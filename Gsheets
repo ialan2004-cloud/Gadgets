@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Sheets 多分頁資料庫展示</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --border: #e2e8f0;
+        }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 2rem;
+        }
+        .container { max-width: 1000px; margin: 0 auto; }
+        h1 { text-align: center; margin-bottom: 2rem; color: var(--primary); }
+        
+        /* 分頁導覽列樣式 */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 2px solid var(--border);
+            margin-bottom: 1.5rem;
+            overflow-x: auto;
+        }
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            background: none;
+            border: none;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #64748b;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .tab-btn:hover { color: var(--primary); }
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        /* 狀態與表格樣式 */
+        .status { text-align: center; padding: 3rem; color: #64748b; font-size: 1.1rem; }
+        .error { color: #ef4444; background: #fef2f2; padding: 1rem; border-radius: 8px; text-align: center; }
+        
+        .table-wrapper {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border); }
+        th { background-color: #f1f5f9; font-weight: 600; color: #475569; position: sticky; top: 0; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background-color: #f8fafc; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>📊 網站後台資料預覽</h1>
+        
+        <!-- 分頁按鈕區域 -->
+        <div class="tabs" id="tabsContainer"></div>
+        
+        <!-- 內容顯示區域 -->
+        <div id="contentArea">
+            <div class="status">請選擇上方分頁載入資料...</div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // ⚙️ 設定區 (已自動填入你的 ID)
+        // ==========================================
+        const CONFIG = {
+            SHEET_ID: '1-b7RoPVtFSIWc3rUf_mLgtAi5y5IiBG3aOk1ewi9xs8',
+            // 這裡定義你要在 Google Sheets 底部建立的工作表(分頁)名稱
+            SHEETS: ['Products', 'Locations', 'News', 'Team', 'FAQ', 'Settings'] 
+        };
+        // ==========================================
+
+        const tabsContainer = document.getElementById('tabsContainer');
+        const contentArea = document.getElementById('contentArea');
+
+        // 1. 初始化分頁按鈕
+        function initTabs() {
+            CONFIG.SHEETS.forEach((sheetName, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'tab-btn';
+                btn.textContent = sheetName;
+                btn.onclick = () => loadSheetData(sheetName, btn);
+                tabsContainer.appendChild(btn);
+                
+                // 預設載入第一個分頁
+                if (index === 0) {
+                    btn.classList.add('active');
+                    loadSheetData(sheetName, btn);
+                }
+            });
+        }
+
+        // 2. 抓取並渲染資料
+        async function loadSheetData(sheetName, activeBtn) {
+            // 更新按鈕 active 狀態
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            activeBtn.classList.add('active');
+
+            contentArea.innerHTML = `<div class="status">⏳ 正在從 Google Sheets 載入 [${sheetName}] 的資料...</div>`;
+
+            const url = `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`找不到分頁 "${sheetName}"，請確認名稱是否完全一致。`);
+                
+                const text = await response.text();
+                
+                // 安全地提取 JSON 字串 (避開 Google 回傳的前綴與後綴)
+                const jsonString = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+                if (!jsonString) throw new Error('回傳資料格式錯誤');
+                
+                const data = JSON.parse(jsonString);
+
+                if (!data.table || !data.table.rows || data.table.rows.length === 0) {
+                    contentArea.innerHTML = `<div class="status">⚠️ 此分頁目前沒有資料，請至 Google Sheets 新增內容。</div>`;
+                    return;
+                }
+
+                // 解析欄位與資料
+                const cols = data.table.cols.map(col => col.label || '未命名欄位');
+                const rows = data.table.rows.map(row => {
+                    const obj = {};
+                    row.c.forEach((cell, index) => {
+                        obj[cols[index]] = cell ? (cell.v !== null ? cell.v : '') : '';
+                    });
+                    return obj;
+                });
+
+                // 渲染表格 HTML
+                renderTable(cols, rows);
+
+            } catch (error) {
+                contentArea.innerHTML = `
+                    <div class="error">
+                        ❌ 載入失敗：${error.message}<br>
+                        <small>請確認試算表權限是否為「知道連結的任何人都可以檢視」，且分頁名稱拼寫正確。</small>
+                    </div>`;
+            }
+        }
+
+        // 3. 產生表格 HTML
+        function renderTable(cols, rows) {
+            let html = '<div class="table-wrapper"><table><thead><tr>';
+            cols.forEach(col => html += `<th>${col}</th>`);
+            html += '</tr></thead><tbody>';
+            
+            rows.forEach(row => {
+                html += '<tr>';
+                cols.forEach(col => html += `<td>${row[col]}</td>`);
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table></div>';
+            contentArea.innerHTML = html;
+        }
+
+        // 啟動程式
+        initTabs();
+    </script>
+</body>
+</html>
