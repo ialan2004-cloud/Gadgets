@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中文／英文默書系統 14.1</title>
+<title>中文／英文默書系統 14.2</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
   :root{--primary:#2563EB;--primary-light:#EFF6FF;--primary-dark:#1D4ED8;--success:#10B981;--danger:#EF4444;--warning:#F59E0B;--bg:#F8FAFC;--card:#fff;--text:#0F172A;--text-light:#64748B;--border:#E2E8F0;--radius:12px;--shadow:0 4px 6px -1px rgba(0,0,0,.05),0 2px 4px -1px rgba(0,0,0,.03);}
@@ -188,7 +188,7 @@
 <div class="container">
   <div id="page-home">
     <div class="card"><div class="card-title">🚀 快速開始</div>
-      <p style="color:var(--text-light);margin-bottom:16px;font-size:14px;">選擇一個默書項目開始溫習</p>
+      <p style="color:var(--text-light);margin-bottom:16px;font-size:14px;">選擇一個默書項目開始溫習（主頁只顯示首 6 個，全部請到「項目」頁）</p>
       <div id="quickProjects"></div>
       <button class="btn btn-primary btn-block mt-2" onclick="showPage('projects')">📁 管理所有項目</button></div>
     <div class="card"><div class="card-title">📊 最近成績</div><div id="recentScores"></div></div>
@@ -428,8 +428,13 @@ const TAB_CONFIG={
 };
 // ============================================================
 
-let projects=JSON.parse(localStorage.getItem('dict_p8')||'[]');
-let records=JSON.parse(localStorage.getItem('dict_r8')||'[]');
+let projects=[];
+try{projects=JSON.parse(localStorage.getItem('dict_p8')||'[]');}catch(e){projects=[];}
+if(!Array.isArray(projects))projects=[];
+let records=[];
+try{records=JSON.parse(localStorage.getItem('dict_r8')||'[]');}catch(e){records=[];}
+if(!Array.isArray(records))records=[];
+
 let currentProject=null,currentDictIndex=0,dictItems=[],originalItems=[],checkResults=[];
 let speechRate=0.8,isRandomized=false,playMode='manual',autoInterval=7;
 let countdownTimer=null,currentCountdown=0,isPaused=false,isReviewMode=false;
@@ -438,12 +443,12 @@ let speakToken=0;
 let wordTimes=[],wordStartTime=0,totalStartTime=0,totalDictationSeconds=0,wordTimerInterval=null,manualTiming=false;
 let debugLines=[];
 
-function saveProjects(){localStorage.setItem('dict_p8',JSON.stringify(projects));}
-function saveRecords(){localStorage.setItem('dict_r8',JSON.stringify(records));}
+function saveProjects(){try{localStorage.setItem('dict_p8',JSON.stringify(projects));}catch(e){debugLog('儲存項目失敗：'+e.message);}}
+function saveRecords(){try{localStorage.setItem('dict_r8',JSON.stringify(records));}catch(e){}}
 
 // ================= DEBUG =================
 function debugLog(msg){
-  const line=`[${new Date().toLocaleTimeString()}] ${msg}`;
+  const line='['+new Date().toLocaleTimeString()+'] '+msg;
   debugLines.push(line);
   if(debugLines.length>60)debugLines.shift();
   const el=document.getElementById('debugContent');
@@ -451,6 +456,26 @@ function debugLog(msg){
   console.log('[DictationSync]',msg);
 }
 function clearDebug(){debugLines=[];const el=document.getElementById('debugContent');if(el)el.innerText='（暫無）';}
+
+// ================= ID HELPERS (FIX: numeric IDs only) =================
+function generateIdFromName(name,lang){
+  const str=(name||'')+'_'+(lang||'zh');let h=0;
+  for(let i=0;i<str.length;i++){h=((h<<5)-h)+str.charCodeAt(i);h|=0;}
+  return Math.abs(h)||1;
+}
+// Repair legacy string IDs (e.g. old "sheet_123") so onclick works
+function migrateIds(){
+  let fixed=0;
+  projects.forEach(p=>{
+    if(typeof p.id!=='number'||isNaN(p.id)){
+      if(p.fromSheet&&p.name){p.id=generateIdFromName(p.name,p.lang||'zh');}
+      else{p.id=Date.now()+Math.floor(Math.random()*10000);}
+      fixed++;
+    }
+  });
+  if(fixed>0){saveProjects();debugLog('已自動修正 '+fixed+' 個項目的 ID 格式');}
+}
+function sameId(a,b){return String(a)===String(b);}
 
 function seedSampleProject(){
   if(localStorage.getItem('dict_seeded_v11'))return;
@@ -477,10 +502,14 @@ function showPage(p){
 function showModal(id){document.getElementById(id).classList.add('show');}
 function closeModal(id){document.getElementById(id).classList.remove('show');}
 
-// ================= GOOGLE SHEETS SYNC (ROBUST) =================
+// ================= SAFE ESCAPING =================
+function escapeHtml(s){const d=document.createElement('div');d.textContent=(s===null||s===undefined)?'':String(s);return d.innerHTML;}
+function escapeAttr(s){return String(s===null||s===undefined?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// ================= GOOGLE SHEETS SYNC =================
 function getTabName(lang){return localStorage.getItem('dict_tab_'+lang)||TAB_CONFIG[lang].defaultName;}
 function getSheetUrl(lang){
-  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(getTabName(lang))}`;
+  return 'https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(getTabName(lang));
 }
 function loadSyncPage(){
   updateSyncStats();
@@ -489,14 +518,14 @@ function loadSyncPage(){
   document.getElementById('lastSyncInfo').innerText='上次同步：'+(last||'未同步');
   document.getElementById('tabNameZh').value=getTabName('zh');
   document.getElementById('tabNameEn').value=getTabName('en');
-  debugLog('就緒。中文分頁="'+getTabName('zh')+'"，英文分頁="'+getTabName('en')+'"');
+  debugLog('就緒。中文分頁="'+getTabName('zh')+'"，英文分頁="'+getTabName('en')+'"，現有項目：'+projects.length);
 }
 function saveTabNames(){
   const zh=document.getElementById('tabNameZh').value.trim();
   const en=document.getElementById('tabNameEn').value.trim();
   if(zh)localStorage.setItem('dict_tab_zh',zh);
   if(en)localStorage.setItem('dict_tab_en',en);
-  debugLog('已更新分頁名稱：中文="'+(zh||getTabName('zh'))+'"，英文="'+(en||getTabName('en'))+'"');
+  debugLog('已更新分頁名稱');
   const el=document.getElementById('tabNameSaved');
   el.style.display='inline';
   setTimeout(()=>{el.style.display='none';},2000);
@@ -518,16 +547,10 @@ function parseCSV(text){
     }
   }
   if(field!==''||row.length>0){row.push(field);rows.push(row);}
-  // remove completely empty rows
   return rows.filter(r=>r.some(cell=>(cell||'').trim()!==''));
 }
 function parseDetails(details){
   return details.split(/[;；]/).map(s=>s.trim()).filter(s=>s.length>0);
-}
-function generateIdFromName(name,lang){
-  const str=name+'_'+lang;let h=0;
-  for(let i=0;i<str.length;i++){h=((h<<5)-h)+str.charCodeAt(i);h|=0;}
-  return 'sheet_'+Math.abs(h);
 }
 function normalizeType(t){
   t=(t||'').toLowerCase();
@@ -550,7 +573,7 @@ function parseSheetCSV(csvText,lang){
     if(ti>=0)typeIdx=ti;
     if(di>=0)detailIdx=di;
   }
-  debugLog('['+lang+'] 偵測到標題行：'+(hasHeader?'係':'否')+'；欄位 Project='+projIdx+' Type='+typeIdx+' Details='+detailIdx);
+  debugLog('['+lang+'] 標題行：'+(hasHeader?'有':'無')+'；欄位 P='+projIdx+' T='+typeIdx+' D='+detailIdx);
   const projectMap={};
   for(let i=startIdx;i<rows.length;i++){
     const r=rows[i];
@@ -567,12 +590,12 @@ function parseSheetCSV(csvText,lang){
   }
   return Object.values(projectMap);
 }
-// Sheet = source of truth: re-sync REPLACES contents of matching projects
 function mergeSheetProjects(sheetProjects){
   let added=0,updated=0;
   sheetProjects.forEach(sp=>{
-    const idx=projects.findIndex(p=>p.id===sp.id||(p.name===sp.name&&p.lang===sp.lang));
+    const idx=projects.findIndex(p=>sameId(p.id,sp.id)||(p.name===sp.name&&p.lang===sp.lang));
     if(idx>=0){
+      projects[idx].id=sp.id;               // normalise to canonical numeric id
       projects[idx].contents=[...sp.contents];
       projects[idx].type=sp.type;
       projects[idx].fromSheet=true;
@@ -598,33 +621,23 @@ async function syncTab(lang){
   const url=getSheetUrl(lang);
   debugLog('['+lang+'] 請求：'+url);
   let res;
-  try{
-    res=await fetch(url);
-  }catch(netErr){
-    debugLog('['+lang+'] 網絡錯誤：'+netErr.message);
-    throw new Error('網絡錯誤，無法連線');
-  }
+  try{res=await fetch(url);}
+  catch(netErr){debugLog('['+lang+'] 網絡錯誤：'+netErr.message);throw new Error('網絡錯誤，無法連線');}
   debugLog('['+lang+'] HTTP 狀態：'+res.status);
-  if(!res.ok){
-    throw new Error('HTTP '+res.status+'（請檢查分頁名稱「'+tabName+'」同共用設定）');
-  }
+  if(!res.ok)throw new Error('HTTP '+res.status+'（請檢查分頁名稱「'+tabName+'」同共用設定）');
   const text=await res.text();
   debugLog('['+lang+'] 回應長度：'+text.length+' 字元');
   debugLog('['+lang+'] 回應預覽：'+text.substring(0,120).replace(/\n/g,'⏎'));
   const trimmed=text.trim();
-  // Not shared properly -> Google returns HTML login/error page
   if(trimmed.startsWith('<')||/<html/i.test(trimmed)||trimmed.toLowerCase().includes('<!doctype')){
     throw new Error('收到 HTML 而唔係 CSV。請確認試算表已共用為「知道連結的任何人」都可檢視');
   }
-  // gviz error payload
   if(/google\.visualization|Error|invalid/i.test(trimmed.split('\n')[0])&&trimmed.length<300){
     throw new Error('Google 返回錯誤，可能分頁「'+tabName+'」唔存在');
   }
   const sp=parseSheetCSV(text,lang);
   debugLog('['+lang+'] 成功解析項目數：'+sp.length);
-  if(!sp.length){
-    throw new Error('讀取唔到有效資料。請檢查分頁「'+tabName+'」格式（Project / Type / Details，用 ; 分隔）');
-  }
+  if(!sp.length)throw new Error('讀取唔到有效資料。請檢查分頁「'+tabName+'」格式（Project / Type / Details，用 ; 分隔）');
   return mergeSheetProjects(sp);
 }
 async function syncAll(){
@@ -632,23 +645,17 @@ async function syncAll(){
   setSyncStatus('loading','正在同步中文同英文分頁...');
   let added=0,updated=0;const errors=[];
   for(const lang of ['zh','en']){
-    try{
-      const r=await syncTab(lang);
-      added+=r.added;updated+=r.updated;
-    }catch(e){errors.push(TAB_CONFIG[lang].label+'：'+e.message);}
+    try{const r=await syncTab(lang);added+=r.added;updated+=r.updated;}
+    catch(e){errors.push(TAB_CONFIG[lang].label+'：'+e.message);}
   }
   saveProjects();
   const now=new Date().toLocaleString('zh-HK');
   localStorage.setItem('dict_last_sync',now);
   document.getElementById('lastSyncInfo').innerText='上次同步：'+now;
-  updateSyncStats();renderHome();
-  if(errors.length&&(added===0&&updated===0)){
-    setSyncStatus('error','同步失敗：'+errors.join('　'));
-  }else if(errors.length){
-    setSyncStatus('success','部分同步成功：新增 '+added+'，更新 '+updated+'。問題：'+errors.join('　'));
-  }else{
-    setSyncStatus('success','同步成功！新增 '+added+' 個，更新 '+updated+' 個項目');
-  }
+  updateSyncStats();renderHome();renderProjects();
+  if(errors.length&&(added===0&&updated===0)){setSyncStatus('error','同步失敗：'+errors.join('　'));}
+  else if(errors.length){setSyncStatus('success','部分同步成功：新增 '+added+'，更新 '+updated+'。問題：'+errors.join('　'));}
+  else{setSyncStatus('success','同步成功！新增 '+added+' 個，更新 '+updated+' 個項目');}
   setBtnLoading(false);
 }
 async function syncSingle(lang){
@@ -660,22 +667,20 @@ async function syncSingle(lang){
     const now=new Date().toLocaleString('zh-HK');
     localStorage.setItem('dict_last_sync',now);
     document.getElementById('lastSyncInfo').innerText='上次同步：'+now;
-    updateSyncStats();renderHome();
+    updateSyncStats();renderHome();renderProjects();
     setSyncStatus('success',TAB_CONFIG[lang].label+'同步成功！新增 '+r.added+'，更新 '+r.updated+' 個項目');
-  }catch(e){
-    setSyncStatus('error','同步失敗：'+e.message);
-  }
+  }catch(e){setSyncStatus('error','同步失敗：'+e.message);}
   setBtnLoading(false);
 }
 function updateSyncStats(){
-  const totalContent=projects.reduce((s,p)=>s+p.contents.length,0);
+  const totalContent=projects.reduce((s,p)=>s+(p.contents?p.contents.length:0),0);
   document.getElementById('syncStats').innerHTML=
     '<div class="stat-box"><div class="value">'+projects.length+'</div><div class="label">默書項目</div></div>'+
     '<div class="stat-box"><div class="value">'+totalContent+'</div><div class="label">默書內容</div></div>'+
     '<div class="stat-box"><div class="value">'+records.length+'</div><div class="label">成績記錄</div></div>';
 }
 function exportBackup(){
-  const data={version:'14.1',exportDate:new Date().toISOString(),projects:projects,records:records};
+  const data={version:'14.2',exportDate:new Date().toISOString(),projects:projects,records:records};
   const json=JSON.stringify(data,null,2);
   const blob=new Blob([json],{type:'application/json'});
   const url=URL.createObjectURL(blob);
@@ -686,10 +691,6 @@ function exportBackup(){
   a.click();
   URL.revokeObjectURL(url);
 }
-
-// ================= SAFE ESCAPING =================
-function escapeHtml(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
-function escapeAttr(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 // ================= PROJECTS =================
 function createProject(){
@@ -702,22 +703,61 @@ function createProject(){
   document.getElementById('newProjectName').value='';
   renderProjects();
 }
-function deleteProject(id,e){e.stopPropagation();if(confirm('確定刪除？')){projects=projects.filter(p=>p.id!==id);saveProjects();renderProjects();}}
+function deleteProject(id,e){
+  if(e&&e.stopPropagation)e.stopPropagation();
+  if(confirm('確定刪除？')){
+    projects=projects.filter(p=>!sameId(p.id,id));
+    saveProjects();renderProjects();
+  }
+}
 function sampleBadge(p){return p.isSample?'<span class="badge badge-purple">示例</span>':'';}
 function langBadge(p){
   if(p.lang==='en')return '<span class="badge badge-lang-en">🔤 EN</span>';
   if(p.lang==='zh')return '<span class="badge badge-lang-zh">🈶 中文</span>';
   return '';
 }
-function renderProjects(){const l=document.getElementById('projectList');if(!projects.length){l.innerHTML='<div class="card text-center" style="color:var(--text-light);padding:40px;">暫時未有項目</div>';return;}const tl={words:'📝 詞語',sentences:'📄 句子',passage:'📖 文章'},tb={words:'badge-blue',sentences:'badge-green',passage:'badge-orange'};l.innerHTML=projects.map(p=>'<div class="project-item" onclick="openProject('+p.id+')"><div class="project-info"><h3>'+escapeHtml(p.name)+'</h3><p><span class="badge '+tb[p.type]+'">'+tl[p.type]+'</span>'+langBadge(p)+sampleBadge(p)+'<span>'+p.contents.length+' 項內容</span></p></div><button class="btn btn-danger btn-sm btn-icon" onclick="deleteProject('+p.id+',event)">🗑️</button></div>').join('');}
-function openProject(id){currentProject=projects.find(p=>p.id===id);if(!currentProject)return;editingContentIndex=-1;const tl={words:'📝 詞語',sentences:'📄 句子',passage:'📖 文章'},tb={words:'badge-blue',sentences:'badge-green',passage:'badge-orange'};document.getElementById('detailTitle').innerText=currentProject.name;document.getElementById('detailBadge').innerHTML='<span class="badge '+tb[currentProject.type]+'">'+tl[currentProject.type]+'</span> '+langBadge(currentProject)+' '+sampleBadge(currentProject);document.getElementById('sampleNote').classList.toggle('hidden',!currentProject.isSample);renderContentList();showPage('project-detail');}
+function renderProjects(){
+  const l=document.getElementById('projectList');
+  if(!projects.length){l.innerHTML='<div class="card text-center" style="color:var(--text-light);padding:40px;">暫時未有項目</div>';return;}
+  const tl={words:'📝 詞語',sentences:'📄 句子',passage:'📖 文章'};
+  const tb={words:'badge-blue',sentences:'badge-green',passage:'badge-orange'};
+  l.innerHTML=projects.map(p=>{
+    const cnt=(p.contents?p.contents.length:0);
+    return '<div class="project-item" onclick="openProject('+p.id+')"><div class="project-info"><h3>'+escapeHtml(p.name||'(未命名)')+'</h3><p><span class="badge '+(tb[p.type]||'badge-blue')+'">'+(tl[p.type]||'📝 詞語')+'</span>'+langBadge(p)+sampleBadge(p)+'<span>'+cnt+' 項內容</span></p></div><button class="btn btn-danger btn-sm btn-icon" onclick="deleteProject('+p.id+',event)">🗑️</button></div>';
+  }).join('');
+}
+function openProject(id){
+  currentProject=projects.find(p=>sameId(p.id,id))||null;
+  if(!currentProject){debugLog('找不到項目 id='+id);alert('找不到該項目，請返回重试。');return;}
+  if(!Array.isArray(currentProject.contents))currentProject.contents=[];
+  editingContentIndex=-1;
+  const tl={words:'📝 詞語',sentences:'📄 句子',passage:'📖 文章'};
+  const tb={words:'badge-blue',sentences:'badge-green',passage:'badge-orange'};
+  document.getElementById('detailTitle').innerText=currentProject.name||'(未命名)';
+  document.getElementById('detailBadge').innerHTML='<span class="badge '+(tb[currentProject.type]||'badge-blue')+'">'+(tl[currentProject.type]||'📝 詞語')+'</span> '+langBadge(currentProject)+' '+sampleBadge(currentProject);
+  document.getElementById('sampleNote').classList.toggle('hidden',!currentProject.isSample);
+  renderContentList();showPage('project-detail');
+}
 function getCurLang(){return (currentProject&&currentProject.lang)?currentProject.lang:'zh';}
 function speakContentAt(i){
-  if(currentProject&&currentProject.contents[i]!==undefined){
+  if(currentProject&&currentProject.contents&&currentProject.contents[i]!==undefined){
     speakText(currentProject.contents[i],getCurLang());
   }
 }
-function renderContentList(){const l=document.getElementById('contentList');document.getElementById('contentCount').innerText=currentProject.contents.length;if(!currentProject.contents.length){l.innerHTML='<p style="color:var(--text-light);text-align:center;padding:30px;">未有內容</p>';return;}const total=currentProject.contents.length;l.innerHTML=currentProject.contents.map((c,i)=>{if(editingContentIndex===i){return '<div class="content-item editing"><div class="num">'+(i+1)+'</div><input type="text" class="form-input edit-input" id="contentEditInput" value="'+escapeAttr(c)+'" onkeydown="if(event.key===\'Enter\')saveContentEdit('+i+');if(event.key===\'Escape\')cancelContentEdit();"><div class="actions"><button class="btn btn-success btn-sm btn-icon" onclick="saveContentEdit('+i+')">✓</button><button class="btn btn-outline btn-sm btn-icon" onclick="cancelContentEdit()">✕</button></div></div>';}return '<div class="content-item"><div class="num">'+(i+1)+'</div><div class="text">'+escapeHtml(c)+'</div><div class="actions"><button class="btn btn-outline btn-sm btn-icon" onclick="speakContentAt('+i+')">🔊</button><button class="btn btn-outline btn-sm btn-icon" onclick="startContentEdit('+i+')">✏️</button><button class="btn btn-outline btn-sm btn-icon" onclick="moveContent('+i+',-1)" '+(i===0?'disabled':'')+'>⬆</button><button class="btn btn-outline btn-sm btn-icon" onclick="moveContent('+i+',1)" '+(i===total-1?'disabled':'')+'>⬇</button><button class="btn btn-danger btn-sm btn-icon" onclick="deleteContent('+i+')">✖</button></div></div>';}).join('');if(editingContentIndex>=0)setTimeout(()=>{const inp=document.getElementById('contentEditInput');if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);}},50);}
+function renderContentList(){
+  const l=document.getElementById('contentList');
+  if(!Array.isArray(currentProject.contents))currentProject.contents=[];
+  document.getElementById('contentCount').innerText=currentProject.contents.length;
+  if(!currentProject.contents.length){l.innerHTML='<p style="color:var(--text-light);text-align:center;padding:30px;">未有內容</p>';return;}
+  const total=currentProject.contents.length;
+  l.innerHTML=currentProject.contents.map((c,i)=>{
+    if(editingContentIndex===i){
+      return '<div class="content-item editing"><div class="num">'+(i+1)+'</div><input type="text" class="form-input edit-input" id="contentEditInput" value="'+escapeAttr(c)+'" onkeydown="if(event.key===\'Enter\')saveContentEdit('+i+');if(event.key===\'Escape\')cancelContentEdit();"><div class="actions"><button class="btn btn-success btn-sm btn-icon" onclick="saveContentEdit('+i+')">✓</button><button class="btn btn-outline btn-sm btn-icon" onclick="cancelContentEdit()">✕</button></div></div>';
+    }
+    return '<div class="content-item"><div class="num">'+(i+1)+'</div><div class="text">'+escapeHtml(c)+'</div><div class="actions"><button class="btn btn-outline btn-sm btn-icon" onclick="speakContentAt('+i+')">🔊</button><button class="btn btn-outline btn-sm btn-icon" onclick="startContentEdit('+i+')">✏️</button><button class="btn btn-outline btn-sm btn-icon" onclick="moveContent('+i+',-1)" '+(i===0?'disabled':'')+'>⬆</button><button class="btn btn-outline btn-sm btn-icon" onclick="moveContent('+i+',1)" '+(i===total-1?'disabled':'')+'>⬇</button><button class="btn btn-danger btn-sm btn-icon" onclick="deleteContent('+i+')">✖</button></div></div>';
+  }).join('');
+  if(editingContentIndex>=0)setTimeout(()=>{const inp=document.getElementById('contentEditInput');if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);}},50);
+}
 function startContentEdit(i){editingContentIndex=i;renderContentList();}
 function saveContentEdit(i){const inp=document.getElementById('contentEditInput');if(inp&&inp.value.trim()){currentProject.contents[i]=inp.value.trim();saveProjects();}editingContentIndex=-1;renderContentList();}
 function cancelContentEdit(){editingContentIndex=-1;renderContentList();}
@@ -808,6 +848,7 @@ function speakText(text,lang,onDone){
     const u=new SpeechSynthesisUtterance(text);
     if(lang==='en'){
       u.lang='en-US';
+      const v=windowSpeechSynthesisGuard();
       const v=window.speechSynthesis.getVoices().find(x=>x.lang&&x.lang.startsWith('en'));
       if(v)u.voice=v;
     }else{
@@ -823,6 +864,7 @@ function speakText(text,lang,onDone){
   if(onDone)onDone();
   return false;
 }
+function windowSpeechSynthesisGuard(){}
 function speakCurrentManual(){stopCountdown();if(currentDictIndex<dictItems.length)speakAndSchedule(dictItems[currentDictIndex]);}
 function speakAndSchedule(text){
   speakToken++;const myToken=speakToken;
@@ -839,7 +881,7 @@ function speakAndSchedule(text){
 }
 function setTimerStatus(t){document.getElementById('slimTimerStatus').innerText=t;}
 function startDictation(){
-  if(!currentProject||!currentProject.contents.length){alert('請先加入默書內容');return;}
+  if(!currentProject||!currentProject.contents||!currentProject.contents.length){alert('請先加入默書內容');return;}
   isRandomized=document.getElementById('preRandomToggle').checked;
   originalItems=[...currentProject.contents];
   dictItems=isRandomized?shuffleArray([...originalItems]):[...originalItems];
@@ -980,7 +1022,7 @@ function retryWrong(){
 }
 function renderHome(){
   const qp=document.getElementById('quickProjects');
-  qp.innerHTML=projects.length?projects.slice(0,3).map(p=>'<div class="project-item" onclick="openProject('+p.id+')" style="margin-bottom:8px;"><div class="project-info"><h3>'+escapeHtml(p.name)+'</h3><p>'+langBadge(p)+sampleBadge(p)+'<span>'+p.contents.length+' 項內容</span></p></div><button class="btn btn-success btn-sm" onclick="event.stopPropagation();openProject('+p.id+');startDictation()">▶️</button></div>').join('')
+  qp.innerHTML=projects.length?projects.slice(0,6).map(p=>'<div class="project-item" onclick="openProject('+p.id+')" style="margin-bottom:8px;"><div class="project-info"><h3>'+escapeHtml(p.name||'(未命名)')+'</h3><p>'+langBadge(p)+sampleBadge(p)+'<span>'+(p.contents?p.contents.length:0)+' 項內容</span></p></div><button class="btn btn-success btn-sm" onclick="event.stopPropagation();openProject('+p.id+');startDictation()">▶️</button></div>').join('')
   :'<p style="color:var(--text-light);text-align:center;padding:20px;">暫時未有項目</p>';
   const rs=document.getElementById('recentScores');
   rs.innerHTML=records.length?records.slice(-5).reverse().map(r=>'<div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);"><span style="font-weight:500;">'+escapeHtml(r.project)+'</span><span style="font-weight:700;color:'+(r.percent>=70?'var(--success)':'var(--danger)')+';">'+r.percent+'%</span></div>').join('')
@@ -1003,6 +1045,7 @@ function clearAllRecords(){if(confirm('確定清除所有記錄？')){records=[]
 function shuffleArray(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
 window.onload=()=>{
+  migrateIds();               // FIX: repair any legacy string IDs first
   seedSampleProject();
   loadOpenCC();
   window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();
