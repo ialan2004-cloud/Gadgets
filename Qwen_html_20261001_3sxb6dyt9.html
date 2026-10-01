@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中文／英文默書系統 14.1</title>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<style>
+  :root{--primary:#2563EB;--primary-light:#EFF6FF;--primary-dark:#1D4ED8;--success:#10B981;--danger:#EF4444;--warning:#F59E0B;--bg:#F8FAFC;--card:#fff;--text:#0F172A;--text-light:#64748B;--border:#E2E8F0;--radius:12px;--shadow:0 4px 6px -1px rgba(0,0,0,.05),0 2px 4px -1px rgba(0,0,0,.03);}
+  *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft JhengHei","PingFang HK",sans-serif;}
+  body{background:var(--bg);min-height:100vh;color:var(--text);}
+  .navbar{background:#fff;border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+  .navbar h1{font-size:18px;font-weight:700;color:var(--primary);display:flex;align-items:center;gap:8px;}
+  .nav-links{display:flex;gap:6px;}
+  .nav-btn{background:transparent;border:none;color:var(--text-light);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;transition:.2s;}
+  .nav-btn:hover{background:var(--primary-light);color:var(--primary);}
+  .nav-btn.active{background:var(--primary);color:#fff;}
+  .container{max-width:900px;margin:0 auto;padding:24px;}
+  .card{background:var(--card);border-radius:var(--radius);padding:24px;margin-bottom:20px;box-shadow:var(--shadow);border:1px solid var(--border);}
+  .card-title{font-size:16px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 20px;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;}
+  .btn:active{transform:scale(.97);}
+  .btn-primary{background:var(--primary);color:#fff;}.btn-primary:hover{background:var(--primary-dark);}
+  .btn-success{background:var(--success);color:#fff;}
+  .btn-danger{background:var(--danger);color:#fff;}
+  .btn-outline{background:#fff;border:1px solid var(--border);color:var(--text);}
+  .btn-outline:hover{border-color:var(--primary);color:var(--primary);}
+  .btn-sm{padding:6px 12px;font-size:13px;}.btn-lg{padding:14px 28px;font-size:16px;}
+  .btn-block{width:100%;}.btn-icon{width:36px;height:36px;padding:0;border-radius:8px;font-size:14px;}
+  .btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+  .form-group{margin-bottom:16px;}
+  .form-label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;}
+  .form-input,.form-select,.form-textarea{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:8px;font-size:15px;transition:.2s;background:#fff;}
+  .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--primary);outline:none;box-shadow:0 0 0 3px rgba(37,99,235,.1);}
+  .form-textarea{min-height:120px;resize:vertical;line-height:1.6;}
+  .edit-input{padding:8px 12px;font-size:15px;flex:1;min-width:0;}
+  .badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;}
+  .badge-blue{background:#DBEAFE;color:#1E40AF;}.badge-green{background:#D1FAE5;color:#065F46;}
+  .badge-orange{background:#FEF3C7;color:#92400E;}.badge-purple{background:#EDE9FE;color:#5B21B6;}
+  .badge-lang-zh{background:#FEF3C7;color:#92400E;}.badge-lang-en{background:#E0E7FF;color:#3730A3;}
+  .project-item{display:flex;align-items:center;justify-content:space-between;padding:16px;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;transition:.2s;cursor:pointer;background:#fff;}
+  .project-item:hover{border-color:var(--primary);box-shadow:0 4px 12px rgba(37,99,235,.08);}
+  .project-info h3{font-size:15px;margin-bottom:4px;}
+  .project-info p{font-size:13px;color:var(--text-light);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .content-item{display:flex;align-items:center;padding:12px 14px;background:#F8FAFC;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;gap:10px;transition:.2s;}
+  .content-item.editing{background:#EFF6FF;border-color:var(--primary);}
+  .content-item .num{width:28px;height:28px;background:var(--primary);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;}
+  .content-item .text{flex:1;font-size:15px;line-height:1.5;min-width:0;word-break:break-word;}
+  .content-item .actions{display:flex;gap:4px;flex-shrink:0;align-items:center;}
+  .segmented-control{display:inline-flex;background:#F1F5F9;border-radius:8px;padding:4px;gap:4px;flex-wrap:wrap;}
+  .seg-btn{padding:8px 14px;border:none;background:transparent;border-radius:6px;font-size:13px;font-weight:500;color:var(--text-light);cursor:pointer;transition:all .2s;white-space:nowrap;}
+  .seg-btn.active{background:#fff;color:var(--primary);box-shadow:0 1px 3px rgba(0,0,0,.1);font-weight:600;}
+  .seg-btn:hover:not(.active){color:var(--text);}
+  .dictation-layout{display:flex;gap:20px;align-items:stretch;}
+  .dictation-main{flex:1;min-width:0;}
+  .dictation-sidebar{width:56px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;}
+  .vp-container{position:relative;flex:1;width:100%;display:flex;flex-direction:column;align-items:center;}
+  .vp-label{font-size:11px;font-weight:700;color:var(--text-light);margin-bottom:8px;text-align:center;white-space:nowrap;}
+  .vp-track{position:relative;width:6px;flex:1;background:#E2E8F0;border-radius:3px;min-height:200px;}
+  .vp-fill{position:absolute;top:0;left:0;width:100%;background:linear-gradient(180deg,var(--primary),#60A5FA);border-radius:3px;transition:height .4s ease;}
+  .vp-dot{position:absolute;left:50%;transform:translateX(-50%);width:16px;height:16px;border-radius:50%;border:2px solid #CBD5E1;background:#fff;transition:all .3s;z-index:2;}
+  .vp-dot.completed{border-color:var(--success);background:var(--success);}
+  .vp-dot.current{border-color:var(--primary);background:var(--primary);box-shadow:0 0 0 4px rgba(37,99,235,.2);animation:vpPulse 1.5s infinite;}
+  .vp-dot.upcoming{border-color:#CBD5E1;background:#fff;}
+  @keyframes vpPulse{0%,100%{box-shadow:0 0 0 4px rgba(37,99,235,.2)}50%{box-shadow:0 0 0 8px rgba(37,99,235,.1)}}
+  .vp-count{font-size:12px;font-weight:700;color:var(--primary);margin-top:8px;}
+  .dictation-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+  .dictation-display{background:linear-gradient(135deg,#F8FAFC 0%,#EFF6FF 100%);border:2px dashed var(--border);border-radius:16px;padding:36px 20px;text-align:center;margin:20px 0 8px 0;min-height:140px;display:flex;align-items:center;justify-content:center;position:relative;}
+  .dictation-text{font-size:34px;font-weight:700;line-height:1.5;letter-spacing:2px;transition:filter .3s;}
+  .dictation-text.hidden-text{filter:blur(12px);user-select:none;color:var(--text-light);}
+  .review-banner{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:var(--warning);color:#fff;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;}
+  .manual-timer-wrap{display:none;justify-content:center;gap:12px;margin:0 0 12px 0;flex-wrap:wrap;}
+  .manual-timer-wrap.visible{display:flex;}
+  .mt-chip{background:#F1F5F9;border-radius:20px;padding:6px 16px;font-size:13px;color:var(--text-light);}
+  .mt-chip strong{color:var(--text);font-variant-numeric:tabular-nums;margin-left:2px;}
+  .time-chip{background:#F1F5F9;border-radius:12px;padding:3px 10px;font-size:12px;color:var(--text-light);margin-right:10px;white-space:nowrap;font-variant-numeric:tabular-nums;}
+  .slim-timer-wrap{margin:0 0 12px 0;display:none;align-items:center;gap:10px;}
+  .slim-timer-wrap.visible{display:flex;}
+  .slim-timer-track{flex:1;height:6px;background:#E2E8F0;border-radius:3px;overflow:hidden;}
+  .slim-timer-fill{height:100%;border-radius:3px;transition:width 1s linear,background .5s;background:var(--primary);}
+  .slim-timer-fill.safe{background:#10B981;}.slim-timer-fill.warning{background:#F59E0B;}.slim-timer-fill.danger{background:#EF4444;}
+  .slim-timer-text{font-size:12px;font-weight:700;color:var(--text-light);min-width:32px;text-align:right;}
+  .slim-timer-status{font-size:11px;color:var(--text-light);min-width:60px;}
+  .settings-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px;}
+  .settings-row:last-child{border-bottom:none;}
+  .settings-label{font-size:14px;font-weight:500;display:flex;align-items:center;gap:6px;}
+  .toggle{position:relative;display:inline-block;width:44px;height:24px;}
+  .toggle input{opacity:0;width:0;height:0;}
+  .toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#CBD5E1;border-radius:24px;transition:.3s;}
+  .toggle-slider:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+  input:checked+.toggle-slider{background:var(--primary);}
+  input:checked+.toggle-slider:before{transform:translateX(20px);}
+  .countdown-ring{width:56px;height:56px;border-radius:50%;background:conic-gradient(var(--primary) 0%,#E2E8F0 0%);display:flex;align-items:center;justify-content:center;margin:8px auto;}
+  .countdown-inner{width:46px;height:46px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--primary);}
+  .check-item{display:flex;align-items:center;padding:16px;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;transition:.2s;background:#fff;}
+  .check-item.correct{border-color:var(--success);background:#F0FDF4;}
+  .check-item.wrong{border-color:var(--danger);background:#FEF2F2;}
+  .check-item .answer{flex:1;font-size:16px;font-weight:500;}
+  .check-btns{display:flex;gap:10px;}
+  .check-btn{width:44px;height:44px;border-radius:50%;border:2px solid var(--border);background:#fff;font-size:20px;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;}
+  .check-btn:hover{transform:scale(1.1);}
+  .check-btn.btn-correct.active{background:var(--success);border-color:var(--success);color:#fff;}
+  .check-btn.btn-wrong.active{background:var(--danger);border-color:var(--danger);color:#fff;}
+  .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:20px 0;}
+  .stat-box{text-align:center;padding:20px;background:#F8FAFC;border-radius:12px;border:1px solid var(--border);}
+  .stat-box .value{font-size:32px;font-weight:800;color:var(--primary);}
+  .stat-box .label{font-size:13px;color:var(--text-light);margin-top:4px;font-weight:500;}
+  .scan-area{border:2px dashed #CBD5E1;border-radius:12px;padding:40px;text-align:center;cursor:pointer;transition:.2s;background:#F8FAFC;}
+  .scan-area:hover{border-color:var(--primary);background:var(--primary-light);}
+  .scan-area .icon{font-size:40px;margin-bottom:12px;}
+  .scan-preview{max-width:100%;max-height:200px;border-radius:8px;margin:12px 0;object-fit:contain;border:1px solid var(--border);}
+  .ocr-progress .bar{height:6px;background:#E2E8F0;border-radius:3px;overflow:hidden;}
+  .ocr-progress .fill{height:100%;background:var(--primary);transition:width .3s;}
+  .ocr-item{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#F8FAFC;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;font-size:14px;}
+  .ocr-item.editing{background:#EFF6FF;border-color:var(--primary);}
+  .ocr-item .oi-num{width:24px;height:24px;background:var(--primary);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
+  .ocr-item .oi-text{flex:1;line-height:1.4;min-width:0;word-break:break-word;}
+  .ocr-item .oi-actions{display:flex;gap:4px;flex-shrink:0;align-items:center;}
+  .ocr-detect-info{background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:10px 14px;font-size:13px;color:#1E40AF;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+  .start-settings{background:#F8FAFC;border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:16px;}
+  .start-settings .ss-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;}
+  .start-settings .ss-label{font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px;}
+  .sample-note{background:#F5F3FF;border:1px solid #DDD6FE;border-radius:8px;padding:10px 14px;font-size:13px;color:#5B21B6;margin-bottom:12px;}
+  .sync-section{border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;background:#fff;}
+  .sync-section h3{font-size:15px;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+  .sync-section p{font-size:13px;color:var(--text-light);margin-bottom:14px;line-height:1.5;}
+  .sync-status{margin-top:12px;padding:10px 14px;border-radius:8px;font-size:14px;display:none;}
+  .sync-status.show{display:block;}
+  .sync-status.success{background:#F0FDF4;color:#065F46;border:1px solid #A7F3D0;}
+  .sync-status.error{background:#FEF2F2;color:#991B1B;border:1px solid #FECACA;}
+  .sync-status.loading{background:#EFF6FF;color:#1E40AF;border:1px solid #BFDBFE;}
+  .sheet-format-box{background:#F8FAFC;border:1px solid var(--border);padding:14px;border-radius:8px;margin:10px 0;font-family:monospace;font-size:12px;line-height:1.6;color:var(--text);}
+  .sheet-id-box{background:#F1F5F9;border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:14px;}
+  .debug-box{font-size:11px;background:#0F172A;color:#94A3B8;padding:12px;border-radius:8px;white-space:pre-wrap;word-break:break-all;max-height:220px;overflow-y:auto;font-family:monospace;margin-top:10px;}
+  details summary{cursor:pointer;color:var(--primary);font-size:14px;font-weight:500;}
+  .last-sync-info{font-size:12px;color:var(--text-light);background:#F1F5F9;padding:6px 12px;border-radius:16px;display:inline-block;margin-bottom:12px;}
+  .modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.6);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center;padding:20px;}
+  .modal.show{display:flex;}
+  .modal-content{background:#fff;border-radius:16px;padding:28px;max-width:560px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 25px -5px rgba(0,0,0,.1);animation:slideUp .3s ease;position:relative;}
+  @keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+  .modal-title{font-size:18px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:8px;padding-right:36px;}
+  .modal-close{position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:50%;background:#F1F5F9;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:#64748B;transition:.2s;z-index:10;}
+  .modal-close:hover{background:#E2E8F0;color:#0F172A;transform:rotate(90deg);}
+  .review-options{display:flex;gap:12px;margin-top:20px;}
+  .review-option{flex:1;padding:20px;border:2px solid var(--border);border-radius:12px;text-align:center;cursor:pointer;transition:.2s;background:#fff;}
+  .review-option:hover{border-color:var(--primary);background:var(--primary-light);}
+  .review-option .ro-icon{font-size:32px;margin-bottom:8px;}
+  .review-option .ro-title{font-weight:600;font-size:15px;margin-bottom:4px;}
+  .review-option .ro-desc{font-size:12px;color:var(--text-light);}
+  .hidden{display:none!important;}.text-center{text-align:center;}
+  .mt-2{margin-top:16px;}.mt-3{margin-top:24px;}.mb-2{margin-bottom:16px;}
+  .flex-between{display:flex;justify-content:space-between;align-items:center;}
+  .list-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
+  .hint{font-size:12px;color:var(--text-light);}
+  @media(max-width:640px){
+    .navbar{padding:12px 16px;flex-wrap:wrap;gap:8px;}.navbar h1{font-size:16px;}
+    .nav-btn{padding:6px 10px;font-size:12px;}
+    .container{padding:12px;}.card{padding:16px;}
+    .stats-grid{grid-template-columns:1fr;}
+    .segmented-control{width:100%;}.seg-btn{flex:1;text-align:center;padding:8px 6px;font-size:12px;}
+    .dictation-text{font-size:26px;}
+    .settings-row{flex-direction:column;align-items:flex-start;}
+    .dictation-layout{flex-direction:column;}
+    .dictation-sidebar{width:100%;flex-direction:row;justify-content:center;}
+    .vp-track{min-height:auto;width:auto;height:6px;flex:1;}
+    .vp-container{flex-direction:row;width:100%;}
+    .vp-label{margin-bottom:0;margin-right:8px;}.vp-count{margin-top:0;margin-left:8px;}
+    .vp-dot{top:50%!important;transform:translateY(-50%);left:auto!important;}
+    .vp-fill{height:100%!important;width:auto;transition:width .4s ease;}
+    .review-options{flex-direction:column;}
+    .content-item{flex-wrap:wrap;}
+    .content-item .actions{width:100%;justify-content:flex-end;margin-top:6px;}
+  }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <h1>📋 中文／英文默書系統</h1>
+  <div class="nav-links">
+    <button class="nav-btn active" onclick="showPage('home')">🏠 主頁</button>
+    <button class="nav-btn" onclick="showPage('projects')">📁 項目</button>
+    <button class="nav-btn" onclick="showPage('records')">📊 記錄</button>
+    <button class="nav-btn" onclick="showPage('sync')">☁️ 同步</button>
+  </div>
+</nav>
+
+<div class="container">
+  <div id="page-home">
+    <div class="card"><div class="card-title">🚀 快速開始</div>
+      <p style="color:var(--text-light);margin-bottom:16px;font-size:14px;">選擇一個默書項目開始溫習</p>
+      <div id="quickProjects"></div>
+      <button class="btn btn-primary btn-block mt-2" onclick="showPage('projects')">📁 管理所有項目</button></div>
+    <div class="card"><div class="card-title">📊 最近成績</div><div id="recentScores"></div></div>
+  </div>
+
+  <div id="page-projects" class="hidden">
+    <div class="card"><div class="flex-between">
+      <div class="card-title" style="margin-bottom:0;">📁 默書項目</div>
+      <button class="btn btn-primary" onclick="showModal('modalNewProject')">➕ 新建項目</button></div></div>
+    <div id="projectList"></div>
+  </div>
+
+  <div id="page-project-detail" class="hidden">
+    <div class="card"><div class="flex-between">
+      <div><h2 id="detailTitle" style="font-size:20px;margin-bottom:6px;"></h2><span id="detailBadge"></span></div>
+      <button class="btn btn-outline" onclick="showPage('projects')">⬅️ 返回</button></div></div>
+    <div class="card">
+      <div id="sampleNote" class="sample-note hidden">🎁 呢個係系統預設嘅示例項目，可以隨意編輯或刪除。</div>
+      <div class="list-toolbar">
+        <div class="card-title" style="margin-bottom:0;">📝 默書內容 (<span id="contentCount">0</span>)</div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary btn-sm" onclick="showModal('modalAddContent')">✍️ 手動加入</button>
+          <button class="btn btn-outline btn-sm" onclick="openScanModal()">📷 掃描</button></div></div>
+      <div class="hint" style="margin-bottom:12px;">💡 ✏️ 編輯 ⬆️⬇️ 排序 ✖ 刪除</div>
+      <div id="contentList"></div>
+      <div class="start-settings">
+        <div class="ss-row"><div class="ss-label">🔀 隨機打亂</div>
+          <label class="toggle"><input type="checkbox" id="preRandomToggle"><span class="toggle-slider"></span></label></div>
+        <div class="ss-row"><div class="ss-label">🔊 朗讀速度</div>
+          <div class="segmented-control" id="preSpeedControl">
+            <button class="seg-btn" onclick="setPreSpeed(0.4,this)">0.4x</button>
+            <button class="seg-btn" onclick="setPreSpeed(0.6,this)">0.6x</button>
+            <button class="seg-btn active" onclick="setPreSpeed(0.8,this)">0.8x</button>
+            <button class="seg-btn" onclick="setPreSpeed(1.0,this)">1.0x</button></div></div>
+        <div class="ss-row"><div class="ss-label">⏱️ 播放模式</div>
+          <div class="segmented-control" id="preModeControl">
+            <button class="seg-btn active" data-mode="manual" onclick="setPreMode('manual',this)">✋ 手動</button>
+            <button class="seg-btn" data-mode="auto" onclick="setPreMode('auto',this)">🤖 自動</button></div></div>
+        <div class="ss-row hidden" id="preAutoRow"><div class="ss-label">⏳ 間隔</div>
+          <div class="segmented-control" id="preIntervalControl">
+            <button class="seg-btn" onclick="setPreInterval(5,this)">5秒</button>
+            <button class="seg-btn active" onclick="setPreInterval(7,this)">7秒</button>
+            <button class="seg-btn" onclick="setPreInterval(10,this)">10秒</button>
+            <button class="seg-btn" onclick="setPreInterval(15,this)">15秒</button>
+            <button class="seg-btn" onclick="setPreInterval(20,this)">20秒</button></div></div>
+      </div>
+      <div class="mt-3 text-center"><button class="btn btn-success btn-lg btn-block" onclick="startDictation()">▶️ 開始默書</button></div>
+    </div>
+  </div>
+
+  <div id="page-dictation" class="hidden">
+    <div class="card" style="padding:16px;">
+      <div class="dictation-layout">
+        <div class="dictation-main">
+          <div class="dictation-header">
+            <button class="btn btn-outline btn-sm" onclick="exitDictation()">⬅️ 退出</button>
+            <span class="badge badge-blue" id="dictProgressBadge">1 / 5</span>
+            <span class="badge badge-purple hidden" id="reviewBadge">🔄 溫習中</span></div>
+          <div class="dictation-display" id="dictDisplay">
+            <div class="review-banner hidden" id="reviewBanner">🔄 快速溫習模式</div>
+            <div class="dictation-text hidden-text" id="dictText">準備好了嗎？</div></div>
+          <div class="manual-timer-wrap" id="manualTimerWrap">
+            <span class="mt-chip">⏱️ 本題 <strong id="mtWord">0秒</strong></span>
+            <span class="mt-chip">Σ 總計 <strong id="mtTotal">0秒</strong></span></div>
+          <div class="slim-timer-wrap" id="slimTimerWrap">
+            <span class="slim-timer-status" id="slimTimerStatus">🔊 朗讀中</span>
+            <div class="slim-timer-track"><div class="slim-timer-fill safe" id="slimTimerFill" style="width:100%"></div></div>
+            <span class="slim-timer-text" id="slimTimerText">--</span></div>
+          <div id="countdownArea" class="hidden text-center">
+            <div class="countdown-ring" id="countdownRing"><div class="countdown-inner" id="countdownNum">7</div></div>
+            <button class="btn btn-outline btn-sm" id="pauseBtn" onclick="togglePause()">⏸️ 暫停</button></div>
+          <div class="text-center mt-2" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+            <button class="btn btn-primary btn-lg" onclick="speakCurrentManual()">🔊 朗讀</button>
+            <button class="btn btn-outline btn-lg" onclick="toggleText()">👁️ 顯示/隱藏</button>
+            <button class="btn btn-success btn-lg" id="btnNext" onclick="nextDictItem()">➡️ 下一題</button></div>
+          <div class="text-center mt-2">
+            <button class="btn btn-outline btn-sm" id="btnEnd" onclick="requestEndDictation()">⏹️ 結束默書</button></div>
+        </div>
+        <div class="dictation-sidebar">
+          <div class="vp-container" id="vpContainer">
+            <div class="vp-label" id="vpLabel">進度</div>
+            <div class="vp-track" id="vpTrack"><div class="vp-fill" id="vpFill" style="height:0%"></div></div>
+            <div class="vp-count" id="vpCount">0/0</div></div></div>
+      </div></div></div>
+
+  <div id="page-checking" class="hidden">
+    <div class="card"><div class="card-title">✅ 家長校對</div>
+      <p style="color:var(--text-light);margin-bottom:16px;font-size:14px;">請對照學生喺紙上寫嘅答案，逐題標記對錯：</p>
+      <div id="checkList"></div></div>
+    <div class="card text-center"><button class="btn btn-primary btn-lg btn-block" onclick="finishChecking()">📊 完成校對</button></div></div>
+
+  <div id="page-result" class="hidden">
+    <div class="card text-center">
+      <div style="font-size:64px;margin-bottom:12px;" id="resultEmoji">🎉</div>
+      <h2 id="resultTitle" style="margin-bottom:20px;">默書完成！</h2>
+      <div class="stats-grid">
+        <div class="stat-box"><div class="value" id="resultScore">0</div><div class="label">答對題數</div></div>
+        <div class="stat-box"><div class="value" id="resultTotal">0</div><div class="label">總題數</div></div>
+        <div class="stat-box"><div class="value" id="resultPercent">0%</div><div class="label">得分</div></div></div>
+      <div id="timeStats" class="hidden" style="text-align:left;">
+        <div class="card-title">⏱️ 用時統計</div>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="value" id="statTotalTime" style="font-size:24px;">--</div><div class="label">總用時</div></div>
+          <div class="stat-box"><div class="value" id="statAvgTime" style="font-size:24px;">--</div><div class="label">平均每題</div></div>
+          <div class="stat-box"><div class="value" id="statSlowest" style="font-size:24px;">--</div><div class="label">最慢一題</div></div></div>
+        <div id="perWordTimes"></div></div>
+      <div id="resultWrong" class="hidden" style="text-align:left;margin-top:20px;">
+        <h4 style="margin-bottom:10px;font-size:15px;">❌ 錯咗嘅內容：</h4><div id="wrongList"></div></div>
+      <div class="mt-3" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="showPage('home')">🏠 返回主頁</button>
+        <button class="btn btn-outline" onclick="retryWrong()">🔄 只溫錯題</button></div></div></div>
+
+  <div id="page-records" class="hidden">
+    <div class="card"><div class="card-title">📊 歷史成績</div><canvas id="recordChart" width="800" height="280" style="width:100%;"></canvas></div>
+    <div class="card"><div id="recordTable"></div>
+      <div class="text-center mt-2"><button class="btn btn-danger btn-sm" onclick="clearAllRecords()">🗑️ 清除所有記錄</button></div></div></div>
+
+  <!-- ===== SYNC PAGE ===== -->
+  <div id="page-sync" class="hidden">
+    <div class="card">
+      <div class="card-title">☁️ Google Sheets 同步</div>
+      <p style="color:var(--text-light);font-size:14px;margin-bottom:16px;">已連接指定試算表，資料會儲存到本機快取，離線都可以使用。</p>
+      <div class="stats-grid" id="syncStats"></div>
+    </div>
+
+    <div class="sync-section">
+      <h3>📊 同步默書資料</h3>
+      <span class="last-sync-info" id="lastSyncInfo">上次同步：未同步</span>
+      <div class="sheet-id-box">
+        <span style="font-size:12px;color:var(--text-light);">已連接試算表 ID：</span><br>
+        <code id="sheetIdDisplay" style="font-size:12px;word-break:break-all;color:var(--text);"></code>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="syncAll()" id="syncAllBtn">🔄 同步全部</button>
+        <button class="btn btn-outline" onclick="syncSingle('zh')" id="syncZhBtn">🈶 只同步中文</button>
+        <button class="btn btn-outline" onclick="syncSingle('en')" id="syncEnBtn">🔤 只同步英文</button>
+      </div>
+      <div class="sync-status" id="syncStatus"></div>
+
+      <details class="mt-3">
+        <summary>📖 試算表格式說明</summary>
+        <div class="mt-2" style="font-size:13px;color:var(--text-light);line-height:1.7;">
+          <p style="margin-bottom:8px;">試算表有兩個分頁，每個分頁有 3 欄：</p>
+          <div class="sheet-format-box">Project,Type,Details<br>第一課,詞語,學校;老師;同學<br>第二課,句子,我喜歡上學;天氣很好</div>
+          <ul style="padding-left:20px;margin-bottom:8px;">
+            <li><strong>Project</strong>：項目名稱</li>
+            <li><strong>Type</strong>：類型（詞語／句子／文章 或 words/sentences/paragraphs）</li>
+            <li><strong>Details</strong>：默書內容，用 <strong>;</strong> 分隔每一項</li>
+          </ul>
+          <p>⚠️ 請確保試算表共用設定為「<strong>知道連結的任何人</strong>」都可檢視。</p>
+          <p>💡 再次同步會以試算表為準（覆蓋同名項目內容）。</p>
+        </div>
+      </details>
+
+      <details class="mt-2">
+        <summary>⚙️ 進階：分頁名稱設定</summary>
+        <div class="mt-2">
+          <div class="form-group"><label class="form-label">中文分頁名稱</label><input type="text" class="form-input" id="tabNameZh"></div>
+          <div class="form-group"><label class="form-label">英文分頁名稱</label><input type="text" class="form-input" id="tabNameEn"></div>
+          <button class="btn btn-outline btn-sm" onclick="saveTabNames()">💾 儲存分頁名稱</button>
+          <span id="tabNameSaved" style="color:var(--success);font-size:13px;margin-left:8px;display:none;">✅ 已儲存</span>
+        </div>
+      </details>
+
+      <details class="mt-2">
+        <summary>🔍 除錯資訊（同步失敗時睇呢度）</summary>
+        <div class="debug-box" id="debugContent">（暫無）</div>
+        <button class="btn btn-outline btn-sm mt-2" onclick="clearDebug()">🗑️ 清除除錯記錄</button>
+      </details>
+    </div>
+
+    <div class="sync-section">
+      <h3>📤 匯出備份</h3>
+      <p>將现有所有項目同成績記錄下載做備份檔（JSON 格式）。</p>
+      <button class="btn btn-outline" onclick="exportBackup()">⬇️ 下載備份檔</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal" id="modalNewProject"><div class="modal-content">
+  <button class="modal-close" onclick="closeModal('modalNewProject')">✕</button>
+  <div class="modal-title">➕ 新建默書項目</div>
+  <div class="form-group"><label class="form-label">項目名稱</label><input type="text" class="form-input" id="newProjectName" placeholder="例如：第三課詞語"></div>
+  <div class="form-group"><label class="form-label">語言</label>
+    <select class="form-select" id="newProjectLang"><option value="zh">🈶 中文</option><option value="en">🔤 英文</option></select></div>
+  <div class="form-group"><label class="form-label">內容類型</label>
+    <select class="form-select" id="newProjectType"><option value="words">📝 詞語</option><option value="sentences">📄 句子</option><option value="passage">📖 文章</option></select></div>
+  <button class="btn btn-primary btn-block mt-2" onclick="createProject()">✅ 建立項目</button></div></div>
+
+<div class="modal" id="modalAddContent"><div class="modal-content">
+  <button class="modal-close" onclick="closeModal('modalAddContent')">✕</button>
+  <div class="modal-title">✍️ 加入默書內容</div>
+  <div class="form-group"><label class="form-label">內容（每行一項）</label><textarea class="form-textarea" id="newContentText"></textarea></div>
+  <button class="btn btn-primary btn-block mt-2" onclick="addContent()">✅ 加入內容</button></div></div>
+
+<div class="modal" id="modalScan"><div class="modal-content">
+  <button class="modal-close" onclick="cancelScan()">✕</button>
+  <div class="modal-title">📷 掃描輸入（OCR）</div>
+  <div class="scan-area" id="scanArea" onclick="document.getElementById('scanInput').click()">
+    <div class="icon">📸</div><p style="font-weight:500;">撳呢度影相或選擇圖片</p>
+    <p style="font-size:12px;color:var(--text-light);margin-top:6px;">自動轉換為繁體中文</p></div>
+  <input type="file" id="scanInput" accept="image/*" capture="environment" style="display:none;" onchange="handleScanImage(this)">
+  <div id="scanPreview" class="hidden text-center">
+    <img id="previewImg" class="scan-preview">
+    <div class="ocr-progress" id="ocrProgress" style="display:none;">
+      <p style="font-size:13px;color:var(--text-light);margin-bottom:6px;">🔄 正在辨識並轉換繁體...</p>
+      <div class="bar"><div class="fill" id="ocrFill" style="width:0%"></div></div></div></div>
+  <div id="scanResult" class="hidden mt-2">
+    <div class="ocr-detect-info" id="ocrDetectInfo">🧠 智能分行結果</div>
+    <div class="hint" style="margin-bottom:8px;">💡 ✏️ 編輯 ⬆️⬇️ 排序 ✖ 刪除</div>
+    <div id="ocrItemsList" style="max-height:280px;overflow-y:auto;margin-bottom:12px;"></div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-primary" style="flex:1;" onclick="confirmScan()">✅ 確認加入</button>
+      <button class="btn btn-outline" style="flex:1;" onclick="retryOcrEdit()">✏️ 批量編輯</button></div></div>
+  <div id="scanEditArea" class="hidden mt-2">
+    <label class="form-label">手動編輯（每行一項）：</label>
+    <textarea class="form-textarea" id="ocrEditText"></textarea>
+    <button class="btn btn-primary btn-block mt-2" onclick="confirmScanEdit()">✅ 確認加入</button></div></div></div>
+
+<div class="modal" id="modalReview"><div class="modal-content">
+  <button class="modal-close" onclick="closeModal('modalReview');goToMarking()">✕</button>
+  <div class="modal-title">📝 默書完成</div>
+  <p style="color:var(--text-light);margin-bottom:8px;">想喺校對前快速溫習一次嗎？</p>
+  <div class="review-options">
+    <div class="review-option" onclick="startQuickReview()"><div class="ro-icon">🔄</div><div class="ro-title">快速溫習</div><div class="ro-desc">自動重播所有詞語</div></div>
+    <div class="review-option" onclick="closeModal('modalReview');goToMarking()"><div class="ro-icon">➡️</div><div class="ro-title">直接校對</div><div class="ro-desc">跳過溫習</div></div></div></div></div>
+
+<script>
+// ============================================================
+// 🔧 CONFIGURATION — change tab names here if needed
+// ============================================================
+const SHEET_ID='1Ok4OH76O2W5rtkHw-1Q_F6W4c4jD-WoQTA0UwAXv4t0';
+const TAB_CONFIG={
+  zh:{defaultName:'Chinese',label:'中文默書'},
+  en:{defaultName:'English',label:'英文默書'}
+};
+// ============================================================
+
+let projects=JSON.parse(localStorage.getItem('dict_p8')||'[]');
+let records=JSON.parse(localStorage.getItem('dict_r8')||'[]');
+let currentProject=null,currentDictIndex=0,dictItems=[],originalItems=[],checkResults=[];
+let speechRate=0.8,isRandomized=false,playMode='manual',autoInterval=7;
+let countdownTimer=null,currentCountdown=0,isPaused=false,isReviewMode=false;
+let ocrParsedItems=[],editingContentIndex=-1,editingOcrIndex=-1;
+let speakToken=0;
+let wordTimes=[],wordStartTime=0,totalStartTime=0,totalDictationSeconds=0,wordTimerInterval=null,manualTiming=false;
+let debugLines=[];
+
+function saveProjects(){localStorage.setItem('dict_p8',JSON.stringify(projects));}
+function saveRecords(){localStorage.setItem('dict_r8',JSON.stringify(records));}
+
+// ================= DEBUG =================
+function debugLog(msg){
+  const line=`[${new Date().toLocaleTimeString()}] ${msg}`;
+  debugLines.push(line);
+  if(debugLines.length>60)debugLines.shift();
+  const el=document.getElementById('debugContent');
+  if(el)el.innerText=debugLines.join('\n');
+  console.log('[DictationSync]',msg);
+}
+function clearDebug(){debugLines=[];const el=document.getElementById('debugContent');if(el)el.innerText='（暫無）';}
+
+function seedSampleProject(){
+  if(localStorage.getItem('dict_seeded_v11'))return;
+  if(projects.length===0){
+    projects.push({id:999999,name:'示例：常見詞語',type:'words',lang:'zh',isSample:true,
+      contents:['學校','老師','同學','書包','功課'],
+      createdAt:new Date().toLocaleDateString('zh-HK')});
+    saveProjects();
+  }
+  localStorage.setItem('dict_seeded_v11','1');
+}
+
+function showPage(p){
+  document.querySelectorAll('[id^="page-"]').forEach(x=>x.classList.add('hidden'));
+  document.getElementById('page-'+p).classList.remove('hidden');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  const map={home:0,projects:1,records:2,sync:3};
+  if(map[p]!==undefined)document.querySelectorAll('.nav-btn')[map[p]].classList.add('active');
+  if(p==='home')renderHome();
+  if(p==='projects')renderProjects();
+  if(p==='records')renderRecords();
+  if(p==='sync')loadSyncPage();
+}
+function showModal(id){document.getElementById(id).classList.add('show');}
+function closeModal(id){document.getElementById(id).classList.remove('show');}
+
+// ================= GOOGLE SHEETS SYNC (ROBUST) =================
+function getTabName(lang){return localStorage.getItem('dict_tab_'+lang)||TAB_CONFIG[lang].defaultName;}
+function getSheetUrl(lang){
+  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(getTabName(lang))}`;
+}
+function loadSyncPage(){
+  updateSyncStats();
+  document.getElementById('sheetIdDisplay').innerText=SHEET_ID;
+  const last=localStorage.getItem('dict_last_sync');
+  document.getElementById('lastSyncInfo').innerText='上次同步：'+(last||'未同步');
+  document.getElementById('tabNameZh').value=getTabName('zh');
+  document.getElementById('tabNameEn').value=getTabName('en');
+  debugLog('就緒。中文分頁="'+getTabName('zh')+'"，英文分頁="'+getTabName('en')+'"');
+}
+function saveTabNames(){
+  const zh=document.getElementById('tabNameZh').value.trim();
+  const en=document.getElementById('tabNameEn').value.trim();
+  if(zh)localStorage.setItem('dict_tab_zh',zh);
+  if(en)localStorage.setItem('dict_tab_en',en);
+  debugLog('已更新分頁名稱：中文="'+(zh||getTabName('zh'))+'"，英文="'+(en||getTabName('en'))+'"');
+  const el=document.getElementById('tabNameSaved');
+  el.style.display='inline';
+  setTimeout(()=>{el.style.display='none';},2000);
+}
+function parseCSV(text){
+  if(text.charCodeAt(0)===0xFEFF)text=text.slice(1);
+  const rows=[];let row=[];let field='';let inQ=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(inQ){
+      if(c==='"'){if(text[i+1]==='"'){field+='"';i++;}else inQ=false;}
+      else field+=c;
+    }else{
+      if(c==='"')inQ=true;
+      else if(c===','){row.push(field);field='';}
+      else if(c==='\n'){row.push(field);rows.push(row);row=[];field='';}
+      else if(c==='\r'){}
+      else field+=c;
+    }
+  }
+  if(field!==''||row.length>0){row.push(field);rows.push(row);}
+  // remove completely empty rows
+  return rows.filter(r=>r.some(cell=>(cell||'').trim()!==''));
+}
+function parseDetails(details){
+  return details.split(/[;；]/).map(s=>s.trim()).filter(s=>s.length>0);
+}
+function generateIdFromName(name,lang){
+  const str=name+'_'+lang;let h=0;
+  for(let i=0;i<str.length;i++){h=((h<<5)-h)+str.charCodeAt(i);h|=0;}
+  return 'sheet_'+Math.abs(h);
+}
+function normalizeType(t){
+  t=(t||'').toLowerCase();
+  if(t.includes('句')||t.includes('sentence'))return 'sentences';
+  if(t.includes('文章')||t.includes('passage')||t.includes('段')||t.includes('paragraph'))return 'passage';
+  return 'words';
+}
+function parseSheetCSV(csvText,lang){
+  const rows=parseCSV(csvText);
+  if(!rows.length)return [];
+  let projIdx=0,typeIdx=1,detailIdx=2,startIdx=0;
+  const header=rows[0].map(c=>(c||'').trim().toLowerCase());
+  const hasHeader=header.some(h=>h.includes('project')||h.includes('type')||h.includes('detail')||h.includes('項目')||h.includes('類型')||h.includes('內容'));
+  if(hasHeader){
+    startIdx=1;
+    const pi=header.findIndex(h=>h.includes('project')||h.includes('項目')||h.includes('名稱'));
+    const ti=header.findIndex(h=>h.includes('type')||h.includes('類型'));
+    const di=header.findIndex(h=>h.includes('detail')||h.includes('內容'));
+    if(pi>=0)projIdx=pi;
+    if(ti>=0)typeIdx=ti;
+    if(di>=0)detailIdx=di;
+  }
+  debugLog('['+lang+'] 偵測到標題行：'+(hasHeader?'係':'否')+'；欄位 Project='+projIdx+' Type='+typeIdx+' Details='+detailIdx);
+  const projectMap={};
+  for(let i=startIdx;i<rows.length;i++){
+    const r=rows[i];
+    const name=(r[projIdx]||'').trim();
+    const type=(r[typeIdx]||'').trim();
+    const details=(r[detailIdx]||'').trim();
+    if(!name||!details)continue;
+    const items=parseDetails(details);
+    if(!items.length)continue;
+    if(!projectMap[name]){
+      projectMap[name]={id:generateIdFromName(name,lang),name:name,type:normalizeType(type),lang:lang,contents:[],fromSheet:true,createdAt:new Date().toLocaleDateString('zh-HK')};
+    }
+    items.forEach(item=>{if(!projectMap[name].contents.includes(item))projectMap[name].contents.push(item);});
+  }
+  return Object.values(projectMap);
+}
+// Sheet = source of truth: re-sync REPLACES contents of matching projects
+function mergeSheetProjects(sheetProjects){
+  let added=0,updated=0;
+  sheetProjects.forEach(sp=>{
+    const idx=projects.findIndex(p=>p.id===sp.id||(p.name===sp.name&&p.lang===sp.lang));
+    if(idx>=0){
+      projects[idx].contents=[...sp.contents];
+      projects[idx].type=sp.type;
+      projects[idx].fromSheet=true;
+      updated++;
+    }else{
+      projects.push(sp);
+      added++;
+    }
+  });
+  return {added,updated};
+}
+function setSyncStatus(type,msg){
+  const el=document.getElementById('syncStatus');
+  el.className='sync-status show '+type;
+  const ic={loading:'⏳',success:'✅',error:'❌'};
+  el.innerText=(ic[type]||'')+' '+msg;
+}
+function setBtnLoading(loading){
+  ['syncAllBtn','syncZhBtn','syncEnBtn'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=loading;});
+}
+async function syncTab(lang){
+  const tabName=getTabName(lang);
+  const url=getSheetUrl(lang);
+  debugLog('['+lang+'] 請求：'+url);
+  let res;
+  try{
+    res=await fetch(url);
+  }catch(netErr){
+    debugLog('['+lang+'] 網絡錯誤：'+netErr.message);
+    throw new Error('網絡錯誤，無法連線');
+  }
+  debugLog('['+lang+'] HTTP 狀態：'+res.status);
+  if(!res.ok){
+    throw new Error('HTTP '+res.status+'（請檢查分頁名稱「'+tabName+'」同共用設定）');
+  }
+  const text=await res.text();
+  debugLog('['+lang+'] 回應長度：'+text.length+' 字元');
+  debugLog('['+lang+'] 回應預覽：'+text.substring(0,120).replace(/\n/g,'⏎'));
+  const trimmed=text.trim();
+  // Not shared properly -> Google returns HTML login/error page
+  if(trimmed.startsWith('<')||/<html/i.test(trimmed)||trimmed.toLowerCase().includes('<!doctype')){
+    throw new Error('收到 HTML 而唔係 CSV。請確認試算表已共用為「知道連結的任何人」都可檢視');
+  }
+  // gviz error payload
+  if(/google\.visualization|Error|invalid/i.test(trimmed.split('\n')[0])&&trimmed.length<300){
+    throw new Error('Google 返回錯誤，可能分頁「'+tabName+'」唔存在');
+  }
+  const sp=parseSheetCSV(text,lang);
+  debugLog('['+lang+'] 成功解析項目數：'+sp.length);
+  if(!sp.length){
+    throw new Error('讀取唔到有效資料。請檢查分頁「'+tabName+'」格式（Project / Type / Details，用 ; 分隔）');
+  }
+  return mergeSheetProjects(sp);
+}
+async function syncAll(){
+  setBtnLoading(true);
+  setSyncStatus('loading','正在同步中文同英文分頁...');
+  let added=0,updated=0;const errors=[];
+  for(const lang of ['zh','en']){
+    try{
+      const r=await syncTab(lang);
+      added+=r.added;updated+=r.updated;
+    }catch(e){errors.push(TAB_CONFIG[lang].label+'：'+e.message);}
+  }
+  saveProjects();
+  const now=new Date().toLocaleString('zh-HK');
+  localStorage.setItem('dict_last_sync',now);
+  document.getElementById('lastSyncInfo').innerText='上次同步：'+now;
+  updateSyncStats();renderHome();
+  if(errors.length&&(added===0&&updated===0)){
+    setSyncStatus('error','同步失敗：'+errors.join('　'));
+  }else if(errors.length){
+    setSyncStatus('success','部分同步成功：新增 '+added+'，更新 '+updated+'。問題：'+errors.join('　'));
+  }else{
+    setSyncStatus('success','同步成功！新增 '+added+' 個，更新 '+updated+' 個項目');
+  }
+  setBtnLoading(false);
+}
+async function syncSingle(lang){
+  setBtnLoading(true);
+  setSyncStatus('loading','正在讀取'+TAB_CONFIG[lang].label+'分頁...');
+  try{
+    const r=await syncTab(lang);
+    saveProjects();
+    const now=new Date().toLocaleString('zh-HK');
+    localStorage.setItem('dict_last_sync',now);
+    document.getElementById('lastSyncInfo').innerText='上次同步：'+now;
+    updateSyncStats();renderHome();
+    setSyncStatus('success',TAB_CONFIG[lang].label+'同步成功！新增 '+r.added+'，更新 '+r.updated+' 個項目');
+  }catch(e){
+    setSyncStatus('error','同步失敗：'+e.message);
+  }
+  setBtnLoading(false);
+}
+function updateSyncStats(){
+  const totalContent=projects.reduce((s,p)=>s+p.contents.length,0);
+  document.getElementById('syncStats').innerHTML=
+    '<div class="stat-box"><div class="value">'+projects.length+'</div><div class="label">默書項目</div></div>'+
+    '<div class="stat-box"><div class="value">'+totalContent+'</div><div class="label">默書內容</div></div>'+
+    '<div class="stat-box"><div class="value">'+records.length+'</div><div class="label">成績記錄</div></div>';
+}
+function exportBackup(){
+  const data={version:'14.1',exportDate:new Date().toISOString(),projects:projects,records:records};
+  const json=JSON.stringify(data,null,2);
+  const blob=new Blob([json],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const d=new Date();
+  a.href=url;
+  a.download='默書備份_'+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ================= SAFE ESCAPING =================
+function escapeHtml(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+function escapeAttr(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// ================= PROJECTS =================
+function createProject(){
+  const n=document.getElementById('newProjectName').value.trim();
+  const t=document.getElementById('newProjectType').value;
+  const lang=document.getElementById('newProjectLang').value;
+  if(!n){alert('請輸入項目名稱');return;}
+  projects.push({id:Date.now(),name:n,type:t,lang:lang,contents:[],createdAt:new Date().toLocaleDateString('zh-HK')});
+  saveProjects();closeModal('modalNewProject');
+  document.getElementById('newProjectName').value='';
+  renderProjects();
+}
+function deleteProject(id,e){e.stopPropagation();if(confirm('確定刪除？')){projects=projects.filter(p=>p.id!==id);saveProjects();renderProjects();}}
+function sampleBadge(p){return p.isSample?'<span class="badge badge-purple">示例</span>':'';}
+function langBadge(p){
+  if(p.lang==='en')return '<span class="badge badge-lang-en">🔤 EN</span>';
+  if(p.lang==='zh')return '<span class="badge badge-lang-zh">🈶 中文</span>';
+  return '';
+}
+function renderProjects(){const l=document.getElementById('projectList');if(!projects.length){l.innerHTML='<div class="card text-center" style="color:var(--text-light);padding:40px;">暫時未有項目</div>';return;}const tl={words:'📝 詞語',sentences:'📄 句子',passage:'📖 文章'},tb={words:'badge-blue',sentences:'badge-green',passage:'badge-orange'};l.innerHTML=projects.map(p=>'<div class="project-item" onclick="openProject('+p.id+')"><div class="project-info"><h3>'+escapeHtml(p.name)+'</h3><p><span class="badge '+tb[p.type]+'">'+tl[p.type]+'</span>'+langBadge(p)+sampleBadge(p)+'<span>'+p.contents.length+' 項內容</span></p></div><button class="btn btn-danger btn-sm btn-icon" onclick="deleteProject('+p.id+',event)">🗑️</button></div>').join('');}
+function openProject(id){currentProject=projects.find(p=>p.id===id);if(!currentProject)return;editingContentIndex=-1;const tl={words:'📝 詞語',sentences:'📄 句子',passage:'📖 文章'},tb={words:'badge-blue',sentences:'badge-green',passage:'badge-orange'};document.getElementById('detailTitle').innerText=currentProject.name;document.getElementById('detailBadge').innerHTML='<span class="badge '+tb[currentProject.type]+'">'+tl[currentProject.type]+'</span> '+langBadge(currentProject)+' '+sampleBadge(currentProject);document.getElementById('sampleNote').classList.toggle('hidden',!currentProject.isSample);renderContentList();showPage('project-detail');}
+function getCurLang(){return (currentProject&&currentProject.lang)?currentProject.lang:'zh';}
+function speakContentAt(i){
+  if(currentProject&&currentProject.contents[i]!==undefined){
+    speakText(currentProject.contents[i],getCurLang());
+  }
+}
+function renderContentList(){const l=document.getElementById('contentList');document.getElementById('contentCount').innerText=currentProject.contents.length;if(!currentProject.contents.length){l.innerHTML='<p style="color:var(--text-light);text-align:center;padding:30px;">未有內容</p>';return;}const total=currentProject.contents.length;l.innerHTML=currentProject.contents.map((c,i)=>{if(editingContentIndex===i){return '<div class="content-item editing"><div class="num">'+(i+1)+'</div><input type="text" class="form-input edit-input" id="contentEditInput" value="'+escapeAttr(c)+'" onkeydown="if(event.key===\'Enter\')saveContentEdit('+i+');if(event.key===\'Escape\')cancelContentEdit();"><div class="actions"><button class="btn btn-success btn-sm btn-icon" onclick="saveContentEdit('+i+')">✓</button><button class="btn btn-outline btn-sm btn-icon" onclick="cancelContentEdit()">✕</button></div></div>';}return '<div class="content-item"><div class="num">'+(i+1)+'</div><div class="text">'+escapeHtml(c)+'</div><div class="actions"><button class="btn btn-outline btn-sm btn-icon" onclick="speakContentAt('+i+')">🔊</button><button class="btn btn-outline btn-sm btn-icon" onclick="startContentEdit('+i+')">✏️</button><button class="btn btn-outline btn-sm btn-icon" onclick="moveContent('+i+',-1)" '+(i===0?'disabled':'')+'>⬆</button><button class="btn btn-outline btn-sm btn-icon" onclick="moveContent('+i+',1)" '+(i===total-1?'disabled':'')+'>⬇</button><button class="btn btn-danger btn-sm btn-icon" onclick="deleteContent('+i+')">✖</button></div></div>';}).join('');if(editingContentIndex>=0)setTimeout(()=>{const inp=document.getElementById('contentEditInput');if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);}},50);}
+function startContentEdit(i){editingContentIndex=i;renderContentList();}
+function saveContentEdit(i){const inp=document.getElementById('contentEditInput');if(inp&&inp.value.trim()){currentProject.contents[i]=inp.value.trim();saveProjects();}editingContentIndex=-1;renderContentList();}
+function cancelContentEdit(){editingContentIndex=-1;renderContentList();}
+function moveContent(i,dir){const ni=i+dir;if(ni<0||ni>=currentProject.contents.length)return;[currentProject.contents[i],currentProject.contents[ni]]=[currentProject.contents[ni],currentProject.contents[i]];saveProjects();renderContentList();}
+function deleteContent(i){if(confirm('確定刪除「'+currentProject.contents[i]+'」？')){currentProject.contents.splice(i,1);saveProjects();renderContentList();}}
+function addContent(){const t=document.getElementById('newContentText').value.trim();if(!t){alert('請輸入內容');return;}currentProject.contents.push(...t.split('\n').map(l=>l.trim()).filter(l=>l));saveProjects();document.getElementById('newContentText').value='';closeModal('modalAddContent');renderContentList();}
+
+function setPreSpeed(s,el){speechRate=s;document.querySelectorAll('#preSpeedControl .seg-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
+function setPreMode(m,el){playMode=m;document.querySelectorAll('#preModeControl .seg-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');document.getElementById('preAutoRow').classList.toggle('hidden',m!=='auto');}
+function setPreInterval(t,el){autoInterval=t;document.querySelectorAll('#preIntervalControl .seg-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
+
+function formatTime(s){if(s===null||s===undefined)return '--';const m=Math.floor(s/60),sec=s%60;return m>0?m+'分'+sec+'秒':sec+'秒';}
+function startWordTimer(){stopWordTimer();wordStartTime=Date.now();manualTiming=true;document.getElementById('manualTimerWrap').classList.add('visible');updateManualTimer();wordTimerInterval=setInterval(updateManualTimer,1000);}
+function stopWordTimer(){manualTiming=false;clearInterval(wordTimerInterval);wordTimerInterval=null;}
+function updateManualTimer(){if(!manualTiming)return;const we=Math.floor((Date.now()-wordStartTime)/1000);const te=Math.floor((Date.now()-totalStartTime)/1000);document.getElementById('mtWord').innerText=formatTime(we);document.getElementById('mtTotal').innerText=formatTime(te);}
+
+let s2tReady=false,s2tConvert=null;
+function loadOpenCC(){return new Promise((resolve)=>{if(window.OpenCC){try{initOpenCC();resolve(true);}catch(e){resolve(false);}return;}const script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/opencc.js';script.onload=()=>{try{initOpenCC();resolve(true);}catch(e){resolve(false);}};script.onerror=()=>resolve(false);document.head.appendChild(script);});}
+function initOpenCC(){s2tConvert=OpenCC.Converter({from:'cn',to:'hk'});s2tReady=true;}
+function toTraditional(text){if(s2tReady&&s2tConvert){try{return s2tConvert(text);}catch(e){return text;}}return text;}
+function openScanModal(){showModal('modalScan');resetScanModal();}
+function handleScanImage(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    document.getElementById('previewImg').src=e.target.result;
+    document.getElementById('scanPreview').classList.remove('hidden');
+    document.getElementById('scanArea').classList.add('hidden');
+    document.getElementById('scanResult').classList.add('hidden');
+    document.getElementById('scanEditArea').classList.add('hidden');
+    document.getElementById('ocrProgress').style.display='block';
+    Tesseract.recognize(e.target.result,'chi_tra+chi_sim+eng',{
+      logger:m=>{if(m.status==='recognizing text')document.getElementById('ocrFill').style.width=Math.round(m.progress*100)+'%';}
+    }).then(async({data:{text}})=>{
+      if(!s2tReady){await loadOpenCC();}
+      const tradText=toTraditional(text);
+      document.getElementById('ocrProgress').style.display='none';
+      ocrParsedItems=intelligentSplit(tradText,currentProject.type);
+      editingOcrIndex=-1;renderOcrItems();
+      document.getElementById('scanResult').classList.remove('hidden');
+    }).catch(()=>{document.getElementById('ocrProgress').style.display='none';alert('辨識失敗');cancelScan();});
+  };
+  reader.readAsDataURL(file);
+}
+function intelligentSplit(text,type){
+  let t=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').replace(/\t/g,' ').trim();
+  t=t.replace(/[|_~`]/g,'');let items=[];
+  if(type==='words'){
+    let lines=t.split('\n').map(l=>l.trim()).filter(l=>l);
+    if(lines.length<=3&&t.length>15){let joined=lines.join(' ');let parts=joined.split(/[,，、;；\s]+/).map(s=>s.trim()).filter(s=>s);if(parts.length>lines.length)items=parts;else items=lines;}
+    else items=lines;
+    items=items.map(i=>i.replace(/^[\d]+[.、．)\]】:：]\s*/,'').replace(/^[①②③④⑤⑥⑦⑧⑨⑩]\s*/,'').replace(/^[-–—•·]\s*/,'').trim());
+  }else if(type==='sentences'){
+    let sentences=t.split(/(?<=[。！？!?；;])/);
+    if(sentences.length<=1)sentences=t.split('\n').map(l=>l.trim()).filter(l=>l);
+    items=sentences.map(s=>s.replace(/^[\d]+[.、．)\]】:：]\s*/,'').trim()).filter(s=>s);
+  }else{
+    let paras=t.split(/\n\s*\n/);if(paras.length<=1)paras=t.split('\n').map(l=>l.trim()).filter(l=>l);
+    items=paras.map(p=>p.replace(/\n/g,' ').trim()).filter(p=>p);
+  }
+  return items.filter(i=>i.length>0);
+}
+function renderOcrItems(){
+  const tl={words:'詞語',sentences:'句子',passage:'段落'};
+  document.getElementById('ocrDetectInfo').innerHTML='🧠 識別到 <strong>'+ocrParsedItems.length+'</strong> 項'+(tl[currentProject.type]||'內容')+(s2tReady?'（已轉繁體）':'');
+  const total=ocrParsedItems.length;
+  document.getElementById('ocrItemsList').innerHTML=ocrParsedItems.map((item,i)=>{
+    if(editingOcrIndex===i){return '<div class="ocr-item editing"><div class="oi-num">'+(i+1)+'</div><input type="text" class="form-input edit-input" id="ocrEditInput" value="'+escapeAttr(item)+'" onkeydown="if(event.key===\'Enter\')saveOcrEdit('+i+');if(event.key===\'Escape\')cancelOcrEdit();"><div class="oi-actions"><button class="btn btn-success btn-sm btn-icon" onclick="saveOcrEdit('+i+')">✓</button><button class="btn btn-outline btn-sm btn-icon" onclick="cancelOcrEdit()">✕</button></div></div>';}
+    return '<div class="ocr-item"><div class="oi-num">'+(i+1)+'</div><div class="oi-text">'+escapeHtml(item)+'</div><div class="oi-actions"><button class="btn btn-outline btn-sm btn-icon" onclick="startOcrEdit('+i+')">✏️</button><button class="btn btn-outline btn-sm btn-icon" onclick="moveOcrItem('+i+',-1)" '+(i===0?'disabled':'')+'>⬆</button><button class="btn btn-outline btn-sm btn-icon" onclick="moveOcrItem('+i+',1)" '+(i===total-1?'disabled':'')+'>⬇</button><button class="btn btn-danger btn-sm btn-icon" onclick="removeOcrItem('+i+')">✖</button></div></div>';
+  }).join('');
+  if(editingOcrIndex>=0)setTimeout(()=>{const inp=document.getElementById('ocrEditInput');if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);}},50);
+}
+function startOcrEdit(i){editingOcrIndex=i;renderOcrItems();}
+function saveOcrEdit(i){const inp=document.getElementById('ocrEditInput');if(inp&&inp.value.trim())ocrParsedItems[i]=inp.value.trim();editingOcrIndex=-1;renderOcrItems();}
+function cancelOcrEdit(){editingOcrIndex=-1;renderOcrItems();}
+function moveOcrItem(i,dir){const ni=i+dir;if(ni<0||ni>=ocrParsedItems.length)return;[ocrParsedItems[i],ocrParsedItems[ni]]=[ocrParsedItems[ni],ocrParsedItems[i]];renderOcrItems();}
+function removeOcrItem(i){ocrParsedItems.splice(i,1);renderOcrItems();}
+function retryOcrEdit(){document.getElementById('scanResult').classList.add('hidden');document.getElementById('scanEditArea').classList.remove('hidden');document.getElementById('ocrEditText').value=ocrParsedItems.join('\n');}
+function confirmScan(){if(!ocrParsedItems.length){alert('沒有內容');return;}currentProject.contents.push(...ocrParsedItems);saveProjects();closeModal('modalScan');resetScanModal();renderContentList();}
+function confirmScanEdit(){const t=document.getElementById('ocrEditText').value.trim();if(!t){alert('沒有內容');return;}currentProject.contents.push(...t.split('\n').map(l=>l.trim()).filter(l=>l));saveProjects();closeModal('modalScan');resetScanModal();renderContentList();}
+function cancelScan(){closeModal('modalScan');resetScanModal();}
+function resetScanModal(){document.getElementById('scanInput').value='';document.getElementById('scanPreview').classList.add('hidden');document.getElementById('scanResult').classList.add('hidden');document.getElementById('scanEditArea').classList.add('hidden');document.getElementById('scanArea').classList.remove('hidden');document.getElementById('ocrProgress').style.display='none';ocrParsedItems=[];editingOcrIndex=-1;}
+
+// ================= LANGUAGE-AWARE SPEECH =================
+function speakText(text,lang,onDone){
+  if('speechSynthesis' in window){
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    if(lang==='en'){
+      u.lang='en-US';
+      const v=window.speechSynthesis.getVoices().find(x=>x.lang&&x.lang.startsWith('en'));
+      if(v)u.voice=v;
+    }else{
+      u.lang='zh-HK';
+      const v=window.speechSynthesis.getVoices().find(x=>x.lang&&x.lang.startsWith('zh'));
+      if(v)u.voice=v;
+    }
+    u.rate=speechRate;
+    if(onDone){u.onend=onDone;u.onerror=onDone;}
+    window.speechSynthesis.speak(u);
+    return true;
+  }
+  if(onDone)onDone();
+  return false;
+}
+function speakCurrentManual(){stopCountdown();if(currentDictIndex<dictItems.length)speakAndSchedule(dictItems[currentDictIndex]);}
+function speakAndSchedule(text){
+  speakToken++;const myToken=speakToken;
+  const lang=getCurLang();
+  if(playMode==='auto'||isReviewMode){
+    setTimerStatus('🔊 朗讀中');
+    const spoken=speakText(text,lang,()=>{
+      if(myToken!==speakToken)return;
+      setTimerStatus('⏳ 倒數中');
+      startCountdown();
+    });
+    if(!spoken&&myToken===speakToken){setTimerStatus('⏳ 倒數中');startCountdown();}
+  }else{speakText(text,lang);}
+}
+function setTimerStatus(t){document.getElementById('slimTimerStatus').innerText=t;}
+function startDictation(){
+  if(!currentProject||!currentProject.contents.length){alert('請先加入默書內容');return;}
+  isRandomized=document.getElementById('preRandomToggle').checked;
+  originalItems=[...currentProject.contents];
+  dictItems=isRandomized?shuffleArray([...originalItems]):[...originalItems];
+  currentDictIndex=0;isReviewMode=false;
+  checkResults=new Array(dictItems.length).fill(null);
+  totalStartTime=Date.now();wordTimes=[];totalDictationSeconds=0;
+  showPage('dictation');updateReviewUI();updateSlimTimerVisibility();showDictItem();
+}
+function showDictItem(){
+  const total=dictItems.length;
+  document.getElementById('dictProgressBadge').innerText=(currentDictIndex+1)+' / '+total;
+  const textEl=document.getElementById('dictText');
+  textEl.innerText=dictItems[currentDictIndex];
+  textEl.classList.add('hidden-text');
+  document.getElementById('btnNext').innerText=currentDictIndex===total-1?(isReviewMode?'✅ 完成溫習':'✅ 完成'):'➡️ 下一題';
+  updateVerticalProgress();
+  stopCountdown();
+  if(playMode==='manual'&&!isReviewMode){startWordTimer();}
+  else{stopWordTimer();document.getElementById('manualTimerWrap').classList.remove('visible');}
+  speakAndSchedule(dictItems[currentDictIndex]);
+}
+function toggleText(){document.getElementById('dictText').classList.toggle('hidden-text');}
+function nextDictItem(){
+  stopCountdown();
+  if(playMode==='manual'&&manualTiming){wordTimes[currentDictIndex]=Math.floor((Date.now()-wordStartTime)/1000);stopWordTimer();}
+  if(currentDictIndex<dictItems.length-1){currentDictIndex++;showDictItem();}
+  else{if(isReviewMode)finishReview();else requestEndDictation();}
+}
+function exitDictation(){if(confirm('確定要退出？')){stopCountdown();stopWordTimer();isReviewMode=false;openProject(currentProject.id);}}
+function requestEndDictation(){
+  stopCountdown();
+  if(playMode==='manual'&&manualTiming){wordTimes[currentDictIndex]=Math.floor((Date.now()-wordStartTime)/1000);stopWordTimer();}
+  totalDictationSeconds=Math.floor((Date.now()-totalStartTime)/1000);
+  showModal('modalReview');
+}
+function startQuickReview(){closeModal('modalReview');isReviewMode=true;currentDictIndex=0;updateReviewUI();updateSlimTimerVisibility();showDictItem();}
+function finishReview(){stopCountdown();isReviewMode=false;updateReviewUI();goToMarking();}
+function goToMarking(){stopCountdown();showPage('checking');renderCheckList();}
+function updateReviewUI(){
+  const b=document.getElementById('reviewBanner'),bg=document.getElementById('reviewBadge'),e=document.getElementById('btnEnd');
+  if(isReviewMode){b.classList.remove('hidden');bg.classList.remove('hidden');e.classList.add('hidden');}
+  else{b.classList.add('hidden');bg.classList.add('hidden');e.classList.remove('hidden');}
+}
+function updateSlimTimerVisibility(){document.getElementById('slimTimerWrap').classList.toggle('visible',(playMode==='auto'||isReviewMode));}
+function updateSlimTimer(){
+  const pct=(currentCountdown/autoInterval)*100;
+  const fill=document.getElementById('slimTimerFill');
+  document.getElementById('slimTimerText').innerText=currentCountdown+'s';
+  fill.style.width=pct+'%';
+  fill.classList.remove('safe','warning','danger');
+  if(pct>50)fill.classList.add('safe');else if(pct>25)fill.classList.add('warning');else fill.classList.add('danger');
+}
+function startCountdown(){
+  stopCountdown();isPaused=false;
+  document.getElementById('pauseBtn').innerText='⏸️ 暫停';
+  currentCountdown=autoInterval;
+  updateSlimTimer();updateCountdownRing();
+  countdownTimer=setInterval(()=>{
+    if(!isPaused){
+      currentCountdown--;
+      updateSlimTimer();updateCountdownRing();
+      if(currentCountdown<=0){stopCountdown();nextDictItem();}
+    }
+  },1000);
+}
+function stopCountdown(){clearInterval(countdownTimer);countdownTimer=null;}
+function togglePause(){isPaused=!isPaused;document.getElementById('pauseBtn').innerText=isPaused?'▶️ 繼續':'⏸️ 暫停';}
+function updateCountdownRing(){
+  document.getElementById('countdownNum').innerText=currentCountdown;
+  document.getElementById('countdownRing').style.background='conic-gradient(var(--primary) '+((currentCountdown/autoInterval)*100)+'%,#E2E8F0 '+((currentCountdown/autoInterval)*100)+'%)';
+}
+function updateVerticalProgress(){
+  const total=dictItems.length,current=currentDictIndex;
+  const track=document.getElementById('vpTrack'),fill=document.getElementById('vpFill');
+  document.getElementById('vpCount').innerText=(current+1)+'/'+total;
+  document.getElementById('vpLabel').innerText=isReviewMode?'溫習':'進度';
+  fill.style.height=(total>1?(current/(total-1))*100:100)+'%';
+  track.querySelectorAll('.vp-dot').forEach(d=>d.remove());
+  const maxDots=Math.min(total,30);
+  for(let i=0;i<maxDots;i++){
+    const dot=document.createElement('div');dot.className='vp-dot';
+    dot.style.top=(maxDots>1?(i/(maxDots-1))*100:0)+'%';
+    if(i<current)dot.classList.add('completed');
+    else if(i===current)dot.classList.add('current');
+    else dot.classList.add('upcoming');
+    track.appendChild(dot);
+  }
+}
+function renderCheckList(){
+  document.getElementById('checkList').innerHTML=dictItems.map((item,i)=>{
+    const t=(playMode==='manual'&&wordTimes[i]!==undefined)?'<span class="time-chip">⏱ '+formatTime(wordTimes[i])+'</span>':'';
+    return '<div class="check-item" id="checkItem'+i+'"><div class="num">'+(i+1)+'</div><div class="answer">'+escapeHtml(item)+'</div>'+t+'<div class="check-btns"><button class="check-btn btn-correct" onclick="markResult('+i+',true)" id="correct'+i+'">✓</button><button class="check-btn btn-wrong" onclick="markResult('+i+',false)" id="wrong'+i+'">✗</button></div></div>';
+  }).join('');
+}
+function markResult(i,ok){checkResults[i]=ok;const item=document.getElementById('checkItem'+i);item.classList.remove('correct','wrong');document.getElementById('correct'+i).classList.remove('active');document.getElementById('wrong'+i).classList.remove('active');if(ok){item.classList.add('correct');document.getElementById('correct'+i).classList.add('active');}else{item.classList.add('wrong');document.getElementById('wrong'+i).classList.add('active');}}
+function finishChecking(){
+  const total=dictItems.length,correct=checkResults.filter(r=>r===true).length;
+  const unchecked=checkResults.filter(r=>r===null).length;
+  if(unchecked>0&&!confirm('仲有 '+unchecked+' 題未校對，確定結束？'))return;
+  const percent=Math.round((correct/total)*100);
+  showPage('result');
+  document.getElementById('resultScore').innerText=correct;
+  document.getElementById('resultTotal').innerText=total;
+  document.getElementById('resultPercent').innerText=percent+'%';
+  let emoji='🌟',title='太厲害喇！';
+  if(percent<50){emoji='💪';title='繼續努力！';}else if(percent<70){emoji='📖';title='唔錯呀！';}else if(percent<90){emoji='😊';title='好叻呀！';}
+  document.getElementById('resultEmoji').innerText=emoji;
+  document.getElementById('resultTitle').innerText=title;
+  const isManual=(playMode==='manual'&&wordTimes.length>0);
+  if(isManual){
+    document.getElementById('timeStats').classList.remove('hidden');
+    document.getElementById('statTotalTime').innerText=formatTime(totalDictationSeconds);
+    const avg=Math.round(totalDictationSeconds/total);
+    document.getElementById('statAvgTime').innerText=formatTime(avg);
+    let maxT=0;wordTimes.forEach(t=>{if((t||0)>maxT)maxT=t;});
+    document.getElementById('statSlowest').innerText=formatTime(maxT);
+    let ph='';
+    dictItems.forEach((w,i)=>{
+      const t=wordTimes[i];const wrong=checkResults[i]!==true;
+      ph+='<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;"><span>'+(i+1)+'. '+escapeHtml(w)+(wrong?' <span style="color:var(--danger)">❌</span>':'')+'</span><span style="font-weight:700;color:'+((t||0)>30?'var(--danger)':(t||0)>15?'var(--warning)':'var(--text-light)')+';">'+(t!==undefined?formatTime(t):'--')+'</span></div>';
+    });
+    document.getElementById('perWordTimes').innerHTML=ph;
+  }else{document.getElementById('timeStats').classList.add('hidden');}
+  const wi=dictItems.filter((_,i)=>checkResults[i]!==true);
+  if(wi.length){document.getElementById('resultWrong').classList.remove('hidden');
+    document.getElementById('wrongList').innerHTML=wi.map(w=>'<div style="padding:10px;background:#FEF2F2;border-radius:8px;margin-bottom:8px;color:var(--danger);font-weight:500;">❌ '+escapeHtml(w)+'</div>').join('');}
+  else document.getElementById('resultWrong').classList.add('hidden');
+  records.push({date:new Date().toLocaleString('zh-HK',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}),project:currentProject.name,correct,total,percent,totalTime:isManual?totalDictationSeconds:null});
+  saveRecords();
+}
+function retryWrong(){
+  const wi=dictItems.filter((_,i)=>checkResults[i]!==true);
+  if(!wi.length){alert('冇錯題！');return;}
+  originalItems=wi;dictItems=isRandomized?shuffleArray([...originalItems]):[...originalItems];
+  currentDictIndex=0;isReviewMode=false;checkResults=new Array(dictItems.length).fill(null);
+  totalStartTime=Date.now();wordTimes=[];totalDictationSeconds=0;
+  showPage('dictation');updateReviewUI();updateSlimTimerVisibility();showDictItem();
+}
+function renderHome(){
+  const qp=document.getElementById('quickProjects');
+  qp.innerHTML=projects.length?projects.slice(0,3).map(p=>'<div class="project-item" onclick="openProject('+p.id+')" style="margin-bottom:8px;"><div class="project-info"><h3>'+escapeHtml(p.name)+'</h3><p>'+langBadge(p)+sampleBadge(p)+'<span>'+p.contents.length+' 項內容</span></p></div><button class="btn btn-success btn-sm" onclick="event.stopPropagation();openProject('+p.id+');startDictation()">▶️</button></div>').join('')
+  :'<p style="color:var(--text-light);text-align:center;padding:20px;">暫時未有項目</p>';
+  const rs=document.getElementById('recentScores');
+  rs.innerHTML=records.length?records.slice(-5).reverse().map(r=>'<div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);"><span style="font-weight:500;">'+escapeHtml(r.project)+'</span><span style="font-weight:700;color:'+(r.percent>=70?'var(--success)':'var(--danger)')+';">'+r.percent+'%</span></div>').join('')
+  :'<p style="color:var(--text-light);text-align:center;padding:20px;">暫時未有記錄</p>';
+}
+function renderRecords(){
+  const c=document.getElementById('recordChart'),ctx=c.getContext('2d');
+  ctx.clearRect(0,0,c.width,c.height);ctx.fillStyle='#F8FAFC';ctx.fillRect(0,0,c.width,c.height);
+  ctx.strokeStyle='#E2E8F0';ctx.lineWidth=1;
+  for(let i=0;i<=10;i++){const y=20+i*24;ctx.beginPath();ctx.moveTo(40,y);ctx.lineTo(c.width-10,y);ctx.stroke();ctx.fillStyle='#94A3B8';ctx.font='11px sans-serif';ctx.fillText((100-i*10)+'',10,y+4);}
+  if(!records.length){ctx.fillStyle='#94A3B8';ctx.font='14px sans-serif';ctx.fillText('暫時未有記錄',c.width/2-40,c.height/2);}
+  else{const rec=records.slice(-20),step=(c.width-60)/Math.max(rec.length-1,1);ctx.strokeStyle='#2563EB';ctx.lineWidth=3;ctx.beginPath();rec.forEach((r,i)=>{const x=40+i*step,y=260-(r.percent*2.4);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.stroke();rec.forEach((r,i)=>{const x=40+i*step,y=260-(r.percent*2.4);ctx.fillStyle=r.percent>=70?'#10B981':'#EF4444';ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fill();});}
+  let html='<table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:16px;"><tr style="background:#F1F5F9;"><th style="padding:12px;text-align:left;">日期</th><th style="text-align:left;">項目</th><th>成績</th><th>得分</th><th>用時</th></tr>';
+  records.slice().reverse().slice(0,15).forEach(r=>{
+    const tt=(r.totalTime!==null&&r.totalTime!==undefined)?formatTime(r.totalTime):'--';
+    html+='<tr style="border-bottom:1px solid var(--border);"><td style="padding:12px;">'+r.date+'</td><td>'+escapeHtml(r.project)+'</td><td style="text-align:center;">'+r.correct+'/'+r.total+'</td><td style="text-align:center;font-weight:700;color:'+(r.percent>=70?'var(--success)':'var(--danger)')+';">'+r.percent+'%</td><td style="text-align:center;color:var(--text-light);">'+tt+'</td></tr>';});
+  html+='</table>';document.getElementById('recordTable').innerHTML=html;
+}
+function clearAllRecords(){if(confirm('確定清除所有記錄？')){records=[];saveRecords();renderRecords();}}
+function shuffleArray(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+window.onload=()=>{
+  seedSampleProject();
+  loadOpenCC();
+  window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();
+  renderHome();
+};
+</script>
+</body>
+</html>
