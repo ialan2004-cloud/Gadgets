@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中文／英文默書系統 14.2</title>
+<title>中文／英文默書系統 14.3</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
   :root{--primary:#2563EB;--primary-light:#EFF6FF;--primary-dark:#1D4ED8;--success:#10B981;--danger:#EF4444;--warning:#F59E0B;--bg:#F8FAFC;--card:#fff;--text:#0F172A;--text-light:#64748B;--border:#E2E8F0;--radius:12px;--shadow:0 4px 6px -1px rgba(0,0,0,.05),0 2px 4px -1px rgba(0,0,0,.03);}
@@ -188,7 +188,7 @@
 <div class="container">
   <div id="page-home">
     <div class="card"><div class="card-title">🚀 快速開始</div>
-      <p style="color:var(--text-light);margin-bottom:16px;font-size:14px;">選擇一個默書項目開始溫習（主頁只顯示首 6 個，全部請到「項目」頁）</p>
+      <p style="color:var(--text-light);margin-bottom:16px;font-size:14px;">選擇一個默書項目開始溫習（主頁顯示首 6 個，全部請到「項目」頁）</p>
       <div id="quickProjects"></div>
       <button class="btn btn-primary btn-block mt-2" onclick="showPage('projects')">📁 管理所有項目</button></div>
     <div class="card"><div class="card-title">📊 最近成績</div><div id="recentScores"></div></div>
@@ -306,14 +306,12 @@
     <div class="card"><div id="recordTable"></div>
       <div class="text-center mt-2"><button class="btn btn-danger btn-sm" onclick="clearAllRecords()">🗑️ 清除所有記錄</button></div></div></div>
 
-  <!-- ===== SYNC PAGE ===== -->
   <div id="page-sync" class="hidden">
     <div class="card">
       <div class="card-title">☁️ Google Sheets 同步</div>
       <p style="color:var(--text-light);font-size:14px;margin-bottom:16px;">已連接指定試算表，資料會儲存到本機快取，離線都可以使用。</p>
       <div class="stats-grid" id="syncStats"></div>
     </div>
-
     <div class="sync-section">
       <h3>📊 同步默書資料</h3>
       <span class="last-sync-info" id="lastSyncInfo">上次同步：未同步</span>
@@ -327,7 +325,6 @@
         <button class="btn btn-outline" onclick="syncSingle('en')" id="syncEnBtn">🔤 只同步英文</button>
       </div>
       <div class="sync-status" id="syncStatus"></div>
-
       <details class="mt-3">
         <summary>📖 試算表格式說明</summary>
         <div class="mt-2" style="font-size:13px;color:var(--text-light);line-height:1.7;">
@@ -342,7 +339,6 @@
           <p>💡 再次同步會以試算表為準（覆蓋同名項目內容）。</p>
         </div>
       </details>
-
       <details class="mt-2">
         <summary>⚙️ 進階：分頁名稱設定</summary>
         <div class="mt-2">
@@ -352,14 +348,12 @@
           <span id="tabNameSaved" style="color:var(--success);font-size:13px;margin-left:8px;display:none;">✅ 已儲存</span>
         </div>
       </details>
-
       <details class="mt-2">
         <summary>🔍 除錯資訊（同步失敗時睇呢度）</summary>
         <div class="debug-box" id="debugContent">（暫無）</div>
         <button class="btn btn-outline btn-sm mt-2" onclick="clearDebug()">🗑️ 清除除錯記錄</button>
       </details>
     </div>
-
     <div class="sync-section">
       <h3>📤 匯出備份</h3>
       <p>將现有所有項目同成績記錄下載做備份檔（JSON 格式）。</p>
@@ -368,7 +362,6 @@
   </div>
 </div>
 
-<!-- MODALS -->
 <div class="modal" id="modalNewProject"><div class="modal-content">
   <button class="modal-close" onclick="closeModal('modalNewProject')">✕</button>
   <div class="modal-title">➕ 新建默書項目</div>
@@ -418,15 +411,11 @@
     <div class="review-option" onclick="closeModal('modalReview');goToMarking()"><div class="ro-icon">➡️</div><div class="ro-title">直接校對</div><div class="ro-desc">跳過溫習</div></div></div></div></div>
 
 <script>
-// ============================================================
-// 🔧 CONFIGURATION — change tab names here if needed
-// ============================================================
 const SHEET_ID='1Ok4OH76O2W5rtkHw-1Q_F6W4c4jD-WoQTA0UwAXv4t0';
 const TAB_CONFIG={
   zh:{defaultName:'Chinese',label:'中文默書'},
   en:{defaultName:'English',label:'英文默書'}
 };
-// ============================================================
 
 let projects=[];
 try{projects=JSON.parse(localStorage.getItem('dict_p8')||'[]');}catch(e){projects=[];}
@@ -446,7 +435,6 @@ let debugLines=[];
 function saveProjects(){try{localStorage.setItem('dict_p8',JSON.stringify(projects));}catch(e){debugLog('儲存項目失敗：'+e.message);}}
 function saveRecords(){try{localStorage.setItem('dict_r8',JSON.stringify(records));}catch(e){}}
 
-// ================= DEBUG =================
 function debugLog(msg){
   const line='['+new Date().toLocaleTimeString()+'] '+msg;
   debugLines.push(line);
@@ -457,13 +445,11 @@ function debugLog(msg){
 }
 function clearDebug(){debugLines=[];const el=document.getElementById('debugContent');if(el)el.innerText='（暫無）';}
 
-// ================= ID HELPERS (FIX: numeric IDs only) =================
 function generateIdFromName(name,lang){
   const str=(name||'')+'_'+(lang||'zh');let h=0;
   for(let i=0;i<str.length;i++){h=((h<<5)-h)+str.charCodeAt(i);h|=0;}
   return Math.abs(h)||1;
 }
-// Repair legacy string IDs (e.g. old "sheet_123") so onclick works
 function migrateIds(){
   let fixed=0;
   projects.forEach(p=>{
@@ -502,11 +488,9 @@ function showPage(p){
 function showModal(id){document.getElementById(id).classList.add('show');}
 function closeModal(id){document.getElementById(id).classList.remove('show');}
 
-// ================= SAFE ESCAPING =================
 function escapeHtml(s){const d=document.createElement('div');d.textContent=(s===null||s===undefined)?'':String(s);return d.innerHTML;}
 function escapeAttr(s){return String(s===null||s===undefined?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-// ================= GOOGLE SHEETS SYNC =================
 function getTabName(lang){return localStorage.getItem('dict_tab_'+lang)||TAB_CONFIG[lang].defaultName;}
 function getSheetUrl(lang){
   return 'https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(getTabName(lang));
@@ -549,9 +533,7 @@ function parseCSV(text){
   if(field!==''||row.length>0){row.push(field);rows.push(row);}
   return rows.filter(r=>r.some(cell=>(cell||'').trim()!==''));
 }
-function parseDetails(details){
-  return details.split(/[;；]/).map(s=>s.trim()).filter(s=>s.length>0);
-}
+function parseDetails(details){return details.split(/[;；]/).map(s=>s.trim()).filter(s=>s.length>0);}
 function normalizeType(t){
   t=(t||'').toLowerCase();
   if(t.includes('句')||t.includes('sentence'))return 'sentences';
@@ -595,15 +577,12 @@ function mergeSheetProjects(sheetProjects){
   sheetProjects.forEach(sp=>{
     const idx=projects.findIndex(p=>sameId(p.id,sp.id)||(p.name===sp.name&&p.lang===sp.lang));
     if(idx>=0){
-      projects[idx].id=sp.id;               // normalise to canonical numeric id
+      projects[idx].id=sp.id;
       projects[idx].contents=[...sp.contents];
       projects[idx].type=sp.type;
       projects[idx].fromSheet=true;
       updated++;
-    }else{
-      projects.push(sp);
-      added++;
-    }
+    }else{projects.push(sp);added++;}
   });
   return {added,updated};
 }
@@ -613,9 +592,7 @@ function setSyncStatus(type,msg){
   const ic={loading:'⏳',success:'✅',error:'❌'};
   el.innerText=(ic[type]||'')+' '+msg;
 }
-function setBtnLoading(loading){
-  ['syncAllBtn','syncZhBtn','syncEnBtn'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=loading;});
-}
+function setBtnLoading(loading){['syncAllBtn','syncZhBtn','syncEnBtn'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=loading;});}
 async function syncTab(lang){
   const tabName=getTabName(lang);
   const url=getSheetUrl(lang);
@@ -680,7 +657,7 @@ function updateSyncStats(){
     '<div class="stat-box"><div class="value">'+records.length+'</div><div class="label">成績記錄</div></div>';
 }
 function exportBackup(){
-  const data={version:'14.2',exportDate:new Date().toISOString(),projects:projects,records:records};
+  const data={version:'14.3',exportDate:new Date().toISOString(),projects:projects,records:records};
   const json=JSON.stringify(data,null,2);
   const blob=new Blob([json],{type:'application/json'});
   const url=URL.createObjectURL(blob);
@@ -692,7 +669,6 @@ function exportBackup(){
   URL.revokeObjectURL(url);
 }
 
-// ================= PROJECTS =================
 function createProject(){
   const n=document.getElementById('newProjectName').value.trim();
   const t=document.getElementById('newProjectType').value;
@@ -841,14 +817,13 @@ function confirmScanEdit(){const t=document.getElementById('ocrEditText').value.
 function cancelScan(){closeModal('modalScan');resetScanModal();}
 function resetScanModal(){document.getElementById('scanInput').value='';document.getElementById('scanPreview').classList.add('hidden');document.getElementById('scanResult').classList.add('hidden');document.getElementById('scanEditArea').classList.add('hidden');document.getElementById('scanArea').classList.remove('hidden');document.getElementById('ocrProgress').style.display='none';ocrParsedItems=[];editingOcrIndex=-1;}
 
-// ================= LANGUAGE-AWARE SPEECH =================
+// ===== FIXED: language-aware speech (no duplicate declarations) =====
 function speakText(text,lang,onDone){
   if('speechSynthesis' in window){
     window.speechSynthesis.cancel();
     const u=new SpeechSynthesisUtterance(text);
     if(lang==='en'){
       u.lang='en-US';
-      const v=windowSpeechSynthesisGuard();
       const v=window.speechSynthesis.getVoices().find(x=>x.lang&&x.lang.startsWith('en'));
       if(v)u.voice=v;
     }else{
@@ -864,7 +839,6 @@ function speakText(text,lang,onDone){
   if(onDone)onDone();
   return false;
 }
-function windowSpeechSynthesisGuard(){}
 function speakCurrentManual(){stopCountdown();if(currentDictIndex<dictItems.length)speakAndSchedule(dictItems[currentDictIndex]);}
 function speakAndSchedule(text){
   speakToken++;const myToken=speakToken;
@@ -1045,7 +1019,7 @@ function clearAllRecords(){if(confirm('確定清除所有記錄？')){records=[]
 function shuffleArray(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
 window.onload=()=>{
-  migrateIds();               // FIX: repair any legacy string IDs first
+  migrateIds();
   seedSampleProject();
   loadOpenCC();
   window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();
