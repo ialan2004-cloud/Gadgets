@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中英文默書系統 17.0</title>
+<title>中英文默書系統 17.2</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
-/* ========== 1. 設計變數 ========== */
+/* ===== 1. 變數 ===== */
 :root{
   --bg:#F4F6FA;--card:#fff;--line:#E6E9F0;
   --ink:#0E1526;--ink2:#5B6472;--ink3:#9AA3B2;
@@ -18,17 +18,32 @@
 body{background:var(--bg);min-height:100vh;color:var(--ink);display:flex;flex-direction:column;}
 button{font-family:inherit;}
 .hidden{display:none!important;}
-/* ========== 2. 頂欄＋導覽 ========== */
-.topbar{position:sticky;top:0;z-index:100;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:10px 20px;}
-.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:17px;cursor:pointer;}
-.logo{width:36px;height:36px;border-radius:10px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:var(--sh);}
-.ver{font-size:11px;color:var(--ink3);background:var(--bg);border:1px solid var(--line);padding:3px 8px;border-radius:99px;font-weight:600;}
-.tabs{display:flex;gap:4px;margin-left:auto;}
-.tab{display:flex;align-items:center;gap:7px;padding:8px 14px;border:0;background:transparent;border-radius:10px;color:var(--ink2);font-size:14px;font-weight:600;cursor:pointer;transition:.15s;}
+/* ===== 2. 頂欄＋通知 ===== */
+.topwrap{position:sticky;top:0;z-index:100;}
+.topbar{position:relative;background:linear-gradient(135deg,#2563EB 0%,#1E40AF 100%);display:flex;align-items:center;gap:10px;padding:12px 18px;color:#fff;}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:17px;color:#fff;cursor:pointer;}
+.logo{width:36px;height:36px;border-radius:10px;background:#fff;color:#2563EB;display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 2px 6px rgba(0,0,0,.18);}
+.ver{font-size:11px;font-weight:700;color:#fff;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);padding:3px 9px;border-radius:99px;}
+.bell{margin-left:auto;position:relative;width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;font-size:17px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.15s;}
+.bell:hover{background:rgba(255,255,255,.26);}
+.bell-badge{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#EF4444;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid #2563EB;}
+.notif-panel{position:absolute;top:calc(100% + 10px);right:14px;width:330px;max-width:calc(100vw - 28px);background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 40px rgba(16,24,40,.18);z-index:300;overflow:hidden;color:var(--ink);}
+.np-head{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--line);font-weight:700;font-size:14px;background:#F8FAFC;}
+.np-close{width:26px;height:26px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;color:var(--ink2);font-size:13px;display:flex;align-items:center;justify-content:center;}
+.ni{display:flex;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);align-items:flex-start;}
+.ni:last-child{border-bottom:0;}
+.ni-ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.ni-t{font-size:13px;font-weight:700;}
+.ni-d{font-size:12px;color:var(--ink2);margin-top:2px;line-height:1.5;}
+.ni-dot{margin-left:auto;width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0;margin-top:5px;}
+/* ===== 3. Tabs＋指示條 ===== */
+.tabs{position:relative;background:#fff;display:flex;justify-content:center;gap:2px;border-bottom:1px solid var(--line);}
+.tab{display:flex;align-items:center;gap:7px;padding:11px 24px;border:0;background:transparent;color:var(--ink2);font-size:14px;font-weight:600;cursor:pointer;transition:.15s;}
 .tab .ic{font-size:15px;}
-.tab:hover{background:var(--bg);}
-.tab.active{background:var(--blue-l);color:var(--blue);}
-/* ========== 3. 版面 ========== */
+.tab:hover{color:var(--blue);}
+.tab.active{color:var(--blue);background:var(--blue-l);}
+.tab-ind{position:absolute;top:0;height:3px;background:var(--blue);border-radius:0 0 4px 4px;transition:left .25s ease,width .25s ease;}
+/* ===== 4. 版面 ===== */
 .page{max-width:860px;margin:0 auto;padding:22px 20px 40px;width:100%;flex:1;}
 .phead{margin-bottom:18px;}
 .crumb{font-size:13px;color:var(--ink3);margin-bottom:6px;}
@@ -40,7 +55,7 @@ button{font-family:inherit;}
 .pactions .btn{flex:1 1 150px;}
 .row-between{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap;}
 .hgroup{display:flex;gap:8px;align-items:center;}
-/* ========== 4. 组件 ========== */
+/* ===== 5. 组件 ===== */
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:var(--sh);margin-bottom:14px;}
 .card-t{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .card-t .sp{flex:1;}
@@ -73,7 +88,6 @@ button{font-family:inherit;}
 .s-sub{font-size:12px;color:var(--ink3);margin-top:10px;}
 .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px;}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.ghead{font-size:13px;font-weight:700;color:var(--ink2);margin:16px 0 10px;display:flex;align-items:center;gap:8px;}
 .lhead{display:inline-flex;padding:6px 13px;border-radius:99px;font-size:13px;font-weight:700;margin-bottom:12px;}
 .lhead.zh{background:#FFF1F0;color:#C0392B;}
 .lhead.en{background:var(--blue-l);color:var(--blue-d);}
@@ -83,9 +97,9 @@ button{font-family:inherit;}
 .row .rmeta{font-size:12px;color:var(--ink3);margin-top:3px;}
 .row .racts{display:flex;gap:6px;}
 .empty-hint{color:var(--ink3);font-size:13px;text-align:center;padding:22px 12px;background:var(--bg);border-radius:12px;border:1px dashed var(--line);}
-.field,.field select,.field textarea{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;font-size:14px;background:#fff;}
-.field:focus,select:focus,textarea:focus{border-color:var(--blue);outline:none;box-shadow:0 0 0 3px rgba(47,107,237,.12);}
+.field{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;font-size:14px;background:#fff;}
 textarea.field{min-height:110px;resize:vertical;line-height:1.6;}
+.field:focus,select:focus,textarea:focus{border-color:var(--blue);outline:none;box-shadow:0 0 0 3px rgba(47,107,237,.12);}
 .seg{display:inline-flex;background:#EDF0F5;border-radius:10px;padding:4px;gap:4px;flex-wrap:wrap;}
 .seg-btn{padding:8px 14px;border:none;background:transparent;border-radius:8px;font-size:13px;font-weight:600;color:var(--ink2);cursor:pointer;}
 .seg-btn.active{background:#fff;color:var(--blue);box-shadow:0 1px 3px rgba(0,0,0,.1);}
@@ -102,12 +116,20 @@ textarea.field{min-height:110px;resize:vertical;line-height:1.6;}
 input:checked+.toggle-slider{background:var(--blue);}
 input:checked+.toggle-slider:before{transform:translateX(20px);}
 details summary{cursor:pointer;color:var(--blue);font-size:14px;font-weight:600;padding:6px 0;}
-.dsum{font-size:15px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:8px;list-style:none;}
-.dsum::-webkit-details-marker{display:none;}
-.dsum::after{content:'▼';margin-left:auto;font-size:11px;color:var(--ink3);transition:.2s;}
-details[open]>.dsum::after{transform:rotate(180deg);}
 .hint{font-size:12px;color:var(--ink3);}
-/* ========== 5. 默書頁 ========== */
+.text-center{text-align:center;}
+/* ===== 6. 手風琴卡片（設定頁） ===== */
+.acc-card{background:#fff;border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:12px;overflow:hidden;}
+.acc-head{width:100%;display:flex;align-items:center;gap:10px;padding:16px 18px;background:#fff;border:0;cursor:pointer;font-size:15px;font-weight:700;color:var(--ink);text-align:left;}
+.acc-head>span:first-child{flex:1;}
+.acc-head:hover{background:#F8FAFC;}
+.acc-chev{font-size:12px;color:var(--ink3);transition:transform .25s;flex-shrink:0;}
+.acc-card.open .acc-chev{transform:rotate(180deg);}
+.acc-body{display:none;padding:0 18px 18px;border-top:1px solid var(--line);}
+.acc-card.open .acc-body{display:block;}
+.qr-wrap{display:flex;align-items:center;justify-content:center;padding:16px;background:#F8FAFC;border:1px solid var(--line);border-radius:12px;min-height:210px;}
+.qr-wrap img,.qr-wrap canvas{border-radius:8px;background:#fff;}
+/* ===== 7. 默書頁 ===== */
 .ddisplay{position:relative;min-height:150px;display:flex;align-items:center;justify-content:center;text-align:center;padding:40px 20px;background:linear-gradient(180deg,#FBFCFE,#F3F7FD);border:1px solid var(--line);border-radius:var(--r);margin-bottom:12px;}
 .dtext{font-size:34px;font-weight:800;line-height:1.5;letter-spacing:2px;transition:filter .3s;}
 .hidden-text{filter:blur(12px);user-select:none;color:var(--ink3);}
@@ -135,7 +157,7 @@ details[open]>.dsum::after{transform:rotate(180deg);}
 .stimer-status{font-size:11px;color:var(--ink3);min-width:56px;font-weight:600;}
 .ring{width:56px;height:56px;border-radius:50%;background:conic-gradient(var(--blue) 0%,#EDF0F5 0%);display:flex;align-items:center;justify-content:center;margin:8px auto;}
 .ring-in{width:46px;height:46px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:var(--blue);}
-/* ========== 6. 列表／表格 ========== */
+/* ===== 8. 列表／表格 ===== */
 .citem{display:flex;align-items:center;padding:12px 14px;background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;gap:10px;}
 .citem.editing{background:var(--blue-l);border-color:#C9DBFD;}
 .citem .num{width:26px;height:26px;background:var(--blue-l);color:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
@@ -145,6 +167,7 @@ details[open]>.dsum::after{transform:rotate(180deg);}
 .chk{display:flex;align-items:center;padding:14px;border:1px solid var(--line);border-radius:12px;margin-bottom:10px;background:#fff;}
 .chk.correct{border-color:#A7F3D0;background:#F0FDF4;}
 .chk.wrong{border-color:#FECACA;background:#FEF2F2;}
+.chk .num{width:26px;height:26px;background:var(--blue-l);color:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;margin-right:12px;flex-shrink:0;}
 .chk .answer{flex:1;font-size:16px;font-weight:600;}
 .chk-btns{display:flex;gap:10px;}
 .cbtn{width:44px;height:44px;border-radius:50%;border:2px solid var(--line);background:#fff;font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
@@ -160,7 +183,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 .tbl td.wrap{white-space:normal;word-break:break-word;}
 .tbl td.nowrap{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .copy-confirm{color:var(--green);font-size:13px;margin-left:8px;display:none;font-weight:600;}
-/* ========== 7. 同步頁 ========== */
+/* ===== 9. 同步狀態 ===== */
 .sync-status{margin-top:12px;padding:10px 14px;border-radius:12px;font-size:14px;display:none;font-weight:600;}
 .sync-status.show{display:block;}
 .sync-status.success{background:#F0FDF4;color:#065F46;border:1px solid #A7F3D0;}
@@ -168,7 +191,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 .sync-status.loading{background:var(--blue-l);color:#1E40AF;border:1px solid #BFDBFE;}
 .mono-box{background:#F8FAFC;border:1px solid var(--line);border-radius:10px;padding:12px;font-family:monospace;font-size:12px;line-height:1.6;word-break:break-all;}
 .debug-box{font-size:11px;background:#0F172A;color:#94A3B8;padding:12px;border-radius:10px;white-space:pre-wrap;word-break:break-all;max-height:200px;overflow-y:auto;font-family:monospace;margin-top:10px;}
-/* ========== 8. 彈窗／頁腳 ========== */
+/* ===== 10. 彈窗／頁腳 ===== */
 .modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center;padding:20px;}
 .modal.show{display:flex;}
 .modal-card{background:#fff;border-radius:20px;padding:26px;max-width:540px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,.2);position:relative;animation:up .25s ease;}
@@ -183,15 +206,14 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 .ropt .t{font-weight:700;font-size:15px;}
 .ropt .d{font-size:12px;color:var(--ink3);margin-top:3px;}
 .app-footer{text-align:center;padding:20px 16px 26px;color:var(--ink3);font-size:12px;}
-/* ========== 9. 響應式 ========== */
+/* ===== 11. 響應式 ===== */
 @media(max-width:768px){
-  .tabs{position:fixed;left:0;right:0;bottom:0;margin:0;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:6px 4px calc(8px + env(safe-area-inset-bottom));z-index:90;box-shadow:0 -4px 16px rgba(16,24,40,.06);}
-  .tab{flex:1;flex-direction:column;gap:2px;font-size:11px;padding:6px 4px;}
+  .tabs{position:fixed;left:0;right:0;bottom:0;border-bottom:0;border-top:1px solid var(--line);justify-content:space-around;padding:4px 4px calc(6px + env(safe-area-inset-bottom));box-shadow:0 -4px 16px rgba(16,24,40,.06);gap:0;z-index:90;}
+  .tab{flex:1;flex-direction:column;gap:2px;font-size:11px;padding:8px 4px 4px;}
   .tab .ic{font-size:19px;}
-  .tab.active{background:transparent;color:var(--blue);}
+  .tab.active{background:transparent;}
   .ver{display:none;}
-  .page{padding:16px 14px 90px;}
-  .topbar{padding:10px 14px;}
+  .page{padding:16px 14px 96px;}
 }
 @media(max-width:640px){
   .stats-row,.grid2{grid-template-columns:1fr;}
@@ -212,16 +234,24 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 </head>
 <body>
 
-<header class="topbar">
-  <div class="brand" onclick="navTo('home')"><span class="logo">📋</span><span>中英文默書系統</span></div>
-  <span class="ver" id="verChip"></span>
+<div class="topwrap">
+  <header class="topbar">
+    <div class="brand" onclick="navTo('home')"><span class="logo">📋</span><span>中英文默書系統</span></div>
+    <span class="ver" id="verChip"></span>
+    <button class="bell" onclick="toggleNotif()" title="消息通知">🔔<span class="bell-badge hidden" id="bellBadge">0</span></button>
+    <div class="notif-panel hidden" id="notifPanel">
+      <div class="np-head"><span>📬 消息通知</span><button class="np-close" onclick="closeNotif()">✕</button></div>
+      <div id="notifList"></div>
+    </div>
+  </header>
   <nav class="tabs" id="tabs">
+    <span class="tab-ind" id="tabInd"></span>
     <button class="tab active" data-p="home" onclick="navTo('home')"><span class="ic">🏠</span><span>主頁</span></button>
     <button class="tab" data-p="projects" onclick="navTo('projects')"><span class="ic">📁</span><span>默書庫</span></button>
     <button class="tab" data-p="records" onclick="navTo('records')"><span class="ic">📊</span><span>記錄</span></button>
     <button class="tab" data-p="settings" onclick="navTo('settings')"><span class="ic">⚙️</span><span>設定</span></button>
   </nav>
-</header>
+</div>
 
 <main class="page">
 <!-- ===== 主頁 ===== -->
@@ -229,16 +259,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
   <div class="phead">
     <div class="crumb">主頁</div>
     <h1 class="ptitle">最新默書表</h1>
-    <p class="psub">快速開始最近嘅默書表，並掌握整體學習狀況</p>
-    <div class="pactions">
-      <button class="btn btn-s" onclick="navTo('records')">📊 查看記錄</button>
-      <button class="btn btn-p" onclick="navTo('projects')">📁 瀏覽默書庫</button>
-    </div>
-  </div>
-  <div class="stats-row">
-    <div class="stat"><div class="s-label">默書表</div><div class="s-value" id="hsSheets">0</div><div class="s-sub" id="hsSheetsSub">—</div></div>
-    <div class="stat"><div class="s-label">默書內容</div><div class="s-value" id="hsItems">0</div><div class="s-sub" id="hsItemsSub">—</div></div>
-    <div class="stat"><div class="s-label">平均得分</div><div class="s-value" id="hsAvg">—</div><div class="bar"><i id="hsAvgBar" style="width:0%"></i></div><div class="s-sub" id="hsAvgSub">未有記錄</div></div>
+    <p class="psub">快速開始最近嘅中文與英文默書表</p>
   </div>
   <div class="grid2">
     <div class="card"><div class="lhead zh">🈶 中文默書</div><div id="quickZh"></div></div>
@@ -247,7 +268,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
   <div class="card"><div class="card-t">📊 最近成績</div><div id="recentScores"></div></div>
 </div>
 
-<!-- ===== 默書庫 ===== -->
+<!-- ===== 默書庫（寬屏雙欄） ===== -->
 <div id="page-projects" class="hidden">
   <div class="phead">
     <div class="crumb">默書庫</div>
@@ -255,8 +276,10 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
     <p class="psub">管理所有中文與英文默書表</p>
     <div class="pactions"><button class="btn btn-p" onclick="showModal('modalNewProject')">➕ 新增默書表</button></div>
   </div>
-  <div class="ghead">🈶 中文默書</div><div id="projListZh"></div>
-  <div class="ghead">🔤 英文默書</div><div id="projListEn"></div>
+  <div class="grid2">
+    <div class="card"><div class="lhead zh">🈶 中文默書</div><div id="projListZh"></div></div>
+    <div class="card"><div class="lhead en">🔤 英文默書</div><div id="projListEn"></div></div>
+  </div>
 </div>
 
 <!-- ===== 默書表詳情 ===== -->
@@ -385,7 +408,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
     <div id="perWordTimes"></div>
   </div>
   <div id="resultWrong" class="card hidden">
-    <div class="card-t">❌ 錯咗嘅內容</div><div id="wrongList"></div>
+    <div class="card-t">❌ 錯內容</div><div id="wrongList"></div>
   </div>
   <div class="pactions">
     <button class="btn btn-s" onclick="goBack()">⬅️ 返回</button>
@@ -411,84 +434,104 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
   <div class="card"><div class="card-t">📋 最近記錄</div><div id="recordTable"></div></div>
 </div>
 
-<!-- ===== 設定 ===== -->
+<!-- ===== 設定（手風琴） ===== -->
 <div id="page-settings" class="hidden">
   <div class="phead">
     <div class="crumb">設定</div>
     <h1 class="ptitle">⚙️ 設定</h1>
-    <p class="psub">語音、Google Sheets 同步與資料匯出</p>
+    <p class="psub">常用功能排喺最頂；所有卡片預設摺疊，同一時間只展開一個。</p>
   </div>
 
-  <div class="card">
-    <div class="card-t">🔊 語音設定</div>
-    <p class="hint" style="margin-bottom:12px;">設定默書時使用嘅語音同音調，揀完可以試聽。如果只見到「自動」，請稍等或重新整理。</p>
-    <div class="srow" style="border-top:1px solid var(--line);">
-      <div class="slabel">🈶 中文語音</div>
-      <div class="voice-control"><select id="zhVoiceSelect" onchange="saveVoicePref('zh')"></select><button class="btn btn-s btn-sm" onclick="testVoice('zh')">🔊 試聽</button></div>
-    </div>
-    <div class="srow">
-      <div class="slabel">🔤 英文語音</div>
-      <div class="voice-control"><select id="enVoiceSelect" onchange="saveVoicePref('en')"></select><button class="btn btn-s btn-sm" onclick="testVoice('en')">🔊 試聽</button></div>
-    </div>
-    <div class="srow">
-      <div class="slabel">🎵 音調</div>
-      <div class="hgroup">
-        <div class="seg" id="pitchControl">
-          <button class="seg-btn" data-pitch="0.7" onclick="setPitch(0.7)">低</button>
-          <button class="seg-btn active" data-pitch="1.0" onclick="setPitch(1.0)">正常</button>
-          <button class="seg-btn" data-pitch="1.3" onclick="setPitch(1.3)">高</button>
+  <!-- 1️⃣ Google Sheets -->
+  <div class="acc-card" data-sec="sheet">
+    <button class="acc-head" onclick="toggleAcc(this)"><span>☁️ Google Sheets 默書資料</span><span class="chip blue" id="lastSyncChip">未匯入</span><span class="acc-chev">▼</span></button>
+    <div class="acc-body">
+      <div class="stats-row" id="importStats" style="margin-top:14px;"></div>
+      <div class="pactions">
+        <button class="btn btn-p" onclick="syncAll()" id="syncAllBtn">🔄 匯入全部</button>
+        <button class="btn btn-s" onclick="syncSingle('zh')" id="syncZhBtn">🈶 中文</button>
+        <button class="btn btn-s" onclick="syncSingle('en')" id="syncEnBtn">🔤 英文</button>
+      </div>
+      <div class="sync-status" id="syncStatus"></div>
+      <details style="margin-top:12px;"><summary>🔗 已連接試算表 ID</summary><div class="mono-box" style="margin-top:8px;" id="sheetIdDisplay"></div></details>
+      <details><summary>📖 試算表格式說明</summary>
+        <div style="margin-top:8px;font-size:13px;color:var(--ink2);line-height:1.7;">
+          <p style="margin-bottom:8px;">試算表有兩個分頁，每個分頁有 3 欄：</p>
+          <div class="mono-box">Project,Type,Details<br>第一課,詞語,學校;老師;同學<br>第二課,句子,我喜歡上學;天氣很好</div>
+          <ul style="padding-left:20px;margin:8px 0;">
+            <li><strong>Project</strong>：默書表名稱</li>
+            <li><strong>Type</strong>：類型（詞語／句子／文章 或 words/sentences/paragraphs）</li>
+            <li><strong>Details</strong>：默書內容，用 <strong>;</strong> 分隔每一項</li>
+          </ul>
+          <p>⚠️ 試算表須共用為「知道連結的任何人」都可檢視。</p>
+          <p>💡 再次匯入會以試算表為準（覆蓋同名默書表內容）。</p>
         </div>
-        <button class="btn btn-s btn-sm" onclick="testPitch()">🔊 試聽</button>
+      </details>
+      <details><summary>⚙️ 進階：分頁名稱設定</summary>
+        <div style="margin-top:10px;">
+          <div class="srow"><div class="slabel">中文分頁</div><input class="field" style="max-width:220px;" id="tabNameZh"></div>
+          <div class="srow"><div class="slabel">英文分頁</div><input class="field" style="max-width:220px;" id="tabNameEn"></div>
+          <button class="btn btn-s btn-sm" onclick="saveTabNames()">💾 儲存分頁名稱</button>
+          <span id="tabNameSaved" style="color:var(--green);font-size:13px;margin-left:8px;display:none;font-weight:600;">✅ 已儲存</span>
+        </div>
+      </details>
+      <details><summary>🔍 除錯資訊</summary>
+        <div class="debug-box" id="debugContent">（暫無）</div>
+        <button class="btn btn-s btn-sm" style="margin-top:8px;" onclick="clearDebug()">🗑️ 清除</button>
+      </details>
+    </div>
+  </div>
+
+  <!-- 2️⃣ 語音 -->
+  <div class="acc-card" data-sec="voice">
+    <button class="acc-head" onclick="toggleAcc(this)"><span>🔊 語音設定</span><span class="acc-chev">▼</span></button>
+    <div class="acc-body">
+      <p class="hint" style="margin:12px 0;">設定默書時使用嘅語音同音調，揀完可以試聽。如果只見到「自動」，請稍等或重新整理。</p>
+      <div class="srow" style="border-top:1px solid var(--line);">
+        <div class="slabel">🈶 中文語音</div>
+        <div class="voice-control"><select id="zhVoiceSelect" onchange="saveVoicePref('zh')"></select><button class="btn btn-s btn-sm" onclick="testVoice('zh')">🔊 試聽</button></div>
+      </div>
+      <div class="srow">
+        <div class="slabel">🔤 英文語音</div>
+        <div class="voice-control"><select id="enVoiceSelect" onchange="saveVoicePref('en')"></select><button class="btn btn-s btn-sm" onclick="testVoice('en')">🔊 試聽</button></div>
+      </div>
+      <div class="srow">
+        <div class="slabel">🎵 音調</div>
+        <div class="hgroup">
+          <div class="seg" id="pitchControl">
+            <button class="seg-btn" data-pitch="0.7" onclick="setPitch(0.7)">低</button>
+            <button class="seg-btn active" data-pitch="1.0" onclick="setPitch(1.0)">正常</button>
+            <button class="seg-btn" data-pitch="1.3" onclick="setPitch(1.3)">高</button>
+          </div>
+          <button class="btn btn-s btn-sm" onclick="testPitch()">🔊 試聽</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-t">☁️ Google Sheets 默書資料</div>
-    <span class="chip blue" id="lastSyncInfo">上次匯入：未匯入</span>
-    <div class="stats-row" id="importStats" style="margin-top:14px;"></div>
-    <div class="pactions">
-      <button class="btn btn-p" onclick="syncAll()" id="syncAllBtn">🔄 匯入全部</button>
-      <button class="btn btn-s" onclick="syncSingle('zh')" id="syncZhBtn">🈶 中文</button>
-      <button class="btn btn-s" onclick="syncSingle('en')" id="syncEnBtn">🔤 英文</button>
+  <!-- 3️⃣ 匯出 -->
+  <div class="acc-card" data-sec="export">
+    <button class="acc-head" onclick="toggleAcc(this)"><span>📤 匯出資料（表格格式）</span><span class="acc-chev">▼</span></button>
+    <div class="acc-body">
+      <p class="hint" style="margin:12px 0;">表格同 Google Sheets 格式一致（3 欄），中英文分開兩表，複製後可直接貼入。</p>
+      <div id="exportTables"></div>
     </div>
-    <div class="sync-status" id="syncStatus"></div>
-    <details style="margin-top:14px;"><summary>🔗 已連接試算表 ID</summary><div class="mono-box" style="margin-top:8px;" id="sheetIdDisplay"></div></details>
-    <details><summary>📖 試算表格式說明</summary>
-      <div style="margin-top:8px;font-size:13px;color:var(--ink2);line-height:1.7;">
-        <p style="margin-bottom:8px;">試算表有兩個分頁，每個分頁有 3 欄：</p>
-        <div class="mono-box">Project,Type,Details<br>第一課,詞語,學校;老師;同學<br>第二課,句子,我喜歡上學;天氣很好</div>
-        <ul style="padding-left:20px;margin:8px 0;">
-          <li><strong>Project</strong>：默書表名稱</li>
-          <li><strong>Type</strong>：類型（詞語／句子／文章 或 words/sentences/paragraphs）</li>
-          <li><strong>Details</strong>：默書內容，用 <strong>;</strong> 分隔每一項</li>
-        </ul>
-        <p>⚠️ 試算表須共用為「知道連結的任何人」都可檢視。</p>
-        <p>💡 再次匯入會以試算表為準（覆蓋同名默書表內容）。</p>
-      </div>
-    </details>
-    <details><summary>⚙️ 進階：分頁名稱設定</summary>
-      <div style="margin-top:10px;">
-        <div class="srow"><div class="slabel">中文分頁</div><input class="field" style="max-width:220px;" id="tabNameZh"></div>
-        <div class="srow"><div class="slabel">英文分頁</div><input class="field" style="max-width:220px;" id="tabNameEn"></div>
-        <button class="btn btn-s btn-sm" onclick="saveTabNames()">💾 儲存分頁名稱</button>
-        <span id="tabNameSaved" style="color:var(--green);font-size:13px;margin-left:8px;display:none;font-weight:600;">✅ 已儲存</span>
-      </div>
-    </details>
-    <details><summary>🔍 除錯資訊</summary>
-      <div class="debug-box" id="debugContent">（暫無）</div>
-      <button class="btn btn-s btn-sm" style="margin-top:8px;" onclick="clearDebug()">🗑️ 清除</button>
-    </details>
   </div>
 
-  <div class="card">
-    <details id="exportDetails">
-      <summary class="dsum">📤 匯出資料（表格格式）</summary>
-      <div style="margin-top:12px;">
-        <p class="psub">表格同 Google Sheets 格式一致（3 欄），中英文分開兩表，複製後可直接貼入。</p>
-        <div id="exportTables"></div>
+  <!-- 4️⃣ 分享 -->
+  <div class="acc-card" data-sec="share">
+    <button class="acc-head" onclick="toggleAcc(this)"><span>🔗 分享頁面（QR Code）</span><span class="acc-chev">▼</span></button>
+    <div class="acc-body">
+      <p class="hint" style="margin:12px 0;">掃描 QR Code 或複製連結，即可喺其他裝置開啟呢個默書系統。</p>
+      <div class="qr-wrap" id="qrBox"></div>
+      <div class="mono-box" style="margin:12px 0;" id="shareUrl"></div>
+      <div class="pactions" style="margin-top:0;">
+        <button class="btn btn-p" onclick="copyShareUrl()">📋 複製連結</button>
+        <button class="btn btn-s" onclick="renderShare()">🔄 重新生成</button>
       </div>
-    </details>
+      <span class="copy-confirm" id="shareCopyOk">✅ 已複製！</span>
+      <div class="note hidden" id="qrNote" style="margin-top:12px;margin-bottom:0;">⚠️ 目前以本機檔案（file://）開啟，QR 連結只限呢部裝置使用。如需跨裝置分享，請將頁面託管到網站（如 GitHub Pages）。</div>
+    </div>
   </div>
 </div>
 </main>
@@ -530,7 +573,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
     </div>
   </div>
   <div id="scanResult" class="hidden" style="margin-top:12px;">
-    <div class="chip blue" id="ocrDetectInfo">🧠 智能分行結果</div>
+    <span class="chip blue" id="ocrDetectInfo">🧠 智能分行結果</span>
     <div class="hint" style="margin:8px 0;">💡 ✏️ 編輯 ⬆️️ 排序 ✖ 刪除</div>
     <div id="ocrItemsList" style="max-height:240px;overflow-y:auto;"></div>
     <div class="pactions">
@@ -556,13 +599,13 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 </div></div>
 
 <script>
-/* ================= 設定 ================= */
-const APP_VERSION='17.0';
+/* ========== 設定 ========== */
+const APP_VERSION='17.2';
 const SHEET_ID='1Ok4OH76O2W5rtkHw-1Q_F6W4c4jD-WoQTA0UwAXv4t0';
 const TAB_CONFIG={zh:{defaultName:'Chinese',label:'中文默書'},en:{defaultName:'English',label:'英文默書'}};
 const MAIN_PAGES=['home','projects','records','settings'];
 
-/* ================= 狀態 ================= */
+/* ========== 狀態 ========== */
 let lastMainPage='home',currentPage='home';
 let projects=safeParse('dict_p8'),records=safeParse('dict_r8');
 let currentProject=null,currentDictIndex=0,dictItems=[],originalItems=[],checkResults=[];
@@ -578,7 +621,7 @@ function saveProjects(){try{localStorage.setItem('dict_p8',JSON.stringify(projec
 function saveRecords(){try{localStorage.setItem('dict_r8',JSON.stringify(records));}catch(e){}}
 function el(id){return document.getElementById(id);}
 
-/* ================= 導覽 ================= */
+/* ========== 導覽＋指示條 ========== */
 function showPage(p){
   currentPage=p;
   if(MAIN_PAGES.includes(p))lastMainPage=p;
@@ -586,10 +629,17 @@ function showPage(p){
   el('page-'+p).classList.remove('hidden');
   const active=MAIN_PAGES.includes(p)?p:lastMainPage;
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.p===active));
+  requestAnimationFrame(moveIndicator);
   if(p==='home')renderHome();
   if(p==='projects')renderProjects();
   if(p==='records')renderRecords();
-  if(p==='settings'){loadSettingsPage();renderExportTables();}
+  if(p==='settings')updateSyncChip();
+}
+function moveIndicator(){
+  const ind=el('tabInd'),act=document.querySelector('.tab.active');
+  if(!ind||!act)return;
+  ind.style.width=act.offsetWidth+'px';
+  ind.style.left=act.offsetLeft+'px';
 }
 function navTo(p){currentPage==='dictation'?requestExitDictation():showPage(p);}
 function goBack(){showPage(lastMainPage);}
@@ -603,7 +653,96 @@ function requestExitDictation(){
   }
 }
 
-/* ================= 工具 ================= */
+/* ========== 手風琴（設定頁） ========== */
+function toggleAcc(btn){
+  const card=btn.closest('.acc-card');
+  const was=card.classList.contains('open');
+  document.querySelectorAll('#page-settings .acc-card').forEach(c=>c.classList.remove('open'));
+  if(was)return;
+  card.classList.add('open');
+  const sec=card.dataset.sec;
+  if(sec==='sheet')loadSheetSection();
+  else if(sec==='voice'){populateVoiceSelects();restorePitchControl();}
+  else if(sec==='export')renderExportTables();
+  else if(sec==='share')renderShare();
+}
+function updateSyncChip(){
+  const last=localStorage.getItem('dict_last_sync');
+  const chip=el('lastSyncChip');
+  if(chip)chip.textContent=last?('匯入於 '+last.split(' ')[0]):'未匯入';
+}
+function loadSheetSection(){
+  renderImportStats();
+  el('sheetIdDisplay').innerText=SHEET_ID;
+  el('tabNameZh').value=getTabName('zh');
+  el('tabNameEn').value=getTabName('en');
+  updateSyncChip();
+}
+
+/* ========== 分享 QR ========== */
+function renderShare(){
+  const url=location.href;
+  el('shareUrl').textContent=url;
+  el('qrNote').classList.toggle('hidden',location.protocol!=='file:');
+  const box=el('qrBox');
+  box.innerHTML='<div class="empty-hint">⏳ 載入 QR 元件...</div>';
+  if(window.QRCode){drawQR(box,url);return;}
+  const s=document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+  s.onload=()=>drawQR(box,url);
+  s.onerror=()=>{box.innerHTML='<div class="empty-hint">QR 元件載入失敗（需網絡）<br>請直接複製連結分享</div>';};
+  document.head.appendChild(s);
+}
+function drawQR(box,url){
+  box.innerHTML='';
+  try{new QRCode(box,{text:url,width:180,height:180,colorDark:'#0E1526',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});}
+  catch(e){box.innerHTML='<div class="empty-hint">QR 生成失敗</div>';}
+}
+function copyShareUrl(){copyToClipboard(location.href).then(()=>flash('shareCopyOk'));}
+
+/* ========== 通知中心 ========== */
+function notifRead(){try{return JSON.parse(localStorage.getItem('dict_notif_read')||'[]');}catch(e){return[];}}
+function buildNotifications(){
+  const out=[],now=Date.now(),today=new Date();
+  const didToday=records.some(r=>r.ts&&new Date(r.ts).toDateString()===today.toDateString());
+  if(records.length&&!didToday)out.push({id:'practice-'+today.toDateString(),ic:'✍️',bg:'var(--blue-l)',t:'練習提醒',d:'今日未進行默書，抽時間練習一次啦！'});
+  const last=records[records.length-1];
+  if(last&&last.percent<70)out.push({id:'review-'+(last.ts||last.date),ic:'📉',bg:'var(--red-l)',t:'複習提醒',d:'上次得分 '+last.percent+'%，建議用「只溫錯題」加強練習。'});
+  const sheetCount=projects.filter(p=>p.fromSheet).length;
+  const syncTs=parseInt(localStorage.getItem('dict_last_sync_ts')||'0',10);
+  if(!sheetCount)out.push({id:'sync-setup',ic:'☁️',bg:'var(--blue-l)',t:'連接 Google Sheets',d:'可以喺「設定」一鍵匯入中英文默書表。'});
+  else if(syncTs&&now-syncTs>7*864e5)out.push({id:'sync-stale',ic:'☁️',bg:'#FEF3C7',t:'數據更新提醒',d:'超過 7 日未匯入 Google Sheets，建議更新。'});
+  else if(syncTs&&now-syncTs<864e5)out.push({id:'sync-new-'+new Date(syncTs).toDateString(),ic:'🆕',bg:'var(--green-l)',t:'新內容已匯入',d:'最近同步咗 Google Sheets 數據，共 '+sheetCount+' 張表可練習。'});
+  return out;
+}
+function refreshNotifications(){
+  const list=buildNotifications(),read=notifRead();
+  const unread=list.filter(n=>!read.includes(n.id)).length;
+  const badge=el('bellBadge');
+  badge.textContent=unread;
+  badge.classList.toggle('hidden',unread===0);
+  el('notifList').innerHTML=list.length?list.map(n=>{
+    const un=!read.includes(n.id);
+    return '<div class="ni"><span class="ni-ic" style="background:'+n.bg+'">'+n.ic+'</span><div style="flex:1;min-width:0;"><div class="ni-t">'+n.t+'</div><div class="ni-d">'+n.d+'</div></div>'+(un?'<span class="ni-dot"></span>':'')+'</div>';
+  }).join(''):'<div class="ni"><span class="ni-ic" style="background:var(--green-l)">✅</span><div><div class="ni-t">暫無新消息</div><div class="ni-d">保持良好學習狀態！</div></div></div>';
+}
+function toggleNotif(){
+  const p=el('notifPanel'),opening=p.classList.contains('hidden');
+  p.classList.toggle('hidden',!opening);
+  if(opening){
+    const read=notifRead();
+    buildNotifications().forEach(n=>{if(!read.includes(n.id))read.push(n.id);});
+    localStorage.setItem('dict_notif_read',JSON.stringify(read));
+    refreshNotifications();
+  }
+}
+function closeNotif(){el('notifPanel').classList.add('hidden');}
+document.addEventListener('click',e=>{
+  const p=el('notifPanel');
+  if(!p.classList.contains('hidden')&&!p.contains(e.target)&&!e.target.closest('.bell'))p.classList.add('hidden');
+});
+
+/* ========== 工具 ========== */
 function escapeHtml(s){const d=document.createElement('div');d.textContent=(s==null)?'':String(s);return d.innerHTML;}
 function escapeAttr(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function escapeTsv(s){return String(s==null?'':s).replace(/[\t\r\n]/g,' ').trim();}
@@ -615,7 +754,7 @@ function generateIdFromName(n,l){const s=(n||'')+'_'+(l||'zh');let h=0;for(let i
 function debugLog(m){const line='['+new Date().toLocaleTimeString()+'] '+m;debugLines.push(line);if(debugLines.length>60)debugLines.shift();const e=el('debugContent');if(e)e.innerText=debugLines.join('\n');console.log('[Sync]',m);}
 function clearDebug(){debugLines=[];const e=el('debugContent');if(e)e.innerText='（暫無）';}
 
-/* ================= 資料迁移 ================= */
+/* ========== 迁移／示例 ========== */
 function migrateData(){
   let ch=false;
   projects.forEach(p=>{
@@ -631,7 +770,7 @@ function seedSample(){
   localStorage.setItem('dict_seeded_v11','1');
 }
 
-/* ================= 語音 ================= */
+/* ========== 語音 ========== */
 function getVoices(){return ('speechSynthesis' in window)?(speechSynthesis.getVoices()||[]):[];}
 function filterVoices(l){const v=getVoices();return l==='zh'?v.filter(x=>x.lang&&/^(zh|cmn|yue|nan|hak)/i.test(x.lang)):v.filter(x=>x.lang&&x.lang.toLowerCase().startsWith('en'));}
 function setupVoiceSelect(l){
@@ -664,16 +803,9 @@ function speakText(text,lang,onDone){
   speechSynthesis.speak(u);return true;
 }
 
-/* ================= Google Sheets ================= */
+/* ========== Google Sheets ========== */
 function getTabName(l){return localStorage.getItem('dict_tab_'+l)||TAB_CONFIG[l].defaultName;}
 function getSheetUrl(l){return 'https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(getTabName(l));}
-function loadSettingsPage(){
-  renderImportStats();populateVoiceSelects();restorePitchControl();
-  el('sheetIdDisplay').innerText=SHEET_ID;
-  const last=localStorage.getItem('dict_last_sync');
-  el('lastSyncInfo').innerText='上次匯入：'+(last||'未匯入');
-  el('tabNameZh').value=getTabName('zh');el('tabNameEn').value=getTabName('en');
-}
 function saveTabNames(){
   const zh=el('tabNameZh').value.trim(),en=el('tabNameEn').value.trim();
   if(zh)localStorage.setItem('dict_tab_zh',zh);
@@ -709,13 +841,16 @@ function parseSheetCSV(csv,lang){
     const c=h.findIndex(x=>x.includes('detail')||x.includes('內容'));
     if(a>=0)pi=a;if(b>=0)ti=b;if(c>=0)di=c;
   }
-  const map={};
+  const map={},now=Date.now();
   for(let i=start;i<rows.length;i++){
     const r=rows[i],name=(r[pi]||'').trim(),type=(r[ti]||'').trim(),det=(r[di]||'').trim();
     if(!name||!det)continue;
     const items=det.split(/[;；]/).map(s=>s.trim()).filter(Boolean);
     if(!items.length)continue;
-    if(!map[name]){const t=(type||'').toLowerCase();map[name]={id:generateIdFromName(name,lang),name,type:t.includes('句')||t.includes('sentence')?'sentences':(t.includes('文章')||t.includes('passage')||t.includes('段')||t.includes('paragraph'))?'passage':'words',lang,contents:[],fromSheet:true,createdTs:Date.now(),updatedTs:Date.now()};}
+    if(!map[name]){
+      const t=(type||'').toLowerCase();
+      map[name]={id:generateIdFromName(name,lang),name,type:t.includes('句')||t.includes('sentence')?'sentences':(t.includes('文章')||t.includes('passage')||t.includes('段')||t.includes('paragraph'))?'passage':'words',lang,contents:[],fromSheet:true,createdTs:now,updatedTs:now};
+    }
     items.forEach(it=>{if(!map[name].contents.includes(it))map[name].contents.push(it);});
   }
   return Object.values(map);
@@ -747,8 +882,9 @@ function afterSync(){
   saveProjects();
   const now=new Date().toLocaleString('zh-HK');
   localStorage.setItem('dict_last_sync',now);
-  el('lastSyncInfo').innerText='上次匯入：'+now;
-  renderImportStats();renderHome();renderProjects();renderExportTables();
+  localStorage.setItem('dict_last_sync_ts',String(Date.now()));
+  updateSyncChip();loadSheetSection();
+  renderHome();renderProjects();renderExportTables();refreshNotifications();
 }
 async function syncAll(){
   setBtnLoading(true);setSyncStatus('loading','正在匯入中文同英文分頁...');
@@ -767,10 +903,10 @@ async function syncSingle(lang){
   setBtnLoading(false);
 }
 
-/* ================= 渲染：卡片 ================= */
+/* ========== 渲染 ========== */
 function badges(p){
-  const tl={words:'詞語',sentences:'句子',passage:'文章'},tb={words:'chip blue',sentences:'chip',passage:'chip'};
-  let s='<span class="'+(tb[p.type]||'chip')+'">'+(tl[p.type]||'詞語')+'</span>';
+  const tl={words:'詞語',sentences:'句子',passage:'文章'};
+  let s='<span class="chip blue">'+(tl[p.type]||'詞語')+'</span>';
   if(p.isSample)s+='<span class="chip purple">示例</span>';
   return s;
 }
@@ -796,18 +932,6 @@ function renderLangList(id,lang,limit,fn){
 function renderHome(){
   renderLangList('quickZh','zh',3,homeCardHTML);
   renderLangList('quickEn','en',3,homeCardHTML);
-  const zh=projects.filter(p=>p.lang==='zh').length,en=projects.length-zh;
-  const items=projects.reduce((s,p)=>s+(p.contents?p.contents.length:0),0);
-  el('hsSheets').textContent=projects.length;
-  el('hsSheetsSub').textContent=zh+' 中文 · '+en+' 英文';
-  el('hsItems').innerHTML=items+'<span class="unit">項</span>';
-  el('hsItemsSub').textContent=projects.length?'分佈於 '+projects.length+' 張默書表':'尚未有內容';
-  if(records.length){
-    const avg=Math.round(records.reduce((s,r)=>s+r.percent,0)/records.length);
-    el('hsAvg').innerHTML=avg+'<span class="unit">%</span>';
-    el('hsAvgBar').style.width=avg+'%';
-    el('hsAvgSub').textContent='共 '+records.length+' 次測驗';
-  }else{el('hsAvg').textContent='—';el('hsAvgBar').style.width='0%';el('hsAvgSub').textContent='未有記錄';}
   el('recentScores').innerHTML=records.length?records.slice(-5).reverse().map(r=>
     '<div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line);"><span style="font-weight:600;">'+escapeHtml(r.project)+'</span><span style="font-weight:800;color:'+(r.percent>=70?'var(--green)':'var(--red)')+';">'+r.percent+'%</span></div>').join('')
     :'<div class="empty-hint">暫時未有記錄</div>';
@@ -817,7 +941,7 @@ function renderProjects(){
   renderLangList('projListEn','en',0,libraryCardHTML);
 }
 
-/* ================= 項目管理 ================= */
+/* ========== 項目管理 ========== */
 function createProject(){
   const n=el('newProjectName').value.trim();if(!n){alert('請輸入名稱');return;}
   const now=Date.now();
@@ -863,12 +987,12 @@ function deleteContent(i){if(confirm('確定刪除「'+currentProject.contents[i
 function addContent(){const t=el('newContentText').value.trim();if(!t){alert('請輸入內容');return;}currentProject.contents.push(...t.split('\n').map(l=>l.trim()).filter(Boolean));touch();saveProjects();el('newContentText').value='';closeModal('modalAddContent');renderContentList();}
 function touch(){if(currentProject)currentProject.updatedTs=Date.now();}
 
-/* ================= 默書設定 ================= */
+/* ========== 默書設定 ========== */
 function setPreSpeed(s,b){speechRate=s;document.querySelectorAll('#preSpeedControl .seg-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');}
 function setPreMode(m,b){playMode=m;document.querySelectorAll('#preModeControl .seg-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');el('preAutoRow').classList.toggle('hidden',m!=='auto');}
 function setPreInterval(t,b){autoInterval=t;document.querySelectorAll('#preIntervalControl .seg-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');}
 
-/* ================= OCR ================= */
+/* ========== OCR ========== */
 function loadOpenCC(){return new Promise(res=>{if(window.OpenCC){init();res(true);return;}const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/opencc.js';s.onload=()=>{init();res(true);};s.onerror=()=>res(false);document.head.appendChild(s);function init(){try{s2tConvert=OpenCC.Converter({from:'cn',to:'hk'});s2tReady=true;}catch(e){}}});}
 function toTraditional(t){if(s2tReady&&s2tConvert){try{return s2tConvert(t);}catch(e){}}return t;}
 function openScanModal(){showModal('modalScan');resetScanModal();}
@@ -927,7 +1051,7 @@ function confirmScanEdit(){const t=el('ocrEditText').value.trim();if(!t){alert('
 function cancelScan(){closeModal('modalScan');resetScanModal();}
 function resetScanModal(){el('scanInput').value='';el('scanPreview').classList.add('hidden');el('scanResult').classList.add('hidden');el('scanEditArea').classList.add('hidden');el('scanArea').classList.remove('hidden');el('ocrProgress').style.display='none';ocrParsedItems=[];editingOcrIndex=-1;}
 
-/* ================= 默書流程 ================= */
+/* ========== 默書流程 ========== */
 function speakAndSchedule(text){
   speakToken++;const my=speakToken,lang=currentProject?currentProject.lang||'zh':'zh';
   if(playMode==='auto'||isReviewMode){
@@ -1017,16 +1141,16 @@ function updateVerticalProgress(){
     const d=document.createElement('div');d.className='vp-dot';
     const pos=n>1?(i/(n-1))*100:50;
     if(isMob){d.style.left=pos+'%';d.style.top='50%';}else{d.style.top=pos+'%';d.style.left='50%';}
-    d.classList.add(i<cur?'completed':i===cur?'current':'');
+    if(i<cur)d.classList.add('completed');else if(i===cur)d.classList.add('current');
     track.appendChild(d);
   }
 }
 
-/* ================= 校對／結果 ================= */
+/* ========== 校對／結果 ========== */
 function renderCheckList(){
   el('checkList').innerHTML=dictItems.map((it,i)=>{
     const t=(playMode==='manual'&&wordTimes[i]!==undefined)?'<span class="chip" style="margin-right:10px;">⏱ '+formatTime(wordTimes[i])+'</span>':'';
-    return '<div class="chk" id="checkItem'+i+'"><div class="num" style="width:26px;height:26px;background:var(--blue-l);color:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;margin-right:12px;flex-shrink:0;">'+(i+1)+'</div><div class="answer">'+escapeHtml(it)+'</div>'+t+'<div class="chk-btns"><button class="cbtn ok" onclick="markResult('+i+',true)" id="correct'+i+'">✓</button><button class="cbtn no" onclick="markResult('+i+',false)" id="wrong'+i+'">✗</button></div></div>';
+    return '<div class="chk" id="checkItem'+i+'"><div class="num">'+(i+1)+'</div><div class="answer">'+escapeHtml(it)+'</div>'+t+'<div class="chk-btns"><button class="cbtn ok" onclick="markResult('+i+',true)" id="correct'+i+'">✓</button><button class="cbtn no" onclick="markResult('+i+',false)" id="wrong'+i+'">✗</button></div></div>';
   }).join('');
 }
 function markResult(i,ok){
@@ -1063,8 +1187,8 @@ function finishChecking(){
   const wi=dictItems.filter((_,i)=>checkResults[i]!==true);
   if(wi.length){el('resultWrong').classList.remove('hidden');el('wrongList').innerHTML=wi.map(w=>'<div style="padding:10px 12px;background:var(--red-l);border:1px solid #FECDCA;border-radius:10px;margin-bottom:8px;color:#B42318;font-weight:600;">❌ '+escapeHtml(w)+'</div>').join('');}
   else el('resultWrong').classList.add('hidden');
-  records.push({date:new Date().toLocaleString('zh-HK',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}),project:currentProject.name,correct,total,percent:pct,totalTime:isManual?totalDictationSeconds:null});
-  saveRecords();showPage('result');
+  records.push({ts:Date.now(),date:new Date().toLocaleString('zh-HK',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}),project:currentProject.name,correct,total,percent:pct,totalTime:isManual?totalDictationSeconds:null});
+  saveRecords();refreshNotifications();showPage('result');
 }
 function retryWrong(){
   const wi=dictItems.filter((_,i)=>checkResults[i]!==true);
@@ -1075,7 +1199,7 @@ function retryWrong(){
   showPage('dictation');updateReviewUI();updateSlimVis();showDictItem();
 }
 
-/* ================= 記錄 ================= */
+/* ========== 記錄 ========== */
 function renderRecords(){
   const n=records.length;
   el('rcTests').innerText=n;
@@ -1097,13 +1221,13 @@ function renderRecords(){
     ctx.stroke();
     rec.forEach((r,i)=>{const x=40+i*step,y=260-r.percent*2.4;ctx.fillStyle=r.percent>=70?'#12B76A':'#EF4444';ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fill();});
   }
-  el('recordTable').innerHTML='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>日期</th><th>默書表</th><th>成績</th><th>得分</th><th>用時</th></tr></thead><tbody>'+
+  el('recordTable').innerHTML='<div class="tbl-wrap" style="margin-top:0;"><table class="tbl"><thead><tr><th>日期</th><th>默書表</th><th>成績</th><th>得分</th><th>用時</th></tr></thead><tbody>'+
     (records.slice().reverse().slice(0,15).map(r=>'<tr><td class="nowrap">'+r.date+'</td><td>'+escapeHtml(r.project)+'</td><td>'+r.correct+'/'+r.total+'</td><td><strong style="color:'+(r.percent>=70?'var(--green)':'var(--red)')+';">'+r.percent+'%</strong></td><td>'+(r.totalTime!=null?formatTime(r.totalTime):'--')+'</td></tr>').join('')||'<tr><td colspan="5" style="text-align:center;color:var(--ink3);padding:18px;">暫無資料</td></tr>')+
     '</tbody></table></div>';
 }
-function clearAllRecords(){if(confirm('確定清除所有記錄？')){records=[];saveRecords();renderRecords();}}
+function clearAllRecords(){if(confirm('確定清除所有記錄？')){records=[];saveRecords();renderRecords();refreshNotifications();}}
 
-/* ================= 匯出 ================= */
+/* ========== 匯出 ========== */
 function typeLabelForExport(p){return p.lang==='en'?{words:'words',sentences:'sentences',passage:'paragraphs'}[p.type]||'words':{words:'詞語',sentences:'句子',passage:'文章'}[p.type]||'詞語';}
 function buildProjectsTsv(l){return['Project\tType\tDetails'].concat(projects.filter(p=>p.lang===l).map(p=>[escapeTsv(p.name),typeLabelForExport(p),escapeTsv((p.contents||[]).join(';'))].join('\t'))).join('\n');}
 function buildRecordsTsv(){return['日期\t默書表\t答對\t總數\t得分(%)\t用時'].concat(records.slice().reverse().map(r=>[r.date,escapeTsv(r.project),r.correct,r.total,r.percent,r.totalTime!=null?formatTime(r.totalTime):''].join('\t'))).join('\n');}
@@ -1142,17 +1266,22 @@ function downloadTsv(){
   a.href=u;a.download='默書資料_'+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'.tsv';a.click();URL.revokeObjectURL(u);
 }
 
-/* ================= 初始化 ================= */
+/* ========== 初始化 ========== */
 window.onload=()=>{
   el('appVersion').innerText=APP_VERSION;
   el('verChip').innerText='v'+APP_VERSION;
   migrateData();seedSample();loadOpenCC();
   if('speechSynthesis' in window){
-    populateVoiceSelects();restorePitchControl();
     speechSynthesis.onvoiceschanged=()=>{speechSynthesis.getVoices();populateVoiceSelects();};
   }
+  updateSyncChip();
+  refreshNotifications();
   showPage('home');
-  window.addEventListener('resize',()=>{if(currentPage==='dictation')updateVerticalProgress();});
+  requestAnimationFrame(moveIndicator);
+  window.addEventListener('resize',()=>{
+    moveIndicator();
+    if(currentPage==='dictation')updateVerticalProgress();
+  });
 };
 </script>
 </body>
