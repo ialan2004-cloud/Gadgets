@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中英文默書系統 16.1</title>
+<title>中英文默書系統 16.2</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
   :root{--primary:#2563EB;--primary-light:#EFF6FF;--primary-dark:#1D4ED8;--success:#10B981;--danger:#EF4444;--warning:#F59E0B;--bg:#F8FAFC;--card:#fff;--text:#0F172A;--text-light:#64748B;--border:#E2E8F0;--radius:12px;--shadow:0 4px 6px -1px rgba(0,0,0,.05),0 2px 4px -1px rgba(0,0,0,.03);}
@@ -86,8 +86,8 @@
   .vp-container{position:relative;flex:1;width:100%;display:flex;flex-direction:column;align-items:center;}
   .vp-label{font-size:11px;font-weight:700;color:var(--text-light);margin-bottom:8px;text-align:center;white-space:nowrap;}
   .vp-track{position:relative;width:6px;flex:1;background:#E2E8F0;border-radius:3px;min-height:200px;}
-  .vp-fill{position:absolute;top:0;left:0;width:100%;background:linear-gradient(180deg,var(--primary),#60A5FA);border-radius:3px;transition:height .4s ease;}
-  .vp-dot{position:absolute;left:50%;transform:translateX(-50%);width:16px;height:16px;border-radius:50%;border:2px solid #CBD5E1;background:#fff;transition:all .3s;z-index:2;}
+  .vp-fill{position:absolute;top:0;left:0;width:100%;background:linear-gradient(180deg,var(--primary),#60A5FA);border-radius:3px;transition:height .4s ease,width .4s ease;}
+  .vp-dot{position:absolute;width:16px;height:16px;border-radius:50%;border:2px solid #CBD5E1;background:#fff;transition:all .3s;z-index:2;transform:translate(-50%,-50%);}
   .vp-dot.completed{border-color:var(--success);background:var(--success);}
   .vp-dot.current{border-color:var(--primary);background:var(--primary);box-shadow:0 0 0 4px rgba(37,99,235,.2);animation:vpPulse 1.5s infinite;}
   .vp-dot.upcoming{border-color:#CBD5E1;background:#fff;}
@@ -217,9 +217,10 @@
     .dictation-sidebar{width:100%;flex-direction:row;justify-content:center;}
     .vp-track{min-height:auto;width:auto;height:6px;flex:1;}
     .vp-container{flex-direction:row;width:100%;}
-    .vp-label{margin-bottom:0;margin-right:8px;}.vp-count{margin-top:0;margin-left:8px;}
-    .vp-dot{top:50%!important;transform:translateY(-50%);left:auto!important;}
-    .vp-fill{height:100%!important;width:auto;transition:width .4s ease;}
+    .vp-label{margin-bottom:0;margin-right:8px;}
+    .vp-count{margin-top:0;margin-left:8px;}
+    .vp-fill{height:100%!important;transition:width .4s ease;}
+    .vp-dot{transform:translate(-50%,-50%);}
     .review-options{flex-direction:column;}
     .content-item{flex-wrap:wrap;}
     .content-item .actions{width:100%;justify-content:flex-end;margin-top:6px;}
@@ -244,6 +245,7 @@
 </header>
 
 <div class="container">
+  <!-- ===== 主頁 ===== -->
   <div id="page-home">
     <div class="home-section-title">🆕 最新默書表</div>
     <div class="home-cols">
@@ -263,6 +265,7 @@
     </div>
   </div>
 
+  <!-- ===== 默書庫 ===== -->
   <div id="page-projects" class="hidden">
     <div class="card">
       <div class="flex-between">
@@ -280,6 +283,7 @@
     </div>
   </div>
 
+  <!-- ===== 默書表詳情 ===== -->
   <div id="page-project-detail" class="hidden">
     <div class="card">
       <div class="page-header">
@@ -325,6 +329,7 @@
     </div>
   </div>
 
+  <!-- ===== 默書進行中 ===== -->
   <div id="page-dictation" class="hidden">
     <div class="card" style="padding:16px;">
       <div class="page-header">
@@ -368,6 +373,7 @@
     </div>
   </div>
 
+  <!-- ===== 校對 ===== -->
   <div id="page-checking" class="hidden">
     <div class="card">
       <div class="page-header">
@@ -382,6 +388,7 @@
     <div class="card text-center"><button class="btn btn-primary btn-lg btn-block" onclick="finishChecking()">📊 完成校對</button></div>
   </div>
 
+  <!-- ===== 結果 ===== -->
   <div id="page-result" class="hidden">
     <div class="card text-center">
       <div class="page-header">
@@ -411,12 +418,15 @@
     </div>
   </div>
 
+  <!-- ===== 記錄 ===== -->
   <div id="page-records" class="hidden">
     <div class="card"><div class="card-title">📊 歷史成績</div><canvas id="recordChart" width="800" height="280" style="width:100%;"></canvas></div>
     <div class="card"><div id="recordTable"></div>
       <div class="text-center mt-2"><button class="btn btn-danger btn-sm" onclick="clearAllRecords()">🗑️ 清除所有記錄</button></div></div></div>
 
+  <!-- ===== ⚙️ 設定 ===== -->
   <div id="page-settings" class="hidden">
+    <!-- 語音設定 -->
     <div class="card">
       <div class="card-title">🔊 語音設定</div>
       <p style="color:var(--text-light);margin-bottom:14px;font-size:13px;">設定默書時使用嘅語音同音調，揀完可以撳「試聽」。如果只見到「自動」，請稍等或重新整理。</p>
@@ -447,6 +457,7 @@
       </div>
     </div>
 
+    <!-- Google Sheets -->
     <div class="sync-section">
       <h3>☁️ Google Sheets 默書資料</h3>
       <p class="section-desc">從 Google Sheets 匯入默書資料到本機，離線都可以使用。</p>
@@ -496,6 +507,7 @@
       </details>
     </div>
 
+    <!-- 匯出 -->
     <div class="sync-section">
       <details id="exportDetails">
         <summary class="export-summary">📤 匯出資料（表格格式）</summary>
@@ -510,6 +522,7 @@
 
 <footer class="app-footer">中英文默書系統 · 版本 <span id="appVersion"></span></footer>
 
+<!-- ===== 模態框 ===== -->
 <div class="modal" id="modalNewProject"><div class="modal-content">
   <button class="modal-close" onclick="closeModal('modalNewProject')">✕</button>
   <div class="modal-title">➕ 新增默書表</div>
@@ -559,7 +572,7 @@
     <div class="review-option" onclick="closeModal('modalReview');goToMarking()"><div class="ro-icon">➡️</div><div class="ro-title">直接校對</div><div class="ro-desc">跳過溫習</div></div></div></div></div>
 
 <script>
-const APP_VERSION='16.1';
+const APP_VERSION='16.2';
 const SHEET_ID='1Ok4OH76O2W5rtkHw-1Q_F6W4c4jD-WoQTA0UwAXv4t0';
 const TAB_CONFIG={
   zh:{defaultName:'Chinese',label:'中文默書'},
@@ -689,6 +702,7 @@ function requestExitDictation(){
   }
 }
 
+// ===== 語音 =====
 function getAvailableVoices(){
   if(!('speechSynthesis' in window))return [];
   return window.speechSynthesis.getVoices()||[];
@@ -761,6 +775,7 @@ function escapeHtml(s){const d=document.createElement('div');d.textContent=(s===
 function escapeAttr(s){return String(s===null||s===undefined?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function escapeTsv(s){return String(s===null||s===undefined?'':s).replace(/[\t\r\n]/g,' ').trim();}
 
+// ===== Google Sheets =====
 function getTabName(lang){return localStorage.getItem('dict_tab_'+lang)||TAB_CONFIG[lang].defaultName;}
 function getSheetUrl(lang){
   return 'https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(getTabName(lang));
@@ -1188,17 +1203,17 @@ function startDictation(){
   showPage('dictation');updateReviewUI();updateSlimTimerVisibility();showDictItem();
 }
 function showDictItem(){
-  const total=dictItems.length;
-  document.getElementById('dictProgressBadge').innerText=(currentDictIndex+1)+' / '+total;
+  const total=dictItems.length,current=currentDictIndex;
+  document.getElementById('dictProgressBadge').innerText=(current+1)+' / '+total;
   const textEl=document.getElementById('dictText');
-  textEl.innerText=dictItems[currentDictIndex];
+  textEl.innerText=dictItems[current];
   textEl.classList.add('hidden-text');
-  document.getElementById('btnNext').innerText=currentDictIndex===total-1?(isReviewMode?'✅ 完成溫習':'✅ 完成'):'➡️ 下一題';
+  document.getElementById('btnNext').innerText=current===total-1?(isReviewMode?'✅ 完成溫習':'✅ 完成'):'➡️ 下一題';
   updateVerticalProgress();
   stopCountdown();
   if(playMode==='manual'&&!isReviewMode){startWordTimer();}
   else{stopWordTimer();document.getElementById('manualTimerWrap').classList.remove('visible');}
-  speakAndSchedule(dictItems[currentDictIndex]);
+  speakAndSchedule(dictItems[current]);
 }
 function toggleText(){document.getElementById('dictText').classList.toggle('hidden-text');}
 function nextDictItem(){
@@ -1249,23 +1264,49 @@ function updateCountdownRing(){
   document.getElementById('countdownNum').innerText=currentCountdown;
   document.getElementById('countdownRing').style.background='conic-gradient(var(--primary) '+((currentCountdown/autoInterval)*100)+'%,#E2E8F0 '+((currentCountdown/autoInterval)*100)+'%)';
 }
+
+// ===== 進度條（修復版）=====
 function updateVerticalProgress(){
   const total=dictItems.length,current=currentDictIndex;
   const track=document.getElementById('vpTrack'),fill=document.getElementById('vpFill');
+  if(!track||!fill)return;
+  
   document.getElementById('vpCount').innerText=(current+1)+'/'+total;
   document.getElementById('vpLabel').innerText=isReviewMode?'溫習':'進度';
-  fill.style.height=(total>1?(current/(total-1))*100:100)+'%';
+  
+  // 修復：用 (current+1)/total 計算，第一題唔會係 0%
+  const pct=(total>0?((current+1)/total)*100:0);
+  const isMobile=window.innerWidth<=640;
+  
+  // 修復：偵測螢幕寬度，設置正確方向
+  if(isMobile){
+    fill.style.width=pct+'%';
+    fill.style.height='100%';
+  }else{
+    fill.style.height=pct+'%';
+    fill.style.width='100%';
+  }
+  
   track.querySelectorAll('.vp-dot').forEach(d=>d.remove());
   const maxDots=Math.min(total,30);
   for(let i=0;i<maxDots;i++){
     const dot=document.createElement('div');dot.className='vp-dot';
-    dot.style.top=(maxDots>1?(i/(maxDots-1))*100:0)+'%';
+    const dotPct=(maxDots>1?(i/(maxDots-1))*100:50);
+    // 修復：根據螢幕寬度設置正確位置
+    if(isMobile){
+      dot.style.left=dotPct+'%';
+      dot.style.top='50%';
+    }else{
+      dot.style.top=dotPct+'%';
+      dot.style.left='50%';
+    }
     if(i<current)dot.classList.add('completed');
     else if(i===current)dot.classList.add('current');
     else dot.classList.add('upcoming');
     track.appendChild(dot);
   }
 }
+
 function renderCheckList(){
   document.getElementById('checkList').innerHTML=dictItems.map((item,i)=>{
     const t=(playMode==='manual'&&wordTimes[i]!==undefined)?'<span class="time-chip">⏱ '+formatTime(wordTimes[i])+'</span>':'';
@@ -1442,6 +1483,7 @@ function downloadTsv(){
   URL.revokeObjectURL(url);
 }
 
+// ===== 初始化 =====
 window.onload=()=>{
   document.getElementById('appVersion').innerText=APP_VERSION;
   migrateIds();
@@ -1457,6 +1499,13 @@ window.onload=()=>{
     };
   }
   showPage('home');
+  
+  // 修復：轉屏後更新進度條
+  window.addEventListener('resize',()=>{
+    if(currentPage==='dictation'){
+      updateVerticalProgress();
+    }
+  });
 };
 </script>
 </body>
