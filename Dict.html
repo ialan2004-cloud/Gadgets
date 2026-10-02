@@ -3,19 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中文／英文默書系統 15.2</title>
+<title>中文／英文默書系統 15.3</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
   :root{--primary:#2563EB;--primary-light:#EFF6FF;--primary-dark:#1D4ED8;--success:#10B981;--danger:#EF4444;--warning:#F59E0B;--bg:#F8FAFC;--card:#fff;--text:#0F172A;--text-light:#64748B;--border:#E2E8F0;--radius:12px;--shadow:0 4px 6px -1px rgba(0,0,0,.05),0 2px 4px -1px rgba(0,0,0,.03);}
   *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft JhengHei","PingFang HK",sans-serif;}
-  body{background:var(--bg);min-height:100vh;color:var(--text);}
+  body{background:var(--bg);min-height:100vh;color:var(--text);display:flex;flex-direction:column;}
   .navbar{background:#fff;border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
   .navbar h1{font-size:18px;font-weight:700;color:var(--primary);display:flex;align-items:center;gap:8px;}
   .nav-links{display:flex;gap:6px;}
   .nav-btn{background:transparent;border:none;color:var(--text-light);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;transition:.2s;}
   .nav-btn:hover{background:var(--primary-light);color:var(--primary);}
   .nav-btn.active{background:var(--primary);color:#fff;}
-  .container{max-width:900px;margin:0 auto;padding:24px;}
+  .container{max-width:900px;margin:0 auto;padding:24px;width:100%;flex:1;}
   .card{background:var(--card);border-radius:var(--radius);padding:24px;margin-bottom:20px;box-shadow:var(--shadow);border:1px solid var(--border);}
   .card-title{font-size:16px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 20px;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;}
@@ -30,6 +30,12 @@
   .btn-icon{width:40px;height:40px;padding:0;border-radius:8px;font-size:16px;}
   .btn-icon.sm{width:36px;height:36px;font-size:14px;}
   .btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+  /* 統一頁首 */
+  .page-header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+  .page-header-left{display:flex;align-items:center;gap:10px;min-width:0;flex-wrap:wrap;}
+  .page-header-title{font-size:18px;font-weight:700;word-break:break-word;}
+  .page-header-right{display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap;}
+  .app-footer{text-align:center;padding:24px 16px;color:#9CA3AF;font-size:12px;}
   .form-group{margin-bottom:16px;}
   .form-label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;}
   .form-input,.form-select,.form-textarea{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:8px;font-size:15px;transition:.2s;background:#fff;}
@@ -80,8 +86,7 @@
   .vp-dot.upcoming{border-color:#CBD5E1;background:#fff;}
   @keyframes vpPulse{0%,100%{box-shadow:0 0 0 4px rgba(37,99,235,.2)}50%{box-shadow:0 0 0 8px rgba(37,99,235,.1)}}
   .vp-count{font-size:12px;font-weight:700;color:var(--primary);margin-top:8px;}
-  .dictation-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
-  .dictation-display{background:linear-gradient(135deg,#F8FAFC 0%,#EFF6FF 100%);border:2px dashed var(--border);border-radius:16px;padding:36px 20px;text-align:center;margin:20px 0 8px 0;min-height:140px;display:flex;align-items:center;justify-content:center;position:relative;}
+  .dictation-display{background:linear-gradient(135deg,#F8FAFC 0%,#EFF6FF 100%);border:2px dashed var(--border);border-radius:16px;padding:36px 20px;text-align:center;margin:8px 0;min-height:140px;display:flex;align-items:center;justify-content:center;position:relative;}
   .dictation-text{font-size:34px;font-weight:700;line-height:1.5;letter-spacing:2px;transition:filter .3s;}
   .dictation-text.hidden-text{filter:blur(12px);user-select:none;color:var(--text-light);}
   .review-banner{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:var(--warning);color:#fff;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;}
@@ -198,6 +203,7 @@
     .review-options{flex-direction:column;}
     .content-item{flex-wrap:wrap;}
     .content-item .actions{width:100%;justify-content:flex-end;margin-top:6px;}
+    .page-header-title{font-size:16px;}
   }
 </style>
 </head>
@@ -206,10 +212,10 @@
 <nav class="navbar">
   <h1>📋 中文／英文默書系統</h1>
   <div class="nav-links">
-    <button class="nav-btn active" onclick="showPage('home')">🏠 主頁</button>
-    <button class="nav-btn" onclick="showPage('projects')">📁 默書庫</button>
-    <button class="nav-btn" onclick="showPage('records')">📊 記錄</button>
-    <button class="nav-btn" onclick="showPage('sync')">☁️ 同步</button>
+    <button class="nav-btn active" onclick="navTo('home')">🏠 主頁</button>
+    <button class="nav-btn" onclick="navTo('projects')">📁 默書庫</button>
+    <button class="nav-btn" onclick="navTo('records')">📊 記錄</button>
+    <button class="nav-btn" onclick="navTo('sync')">☁️ 同步</button>
   </div>
 </nav>
 
@@ -227,7 +233,7 @@
           <div id="quickEn"></div>
         </div>
       </div>
-      <button class="btn btn-primary btn-block mt-2" onclick="showPage('projects')">📁 瀏覽默書庫</button>
+      <button class="btn btn-primary btn-block mt-2" onclick="navTo('projects')">📁 瀏覽默書庫</button>
     </div>
     <div class="card"><div class="card-title">📊 最近成績</div><div id="recentScores"></div></div>
   </div>
@@ -250,9 +256,15 @@
   </div>
 
   <div id="page-project-detail" class="hidden">
-    <div class="card"><div class="flex-between">
-      <div><h2 id="detailTitle" style="font-size:20px;margin-bottom:6px;"></h2><span id="detailBadge"></span></div>
-      <button class="btn btn-outline" onclick="showPage('projects')">⬅️ 返回</button></div></div>
+    <div class="card">
+      <div class="page-header">
+        <div class="page-header-left">
+          <button class="btn btn-outline btn-sm" onclick="goBack()">⬅️ 返回</button>
+          <span class="page-header-title" id="detailTitle"></span>
+        </div>
+        <div class="page-header-right" id="detailBadge"></div>
+      </div>
+    </div>
     <div class="card">
       <div id="sampleNote" class="sample-note hidden">🎁 呢個係系統預設嘅示例默書表，可以隨意編輯或刪除。</div>
       <div class="list-toolbar">
@@ -289,12 +301,18 @@
 
   <div id="page-dictation" class="hidden">
     <div class="card" style="padding:16px;">
+      <div class="page-header">
+        <div class="page-header-left">
+          <button class="btn btn-outline btn-sm" onclick="requestExitDictation()">❌ 退出</button>
+          <span class="page-header-title">📝 默書進行中</span>
+        </div>
+        <div class="page-header-right">
+          <span class="badge badge-purple hidden" id="reviewBadge">🔄 溫習中</span>
+          <span class="badge badge-blue" id="dictProgressBadge">1 / 5</span>
+        </div>
+      </div>
       <div class="dictation-layout">
         <div class="dictation-main">
-          <div class="dictation-header">
-            <button class="btn btn-outline btn-sm" onclick="exitDictation()">⬅️ 退出</button>
-            <span class="badge badge-blue" id="dictProgressBadge">1 / 5</span>
-            <span class="badge badge-purple hidden" id="reviewBadge">🔄 溫習中</span></div>
           <div class="dictation-display" id="dictDisplay">
             <div class="review-banner hidden" id="reviewBanner">🔄 快速溫習模式</div>
             <div class="dictation-text hidden-text" id="dictText">準備好了嗎？</div></div>
@@ -320,16 +338,32 @@
             <div class="vp-label" id="vpLabel">進度</div>
             <div class="vp-track" id="vpTrack"><div class="vp-fill" id="vpFill" style="height:0%"></div></div>
             <div class="vp-count" id="vpCount">0/0</div></div></div>
-      </div></div></div>
+      </div>
+    </div>
+  </div>
 
   <div id="page-checking" class="hidden">
-    <div class="card"><div class="card-title">✅ 家長校對</div>
+    <div class="card">
+      <div class="page-header">
+        <div class="page-header-left">
+          <button class="btn btn-outline btn-sm" onclick="goBack()">⬅️ 返回</button>
+          <span class="page-header-title">✅ 家長校對</span>
+        </div>
+      </div>
       <p style="color:var(--text-light);margin-bottom:16px;font-size:14px;">請對照學生喺紙上寫嘅答案，逐題標記對錯：</p>
-      <div id="checkList"></div></div>
-    <div class="card text-center"><button class="btn btn-primary btn-lg btn-block" onclick="finishChecking()">📊 完成校對</button></div></div>
+      <div id="checkList"></div>
+    </div>
+    <div class="card text-center"><button class="btn btn-primary btn-lg btn-block" onclick="finishChecking()">📊 完成校對</button></div>
+  </div>
 
   <div id="page-result" class="hidden">
     <div class="card text-center">
+      <div class="page-header">
+        <div class="page-header-left">
+          <button class="btn btn-outline btn-sm" onclick="goBack()">⬅️ 返回</button>
+          <span class="page-header-title">🎯 默書結果</span>
+        </div>
+      </div>
       <div style="font-size:64px;margin-bottom:12px;" id="resultEmoji">🎉</div>
       <h2 id="resultTitle" style="margin-bottom:20px;">默書完成！</h2>
       <div class="stats-grid">
@@ -346,8 +380,10 @@
       <div id="resultWrong" class="hidden" style="text-align:left;margin-top:20px;">
         <h4 style="margin-bottom:10px;font-size:15px;">❌ 錯咗嘅內容：</h4><div id="wrongList"></div></div>
       <div class="mt-3" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-        <button class="btn btn-primary" onclick="showPage('home')">🏠 返回主頁</button>
-        <button class="btn btn-outline" onclick="retryWrong()">🔄 只溫錯題</button></div></div></div>
+        <button class="btn btn-outline" onclick="navTo('home')">🏠 返回主頁</button>
+        <button class="btn btn-primary" onclick="retryWrong()">🔄 只溫錯題</button></div>
+    </div>
+  </div>
 
   <div id="page-records" class="hidden">
     <div class="card"><div class="card-title">📊 歷史成績</div><canvas id="recordChart" width="800" height="280" style="width:100%;"></canvas></div>
@@ -402,7 +438,6 @@
         <button class="btn btn-outline btn-sm mt-2" onclick="clearDebug()">🗑️ 清除除錯記錄</button>
       </details>
     </div>
-
     <div class="sync-section">
       <h3>📤 匯出資料（表格格式）</h3>
       <p>以下表格同你嘅 Google Sheets 格式一致（3 欄：Project / Type / Details），中英文分開兩表。撳「複製」後可直接貼入 Google Sheets。</p>
@@ -410,6 +445,8 @@
     </div>
   </div>
 </div>
+
+<footer class="app-footer">中文／英文默書系統 · 版本 <span id="appVersion"></span></footer>
 
 <div class="modal" id="modalNewProject"><div class="modal-content">
   <button class="modal-close" onclick="closeModal('modalNewProject')">✕</button>
@@ -460,11 +497,15 @@
     <div class="review-option" onclick="closeModal('modalReview');goToMarking()"><div class="ro-icon">➡️</div><div class="ro-title">直接校對</div><div class="ro-desc">跳過溫習</div></div></div></div></div>
 
 <script>
+const APP_VERSION='15.3';
 const SHEET_ID='1Ok4OH76O2W5rtkHw-1Q_F6W4c4jD-WoQTA0UwAXv4t0';
 const TAB_CONFIG={
   zh:{defaultName:'Chinese',label:'中文默書'},
   en:{defaultName:'English',label:'英文默書'}
 };
+const MAIN_PAGES=['home','projects','records','sync'];
+let lastMainPage='home';
+let currentPage='home';
 
 let projects=[];
 try{projects=JSON.parse(localStorage.getItem('dict_p8')||'[]');}catch(e){projects=[];}
@@ -543,19 +584,49 @@ function seedSampleProject(){
   localStorage.setItem('dict_seeded_v11','1');
 }
 
+// ===== 導航 =====
 function showPage(p){
+  currentPage=p;
+  if(MAIN_PAGES.indexOf(p)>=0)lastMainPage=p;
   document.querySelectorAll('[id^="page-"]').forEach(x=>x.classList.add('hidden'));
-  document.getElementById('page-'+p).classList.remove('hidden');
+  const target=document.getElementById('page-'+p);
+  if(target)target.classList.remove('hidden');
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  const activeMain=(MAIN_PAGES.indexOf(p)>=0)?p:lastMainPage;
   const map={home:0,projects:1,records:2,sync:3};
-  if(map[p]!==undefined)document.querySelectorAll('.nav-btn')[map[p]].classList.add('active');
+  const navBtns=document.querySelectorAll('.nav-btn');
+  if(map[activeMain]!==undefined&&navBtns[map[activeMain]])navBtns[map[activeMain]].classList.add('active');
   if(p==='home')renderHome();
   if(p==='projects')renderProjects();
   if(p==='records')renderRecords();
   if(p==='sync'){loadSyncPage();renderExportTables();}
 }
+function navTo(p){
+  if(currentPage==='dictation'){
+    requestExitDictation();
+  }else{
+    showPage(p);
+  }
+}
+function goBack(){
+  showPage(lastMainPage);
+}
 function showModal(id){document.getElementById(id).classList.add('show');}
 function closeModal(id){document.getElementById(id).classList.remove('show');}
+
+// ===== 默書退出保護 =====
+function stopDictationSession(){
+  stopCountdown();
+  stopWordTimer();
+  if('speechSynthesis' in window)window.speechSynthesis.cancel();
+  isReviewMode=false;
+}
+function requestExitDictation(){
+  if(confirm('你正在默書中。\n確定要退出默書嗎？\n\n按「確定」→ 終止默書並返回上一頁\n按「取消」→ 繼續默書')){
+    stopDictationSession();
+    showPage(lastMainPage);
+  }
+}
 
 function escapeHtml(s){const d=document.createElement('div');d.textContent=(s===null||s===undefined)?'':String(s);return d.innerHTML;}
 function escapeAttr(s){return String(s===null||s===undefined?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
@@ -986,7 +1057,6 @@ function nextDictItem(){
   if(currentDictIndex<dictItems.length-1){currentDictIndex++;showDictItem();}
   else{if(isReviewMode)finishReview();else requestEndDictation();}
 }
-function exitDictation(){if(confirm('確定要退出？')){stopCountdown();stopWordTimer();isReviewMode=false;openProject(currentProject.id);}}
 function requestEndDictation(){
   stopCountdown();
   if(playMode==='manual'&&manualTiming){wordTimes[currentDictIndex]=Math.floor((Date.now()-wordStartTime)/1000);stopWordTimer();}
@@ -1112,7 +1182,6 @@ function renderRecords(){
 function clearAllRecords(){if(confirm('確定清除所有記錄？')){records=[];saveRecords();renderRecords();}}
 function shuffleArray(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
-// ===== 匯出表格（3 欄：Project / Type / Details，中英文分表）=====
 function typeLabelForExport(p){
   if(p.lang==='en'){
     return {words:'words',sentences:'sentences',passage:'paragraphs'}[p.type]||'words';
@@ -1224,6 +1293,7 @@ function downloadTsv(){
 }
 
 window.onload=()=>{
+  document.getElementById('appVersion').innerText=APP_VERSION;
   migrateIds();
   migrateTimestamps();
   seedSampleProject();
