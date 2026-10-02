@@ -3,15 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中文／英文默書系統 15.3</title>
+<title>中英文默書系統 15.5</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
   :root{--primary:#2563EB;--primary-light:#EFF6FF;--primary-dark:#1D4ED8;--success:#10B981;--danger:#EF4444;--warning:#F59E0B;--bg:#F8FAFC;--card:#fff;--text:#0F172A;--text-light:#64748B;--border:#E2E8F0;--radius:12px;--shadow:0 4px 6px -1px rgba(0,0,0,.05),0 2px 4px -1px rgba(0,0,0,.03);}
   *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft JhengHei","PingFang HK",sans-serif;}
   body{background:var(--bg);min-height:100vh;color:var(--text);display:flex;flex-direction:column;}
-  .navbar{background:#fff;border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
-  .navbar h1{font-size:18px;font-weight:700;color:var(--primary);display:flex;align-items:center;gap:8px;}
-  .nav-links{display:flex;gap:6px;}
+  .app-header{background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+  .app-title-bar{background:linear-gradient(135deg,#2563EB 0%,#1E40AF 100%);padding:18px 16px;text-align:center;}
+  .app-title{display:inline-block;color:#fff;font-size:26px;font-weight:800;letter-spacing:3px;padding:6px 28px;background:rgba(255,255,255,.15);border-radius:40px;text-shadow:0 2px 4px rgba(0,0,0,.25);}
+  .app-nav{display:flex;justify-content:center;gap:6px;padding:10px 16px;flex-wrap:wrap;background:#fff;}
   .nav-btn{background:transparent;border:none;color:var(--text-light);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;transition:.2s;}
   .nav-btn:hover{background:var(--primary-light);color:var(--primary);}
   .nav-btn.active{background:var(--primary);color:#fff;}
@@ -21,16 +22,15 @@
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 20px;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;}
   .btn:active{transform:scale(.97);}
   .btn-primary{background:var(--primary);color:#fff;}.btn-primary:hover{background:var(--primary-dark);}
-  .btn-success{background:var(--success);color:#fff;}
-  .btn-danger{background:var(--danger);color:#fff;}
+  .btn-success{background:var(--success);color:#fff;}.btn-success:hover{background:#059669;}
+  .btn-danger{background:var(--danger);color:#fff;}.btn-danger:hover{background:#DC2626;}
   .btn-outline{background:#fff;border:1px solid var(--border);color:var(--text);}
   .btn-outline:hover{border-color:var(--primary);color:var(--primary);}
   .btn-sm{padding:6px 12px;font-size:13px;}.btn-lg{padding:14px 28px;font-size:16px;}
   .btn-block{width:100%;}
-  .btn-icon{width:40px;height:40px;padding:0;border-radius:8px;font-size:16px;}
-  .btn-icon.sm{width:36px;height:36px;font-size:14px;}
+  .btn-icon{width:44px;height:44px;padding:0;border-radius:10px;font-size:17px;flex-shrink:0;}
+  .btn-icon.sm{width:38px;height:38px;font-size:15px;border-radius:9px;}
   .btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
-  /* 統一頁首 */
   .page-header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
   .page-header-left{display:flex;align-items:center;gap:10px;min-width:0;flex-wrap:wrap;}
   .page-header-title{font-size:18px;font-weight:700;word-break:break-word;}
@@ -45,24 +45,21 @@
   .badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;}
   .badge-blue{background:#DBEAFE;color:#1E40AF;}.badge-green{background:#D1FAE5;color:#065F46;}
   .badge-orange{background:#FEF3C7;color:#92400E;}.badge-purple{background:#EDE9FE;color:#5B21B6;}
-  .badge-lang-zh{background:#FEF3C7;color:#92400E;}.badge-lang-en{background:#E0E7FF;color:#3730A3;}
   .home-cols{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
   .col-head{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;padding-bottom:10px;margin-bottom:12px;border-bottom:2px solid var(--border);}
   .section-head{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:12px;}
-  .proj-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer;transition:.2s;}
-  .proj-card:hover{border-color:var(--primary);box-shadow:0 4px 12px rgba(37,99,235,.1);}
+  .proj-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;cursor:default;transition:.2s;}
   .proj-card-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;}
   .proj-name{font-weight:600;font-size:15px;word-break:break-word;}
   .proj-card-meta{font-size:13px;color:var(--text-light);margin-bottom:2px;}
   .proj-card-time{font-size:11px;color:#9CA3AF;margin-bottom:10px;}
-  .proj-card-actions{display:flex;gap:6px;justify-content:flex-end;}
-  .proj-card.compact{padding:10px 12px;margin-bottom:8px;}
-  .proj-card.compact .proj-card-top{margin-bottom:4px;}
-  .proj-card.compact .proj-name{font-size:14px;}
-  .proj-card.compact .proj-card-meta{font-size:12px;margin-bottom:0;}
-  .proj-card.compact .proj-card-time{font-size:10px;margin-bottom:6px;}
-  .proj-card.compact .proj-card-actions{margin-top:6px;padding-top:6px;border-top:1px solid var(--border);}
-  .proj-card.compact .proj-card-actions .btn{padding:4px 10px;font-size:12px;}
+  .proj-card-actions{display:flex;gap:8px;justify-content:flex-end;}
+  .home-card{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;}
+  .home-card-body{flex:1;min-width:0;}
+  .home-card .proj-card-top{margin-bottom:4px;}
+  .home-card .proj-name{font-size:14px;}
+  .home-card .proj-card-meta{font-size:12px;margin-bottom:0;}
+  .home-card .proj-card-time{font-size:10px;margin-bottom:0;margin-top:3px;}
   .empty-hint{color:var(--text-light);font-size:13px;text-align:center;padding:24px 12px;background:#F8FAFC;border-radius:10px;border:1px dashed var(--border);}
   .content-item{display:flex;align-items:center;padding:12px 14px;background:#F8FAFC;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;gap:10px;transition:.2s;}
   .content-item.editing{background:#EFF6FF;border-color:var(--primary);}
@@ -142,19 +139,34 @@
   .start-settings .ss-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;}
   .start-settings .ss-label{font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px;}
   .sample-note{background:#F5F3FF;border:1px solid #DDD6FE;border-radius:8px;padding:10px 14px;font-size:13px;color:#5B21B6;margin-bottom:12px;}
-  .sync-section{border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;background:#fff;}
-  .sync-section h3{font-size:15px;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
-  .sync-section p{font-size:13px;color:var(--text-light);margin-bottom:14px;line-height:1.5;}
+  /* 同步／匯入匯出 區塊 */
+  .sync-section{border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:20px;background:#fff;box-shadow:var(--shadow);}
+  .sync-section h3{font-size:16px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+  .section-desc{font-size:13px;color:var(--text-light);margin-bottom:16px;line-height:1.5;}
+  .last-sync-info{font-size:13px;color:var(--text);background:var(--primary-light);border:1px solid #BFDBFE;padding:8px 14px;border-radius:8px;display:inline-block;font-weight:500;}
+  /* 匯入數據統計方格 */
+  .import-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0;}
+  .import-stat-box{background:#F8FAFC;border:1px solid var(--border);border-radius:12px;padding:18px 12px;text-align:center;transition:.2s;}
+  .import-stat-box:hover{border-color:var(--primary);box-shadow:0 2px 8px rgba(37,99,235,.08);}
+  .is-icon{font-size:20px;margin-bottom:6px;}
+  .is-value{font-size:28px;font-weight:800;color:var(--primary);line-height:1.2;}
+  .is-label{font-size:12px;color:var(--text-light);margin-top:4px;}
+  .import-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;}
   .sync-status{margin-top:12px;padding:10px 14px;border-radius:8px;font-size:14px;display:none;}
   .sync-status.show{display:block;}
   .sync-status.success{background:#F0FDF4;color:#065F46;border:1px solid #A7F3D0;}
   .sync-status.error{background:#FEF2F2;color:#991B1B;border:1px solid #FECACA;}
   .sync-status.loading{background:#EFF6FF;color:#1E40AF;border:1px solid #BFDBFE;}
   .sheet-format-box{background:#F8FAFC;border:1px solid var(--border);padding:14px;border-radius:8px;margin:10px 0;font-family:monospace;font-size:12px;line-height:1.6;color:var(--text);}
-  .sheet-id-box{background:#F1F5F9;border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:14px;}
+  .sheet-id-box{background:#F8FAFC;border:1px solid var(--border);border-radius:8px;padding:12px;}
   .debug-box{font-size:11px;background:#0F172A;color:#94A3B8;padding:12px;border-radius:8px;white-space:pre-wrap;word-break:break-all;max-height:220px;overflow-y:auto;font-family:monospace;margin-top:10px;}
   details summary{cursor:pointer;color:var(--primary);font-size:14px;font-weight:500;}
-  .last-sync-info{font-size:12px;color:var(--text-light);background:#F1F5F9;padding:6px 12px;border-radius:16px;display:inline-block;margin-bottom:12px;}
+  /* 匯出摺疊標題（與 h3 一致） */
+  .export-summary{font-size:16px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px;list-style:none;cursor:pointer;}
+  .export-summary::-webkit-details-marker{display:none;}
+  .export-summary::after{content:'▼';margin-left:auto;font-size:11px;color:var(--text-light);transition:transform .2s;}
+  details[open]>.export-summary::after{transform:rotate(180deg);}
+  .export-body{margin-top:14px;}
   .export-table-wrap{margin-top:12px;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
   .export-table-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#F1F5F9;font-weight:600;font-size:14px;}
   .export-table{width:100%;border-collapse:collapse;font-size:13px;}
@@ -185,10 +197,11 @@
   .list-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
   .hint{font-size:12px;color:var(--text-light);}
   @media(max-width:640px){
-    .navbar{padding:12px 16px;flex-wrap:wrap;gap:8px;}.navbar h1{font-size:16px;}
+    .app-title{font-size:20px;letter-spacing:2px;padding:5px 20px;}
     .nav-btn{padding:6px 10px;font-size:12px;}
     .container{padding:12px;}.card{padding:16px;}
     .stats-grid{grid-template-columns:1fr;}
+    .import-stats{grid-template-columns:1fr;}
     .home-cols{grid-template-columns:1fr;}
     .segmented-control{width:100%;}.seg-btn{flex:1;text-align:center;padding:8px 6px;font-size:12px;}
     .dictation-text{font-size:26px;}
@@ -204,20 +217,23 @@
     .content-item{flex-wrap:wrap;}
     .content-item .actions{width:100%;justify-content:flex-end;margin-top:6px;}
     .page-header-title{font-size:16px;}
+    .btn-icon{width:40px;height:40px;font-size:16px;}
   }
 </style>
 </head>
 <body>
 
-<nav class="navbar">
-  <h1>📋 中文／英文默書系統</h1>
-  <div class="nav-links">
+<header class="app-header">
+  <div class="app-title-bar">
+    <h1 class="app-title">📋 中英文默書系統</h1>
+  </div>
+  <nav class="app-nav">
     <button class="nav-btn active" onclick="navTo('home')">🏠 主頁</button>
     <button class="nav-btn" onclick="navTo('projects')">📁 默書庫</button>
     <button class="nav-btn" onclick="navTo('records')">📊 記錄</button>
     <button class="nav-btn" onclick="navTo('sync')">☁️ 同步</button>
-  </div>
-</nav>
+  </nav>
+</header>
 
 <div class="container">
   <div id="page-home">
@@ -390,26 +406,30 @@
     <div class="card"><div id="recordTable"></div>
       <div class="text-center mt-2"><button class="btn btn-danger btn-sm" onclick="clearAllRecords()">🗑️ 清除所有記錄</button></div></div></div>
 
+  <!-- ===== 同步頁：匯入 + 匯出 ===== -->
   <div id="page-sync" class="hidden">
-    <div class="card">
-      <div class="card-title">☁️ Google Sheets 同步</div>
-      <p style="color:var(--text-light);font-size:14px;margin-bottom:16px;">已連接指定試算表，資料會儲存到本機快取，離線都可以使用。</p>
-      <div class="stats-grid" id="syncStats"></div>
-    </div>
+    <!-- Google Sheets 默書資料（匯入） -->
     <div class="sync-section">
-      <h3>📊 同步默書資料</h3>
-      <span class="last-sync-info" id="lastSyncInfo">上次同步：未同步</span>
-      <div class="sheet-id-box">
-        <span style="font-size:12px;color:var(--text-light);">已連接試算表 ID：</span><br>
-        <code id="sheetIdDisplay" style="font-size:12px;word-break:break-all;color:var(--text);"></code>
+      <h3>☁️ Google Sheets 默書資料</h3>
+      <p class="section-desc">從 Google Sheets 匯入默書資料到本機，離線都可以使用。</p>
+      <div style="margin-bottom:4px;">
+        <span class="last-sync-info" id="lastSyncInfo">上次匯入：未匯入</span>
       </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="btn btn-primary" onclick="syncAll()" id="syncAllBtn">🔄 同步全部</button>
-        <button class="btn btn-outline" onclick="syncSingle('zh')" id="syncZhBtn">🈶 只同步中文</button>
-        <button class="btn btn-outline" onclick="syncSingle('en')" id="syncEnBtn">🔤 只同步英文</button>
+      <div class="import-stats" id="importStats"></div>
+      <div class="import-actions">
+        <button class="btn btn-primary" onclick="syncAll()" id="syncAllBtn">🔄 匯入全部</button>
+        <button class="btn btn-outline" onclick="syncSingle('zh')" id="syncZhBtn">🈶 只匯入中文</button>
+        <button class="btn btn-outline" onclick="syncSingle('en')" id="syncEnBtn">🔤 只匯入英文</button>
       </div>
       <div class="sync-status" id="syncStatus"></div>
+
       <details class="mt-3">
+        <summary>🔗 已連接試算表 ID</summary>
+        <div class="sheet-id-box" style="margin-top:10px;">
+          <code id="sheetIdDisplay" style="font-size:12px;word-break:break-all;color:var(--text);"></code>
+        </div>
+      </details>
+      <details class="mt-2">
         <summary>📖 試算表格式說明</summary>
         <div class="mt-2" style="font-size:13px;color:var(--text-light);line-height:1.7;">
           <p style="margin-bottom:8px;">試算表有兩個分頁，每個分頁有 3 欄：</p>
@@ -420,7 +440,7 @@
             <li><strong>Details</strong>：默書內容，用 <strong>;</strong> 分隔每一項</li>
           </ul>
           <p>⚠️ 請確保試算表共用設定為「<strong>知道連結的任何人</strong>」都可檢視。</p>
-          <p>💡 再次同步會以試算表為準（覆蓋同名默書表內容）。</p>
+          <p>💡 再次匯入會以試算表為準（覆蓋同名默書表內容）。</p>
         </div>
       </details>
       <details class="mt-2">
@@ -433,20 +453,26 @@
         </div>
       </details>
       <details class="mt-2">
-        <summary>🔍 除錯資訊（同步失敗時睇呢度）</summary>
+        <summary>🔍 除錯資訊（匯入失敗時睇呢度）</summary>
         <div class="debug-box" id="debugContent">（暫無）</div>
         <button class="btn btn-outline btn-sm mt-2" onclick="clearDebug()">🗑️ 清除除錯記錄</button>
       </details>
     </div>
+
+    <!-- 匯出資料 -->
     <div class="sync-section">
-      <h3>📤 匯出資料（表格格式）</h3>
-      <p>以下表格同你嘅 Google Sheets 格式一致（3 欄：Project / Type / Details），中英文分開兩表。撳「複製」後可直接貼入 Google Sheets。</p>
-      <div id="exportTables"></div>
+      <details id="exportDetails">
+        <summary class="export-summary">📤 匯出資料（表格格式）</summary>
+        <div class="export-body">
+          <p class="section-desc">以下表格同你嘅 Google Sheets 格式一致（3 欄：Project / Type / Details），中英文分開兩表。撳「複製」後可直接貼入 Google Sheets。</p>
+          <div id="exportTables"></div>
+        </div>
+      </details>
     </div>
   </div>
 </div>
 
-<footer class="app-footer">中文／英文默書系統 · 版本 <span id="appVersion"></span></footer>
+<footer class="app-footer">中英文默書系統 · 版本 <span id="appVersion"></span></footer>
 
 <div class="modal" id="modalNewProject"><div class="modal-content">
   <button class="modal-close" onclick="closeModal('modalNewProject')">✕</button>
@@ -497,7 +523,7 @@
     <div class="review-option" onclick="closeModal('modalReview');goToMarking()"><div class="ro-icon">➡️</div><div class="ro-title">直接校對</div><div class="ro-desc">跳過溫習</div></div></div></div></div>
 
 <script>
-const APP_VERSION='15.3';
+const APP_VERSION='15.5';
 const SHEET_ID='1Ok4OH76O2W5rtkHw-1Q_F6W4c4jD-WoQTA0UwAXv4t0';
 const TAB_CONFIG={
   zh:{defaultName:'Chinese',label:'中文默書'},
@@ -584,7 +610,6 @@ function seedSampleProject(){
   localStorage.setItem('dict_seeded_v11','1');
 }
 
-// ===== 導航 =====
 function showPage(p){
   currentPage=p;
   if(MAIN_PAGES.indexOf(p)>=0)lastMainPage=p;
@@ -614,7 +639,6 @@ function goBack(){
 function showModal(id){document.getElementById(id).classList.add('show');}
 function closeModal(id){document.getElementById(id).classList.remove('show');}
 
-// ===== 默書退出保護 =====
 function stopDictationSession(){
   stopCountdown();
   stopWordTimer();
@@ -637,10 +661,10 @@ function getSheetUrl(lang){
   return 'https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(getTabName(lang));
 }
 function loadSyncPage(){
-  updateSyncStats();
+  renderImportStats();
   document.getElementById('sheetIdDisplay').innerText=SHEET_ID;
   const last=localStorage.getItem('dict_last_sync');
-  document.getElementById('lastSyncInfo').innerText='上次同步：'+(last||'未同步');
+  document.getElementById('lastSyncInfo').innerText='上次匯入：'+(last||'未匯入');
   document.getElementById('tabNameZh').value=getTabName('zh');
   document.getElementById('tabNameEn').value=getTabName('en');
   debugLog('就緒。中文分頁="'+getTabName('zh')+'"，英文分頁="'+getTabName('en')+'"，現有默書表：'+projects.length);
@@ -654,6 +678,20 @@ function saveTabNames(){
   const el=document.getElementById('tabNameSaved');
   el.style.display='inline';
   setTimeout(()=>{el.style.display='none';},2000);
+}
+// 匯入數據統計（只計算從 Google Sheets 匯入嘅資料）
+function renderImportStats(){
+  const el=document.getElementById('importStats');
+  if(!el)return;
+  const zhList=projects.filter(p=>p.lang==='zh'&&p.fromSheet);
+  const enList=projects.filter(p=>p.lang==='en'&&p.fromSheet);
+  const zhCount=zhList.length;
+  const enCount=enList.length;
+  const totalContent=zhList.concat(enList).reduce((s,p)=>s+(p.contents?p.contents.length:0),0);
+  el.innerHTML=
+    '<div class="import-stat-box"><div class="is-icon">🈶</div><div class="is-value">'+zhCount+'</div><div class="is-label">中文默書表</div></div>'+
+    '<div class="import-stat-box"><div class="is-icon">🔤</div><div class="is-value">'+enCount+'</div><div class="is-label">英文默書表</div></div>'+
+    '<div class="import-stat-box"><div class="is-icon">📝</div><div class="is-value">'+totalContent+'</div><div class="is-label">匯入內容</div></div>';
 }
 function parseCSV(text){
   if(text.charCodeAt(0)===0xFEFF)text=text.slice(1);
@@ -763,7 +801,7 @@ async function syncTab(lang){
 }
 async function syncAll(){
   setBtnLoading(true);
-  setSyncStatus('loading','正在同步中文同英文分頁...');
+  setSyncStatus('loading','正在匯入中文同英文分頁...');
   let added=0,updated=0;const errors=[];
   for(const lang of ['zh','en']){
     try{const r=await syncTab(lang);added+=r.added;updated+=r.updated;}
@@ -772,33 +810,26 @@ async function syncAll(){
   saveProjects();
   const now=new Date().toLocaleString('zh-HK');
   localStorage.setItem('dict_last_sync',now);
-  document.getElementById('lastSyncInfo').innerText='上次同步：'+now;
-  updateSyncStats();renderHome();renderProjects();renderExportTables();
-  if(errors.length&&(added===0&&updated===0)){setSyncStatus('error','同步失敗：'+errors.join('　'));}
-  else if(errors.length){setSyncStatus('success','部分同步成功：新增 '+added+'，更新 '+updated+'。問題：'+errors.join('　'));}
-  else{setSyncStatus('success','同步成功！新增 '+added+' 個，更新 '+updated+' 個默書表');}
+  document.getElementById('lastSyncInfo').innerText='上次匯入：'+now;
+  renderImportStats();renderHome();renderProjects();renderExportTables();
+  if(errors.length&&(added===0&&updated===0)){setSyncStatus('error','匯入失敗：'+errors.join('　'));}
+  else if(errors.length){setSyncStatus('success','部分匯入成功：新增 '+added+'，更新 '+updated+'。問題：'+errors.join('　'));}
+  else{setSyncStatus('success','匯入成功！新增 '+added+' 個，更新 '+updated+' 個默書表');}
   setBtnLoading(false);
 }
 async function syncSingle(lang){
   setBtnLoading(true);
-  setSyncStatus('loading','正在讀取'+TAB_CONFIG[lang].label+'分頁...');
+  setSyncStatus('loading','正在匯入'+TAB_CONFIG[lang].label+'分頁...');
   try{
     const r=await syncTab(lang);
     saveProjects();
     const now=new Date().toLocaleString('zh-HK');
     localStorage.setItem('dict_last_sync',now);
-    document.getElementById('lastSyncInfo').innerText='上次同步：'+now;
-    updateSyncStats();renderHome();renderProjects();renderExportTables();
-    setSyncStatus('success',TAB_CONFIG[lang].label+'同步成功！新增 '+r.added+' 個，更新 '+r.updated+' 個默書表');
-  }catch(e){setSyncStatus('error','同步失敗：'+e.message);}
+    document.getElementById('lastSyncInfo').innerText='上次匯入：'+now;
+    renderImportStats();renderHome();renderProjects();renderExportTables();
+    setSyncStatus('success',TAB_CONFIG[lang].label+'匯入成功！新增 '+r.added+' 個，更新 '+r.updated+' 個默書表');
+  }catch(e){setSyncStatus('error','匯入失敗：'+e.message);}
   setBtnLoading(false);
-}
-function updateSyncStats(){
-  const totalContent=projects.reduce((s,p)=>s+(p.contents?p.contents.length:0),0);
-  document.getElementById('syncStats').innerHTML=
-    '<div class="stat-box"><div class="value">'+projects.length+'</div><div class="label">默書表</div></div>'+
-    '<div class="stat-box"><div class="value">'+totalContent+'</div><div class="label">默書內容</div></div>'+
-    '<div class="stat-box"><div class="value">'+records.length+'</div><div class="label">成績記錄</div></div>';
 }
 
 function sampleBadge(p){return p.isSample?'<span class="badge badge-purple">示例</span>':'';}
@@ -814,25 +845,26 @@ function countLabel(p){
   return cnt+' 個詞條';
 }
 function homeCardHTML(p){
-  return '<div class="proj-card compact" onclick="openProject('+p.id+')">'+
-    '<div class="proj-card-top"><span class="proj-name">'+escapeHtml(p.name||'(未命名)')+'</span>'+
-    '<span style="display:flex;gap:4px;flex-shrink:0;">'+sampleBadge(p)+typeBadge(p)+'</span></div>'+
-    '<div class="proj-card-meta">'+countLabel(p)+'</div>'+
-    '<div class="proj-card-time">'+formatTs(p.updatedTs)+'</div>'+
-    '<div class="proj-card-actions">'+
-      '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openProject('+p.id+');startDictation()" style="flex:1;">▶️ 開始默書</button>'+
-    '</div></div>';
+  return '<div class="proj-card home-card">'+
+    '<div class="home-card-body">'+
+      '<div class="proj-card-top"><span class="proj-name">'+escapeHtml(p.name||'(未命名)')+'</span>'+
+      '<span style="display:flex;gap:4px;flex-shrink:0;">'+sampleBadge(p)+typeBadge(p)+'</span></div>'+
+      '<div class="proj-card-meta">'+countLabel(p)+'</div>'+
+      '<div class="proj-card-time">'+formatTs(p.updatedTs)+'</div>'+
+    '</div>'+
+    '<button class="btn btn-success btn-icon" onclick="openProject('+p.id+');startDictation()" title="開始默書">▶️</button>'+
+  '</div>';
 }
 function libraryCardHTML(p){
-  return '<div class="proj-card" onclick="openProject('+p.id+')">'+
+  return '<div class="proj-card">'+
     '<div class="proj-card-top"><span class="proj-name">'+escapeHtml(p.name||'(未命名)')+'</span>'+
     '<span style="display:flex;gap:4px;flex-shrink:0;">'+sampleBadge(p)+typeBadge(p)+'</span></div>'+
     '<div class="proj-card-meta">'+countLabel(p)+'</div>'+
     '<div class="proj-card-time">建立 '+formatTs(p.createdTs)+' · 更新 '+formatTs(p.updatedTs)+'</div>'+
     '<div class="proj-card-actions">'+
-      '<button class="btn btn-outline btn-icon sm" onclick="event.stopPropagation();openProject('+p.id+')" title="修改">✏️</button>'+
-      '<button class="btn btn-success btn-icon sm" onclick="event.stopPropagation();openProject('+p.id+');startDictation()" title="默書">▶️</button>'+
-      '<button class="btn btn-outline btn-icon sm" onclick="deleteProject('+p.id+',event)" title="刪除" style="color:var(--danger);border-color:var(--border);">🗑️</button>'+
+      '<button class="btn btn-primary btn-icon sm" onclick="openProject('+p.id+')" title="編輯">✏️</button>'+
+      '<button class="btn btn-success btn-icon sm" onclick="openProject('+p.id+');startDictation()" title="默書">▶️</button>'+
+      '<button class="btn btn-danger btn-icon sm" onclick="deleteProject('+p.id+',event)" title="刪除">🗑️</button>'+
     '</div></div>';
 }
 function renderLangList(elId,lang,limit,cardFn){
@@ -1299,7 +1331,7 @@ window.onload=()=>{
   seedSampleProject();
   loadOpenCC();
   window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();
-  renderHome();
+  showPage('home');
 };
 </script>
 </body>
