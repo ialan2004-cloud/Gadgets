@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中英文默書系統 15.5</title>
+<title>中英文默書系統 15.6</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
   :root{--primary:#2563EB;--primary-light:#EFF6FF;--primary-dark:#1D4ED8;--success:#10B981;--danger:#EF4444;--warning:#F59E0B;--bg:#F8FAFC;--card:#fff;--text:#0F172A;--text-light:#64748B;--border:#E2E8F0;--radius:12px;--shadow:0 4px 6px -1px rgba(0,0,0,.05),0 2px 4px -1px rgba(0,0,0,.03);}
@@ -45,10 +45,18 @@
   .badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;}
   .badge-blue{background:#DBEAFE;color:#1E40AF;}.badge-green{background:#D1FAE5;color:#065F46;}
   .badge-orange{background:#FEF3C7;color:#92400E;}.badge-purple{background:#EDE9FE;color:#5B21B6;}
-  .home-cols{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
-  .col-head{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;padding-bottom:10px;margin-bottom:12px;border-bottom:2px solid var(--border);}
+  /* 主頁：最新默書表 */
+  .home-section-title{font-size:16px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+  .home-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .home-lang-card{border-radius:var(--radius);padding:16px;border:1px solid;box-shadow:var(--shadow);}
+  .home-lang-card.zh{background:#FFF7F5;border-color:#F5D8D2;}
+  .home-lang-card.en{background:#F5F9FF;border-color:#D9E6FA;}
+  .lang-card-head{font-size:14px;font-weight:700;padding:7px 12px;border-radius:8px;margin-bottom:12px;display:inline-flex;align-items:center;gap:6px;}
+  .home-lang-card.zh .lang-card-head{background:#FCE8E3;color:#C0392B;}
+  .home-lang-card.en .lang-card-head{background:#E8F0FE;color:#1D4ED8;}
   .section-head{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:12px;}
   .proj-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;cursor:default;transition:.2s;}
+  .proj-card:last-child{margin-bottom:0;}
   .proj-card-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;}
   .proj-name{font-weight:600;font-size:15px;word-break:break-word;}
   .proj-card-meta{font-size:13px;color:var(--text-light);margin-bottom:2px;}
@@ -60,7 +68,7 @@
   .home-card .proj-name{font-size:14px;}
   .home-card .proj-card-meta{font-size:12px;margin-bottom:0;}
   .home-card .proj-card-time{font-size:10px;margin-bottom:0;margin-top:3px;}
-  .empty-hint{color:var(--text-light);font-size:13px;text-align:center;padding:24px 12px;background:#F8FAFC;border-radius:10px;border:1px dashed var(--border);}
+  .empty-hint{color:var(--text-light);font-size:13px;text-align:center;padding:24px 12px;background:rgba(255,255,255,.6);border-radius:10px;border:1px dashed var(--border);}
   .content-item{display:flex;align-items:center;padding:12px 14px;background:#F8FAFC;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;gap:10px;transition:.2s;}
   .content-item.editing{background:#EFF6FF;border-color:var(--primary);}
   .content-item .num{width:28px;height:28px;background:var(--primary);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;}
@@ -139,12 +147,10 @@
   .start-settings .ss-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;}
   .start-settings .ss-label{font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px;}
   .sample-note{background:#F5F3FF;border:1px solid #DDD6FE;border-radius:8px;padding:10px 14px;font-size:13px;color:#5B21B6;margin-bottom:12px;}
-  /* 同步／匯入匯出 區塊 */
   .sync-section{border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:20px;background:#fff;box-shadow:var(--shadow);}
   .sync-section h3{font-size:16px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px;}
   .section-desc{font-size:13px;color:var(--text-light);margin-bottom:16px;line-height:1.5;}
   .last-sync-info{font-size:13px;color:var(--text);background:var(--primary-light);border:1px solid #BFDBFE;padding:8px 14px;border-radius:8px;display:inline-block;font-weight:500;}
-  /* 匯入數據統計方格 */
   .import-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0;}
   .import-stat-box{background:#F8FAFC;border:1px solid var(--border);border-radius:12px;padding:18px 12px;text-align:center;transition:.2s;}
   .import-stat-box:hover{border-color:var(--primary);box-shadow:0 2px 8px rgba(37,99,235,.08);}
@@ -161,7 +167,6 @@
   .sheet-id-box{background:#F8FAFC;border:1px solid var(--border);border-radius:8px;padding:12px;}
   .debug-box{font-size:11px;background:#0F172A;color:#94A3B8;padding:12px;border-radius:8px;white-space:pre-wrap;word-break:break-all;max-height:220px;overflow-y:auto;font-family:monospace;margin-top:10px;}
   details summary{cursor:pointer;color:var(--primary);font-size:14px;font-weight:500;}
-  /* 匯出摺疊標題（與 h3 一致） */
   .export-summary{font-size:16px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px;list-style:none;cursor:pointer;}
   .export-summary::-webkit-details-marker{display:none;}
   .export-summary::after{content:'▼';margin-left:auto;font-size:11px;color:var(--text-light);transition:transform .2s;}
@@ -236,22 +241,24 @@
 </header>
 
 <div class="container">
+  <!-- ===== 主頁 ===== -->
   <div id="page-home">
-    <div class="card">
-      <div class="card-title">🚀 快速開始</div>
-      <div class="home-cols">
-        <div>
-          <div class="col-head">🈶 中文默書 <span style="font-weight:400;color:var(--text-light);font-size:12px;">（最近新增）</span></div>
-          <div id="quickZh"></div>
-        </div>
-        <div>
-          <div class="col-head">🔤 英文默書 <span style="font-weight:400;color:var(--text-light);font-size:12px;">（最近新增）</span></div>
-          <div id="quickEn"></div>
-        </div>
+    <div class="home-section-title">🆕 最新默書表</div>
+    <div class="home-cols">
+      <div class="home-lang-card zh">
+        <div class="lang-card-head">🈶 中文默書</div>
+        <div id="quickZh"></div>
       </div>
-      <button class="btn btn-primary btn-block mt-2" onclick="navTo('projects')">📁 瀏覽默書庫</button>
+      <div class="home-lang-card en">
+        <div class="lang-card-head">🔤 英文默書</div>
+        <div id="quickEn"></div>
+      </div>
     </div>
-    <div class="card"><div class="card-title">📊 最近成績</div><div id="recentScores"></div></div>
+    <button class="btn btn-primary btn-block mt-2" onclick="navTo('projects')">📁 瀏覽默書庫</button>
+    <div class="card mt-3">
+      <div class="card-title">📊 最近成績</div>
+      <div id="recentScores"></div>
+    </div>
   </div>
 
   <div id="page-projects" class="hidden">
@@ -406,9 +413,7 @@
     <div class="card"><div id="recordTable"></div>
       <div class="text-center mt-2"><button class="btn btn-danger btn-sm" onclick="clearAllRecords()">🗑️ 清除所有記錄</button></div></div></div>
 
-  <!-- ===== 同步頁：匯入 + 匯出 ===== -->
   <div id="page-sync" class="hidden">
-    <!-- Google Sheets 默書資料（匯入） -->
     <div class="sync-section">
       <h3>☁️ Google Sheets 默書資料</h3>
       <p class="section-desc">從 Google Sheets 匯入默書資料到本機，離線都可以使用。</p>
@@ -422,7 +427,6 @@
         <button class="btn btn-outline" onclick="syncSingle('en')" id="syncEnBtn">🔤 只匯入英文</button>
       </div>
       <div class="sync-status" id="syncStatus"></div>
-
       <details class="mt-3">
         <summary>🔗 已連接試算表 ID</summary>
         <div class="sheet-id-box" style="margin-top:10px;">
@@ -458,8 +462,6 @@
         <button class="btn btn-outline btn-sm mt-2" onclick="clearDebug()">🗑️ 清除除錯記錄</button>
       </details>
     </div>
-
-    <!-- 匯出資料 -->
     <div class="sync-section">
       <details id="exportDetails">
         <summary class="export-summary">📤 匯出資料（表格格式）</summary>
@@ -523,7 +525,7 @@
     <div class="review-option" onclick="closeModal('modalReview');goToMarking()"><div class="ro-icon">➡️</div><div class="ro-title">直接校對</div><div class="ro-desc">跳過溫習</div></div></div></div></div>
 
 <script>
-const APP_VERSION='15.5';
+const APP_VERSION='15.6';
 const SHEET_ID='1Ok4OH76O2W5rtkHw-1Q_F6W4c4jD-WoQTA0UwAXv4t0';
 const TAB_CONFIG={
   zh:{defaultName:'Chinese',label:'中文默書'},
@@ -679,7 +681,6 @@ function saveTabNames(){
   el.style.display='inline';
   setTimeout(()=>{el.style.display='none';},2000);
 }
-// 匯入數據統計（只計算從 Google Sheets 匯入嘅資料）
 function renderImportStats(){
   const el=document.getElementById('importStats');
   if(!el)return;
