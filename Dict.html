@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中文／英文默書系統 15.1</title>
+<title>中文／英文默書系統 15.2</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
   :root{--primary:#2563EB;--primary-light:#EFF6FF;--primary-dark:#1D4ED8;--success:#10B981;--danger:#EF4444;--warning:#F59E0B;--bg:#F8FAFC;--card:#fff;--text:#0F172A;--text-light:#64748B;--border:#E2E8F0;--radius:12px;--shadow:0 4px 6px -1px rgba(0,0,0,.05),0 2px 4px -1px rgba(0,0,0,.03);}
@@ -43,7 +43,6 @@
   .home-cols{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
   .col-head{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;padding-bottom:10px;margin-bottom:12px;border-bottom:2px solid var(--border);}
   .section-head{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:12px;}
-  /* 默書庫卡片 */
   .proj-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer;transition:.2s;}
   .proj-card:hover{border-color:var(--primary);box-shadow:0 4px 12px rgba(37,99,235,.1);}
   .proj-card-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;}
@@ -51,7 +50,6 @@
   .proj-card-meta{font-size:13px;color:var(--text-light);margin-bottom:2px;}
   .proj-card-time{font-size:11px;color:#9CA3AF;margin-bottom:10px;}
   .proj-card-actions{display:flex;gap:6px;justify-content:flex-end;}
-  /* 主頁緊湊卡片 */
   .proj-card.compact{padding:10px 12px;margin-bottom:8px;}
   .proj-card.compact .proj-card-top{margin-bottom:4px;}
   .proj-card.compact .proj-name{font-size:14px;}
@@ -152,16 +150,16 @@
   .debug-box{font-size:11px;background:#0F172A;color:#94A3B8;padding:12px;border-radius:8px;white-space:pre-wrap;word-break:break-all;max-height:220px;overflow-y:auto;font-family:monospace;margin-top:10px;}
   details summary{cursor:pointer;color:var(--primary);font-size:14px;font-weight:500;}
   .last-sync-info{font-size:12px;color:var(--text-light);background:#F1F5F9;padding:6px 12px;border-radius:16px;display:inline-block;margin-bottom:12px;}
-  /* 匯出表格 */
   .export-table-wrap{margin-top:12px;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
   .export-table-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#F1F5F9;font-weight:600;font-size:14px;}
   .export-table{width:100%;border-collapse:collapse;font-size:13px;}
   .export-table th,.export-table td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);}
   .export-table th{background:#F8FAFC;font-weight:600;font-size:12px;color:var(--text-light);text-transform:uppercase;}
   .export-table tr:last-child td{border-bottom:none;}
-  .export-table td{white-space:nowrap;max-width:300px;overflow:hidden;text-overflow:ellipsis;}
-  .export-table td.wrap{white-space:normal;}
-  .export-actions{display:flex;gap:8px;margin-top:10px;}
+  .export-table td{max-width:300px;}
+  .export-table td.wrap{white-space:normal;word-break:break-word;}
+  .export-table td.nowrap{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .export-actions{display:flex;gap:8px;margin-top:14px;align-items:center;flex-wrap:wrap;}
   .copy-confirm{color:var(--success);font-size:13px;margin-left:8px;display:none;}
   .modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.6);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center;padding:20px;}
   .modal.show{display:flex;}
@@ -405,10 +403,9 @@
       </details>
     </div>
 
-    <!-- ===== EXPORT AS TABLE ===== -->
     <div class="sync-section">
       <h3>📤 匯出資料（表格格式）</h3>
-      <p>以下表格為 Tab 分隔格式，撳「複製」後可直接貼入 Google Sheets。</p>
+      <p>以下表格同你嘅 Google Sheets 格式一致（3 欄：Project / Type / Details），中英文分開兩表。撳「複製」後可直接貼入 Google Sheets。</p>
       <div id="exportTables"></div>
     </div>
   </div>
@@ -562,7 +559,6 @@ function closeModal(id){document.getElementById(id).classList.remove('show');}
 
 function escapeHtml(s){const d=document.createElement('div');d.textContent=(s===null||s===undefined)?'':String(s);return d.innerHTML;}
 function escapeAttr(s){return String(s===null||s===undefined?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-// Escape for TSV cells: remove tabs/newlines
 function escapeTsv(s){return String(s===null||s===undefined?'':s).replace(/[\t\r\n]/g,' ').trim();}
 
 function getTabName(lang){return localStorage.getItem('dict_tab_'+lang)||TAB_CONFIG[lang].defaultName;}
@@ -734,7 +730,6 @@ function updateSyncStats(){
     '<div class="stat-box"><div class="value">'+records.length+'</div><div class="label">成績記錄</div></div>';
 }
 
-// ===== 卡片渲染 =====
 function sampleBadge(p){return p.isSample?'<span class="badge badge-purple">示例</span>':'';}
 function typeBadge(p){
   const tl={words:'詞語',sentences:'句子',passage:'文章'};
@@ -747,7 +742,6 @@ function countLabel(p){
   if(p.type==='passage')return cnt+' 段文章';
   return cnt+' 個詞條';
 }
-// 主頁卡片（緊湊、無刪除鍵）
 function homeCardHTML(p){
   return '<div class="proj-card compact" onclick="openProject('+p.id+')">'+
     '<div class="proj-card-top"><span class="proj-name">'+escapeHtml(p.name||'(未命名)')+'</span>'+
@@ -758,7 +752,6 @@ function homeCardHTML(p){
       '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openProject('+p.id+');startDictation()" style="flex:1;">▶️ 開始默書</button>'+
     '</div></div>';
 }
-// 默書庫卡片（含三個圖示按鈕）
 function libraryCardHTML(p){
   return '<div class="proj-card" onclick="openProject('+p.id+')">'+
     '<div class="proj-card-top"><span class="proj-name">'+escapeHtml(p.name||'(未命名)')+'</span>'+
@@ -1119,22 +1112,19 @@ function renderRecords(){
 function clearAllRecords(){if(confirm('確定清除所有記錄？')){records=[];saveRecords();renderRecords();}}
 function shuffleArray(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
-// ===== 匯出表格（TSV 格式） =====
-function typeLabel(t){return {words:'詞語',sentences:'句子',passage:'文章'}[t]||'詞語';}
-function langLabel(l){return l==='en'?'英文':'中文';}
-
-function buildProjectsTsv(){
-  const lines=['語言\t名稱\t類型\t內容\t建立日期\t更新日期'];
-  projects.forEach(p=>{
-    const contents=(p.contents||[]).join('; ');
-    lines.push([
-      langLabel(p.lang),
-      escapeTsv(p.name),
-      typeLabel(p.type),
-      escapeTsv(contents),
-      formatTs(p.createdTs),
-      formatTs(p.updatedTs)
-    ].join('\t'));
+// ===== 匯出表格（3 欄：Project / Type / Details，中英文分表）=====
+function typeLabelForExport(p){
+  if(p.lang==='en'){
+    return {words:'words',sentences:'sentences',passage:'paragraphs'}[p.type]||'words';
+  }
+  return {words:'詞語',sentences:'句子',passage:'文章'}[p.type]||'詞語';
+}
+function buildProjectsTsv(lang){
+  const list=projects.filter(p=>p.lang===lang);
+  const lines=['Project\tType\tDetails'];
+  list.forEach(p=>{
+    const details=(p.contents||[]).join(';');
+    lines.push([escapeTsv(p.name),typeLabelForExport(p),escapeTsv(details)].join('\t'));
   });
   return lines.join('\n');
 }
@@ -1142,56 +1132,57 @@ function buildRecordsTsv(){
   const lines=['日期\t默書表\t答對\t總數\t得分(%)\t用時'];
   records.slice().reverse().forEach(r=>{
     const tt=(r.totalTime!==null&&r.totalTime!==undefined)?formatTime(r.totalTime):'';
-    lines.push([
-      r.date,
-      escapeTsv(r.project),
-      r.correct,
-      r.total,
-      r.percent,
-      tt
-    ].join('\t'));
+    lines.push([r.date,escapeTsv(r.project),r.correct,r.total,r.percent,tt].join('\t'));
   });
   return lines.join('\n');
+}
+function renderProjectTable(lang,title){
+  const list=projects.filter(p=>p.lang===lang);
+  const rows=list.map(p=>
+    '<tr><td class="nowrap">'+escapeHtml(p.name)+'</td><td class="nowrap">'+typeLabelForExport(p)+'</td><td class="wrap">'+escapeHtml((p.contents||[]).join(';'))+'</td></tr>'
+  ).join('');
+  const copyFn=lang==='zh'?'copyProjectsZh()':'copyProjectsEn()';
+  const confirmId=lang==='zh'?'copyProjZhConfirm':'copyProjEnConfirm';
+  return '<div class="export-table-wrap">'+
+    '<div class="export-table-head"><span>'+title+'（'+list.length+' 張）</span>'+
+    '<button class="btn btn-primary btn-sm" onclick="'+copyFn+'">📋 複製</button></div>'+
+    '<div style="max-height:220px;overflow:auto;">'+
+    '<table class="export-table"><thead><tr><th>Project</th><th>Type</th><th>Details</th></tr></thead>'+
+    '<tbody>'+(rows||'<tr><td colspan="3" style="text-align:center;color:var(--text-light);padding:20px;">暫無資料</td></tr>')+'</tbody></table></div>'+
+    '<span class="copy-confirm" id="'+confirmId+'">✅ 已複製！可貼入 Google Sheets</span>'+
+  '</div>';
+}
+function renderRecordsExportTable(){
+  const recList=records.slice().reverse().slice(0,100);
+  const rows=recList.map(r=>{
+    const tt=(r.totalTime!==null&&r.totalTime!==undefined)?formatTime(r.totalTime):'—';
+    return '<tr><td class="nowrap">'+escapeHtml(r.date)+'</td><td class="nowrap">'+escapeHtml(r.project)+'</td><td class="nowrap">'+r.correct+'/'+r.total+'</td><td class="nowrap">'+r.percent+'%</td><td class="nowrap">'+tt+'</td></tr>';
+  }).join('');
+  return '<div class="export-table-wrap" style="margin-top:16px;">'+
+    '<div class="export-table-head"><span>📊 成績記錄（'+records.length+' 筆）</span>'+
+    '<button class="btn btn-primary btn-sm" onclick="copyRecords()">📋 複製</button></div>'+
+    '<div style="max-height:220px;overflow:auto;">'+
+    '<table class="export-table"><thead><tr><th>日期</th><th>默書表</th><th>成績</th><th>得分</th><th>用時</th></tr></thead>'+
+    '<tbody>'+(rows||'<tr><td colspan="5" style="text-align:center;color:var(--text-light);padding:20px;">暫無資料</td></tr>')+'</tbody></table></div>'+
+    '<span class="copy-confirm" id="copyRecConfirm">✅ 已複製！可貼入 Google Sheets</span>'+
+  '</div>';
 }
 function renderExportTables(){
   const wrap=document.getElementById('exportTables');
   if(!wrap)return;
-  // Project summary table (HTML)
-  const projRows=projects.map(p=>
-    '<tr><td>'+langLabel(p.lang)+'</td><td>'+escapeHtml(p.name)+'</td><td>'+typeLabel(p.type)+'</td><td class="wrap">'+escapeHtml((p.contents||[]).join('; '))+'</td><td>'+(p.contents?p.contents.length:0)+'</td></tr>'
-  ).join('');
-  const recordRows=records.slice().reverse().slice(0,50).map(r=>{
-    const tt=(r.totalTime!==null&&r.totalTime!==undefined)?formatTime(r.totalTime):'—';
-    return '<tr><td>'+escapeHtml(r.date)+'</td><td>'+escapeHtml(r.project)+'</td><td>'+r.correct+'/'+r.total+'</td><td>'+r.percent+'%</td><td>'+tt+'</td></tr>';
-  }).join('');
-
   wrap.innerHTML=
-    '<div class="export-table-wrap">'+
-      '<div class="export-table-head"><span>📝 默書表內容（共 '+projects.length+' 張）</span>'+
-      '<button class="btn btn-primary btn-sm" onclick="copyProjects()">📋 複製</button></div>'+
-      '<div style="max-height:240px;overflow:auto;">'+
-      '<table class="export-table"><thead><tr><th>語言</th><th>名稱</th><th>類型</th><th>內容</th><th>#</th></tr></thead>'+
-      '<tbody>'+(projRows||'<tr><td colspan="5" style="text-align:center;color:var(--text-light);padding:20px;">暫無資料</td></tr>')+'</tbody></table></div>'+
-      '<span class="copy-confirm" id="copyProjConfirm">✅ 已複製！可貼入 Google Sheets</span>'+
-    '</div>'+
-    '<div class="export-table-wrap" style="margin-top:16px;">'+
-      '<div class="export-table-head"><span>📊 成績記錄（共 '+records.length+' 筆）</span>'+
-      '<button class="btn btn-primary btn-sm" onclick="copyRecords()">📋 複製</button></div>'+
-      '<div style="max-height:240px;overflow:auto;">'+
-      '<table class="export-table"><thead><tr><th>日期</th><th>默書表</th><th>成績</th><th>得分</th><th>用時</th></tr></thead>'+
-      '<tbody>'+(recordRows||'<tr><td colspan="5" style="text-align:center;color:var(--text-light);padding:20px;">暫無資料</td></tr>')+'</tbody></table></div>'+
-      '<span class="copy-confirm" id="copyRecConfirm">✅ 已複製！可貼入 Google Sheets</span>'+
-    '</div>'+
+    renderProjectTable('zh','🈶 中文默書表')+
+    renderProjectTable('en','🔤 英文默書表')+
+    renderRecordsExportTable()+
     '<div class="export-actions">'+
-      '<button class="btn btn-outline btn-sm" onclick="downloadTsv()">⬇️ 下載 TSV 檔（兩個表）</button>'+
-      '<span class="hint" style="align-self:center;">💡 TSV 檔用 Google Sheets / Excel 開啟即可</span>'+
+      '<button class="btn btn-outline btn-sm" onclick="downloadTsv()">⬇️ 下載 TSV 檔（全部）</button>'+
+      '<span class="hint">💡 複製後可直接貼入 Google Sheets，會自動分欄</span>'+
     '</div>';
 }
 function copyToClipboard(text){
   if(navigator.clipboard&&navigator.clipboard.writeText){
     return navigator.clipboard.writeText(text);
   }
-  // Fallback
   const ta=document.createElement('textarea');
   ta.value=text;ta.style.position='fixed';ta.style.top='0';ta.style.left='0';ta.style.opacity='0';
   document.body.appendChild(ta);ta.select();
@@ -1199,25 +1190,29 @@ function copyToClipboard(text){
   document.body.removeChild(ta);
   return Promise.resolve();
 }
-function copyProjects(){
-  copyToClipboard(buildProjectsTsv()).then(()=>{
-    const el=document.getElementById('copyProjConfirm');
-    el.style.display='inline';
-    setTimeout(()=>{el.style.display='none';},2500);
+function copyProjectsZh(){
+  copyToClipboard(buildProjectsTsv('zh')).then(()=>{
+    const el=document.getElementById('copyProjZhConfirm');
+    if(el){el.style.display='inline';setTimeout(()=>{el.style.display='none';},2500);}
+  });
+}
+function copyProjectsEn(){
+  copyToClipboard(buildProjectsTsv('en')).then(()=>{
+    const el=document.getElementById('copyProjEnConfirm');
+    if(el){el.style.display='inline';setTimeout(()=>{el.style.display='none';},2500);}
   });
 }
 function copyRecords(){
   copyToClipboard(buildRecordsTsv()).then(()=>{
     const el=document.getElementById('copyRecConfirm');
-    el.style.display='inline';
-    setTimeout(()=>{el.style.display='none';},2500);
+    if(el){el.style.display='inline';setTimeout(()=>{el.style.display='none';},2500);}
   });
 }
 function downloadTsv(){
   const combined=
-    '# 默書表內容\n'+buildProjectsTsv()+'\n\n'+
+    '# 中文默書表 (Project / Type / Details)\n'+buildProjectsTsv('zh')+'\n\n'+
+    '# 英文默書表 (Project / Type / Details)\n'+buildProjectsTsv('en')+'\n\n'+
     '# 成績記錄\n'+buildRecordsTsv();
-  // Add BOM for Excel compatibility
   const blob=new Blob(['\uFEFF'+combined],{type:'text/tab-separated-values;charset=utf-8'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
