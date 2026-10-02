@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中英文默書系統 16.0</title>
+<title>中英文默書系統 16.1</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
   :root{--primary:#2563EB;--primary-light:#EFF6FF;--primary-dark:#1D4ED8;--success:#10B981;--danger:#EF4444;--warning:#F59E0B;--bg:#F8FAFC;--card:#fff;--text:#0F172A;--text-light:#64748B;--border:#E2E8F0;--radius:12px;--shadow:0 4px 6px -1px rgba(0,0,0,.05),0 2px 4px -1px rgba(0,0,0,.03);}
@@ -244,7 +244,6 @@
 </header>
 
 <div class="container">
-  <!-- ===== 主頁（簡化：移除語音設定） ===== -->
   <div id="page-home">
     <div class="home-section-title">🆕 最新默書表</div>
     <div class="home-cols">
@@ -264,7 +263,6 @@
     </div>
   </div>
 
-  <!-- ===== 默書庫 ===== -->
   <div id="page-projects" class="hidden">
     <div class="card">
       <div class="flex-between">
@@ -282,7 +280,6 @@
     </div>
   </div>
 
-  <!-- ===== 默書表詳情 ===== -->
   <div id="page-project-detail" class="hidden">
     <div class="card">
       <div class="page-header">
@@ -328,7 +325,6 @@
     </div>
   </div>
 
-  <!-- ===== 默書 ===== -->
   <div id="page-dictation" class="hidden">
     <div class="card" style="padding:16px;">
       <div class="page-header">
@@ -372,7 +368,6 @@
     </div>
   </div>
 
-  <!-- ===== 校對 ===== -->
   <div id="page-checking" class="hidden">
     <div class="card">
       <div class="page-header">
@@ -387,7 +382,6 @@
     <div class="card text-center"><button class="btn btn-primary btn-lg btn-block" onclick="finishChecking()">📊 完成校對</button></div>
   </div>
 
-  <!-- ===== 結果 ===== -->
   <div id="page-result" class="hidden">
     <div class="card text-center">
       <div class="page-header">
@@ -417,15 +411,12 @@
     </div>
   </div>
 
-  <!-- ===== 記錄 ===== -->
   <div id="page-records" class="hidden">
     <div class="card"><div class="card-title">📊 歷史成績</div><canvas id="recordChart" width="800" height="280" style="width:100%;"></canvas></div>
     <div class="card"><div id="recordTable"></div>
       <div class="text-center mt-2"><button class="btn btn-danger btn-sm" onclick="clearAllRecords()">🗑️ 清除所有記錄</button></div></div></div>
 
-  <!-- ===== ⚙️ 設定（合併語音 + Google Sheets） ===== -->
   <div id="page-settings" class="hidden">
-    <!-- 🔊 語音設定 -->
     <div class="card">
       <div class="card-title">🔊 語音設定</div>
       <p style="color:var(--text-light);margin-bottom:14px;font-size:13px;">設定默書時使用嘅語音同音調，揀完可以撳「試聽」。如果只見到「自動」，請稍等或重新整理。</p>
@@ -456,7 +447,6 @@
       </div>
     </div>
 
-    <!-- ☁️ Google Sheets 默書資料 -->
     <div class="sync-section">
       <h3>☁️ Google Sheets 默書資料</h3>
       <p class="section-desc">從 Google Sheets 匯入默書資料到本機，離線都可以使用。</p>
@@ -506,7 +496,6 @@
       </details>
     </div>
 
-    <!-- 📤 匯出資料 -->
     <div class="sync-section">
       <details id="exportDetails">
         <summary class="export-summary">📤 匯出資料（表格格式）</summary>
@@ -570,11 +559,11 @@
     <div class="review-option" onclick="closeModal('modalReview');goToMarking()"><div class="ro-icon">➡️</div><div class="ro-title">直接校對</div><div class="ro-desc">跳過溫習</div></div></div></div></div>
 
 <script>
-const APP_VERSION='16.0';
+const APP_VERSION='16.1';
 const SHEET_ID='1Ok4OH76O2W5rtkHw-1Q_F6W4c4jD-WoQTA0UwAXv4t0';
 const TAB_CONFIG={
   zh:{defaultName:'Chinese',label:'中文默書'},
-  en:{defaultName:'English'===undefined?null:{defaultName:'English',label:'英文默書'}
+  en:{defaultName:'English',label:'英文默書'}
 };
 const MAIN_PAGES=['home','projects','records','settings'];
 let lastMainPage='home';
@@ -700,7 +689,6 @@ function requestExitDictation(){
   }
 }
 
-// ===== 語音選擇 =====
 function getAvailableVoices(){
   if(!('speechSynthesis' in window))return [];
   return window.speechSynthesis.getVoices()||[];
@@ -752,7 +740,6 @@ function testVoice(lang){
   speakText(sample,lang);
 }
 
-// ===== 音調調節 =====
 function setPitch(p){
   speechPitch=p;
   localStorage.setItem('dict_pitch',String(p));
