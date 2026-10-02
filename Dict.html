@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中文／英文默書系統 14.3</title>
+<title>中文／英文默書系統 15.0</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
   :root{--primary:#2563EB;--primary-light:#EFF6FF;--primary-dark:#1D4ED8;--success:#10B981;--danger:#EF4444;--warning:#F59E0B;--bg:#F8FAFC;--card:#fff;--text:#0F172A;--text-light:#64748B;--border:#E2E8F0;--radius:12px;--shadow:0 4px 6px -1px rgba(0,0,0,.05),0 2px 4px -1px rgba(0,0,0,.03);}
@@ -38,10 +38,19 @@
   .badge-blue{background:#DBEAFE;color:#1E40AF;}.badge-green{background:#D1FAE5;color:#065F46;}
   .badge-orange{background:#FEF3C7;color:#92400E;}.badge-purple{background:#EDE9FE;color:#5B21B6;}
   .badge-lang-zh{background:#FEF3C7;color:#92400E;}.badge-lang-en{background:#E0E7FF;color:#3730A3;}
-  .project-item{display:flex;align-items:center;justify-content:space-between;padding:16px;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;transition:.2s;cursor:pointer;background:#fff;}
-  .project-item:hover{border-color:var(--primary);box-shadow:0 4px 12px rgba(37,99,235,.08);}
-  .project-info h3{font-size:15px;margin-bottom:4px;}
-  .project-info p{font-size:13px;color:var(--text-light);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  /* 雙欄排版（主頁） */
+  .home-cols{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  .col-head{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;padding-bottom:10px;margin-bottom:12px;border-bottom:2px solid var(--border);}
+  .section-head{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+  /* 項目卡片 */
+  .proj-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer;transition:.2s;}
+  .proj-card:hover{border-color:var(--primary);box-shadow:0 4px 12px rgba(37,99,235,.1);}
+  .proj-card-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;}
+  .proj-name{font-weight:600;font-size:15px;word-break:break-word;}
+  .proj-card-meta{font-size:13px;color:var(--text-light);margin-bottom:2px;}
+  .proj-card-time{font-size:11px;color:#9CA3AF;margin-bottom:10px;}
+  .proj-card-actions{display:flex;gap:6px;justify-content:flex-end;}
+  .empty-hint{color:var(--text-light);font-size:13px;text-align:center;padding:24px 12px;background:#F8FAFC;border-radius:10px;border:1px dashed var(--border);}
   .content-item{display:flex;align-items:center;padding:12px 14px;background:#F8FAFC;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;gap:10px;transition:.2s;}
   .content-item.editing{background:#EFF6FF;border-color:var(--primary);}
   .content-item .num{width:28px;height:28px;background:var(--primary);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;}
@@ -157,6 +166,7 @@
     .nav-btn{padding:6px 10px;font-size:12px;}
     .container{padding:12px;}.card{padding:16px;}
     .stats-grid{grid-template-columns:1fr;}
+    .home-cols{grid-template-columns:1fr;}
     .segmented-control{width:100%;}.seg-btn{flex:1;text-align:center;padding:8px 6px;font-size:12px;}
     .dictation-text{font-size:26px;}
     .settings-row{flex-direction:column;align-items:flex-start;}
@@ -179,26 +189,48 @@
   <h1>📋 中文／英文默書系統</h1>
   <div class="nav-links">
     <button class="nav-btn active" onclick="showPage('home')">🏠 主頁</button>
-    <button class="nav-btn" onclick="showPage('projects')">📁 項目</button>
+    <button class="nav-btn" onclick="showPage('projects')">📁 默書庫</button>
     <button class="nav-btn" onclick="showPage('records')">📊 記錄</button>
     <button class="nav-btn" onclick="showPage('sync')">☁️ 同步</button>
   </div>
 </nav>
 
 <div class="container">
+  <!-- ===== 主頁：中文左、英文右 ===== -->
   <div id="page-home">
-    <div class="card"><div class="card-title">🚀 快速開始</div>
-      <p style="color:var(--text-light);margin-bottom:16px;font-size:14px;">選擇一個默書項目開始溫習（主頁顯示首 6 個，全部請到「項目」頁）</p>
-      <div id="quickProjects"></div>
-      <button class="btn btn-primary btn-block mt-2" onclick="showPage('projects')">📁 管理所有項目</button></div>
+    <div class="card">
+      <div class="card-title">🚀 快速開始</div>
+      <div class="home-cols">
+        <div>
+          <div class="col-head">🈶 中文默書 <span style="font-weight:400;color:var(--text-light);font-size:12px;">（最近新增）</span></div>
+          <div id="quickZh"></div>
+        </div>
+        <div>
+          <div class="col-head">🔤 英文默書 <span style="font-weight:400;color:var(--text-light);font-size:12px;">（最近新增）</span></div>
+          <div id="quickEn"></div>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-block mt-2" onclick="showPage('projects')">📁 瀏覽默書庫</button>
+    </div>
     <div class="card"><div class="card-title">📊 最近成績</div><div id="recentScores"></div></div>
   </div>
 
+  <!-- ===== 默書庫：中文／英文分開 ===== -->
   <div id="page-projects" class="hidden">
-    <div class="card"><div class="flex-between">
-      <div class="card-title" style="margin-bottom:0;">📁 默書項目</div>
-      <button class="btn btn-primary" onclick="showModal('modalNewProject')">➕ 新建項目</button></div></div>
-    <div id="projectList"></div>
+    <div class="card">
+      <div class="flex-between">
+        <div class="card-title" style="margin-bottom:0;">📁 默書庫</div>
+        <button class="btn btn-primary" onclick="showModal('modalNewProject')">➕ 新增默書表</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-head">🈶 中文默書</div>
+      <div id="projListZh"></div>
+    </div>
+    <div class="card">
+      <div class="section-head">🔤 英文默書</div>
+      <div id="projListEn"></div>
+    </div>
   </div>
 
   <div id="page-project-detail" class="hidden">
@@ -206,7 +238,7 @@
       <div><h2 id="detailTitle" style="font-size:20px;margin-bottom:6px;"></h2><span id="detailBadge"></span></div>
       <button class="btn btn-outline" onclick="showPage('projects')">⬅️ 返回</button></div></div>
     <div class="card">
-      <div id="sampleNote" class="sample-note hidden">🎁 呢個係系統預設嘅示例項目，可以隨意編輯或刪除。</div>
+      <div id="sampleNote" class="sample-note hidden">🎁 呢個係系統預設嘅示例默書表，可以隨意編輯或刪除。</div>
       <div class="list-toolbar">
         <div class="card-title" style="margin-bottom:0;">📝 默書內容 (<span id="contentCount">0</span>)</div>
         <div style="display:flex;gap:8px;">
@@ -331,12 +363,12 @@
           <p style="margin-bottom:8px;">試算表有兩個分頁，每個分頁有 3 欄：</p>
           <div class="sheet-format-box">Project,Type,Details<br>第一課,詞語,學校;老師;同學<br>第二課,句子,我喜歡上學;天氣很好</div>
           <ul style="padding-left:20px;margin-bottom:8px;">
-            <li><strong>Project</strong>：項目名稱</li>
+            <li><strong>Project</strong>：默書表名稱</li>
             <li><strong>Type</strong>：類型（詞語／句子／文章 或 words/sentences/paragraphs）</li>
             <li><strong>Details</strong>：默書內容，用 <strong>;</strong> 分隔每一項</li>
           </ul>
           <p>⚠️ 請確保試算表共用設定為「<strong>知道連結的任何人</strong>」都可檢視。</p>
-          <p>💡 再次同步會以試算表為準（覆蓋同名項目內容）。</p>
+          <p>💡 再次同步會以試算表為準（覆蓋同名默書表內容）。</p>
         </div>
       </details>
       <details class="mt-2">
@@ -356,7 +388,7 @@
     </div>
     <div class="sync-section">
       <h3>📤 匯出備份</h3>
-      <p>將现有所有項目同成績記錄下載做備份檔（JSON 格式）。</p>
+      <p>將现有所有默書表同成績記錄下載做備份檔（JSON 格式）。</p>
       <button class="btn btn-outline" onclick="exportBackup()">⬇️ 下載備份檔</button>
     </div>
   </div>
@@ -364,13 +396,13 @@
 
 <div class="modal" id="modalNewProject"><div class="modal-content">
   <button class="modal-close" onclick="closeModal('modalNewProject')">✕</button>
-  <div class="modal-title">➕ 新建默書項目</div>
-  <div class="form-group"><label class="form-label">項目名稱</label><input type="text" class="form-input" id="newProjectName" placeholder="例如：第三課詞語"></div>
+  <div class="modal-title">➕ 新增默書表</div>
+  <div class="form-group"><label class="form-label">名稱</label><input type="text" class="form-input" id="newProjectName" placeholder="例如：第三課詞語"></div>
   <div class="form-group"><label class="form-label">語言</label>
     <select class="form-select" id="newProjectLang"><option value="zh">🈶 中文</option><option value="en">🔤 英文</option></select></div>
   <div class="form-group"><label class="form-label">內容類型</label>
     <select class="form-select" id="newProjectType"><option value="words">📝 詞語</option><option value="sentences">📄 句子</option><option value="passage">📖 文章</option></select></div>
-  <button class="btn btn-primary btn-block mt-2" onclick="createProject()">✅ 建立項目</button></div></div>
+  <button class="btn btn-primary btn-block mt-2" onclick="createProject()">✅ 建立</button></div></div>
 
 <div class="modal" id="modalAddContent"><div class="modal-content">
   <button class="modal-close" onclick="closeModal('modalAddContent')">✕</button>
@@ -432,7 +464,7 @@ let speakToken=0;
 let wordTimes=[],wordStartTime=0,totalStartTime=0,totalDictationSeconds=0,wordTimerInterval=null,manualTiming=false;
 let debugLines=[];
 
-function saveProjects(){try{localStorage.setItem('dict_p8',JSON.stringify(projects));}catch(e){debugLog('儲存項目失敗：'+e.message);}}
+function saveProjects(){try{localStorage.setItem('dict_p8',JSON.stringify(projects));}catch(e){debugLog('儲存失敗：'+e.message);}}
 function saveRecords(){try{localStorage.setItem('dict_r8',JSON.stringify(records));}catch(e){}}
 
 function debugLog(msg){
@@ -445,6 +477,7 @@ function debugLog(msg){
 }
 function clearDebug(){debugLines=[];const el=document.getElementById('debugContent');if(el)el.innerText='（暫無）';}
 
+// ===== ID / timestamp helpers =====
 function generateIdFromName(name,lang){
   const str=(name||'')+'_'+(lang||'zh');let h=0;
   for(let i=0;i<str.length;i++){h=((h<<5)-h)+str.charCodeAt(i);h|=0;}
@@ -459,16 +492,36 @@ function migrateIds(){
       fixed++;
     }
   });
-  if(fixed>0){saveProjects();debugLog('已自動修正 '+fixed+' 個項目的 ID 格式');}
+  if(fixed>0){saveProjects();debugLog('已自動修正 '+fixed+' 個默書表的 ID 格式');}
+}
+function migrateTimestamps(){
+  let changed=false;
+  projects.forEach(p=>{
+    if(!p.createdTs){
+      let t=NaN;
+      if(p.createdAt){t=Date.parse(p.createdAt);}
+      p.createdTs=(t&&!isNaN(t))?t:1;
+      changed=true;
+    }
+    if(!p.updatedTs){p.updatedTs=p.createdTs;changed=true;}
+  });
+  if(changed)saveProjects();
 }
 function sameId(a,b){return String(a)===String(b);}
+function touchProject(p){if(p)p.updatedTs=Date.now();}
+function formatTs(ts){
+  if(!ts)return '—';
+  const d=new Date(ts);
+  if(isNaN(d.getTime()))return '—';
+  return d.getFullYear()+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0');
+}
 
 function seedSampleProject(){
   if(localStorage.getItem('dict_seeded_v11'))return;
   if(projects.length===0){
+    const now=Date.now();
     projects.push({id:999999,name:'示例：常見詞語',type:'words',lang:'zh',isSample:true,
-      contents:['學校','老師','同學','書包','功課'],
-      createdAt:new Date().toLocaleDateString('zh-HK')});
+      contents:['學校','老師','同學','書包','功課'],createdTs:now,updatedTs:now});
     saveProjects();
   }
   localStorage.setItem('dict_seeded_v11','1');
@@ -491,6 +544,7 @@ function closeModal(id){document.getElementById(id).classList.remove('show');}
 function escapeHtml(s){const d=document.createElement('div');d.textContent=(s===null||s===undefined)?'':String(s);return d.innerHTML;}
 function escapeAttr(s){return String(s===null||s===undefined?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
+// ===== Google Sheets sync =====
 function getTabName(lang){return localStorage.getItem('dict_tab_'+lang)||TAB_CONFIG[lang].defaultName;}
 function getSheetUrl(lang){
   return 'https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(getTabName(lang));
@@ -502,7 +556,7 @@ function loadSyncPage(){
   document.getElementById('lastSyncInfo').innerText='上次同步：'+(last||'未同步');
   document.getElementById('tabNameZh').value=getTabName('zh');
   document.getElementById('tabNameEn').value=getTabName('en');
-  debugLog('就緒。中文分頁="'+getTabName('zh')+'"，英文分頁="'+getTabName('en')+'"，現有項目：'+projects.length);
+  debugLog('就緒。中文分頁="'+getTabName('zh')+'"，英文分頁="'+getTabName('en')+'"，現有默書表：'+projects.length);
 }
 function saveTabNames(){
   const zh=document.getElementById('tabNameZh').value.trim();
@@ -557,6 +611,7 @@ function parseSheetCSV(csvText,lang){
   }
   debugLog('['+lang+'] 標題行：'+(hasHeader?'有':'無')+'；欄位 P='+projIdx+' T='+typeIdx+' D='+detailIdx);
   const projectMap={};
+  const now=Date.now();
   for(let i=startIdx;i<rows.length;i++){
     const r=rows[i];
     const name=(r[projIdx]||'').trim();
@@ -566,7 +621,7 @@ function parseSheetCSV(csvText,lang){
     const items=parseDetails(details);
     if(!items.length)continue;
     if(!projectMap[name]){
-      projectMap[name]={id:generateIdFromName(name,lang),name:name,type:normalizeType(type),lang:lang,contents:[],fromSheet:true,createdAt:new Date().toLocaleDateString('zh-HK')};
+      projectMap[name]={id:generateIdFromName(name,lang),name:name,type:normalizeType(type),lang:lang,contents:[],fromSheet:true,createdTs:now,updatedTs:now};
     }
     items.forEach(item=>{if(!projectMap[name].contents.includes(item))projectMap[name].contents.push(item);});
   }
@@ -581,6 +636,8 @@ function mergeSheetProjects(sheetProjects){
       projects[idx].contents=[...sp.contents];
       projects[idx].type=sp.type;
       projects[idx].fromSheet=true;
+      projects[idx].updatedTs=Date.now();
+      if(!projects[idx].createdTs)projects[idx].createdTs=sp.createdTs;
       updated++;
     }else{projects.push(sp);added++;}
   });
@@ -613,7 +670,7 @@ async function syncTab(lang){
     throw new Error('Google 返回錯誤，可能分頁「'+tabName+'」唔存在');
   }
   const sp=parseSheetCSV(text,lang);
-  debugLog('['+lang+'] 成功解析項目數：'+sp.length);
+  debugLog('['+lang+'] 成功解析默書表數：'+sp.length);
   if(!sp.length)throw new Error('讀取唔到有效資料。請檢查分頁「'+tabName+'」格式（Project / Type / Details，用 ; 分隔）');
   return mergeSheetProjects(sp);
 }
@@ -632,7 +689,7 @@ async function syncAll(){
   updateSyncStats();renderHome();renderProjects();
   if(errors.length&&(added===0&&updated===0)){setSyncStatus('error','同步失敗：'+errors.join('　'));}
   else if(errors.length){setSyncStatus('success','部分同步成功：新增 '+added+'，更新 '+updated+'。問題：'+errors.join('　'));}
-  else{setSyncStatus('success','同步成功！新增 '+added+' 個，更新 '+updated+' 個項目');}
+  else{setSyncStatus('success','同步成功！新增 '+added+' 個，更新 '+updated+' 個默書表');}
   setBtnLoading(false);
 }
 async function syncSingle(lang){
@@ -645,19 +702,19 @@ async function syncSingle(lang){
     localStorage.setItem('dict_last_sync',now);
     document.getElementById('lastSyncInfo').innerText='上次同步：'+now;
     updateSyncStats();renderHome();renderProjects();
-    setSyncStatus('success',TAB_CONFIG[lang].label+'同步成功！新增 '+r.added+'，更新 '+r.updated+' 個項目');
+    setSyncStatus('success',TAB_CONFIG[lang].label+'同步成功！新增 '+r.added+' 個，更新 '+r.updated+' 個默書表');
   }catch(e){setSyncStatus('error','同步失敗：'+e.message);}
   setBtnLoading(false);
 }
 function updateSyncStats(){
   const totalContent=projects.reduce((s,p)=>s+(p.contents?p.contents.length:0),0);
   document.getElementById('syncStats').innerHTML=
-    '<div class="stat-box"><div class="value">'+projects.length+'</div><div class="label">默書項目</div></div>'+
+    '<div class="stat-box"><div class="value">'+projects.length+'</div><div class="label">默書表</div></div>'+
     '<div class="stat-box"><div class="value">'+totalContent+'</div><div class="label">默書內容</div></div>'+
     '<div class="stat-box"><div class="value">'+records.length+'</div><div class="label">成績記錄</div></div>';
 }
 function exportBackup(){
-  const data={version:'14.3',exportDate:new Date().toISOString(),projects:projects,records:records};
+  const data={version:'15.0',exportDate:new Date().toISOString(),projects:projects,records:records};
   const json=JSON.stringify(data,null,2);
   const blob=new Blob([json],{type:'application/json'});
   const url=URL.createObjectURL(blob);
@@ -669,12 +726,66 @@ function exportBackup(){
   URL.revokeObjectURL(url);
 }
 
+// ===== 項目卡片渲染 =====
+function sampleBadge(p){return p.isSample?'<span class="badge badge-purple">示例</span>':'';}
+function langBadge(p){
+  if(p.lang==='en')return '<span class="badge badge-lang-en">🔤 EN</span>';
+  if(p.lang==='zh')return '<span class="badge badge-lang-zh">🈶 中文</span>';
+  return '';
+}
+function typeBadge(p){
+  const tl={words:'詞語',sentences:'句子',passage:'文章'};
+  const tb={words:'badge-blue',sentences:'badge-green',passage:'badge-orange'};
+  return '<span class="badge '+(tb[p.type]||'badge-blue')+'">'+(tl[p.type]||'詞語')+'</span>';
+}
+function countLabel(p){
+  const cnt=(p.contents?p.contents.length:0);
+  if(p.type==='sentences')return cnt+' 個句子';
+  if(p.type==='passage')return cnt+' 段文章';
+  return cnt+' 個詞條';
+}
+function projectCardHTML(p){
+  const timeStr='建立 '+formatTs(p.createdTs)+' · 更新 '+formatTs(p.updatedTs);
+  return '<div class="proj-card" onclick="openProject('+p.id+')">'+
+    '<div class="proj-card-top"><span class="proj-name">'+escapeHtml(p.name||'(未命名)')+'</span>'+
+    '<span style="display:flex;gap:4px;flex-shrink:0;">'+sampleBadge(p)+typeBadge(p)+'</span></div>'+
+    '<div class="proj-card-meta">'+countLabel(p)+'</div>'+
+    '<div class="proj-card-time">'+timeStr+'</div>'+
+    '<div class="proj-card-actions">'+
+      '<button class="btn btn-success btn-sm" onclick="event.stopPropagation();openProject('+p.id+');startDictation()">▶️ 默書</button>'+
+      '<button class="btn btn-outline btn-sm btn-icon" onclick="deleteProject('+p.id+',event)">🗑️</button>'+
+    '</div></div>';
+}
+function renderLangList(elId,lang,limit){
+  const el=document.getElementById(elId);
+  if(!el)return;
+  const list=projects.filter(p=>p.lang===lang).sort((a,b)=>(b.createdTs||0)-(a.createdTs||0));
+  const shown=limit?list.slice(0,limit):list;
+  if(!shown.length){
+    el.innerHTML='<div class="empty-hint">暫時未有'+(lang==='zh'?'中文':'英文')+'默書表</div>';
+    return;
+  }
+  el.innerHTML=shown.map(p=>projectCardHTML(p)).join('');
+}
+function renderHome(){
+  renderLangList('quickZh','zh',3);
+  renderLangList('quickEn','en',3);
+  const rs=document.getElementById('recentScores');
+  rs.innerHTML=records.length?records.slice(-5).reverse().map(r=>'<div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);"><span style="font-weight:500;">'+escapeHtml(r.project)+'</span><span style="font-weight:700;color:'+(r.percent>=70?'var(--success)':'var(--danger)')+';">'+r.percent+'%</span></div>').join('')
+  :'<p style="color:var(--text-light);text-align:center;padding:20px;">暫時未有記錄</p>';
+}
+function renderProjects(){
+  renderLangList('projListZh','zh',0);
+  renderLangList('projListEn','en',0);
+}
+
 function createProject(){
   const n=document.getElementById('newProjectName').value.trim();
   const t=document.getElementById('newProjectType').value;
   const lang=document.getElementById('newProjectLang').value;
-  if(!n){alert('請輸入項目名稱');return;}
-  projects.push({id:Date.now(),name:n,type:t,lang:lang,contents:[],createdAt:new Date().toLocaleDateString('zh-HK')});
+  if(!n){alert('請輸入名稱');return;}
+  const now=Date.now();
+  projects.push({id:now,name:n,type:t,lang:lang,contents:[],createdTs:now,updatedTs:now});
   saveProjects();closeModal('modalNewProject');
   document.getElementById('newProjectName').value='';
   renderProjects();
@@ -683,28 +794,12 @@ function deleteProject(id,e){
   if(e&&e.stopPropagation)e.stopPropagation();
   if(confirm('確定刪除？')){
     projects=projects.filter(p=>!sameId(p.id,id));
-    saveProjects();renderProjects();
+    saveProjects();renderProjects();renderHome();
   }
-}
-function sampleBadge(p){return p.isSample?'<span class="badge badge-purple">示例</span>':'';}
-function langBadge(p){
-  if(p.lang==='en')return '<span class="badge badge-lang-en">🔤 EN</span>';
-  if(p.lang==='zh')return '<span class="badge badge-lang-zh">🈶 中文</span>';
-  return '';
-}
-function renderProjects(){
-  const l=document.getElementById('projectList');
-  if(!projects.length){l.innerHTML='<div class="card text-center" style="color:var(--text-light);padding:40px;">暫時未有項目</div>';return;}
-  const tl={words:'📝 詞語',sentences:'📄 句子',passage:'📖 文章'};
-  const tb={words:'badge-blue',sentences:'badge-green',passage:'badge-orange'};
-  l.innerHTML=projects.map(p=>{
-    const cnt=(p.contents?p.contents.length:0);
-    return '<div class="project-item" onclick="openProject('+p.id+')"><div class="project-info"><h3>'+escapeHtml(p.name||'(未命名)')+'</h3><p><span class="badge '+(tb[p.type]||'badge-blue')+'">'+(tl[p.type]||'📝 詞語')+'</span>'+langBadge(p)+sampleBadge(p)+'<span>'+cnt+' 項內容</span></p></div><button class="btn btn-danger btn-sm btn-icon" onclick="deleteProject('+p.id+',event)">🗑️</button></div>';
-  }).join('');
 }
 function openProject(id){
   currentProject=projects.find(p=>sameId(p.id,id))||null;
-  if(!currentProject){debugLog('找不到項目 id='+id);alert('找不到該項目，請返回重试。');return;}
+  if(!currentProject){debugLog('找不到默書表 id='+id);alert('找不到該默書表，請返回重試。');return;}
   if(!Array.isArray(currentProject.contents))currentProject.contents=[];
   editingContentIndex=-1;
   const tl={words:'📝 詞語',sentences:'📄 句子',passage:'📖 文章'};
@@ -735,11 +830,11 @@ function renderContentList(){
   if(editingContentIndex>=0)setTimeout(()=>{const inp=document.getElementById('contentEditInput');if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);}},50);
 }
 function startContentEdit(i){editingContentIndex=i;renderContentList();}
-function saveContentEdit(i){const inp=document.getElementById('contentEditInput');if(inp&&inp.value.trim()){currentProject.contents[i]=inp.value.trim();saveProjects();}editingContentIndex=-1;renderContentList();}
+function saveContentEdit(i){const inp=document.getElementById('contentEditInput');if(inp&&inp.value.trim()){currentProject.contents[i]=inp.value.trim();touchProject(currentProject);saveProjects();}editingContentIndex=-1;renderContentList();}
 function cancelContentEdit(){editingContentIndex=-1;renderContentList();}
-function moveContent(i,dir){const ni=i+dir;if(ni<0||ni>=currentProject.contents.length)return;[currentProject.contents[i],currentProject.contents[ni]]=[currentProject.contents[ni],currentProject.contents[i]];saveProjects();renderContentList();}
-function deleteContent(i){if(confirm('確定刪除「'+currentProject.contents[i]+'」？')){currentProject.contents.splice(i,1);saveProjects();renderContentList();}}
-function addContent(){const t=document.getElementById('newContentText').value.trim();if(!t){alert('請輸入內容');return;}currentProject.contents.push(...t.split('\n').map(l=>l.trim()).filter(l=>l));saveProjects();document.getElementById('newContentText').value='';closeModal('modalAddContent');renderContentList();}
+function moveContent(i,dir){const ni=i+dir;if(ni<0||ni>=currentProject.contents.length)return;[currentProject.contents[i],currentProject.contents[ni]]=[currentProject.contents[ni],currentProject.contents[i]];touchProject(currentProject);saveProjects();renderContentList();}
+function deleteContent(i){if(confirm('確定刪除「'+currentProject.contents[i]+'」？')){currentProject.contents.splice(i,1);touchProject(currentProject);saveProjects();renderContentList();}}
+function addContent(){const t=document.getElementById('newContentText').value.trim();if(!t){alert('請輸入內容');return;}currentProject.contents.push(...t.split('\n').map(l=>l.trim()).filter(l=>l));touchProject(currentProject);saveProjects();document.getElementById('newContentText').value='';closeModal('modalAddContent');renderContentList();}
 
 function setPreSpeed(s,el){speechRate=s;document.querySelectorAll('#preSpeedControl .seg-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
 function setPreMode(m,el){playMode=m;document.querySelectorAll('#preModeControl .seg-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');document.getElementById('preAutoRow').classList.toggle('hidden',m!=='auto');}
@@ -812,12 +907,11 @@ function cancelOcrEdit(){editingOcrIndex=-1;renderOcrItems();}
 function moveOcrItem(i,dir){const ni=i+dir;if(ni<0||ni>=ocrParsedItems.length)return;[ocrParsedItems[i],ocrParsedItems[ni]]=[ocrParsedItems[ni],ocrParsedItems[i]];renderOcrItems();}
 function removeOcrItem(i){ocrParsedItems.splice(i,1);renderOcrItems();}
 function retryOcrEdit(){document.getElementById('scanResult').classList.add('hidden');document.getElementById('scanEditArea').classList.remove('hidden');document.getElementById('ocrEditText').value=ocrParsedItems.join('\n');}
-function confirmScan(){if(!ocrParsedItems.length){alert('沒有內容');return;}currentProject.contents.push(...ocrParsedItems);saveProjects();closeModal('modalScan');resetScanModal();renderContentList();}
-function confirmScanEdit(){const t=document.getElementById('ocrEditText').value.trim();if(!t){alert('沒有內容');return;}currentProject.contents.push(...t.split('\n').map(l=>l.trim()).filter(l=>l));saveProjects();closeModal('modalScan');resetScanModal();renderContentList();}
+function confirmScan(){if(!ocrParsedItems.length){alert('沒有內容');return;}currentProject.contents.push(...ocrParsedItems);touchProject(currentProject);saveProjects();closeModal('modalScan');resetScanModal();renderContentList();}
+function confirmScanEdit(){const t=document.getElementById('ocrEditText').value.trim();if(!t){alert('沒有內容');return;}currentProject.contents.push(...t.split('\n').map(l=>l.trim()).filter(l=>l));touchProject(currentProject);saveProjects();closeModal('modalScan');resetScanModal();renderContentList();}
 function cancelScan(){closeModal('modalScan');resetScanModal();}
 function resetScanModal(){document.getElementById('scanInput').value='';document.getElementById('scanPreview').classList.add('hidden');document.getElementById('scanResult').classList.add('hidden');document.getElementById('scanEditArea').classList.add('hidden');document.getElementById('scanArea').classList.remove('hidden');document.getElementById('ocrProgress').style.display='none';ocrParsedItems=[];editingOcrIndex=-1;}
 
-// ===== FIXED: language-aware speech (no duplicate declarations) =====
 function speakText(text,lang,onDone){
   if('speechSynthesis' in window){
     window.speechSynthesis.cancel();
@@ -994,14 +1088,6 @@ function retryWrong(){
   totalStartTime=Date.now();wordTimes=[];totalDictationSeconds=0;
   showPage('dictation');updateReviewUI();updateSlimTimerVisibility();showDictItem();
 }
-function renderHome(){
-  const qp=document.getElementById('quickProjects');
-  qp.innerHTML=projects.length?projects.slice(0,6).map(p=>'<div class="project-item" onclick="openProject('+p.id+')" style="margin-bottom:8px;"><div class="project-info"><h3>'+escapeHtml(p.name||'(未命名)')+'</h3><p>'+langBadge(p)+sampleBadge(p)+'<span>'+(p.contents?p.contents.length:0)+' 項內容</span></p></div><button class="btn btn-success btn-sm" onclick="event.stopPropagation();openProject('+p.id+');startDictation()">▶️</button></div>').join('')
-  :'<p style="color:var(--text-light);text-align:center;padding:20px;">暫時未有項目</p>';
-  const rs=document.getElementById('recentScores');
-  rs.innerHTML=records.length?records.slice(-5).reverse().map(r=>'<div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);"><span style="font-weight:500;">'+escapeHtml(r.project)+'</span><span style="font-weight:700;color:'+(r.percent>=70?'var(--success)':'var(--danger)')+';">'+r.percent+'%</span></div>').join('')
-  :'<p style="color:var(--text-light);text-align:center;padding:20px;">暫時未有記錄</p>';
-}
 function renderRecords(){
   const c=document.getElementById('recordChart'),ctx=c.getContext('2d');
   ctx.clearRect(0,0,c.width,c.height);ctx.fillStyle='#F8FAFC';ctx.fillRect(0,0,c.width,c.height);
@@ -1009,7 +1095,7 @@ function renderRecords(){
   for(let i=0;i<=10;i++){const y=20+i*24;ctx.beginPath();ctx.moveTo(40,y);ctx.lineTo(c.width-10,y);ctx.stroke();ctx.fillStyle='#94A3B8';ctx.font='11px sans-serif';ctx.fillText((100-i*10)+'',10,y+4);}
   if(!records.length){ctx.fillStyle='#94A3B8';ctx.font='14px sans-serif';ctx.fillText('暫時未有記錄',c.width/2-40,c.height/2);}
   else{const rec=records.slice(-20),step=(c.width-60)/Math.max(rec.length-1,1);ctx.strokeStyle='#2563EB';ctx.lineWidth=3;ctx.beginPath();rec.forEach((r,i)=>{const x=40+i*step,y=260-(r.percent*2.4);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.stroke();rec.forEach((r,i)=>{const x=40+i*step,y=260-(r.percent*2.4);ctx.fillStyle=r.percent>=70?'#10B981':'#EF4444';ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fill();});}
-  let html='<table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:16px;"><tr style="background:#F1F5F9;"><th style="padding:12px;text-align:left;">日期</th><th style="text-align:left;">項目</th><th>成績</th><th>得分</th><th>用時</th></tr>';
+  let html='<table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:16px;"><tr style="background:#F1F5F9;"><th style="padding:12px;text-align:left;">日期</th><th style="text-align:left;">默書表</th><th>成績</th><th>得分</th><th>用時</th></tr>';
   records.slice().reverse().slice(0,15).forEach(r=>{
     const tt=(r.totalTime!==null&&r.totalTime!==undefined)?formatTime(r.totalTime):'--';
     html+='<tr style="border-bottom:1px solid var(--border);"><td style="padding:12px;">'+r.date+'</td><td>'+escapeHtml(r.project)+'</td><td style="text-align:center;">'+r.correct+'/'+r.total+'</td><td style="text-align:center;font-weight:700;color:'+(r.percent>=70?'var(--success)':'var(--danger)')+';">'+r.percent+'%</td><td style="text-align:center;color:var(--text-light);">'+tt+'</td></tr>';});
@@ -1020,6 +1106,7 @@ function shuffleArray(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.r
 
 window.onload=()=>{
   migrateIds();
+  migrateTimestamps();
   seedSampleProject();
   loadOpenCC();
   window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();
