@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中文／英文默書系統 15.0</title>
+<title>中文／英文默書系統 15.1</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
   :root{--primary:#2563EB;--primary-light:#EFF6FF;--primary-dark:#1D4ED8;--success:#10B981;--danger:#EF4444;--warning:#F59E0B;--bg:#F8FAFC;--card:#fff;--text:#0F172A;--text-light:#64748B;--border:#E2E8F0;--radius:12px;--shadow:0 4px 6px -1px rgba(0,0,0,.05),0 2px 4px -1px rgba(0,0,0,.03);}
@@ -26,7 +26,9 @@
   .btn-outline{background:#fff;border:1px solid var(--border);color:var(--text);}
   .btn-outline:hover{border-color:var(--primary);color:var(--primary);}
   .btn-sm{padding:6px 12px;font-size:13px;}.btn-lg{padding:14px 28px;font-size:16px;}
-  .btn-block{width:100%;}.btn-icon{width:36px;height:36px;padding:0;border-radius:8px;font-size:14px;}
+  .btn-block{width:100%;}
+  .btn-icon{width:40px;height:40px;padding:0;border-radius:8px;font-size:16px;}
+  .btn-icon.sm{width:36px;height:36px;font-size:14px;}
   .btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
   .form-group{margin-bottom:16px;}
   .form-label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;}
@@ -38,11 +40,10 @@
   .badge-blue{background:#DBEAFE;color:#1E40AF;}.badge-green{background:#D1FAE5;color:#065F46;}
   .badge-orange{background:#FEF3C7;color:#92400E;}.badge-purple{background:#EDE9FE;color:#5B21B6;}
   .badge-lang-zh{background:#FEF3C7;color:#92400E;}.badge-lang-en{background:#E0E7FF;color:#3730A3;}
-  /* 雙欄排版（主頁） */
   .home-cols{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
   .col-head{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;padding-bottom:10px;margin-bottom:12px;border-bottom:2px solid var(--border);}
   .section-head{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:12px;}
-  /* 項目卡片 */
+  /* 默書庫卡片 */
   .proj-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer;transition:.2s;}
   .proj-card:hover{border-color:var(--primary);box-shadow:0 4px 12px rgba(37,99,235,.1);}
   .proj-card-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;}
@@ -50,6 +51,14 @@
   .proj-card-meta{font-size:13px;color:var(--text-light);margin-bottom:2px;}
   .proj-card-time{font-size:11px;color:#9CA3AF;margin-bottom:10px;}
   .proj-card-actions{display:flex;gap:6px;justify-content:flex-end;}
+  /* 主頁緊湊卡片 */
+  .proj-card.compact{padding:10px 12px;margin-bottom:8px;}
+  .proj-card.compact .proj-card-top{margin-bottom:4px;}
+  .proj-card.compact .proj-name{font-size:14px;}
+  .proj-card.compact .proj-card-meta{font-size:12px;margin-bottom:0;}
+  .proj-card.compact .proj-card-time{font-size:10px;margin-bottom:6px;}
+  .proj-card.compact .proj-card-actions{margin-top:6px;padding-top:6px;border-top:1px solid var(--border);}
+  .proj-card.compact .proj-card-actions .btn{padding:4px 10px;font-size:12px;}
   .empty-hint{color:var(--text-light);font-size:13px;text-align:center;padding:24px 12px;background:#F8FAFC;border-radius:10px;border:1px dashed var(--border);}
   .content-item{display:flex;align-items:center;padding:12px 14px;background:#F8FAFC;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;gap:10px;transition:.2s;}
   .content-item.editing{background:#EFF6FF;border-color:var(--primary);}
@@ -143,6 +152,17 @@
   .debug-box{font-size:11px;background:#0F172A;color:#94A3B8;padding:12px;border-radius:8px;white-space:pre-wrap;word-break:break-all;max-height:220px;overflow-y:auto;font-family:monospace;margin-top:10px;}
   details summary{cursor:pointer;color:var(--primary);font-size:14px;font-weight:500;}
   .last-sync-info{font-size:12px;color:var(--text-light);background:#F1F5F9;padding:6px 12px;border-radius:16px;display:inline-block;margin-bottom:12px;}
+  /* 匯出表格 */
+  .export-table-wrap{margin-top:12px;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  .export-table-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#F1F5F9;font-weight:600;font-size:14px;}
+  .export-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .export-table th,.export-table td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);}
+  .export-table th{background:#F8FAFC;font-weight:600;font-size:12px;color:var(--text-light);text-transform:uppercase;}
+  .export-table tr:last-child td{border-bottom:none;}
+  .export-table td{white-space:nowrap;max-width:300px;overflow:hidden;text-overflow:ellipsis;}
+  .export-table td.wrap{white-space:normal;}
+  .export-actions{display:flex;gap:8px;margin-top:10px;}
+  .copy-confirm{color:var(--success);font-size:13px;margin-left:8px;display:none;}
   .modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.6);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center;padding:20px;}
   .modal.show{display:flex;}
   .modal-content{background:#fff;border-radius:16px;padding:28px;max-width:560px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 25px -5px rgba(0,0,0,.1);animation:slideUp .3s ease;position:relative;}
@@ -196,7 +216,6 @@
 </nav>
 
 <div class="container">
-  <!-- ===== 主頁：中文左、英文右 ===== -->
   <div id="page-home">
     <div class="card">
       <div class="card-title">🚀 快速開始</div>
@@ -215,7 +234,6 @@
     <div class="card"><div class="card-title">📊 最近成績</div><div id="recentScores"></div></div>
   </div>
 
-  <!-- ===== 默書庫：中文／英文分開 ===== -->
   <div id="page-projects" class="hidden">
     <div class="card">
       <div class="flex-between">
@@ -386,10 +404,12 @@
         <button class="btn btn-outline btn-sm mt-2" onclick="clearDebug()">🗑️ 清除除錯記錄</button>
       </details>
     </div>
+
+    <!-- ===== EXPORT AS TABLE ===== -->
     <div class="sync-section">
-      <h3>📤 匯出備份</h3>
-      <p>將现有所有默書表同成績記錄下載做備份檔（JSON 格式）。</p>
-      <button class="btn btn-outline" onclick="exportBackup()">⬇️ 下載備份檔</button>
+      <h3>📤 匯出資料（表格格式）</h3>
+      <p>以下表格為 Tab 分隔格式，撳「複製」後可直接貼入 Google Sheets。</p>
+      <div id="exportTables"></div>
     </div>
   </div>
 </div>
@@ -477,7 +497,6 @@ function debugLog(msg){
 }
 function clearDebug(){debugLines=[];const el=document.getElementById('debugContent');if(el)el.innerText='（暫無）';}
 
-// ===== ID / timestamp helpers =====
 function generateIdFromName(name,lang){
   const str=(name||'')+'_'+(lang||'zh');let h=0;
   for(let i=0;i<str.length;i++){h=((h<<5)-h)+str.charCodeAt(i);h|=0;}
@@ -536,15 +555,16 @@ function showPage(p){
   if(p==='home')renderHome();
   if(p==='projects')renderProjects();
   if(p==='records')renderRecords();
-  if(p==='sync')loadSyncPage();
+  if(p==='sync'){loadSyncPage();renderExportTables();}
 }
 function showModal(id){document.getElementById(id).classList.add('show');}
 function closeModal(id){document.getElementById(id).classList.remove('show');}
 
 function escapeHtml(s){const d=document.createElement('div');d.textContent=(s===null||s===undefined)?'':String(s);return d.innerHTML;}
 function escapeAttr(s){return String(s===null||s===undefined?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+// Escape for TSV cells: remove tabs/newlines
+function escapeTsv(s){return String(s===null||s===undefined?'':s).replace(/[\t\r\n]/g,' ').trim();}
 
-// ===== Google Sheets sync =====
 function getTabName(lang){return localStorage.getItem('dict_tab_'+lang)||TAB_CONFIG[lang].defaultName;}
 function getSheetUrl(lang){
   return 'https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(getTabName(lang));
@@ -686,7 +706,7 @@ async function syncAll(){
   const now=new Date().toLocaleString('zh-HK');
   localStorage.setItem('dict_last_sync',now);
   document.getElementById('lastSyncInfo').innerText='上次同步：'+now;
-  updateSyncStats();renderHome();renderProjects();
+  updateSyncStats();renderHome();renderProjects();renderExportTables();
   if(errors.length&&(added===0&&updated===0)){setSyncStatus('error','同步失敗：'+errors.join('　'));}
   else if(errors.length){setSyncStatus('success','部分同步成功：新增 '+added+'，更新 '+updated+'。問題：'+errors.join('　'));}
   else{setSyncStatus('success','同步成功！新增 '+added+' 個，更新 '+updated+' 個默書表');}
@@ -701,7 +721,7 @@ async function syncSingle(lang){
     const now=new Date().toLocaleString('zh-HK');
     localStorage.setItem('dict_last_sync',now);
     document.getElementById('lastSyncInfo').innerText='上次同步：'+now;
-    updateSyncStats();renderHome();renderProjects();
+    updateSyncStats();renderHome();renderProjects();renderExportTables();
     setSyncStatus('success',TAB_CONFIG[lang].label+'同步成功！新增 '+r.added+' 個，更新 '+r.updated+' 個默書表');
   }catch(e){setSyncStatus('error','同步失敗：'+e.message);}
   setBtnLoading(false);
@@ -713,26 +733,9 @@ function updateSyncStats(){
     '<div class="stat-box"><div class="value">'+totalContent+'</div><div class="label">默書內容</div></div>'+
     '<div class="stat-box"><div class="value">'+records.length+'</div><div class="label">成績記錄</div></div>';
 }
-function exportBackup(){
-  const data={version:'15.0',exportDate:new Date().toISOString(),projects:projects,records:records};
-  const json=JSON.stringify(data,null,2);
-  const blob=new Blob([json],{type:'application/json'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  const d=new Date();
-  a.href=url;
-  a.download='默書備份_'+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'.json';
-  a.click();
-  URL.revokeObjectURL(url);
-}
 
-// ===== 項目卡片渲染 =====
+// ===== 卡片渲染 =====
 function sampleBadge(p){return p.isSample?'<span class="badge badge-purple">示例</span>':'';}
-function langBadge(p){
-  if(p.lang==='en')return '<span class="badge badge-lang-en">🔤 EN</span>';
-  if(p.lang==='zh')return '<span class="badge badge-lang-zh">🈶 中文</span>';
-  return '';
-}
 function typeBadge(p){
   const tl={words:'詞語',sentences:'句子',passage:'文章'};
   const tb={words:'badge-blue',sentences:'badge-green',passage:'badge-orange'};
@@ -744,19 +747,31 @@ function countLabel(p){
   if(p.type==='passage')return cnt+' 段文章';
   return cnt+' 個詞條';
 }
-function projectCardHTML(p){
-  const timeStr='建立 '+formatTs(p.createdTs)+' · 更新 '+formatTs(p.updatedTs);
+// 主頁卡片（緊湊、無刪除鍵）
+function homeCardHTML(p){
+  return '<div class="proj-card compact" onclick="openProject('+p.id+')">'+
+    '<div class="proj-card-top"><span class="proj-name">'+escapeHtml(p.name||'(未命名)')+'</span>'+
+    '<span style="display:flex;gap:4px;flex-shrink:0;">'+sampleBadge(p)+typeBadge(p)+'</span></div>'+
+    '<div class="proj-card-meta">'+countLabel(p)+'</div>'+
+    '<div class="proj-card-time">'+formatTs(p.updatedTs)+'</div>'+
+    '<div class="proj-card-actions">'+
+      '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openProject('+p.id+');startDictation()" style="flex:1;">▶️ 開始默書</button>'+
+    '</div></div>';
+}
+// 默書庫卡片（含三個圖示按鈕）
+function libraryCardHTML(p){
   return '<div class="proj-card" onclick="openProject('+p.id+')">'+
     '<div class="proj-card-top"><span class="proj-name">'+escapeHtml(p.name||'(未命名)')+'</span>'+
     '<span style="display:flex;gap:4px;flex-shrink:0;">'+sampleBadge(p)+typeBadge(p)+'</span></div>'+
     '<div class="proj-card-meta">'+countLabel(p)+'</div>'+
-    '<div class="proj-card-time">'+timeStr+'</div>'+
+    '<div class="proj-card-time">建立 '+formatTs(p.createdTs)+' · 更新 '+formatTs(p.updatedTs)+'</div>'+
     '<div class="proj-card-actions">'+
-      '<button class="btn btn-success btn-sm" onclick="event.stopPropagation();openProject('+p.id+');startDictation()">▶️ 默書</button>'+
-      '<button class="btn btn-outline btn-sm btn-icon" onclick="deleteProject('+p.id+',event)">🗑️</button>'+
+      '<button class="btn btn-outline btn-icon sm" onclick="event.stopPropagation();openProject('+p.id+')" title="修改">✏️</button>'+
+      '<button class="btn btn-success btn-icon sm" onclick="event.stopPropagation();openProject('+p.id+');startDictation()" title="默書">▶️</button>'+
+      '<button class="btn btn-outline btn-icon sm" onclick="deleteProject('+p.id+',event)" title="刪除" style="color:var(--danger);border-color:var(--border);">🗑️</button>'+
     '</div></div>';
 }
-function renderLangList(elId,lang,limit){
+function renderLangList(elId,lang,limit,cardFn){
   const el=document.getElementById(elId);
   if(!el)return;
   const list=projects.filter(p=>p.lang===lang).sort((a,b)=>(b.createdTs||0)-(a.createdTs||0));
@@ -765,18 +780,18 @@ function renderLangList(elId,lang,limit){
     el.innerHTML='<div class="empty-hint">暫時未有'+(lang==='zh'?'中文':'英文')+'默書表</div>';
     return;
   }
-  el.innerHTML=shown.map(p=>projectCardHTML(p)).join('');
+  el.innerHTML=shown.map(cardFn).join('');
 }
 function renderHome(){
-  renderLangList('quickZh','zh',3);
-  renderLangList('quickEn','en',3);
+  renderLangList('quickZh','zh',3,homeCardHTML);
+  renderLangList('quickEn','en',3,homeCardHTML);
   const rs=document.getElementById('recentScores');
   rs.innerHTML=records.length?records.slice(-5).reverse().map(r=>'<div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);"><span style="font-weight:500;">'+escapeHtml(r.project)+'</span><span style="font-weight:700;color:'+(r.percent>=70?'var(--success)':'var(--danger)')+';">'+r.percent+'%</span></div>').join('')
   :'<p style="color:var(--text-light);text-align:center;padding:20px;">暫時未有記錄</p>';
 }
 function renderProjects(){
-  renderLangList('projListZh','zh',0);
-  renderLangList('projListEn','en',0);
+  renderLangList('projListZh','zh',0,libraryCardHTML);
+  renderLangList('projListEn','en',0,libraryCardHTML);
 }
 
 function createProject(){
@@ -805,7 +820,7 @@ function openProject(id){
   const tl={words:'📝 詞語',sentences:'📄 句子',passage:'📖 文章'};
   const tb={words:'badge-blue',sentences:'badge-green',passage:'badge-orange'};
   document.getElementById('detailTitle').innerText=currentProject.name||'(未命名)';
-  document.getElementById('detailBadge').innerHTML='<span class="badge '+(tb[currentProject.type]||'badge-blue')+'">'+(tl[currentProject.type]||'📝 詞語')+'</span> '+langBadge(currentProject)+' '+sampleBadge(currentProject);
+  document.getElementById('detailBadge').innerHTML='<span class="badge '+(tb[currentProject.type]||'badge-blue')+'">'+(tl[currentProject.type]||'📝 詞語')+'</span> '+sampleBadge(currentProject);
   document.getElementById('sampleNote').classList.toggle('hidden',!currentProject.isSample);
   renderContentList();showPage('project-detail');
 }
@@ -1103,6 +1118,115 @@ function renderRecords(){
 }
 function clearAllRecords(){if(confirm('確定清除所有記錄？')){records=[];saveRecords();renderRecords();}}
 function shuffleArray(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+// ===== 匯出表格（TSV 格式） =====
+function typeLabel(t){return {words:'詞語',sentences:'句子',passage:'文章'}[t]||'詞語';}
+function langLabel(l){return l==='en'?'英文':'中文';}
+
+function buildProjectsTsv(){
+  const lines=['語言\t名稱\t類型\t內容\t建立日期\t更新日期'];
+  projects.forEach(p=>{
+    const contents=(p.contents||[]).join('; ');
+    lines.push([
+      langLabel(p.lang),
+      escapeTsv(p.name),
+      typeLabel(p.type),
+      escapeTsv(contents),
+      formatTs(p.createdTs),
+      formatTs(p.updatedTs)
+    ].join('\t'));
+  });
+  return lines.join('\n');
+}
+function buildRecordsTsv(){
+  const lines=['日期\t默書表\t答對\t總數\t得分(%)\t用時'];
+  records.slice().reverse().forEach(r=>{
+    const tt=(r.totalTime!==null&&r.totalTime!==undefined)?formatTime(r.totalTime):'';
+    lines.push([
+      r.date,
+      escapeTsv(r.project),
+      r.correct,
+      r.total,
+      r.percent,
+      tt
+    ].join('\t'));
+  });
+  return lines.join('\n');
+}
+function renderExportTables(){
+  const wrap=document.getElementById('exportTables');
+  if(!wrap)return;
+  // Project summary table (HTML)
+  const projRows=projects.map(p=>
+    '<tr><td>'+langLabel(p.lang)+'</td><td>'+escapeHtml(p.name)+'</td><td>'+typeLabel(p.type)+'</td><td class="wrap">'+escapeHtml((p.contents||[]).join('; '))+'</td><td>'+(p.contents?p.contents.length:0)+'</td></tr>'
+  ).join('');
+  const recordRows=records.slice().reverse().slice(0,50).map(r=>{
+    const tt=(r.totalTime!==null&&r.totalTime!==undefined)?formatTime(r.totalTime):'—';
+    return '<tr><td>'+escapeHtml(r.date)+'</td><td>'+escapeHtml(r.project)+'</td><td>'+r.correct+'/'+r.total+'</td><td>'+r.percent+'%</td><td>'+tt+'</td></tr>';
+  }).join('');
+
+  wrap.innerHTML=
+    '<div class="export-table-wrap">'+
+      '<div class="export-table-head"><span>📝 默書表內容（共 '+projects.length+' 張）</span>'+
+      '<button class="btn btn-primary btn-sm" onclick="copyProjects()">📋 複製</button></div>'+
+      '<div style="max-height:240px;overflow:auto;">'+
+      '<table class="export-table"><thead><tr><th>語言</th><th>名稱</th><th>類型</th><th>內容</th><th>#</th></tr></thead>'+
+      '<tbody>'+(projRows||'<tr><td colspan="5" style="text-align:center;color:var(--text-light);padding:20px;">暫無資料</td></tr>')+'</tbody></table></div>'+
+      '<span class="copy-confirm" id="copyProjConfirm">✅ 已複製！可貼入 Google Sheets</span>'+
+    '</div>'+
+    '<div class="export-table-wrap" style="margin-top:16px;">'+
+      '<div class="export-table-head"><span>📊 成績記錄（共 '+records.length+' 筆）</span>'+
+      '<button class="btn btn-primary btn-sm" onclick="copyRecords()">📋 複製</button></div>'+
+      '<div style="max-height:240px;overflow:auto;">'+
+      '<table class="export-table"><thead><tr><th>日期</th><th>默書表</th><th>成績</th><th>得分</th><th>用時</th></tr></thead>'+
+      '<tbody>'+(recordRows||'<tr><td colspan="5" style="text-align:center;color:var(--text-light);padding:20px;">暫無資料</td></tr>')+'</tbody></table></div>'+
+      '<span class="copy-confirm" id="copyRecConfirm">✅ 已複製！可貼入 Google Sheets</span>'+
+    '</div>'+
+    '<div class="export-actions">'+
+      '<button class="btn btn-outline btn-sm" onclick="downloadTsv()">⬇️ 下載 TSV 檔（兩個表）</button>'+
+      '<span class="hint" style="align-self:center;">💡 TSV 檔用 Google Sheets / Excel 開啟即可</span>'+
+    '</div>';
+}
+function copyToClipboard(text){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    return navigator.clipboard.writeText(text);
+  }
+  // Fallback
+  const ta=document.createElement('textarea');
+  ta.value=text;ta.style.position='fixed';ta.style.top='0';ta.style.left='0';ta.style.opacity='0';
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');}catch(e){}
+  document.body.removeChild(ta);
+  return Promise.resolve();
+}
+function copyProjects(){
+  copyToClipboard(buildProjectsTsv()).then(()=>{
+    const el=document.getElementById('copyProjConfirm');
+    el.style.display='inline';
+    setTimeout(()=>{el.style.display='none';},2500);
+  });
+}
+function copyRecords(){
+  copyToClipboard(buildRecordsTsv()).then(()=>{
+    const el=document.getElementById('copyRecConfirm');
+    el.style.display='inline';
+    setTimeout(()=>{el.style.display='none';},2500);
+  });
+}
+function downloadTsv(){
+  const combined=
+    '# 默書表內容\n'+buildProjectsTsv()+'\n\n'+
+    '# 成績記錄\n'+buildRecordsTsv();
+  // Add BOM for Excel compatibility
+  const blob=new Blob(['\uFEFF'+combined],{type:'text/tab-separated-values;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const d=new Date();
+  a.href=url;
+  a.download='默書資料_'+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'.tsv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 window.onload=()=>{
   migrateIds();
