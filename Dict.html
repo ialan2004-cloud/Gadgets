@@ -3,1224 +3,967 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中英文默書系統 16.2</title>
+<title>中英文默書系統 17.0</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
-  :root{--primary:#2563EB;--primary-light:#EFF6FF;--primary-dark:#1D4ED8;--success:#10B981;--danger:#EF4444;--warning:#F59E0B;--bg:#F8FAFC;--card:#fff;--text:#0F172A;--text-light:#64748B;--border:#E2E8F0;--radius:12px;--shadow:0 4px 6px -1px rgba(0,0,0,.05),0 2px 4px -1px rgba(0,0,0,.03);}
-  *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft JhengHei","PingFang HK",sans-serif;}
-  body{background:var(--bg);min-height:100vh;color:var(--text);display:flex;flex-direction:column;}
-  .app-header{background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.05);}
-  .app-title-bar{background:linear-gradient(135deg,#2563EB 0%,#1E40AF 100%);padding:18px 16px;text-align:center;}
-  .app-title{display:inline-block;color:#fff;font-size:26px;font-weight:800;letter-spacing:3px;padding:6px 28px;background:rgba(255,255,255,.15);border-radius:40px;text-shadow:0 2px 4px rgba(0,0,0,.25);}
-  .app-nav{display:flex;justify-content:center;gap:6px;padding:10px 16px;flex-wrap:wrap;background:#fff;}
-  .nav-btn{background:transparent;border:none;color:var(--text-light);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;transition:.2s;}
-  .nav-btn:hover{background:var(--primary-light);color:var(--primary);}
-  .nav-btn.active{background:var(--primary);color:#fff;}
-  .container{max-width:900px;margin:0 auto;padding:24px;width:100%;flex:1;}
-  .card{background:var(--card);border-radius:var(--radius);padding:24px;margin-bottom:20px;box-shadow:var(--shadow);border:1px solid var(--border);}
-  .card-title{font-size:16px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
-  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 20px;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;}
-  .btn:active{transform:scale(.97);}
-  .btn-primary{background:var(--primary);color:#fff;}.btn-primary:hover{background:var(--primary-dark);}
-  .btn-success{background:var(--success);color:#fff;}.btn-success:hover{background:#059669;}
-  .btn-danger{background:var(--danger);color:#fff;}.btn-danger:hover{background:#DC2626;}
-  .btn-outline{background:#fff;border:1px solid var(--border);color:var(--text);}
-  .btn-outline:hover{border-color:var(--primary);color:var(--primary);}
-  .btn-sm{padding:6px 12px;font-size:13px;}.btn-lg{padding:14px 28px;font-size:16px;}
-  .btn-block{width:100%;}
-  .btn-icon{width:44px;height:44px;padding:0;border-radius:10px;font-size:17px;flex-shrink:0;}
-  .btn-icon.sm{width:38px;height:38px;font-size:15px;border-radius:9px;}
-  .btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
-  .page-header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
-  .page-header-left{display:flex;align-items:center;gap:10px;min-width:0;flex-wrap:wrap;}
-  .page-header-title{font-size:18px;font-weight:700;word-break:break-word;}
-  .page-header-right{display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap;}
-  .app-footer{text-align:center;padding:24px 16px;color:#9CA3AF;font-size:12px;}
-  .form-group{margin-bottom:16px;}
-  .form-label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;}
-  .form-input,.form-select,.form-textarea{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:8px;font-size:15px;transition:.2s;background:#fff;}
-  .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--primary);outline:none;box-shadow:0 0 0 3px rgba(37,99,235,.1);}
-  .form-textarea{min-height:120px;resize:vertical;line-height:1.6;}
-  .edit-input{padding:8px 12px;font-size:15px;flex:1;min-width:0;}
-  .badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;}
-  .badge-blue{background:#DBEAFE;color:#1E40AF;}.badge-green{background:#D1FAE5;color:#065F46;}
-  .badge-orange{background:#FEF3C7;color:#92400E;}.badge-purple{background:#EDE9FE;color:#5B21B6;}
-  .home-section-title{font-size:16px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
-  .home-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-  .home-lang-card{border-radius:var(--radius);padding:16px;border:1px solid;box-shadow:var(--shadow);}
-  .home-lang-card.zh{background:#FFF7F5;border-color:#F5D8D2;}
-  .home-lang-card.en{background:#F5F9FF;border-color:#D9E6FA;}
-  .lang-card-head{font-size:14px;font-weight:700;padding:7px 12px;border-radius:8px;margin-bottom:12px;display:inline-flex;align-items:center;gap:6px;}
-  .home-lang-card.zh .lang-card-head{background:#FCE8E3;color:#C0392B;}
-  .home-lang-card.en .lang-card-head{background:#E8F0FE;color:#1D4ED8;}
-  .section-head{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:12px;}
-  .proj-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;cursor:default;transition:.2s;}
-  .proj-card:last-child{margin-bottom:0;}
-  .proj-card-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;}
-  .proj-name{font-weight:600;font-size:15px;word-break:break-word;}
-  .proj-card-meta{font-size:13px;color:var(--text-light);margin-bottom:2px;}
-  .proj-card-time{font-size:11px;color:#9CA3AF;margin-bottom:10px;}
-  .proj-card-actions{display:flex;gap:8px;justify-content:flex-end;}
-  .home-card{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;}
-  .home-card-body{flex:1;min-width:0;}
-  .home-card .proj-card-top{margin-bottom:4px;}
-  .home-card .proj-name{font-size:14px;}
-  .home-card .proj-card-meta{font-size:12px;margin-bottom:0;}
-  .home-card .proj-card-time{font-size:10px;margin-bottom:0;margin-top:3px;}
-  .empty-hint{color:var(--text-light);font-size:13px;text-align:center;padding:24px 12px;background:rgba(255,255,255,.6);border-radius:10px;border:1px dashed var(--border);}
-  .content-item{display:flex;align-items:center;padding:12px 14px;background:#F8FAFC;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;gap:10px;transition:.2s;}
-  .content-item.editing{background:#EFF6FF;border-color:var(--primary);}
-  .content-item .num{width:28px;height:28px;background:var(--primary);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;}
-  .content-item .text{flex:1;font-size:15px;line-height:1.5;min-width:0;word-break:break-word;}
-  .content-item .actions{display:flex;gap:4px;flex-shrink:0;align-items:center;}
-  .segmented-control{display:inline-flex;background:#F1F5F9;border-radius:8px;padding:4px;gap:4px;flex-wrap:wrap;}
-  .seg-btn{padding:8px 14px;border:none;background:transparent;border-radius:6px;font-size:13px;font-weight:500;color:var(--text-light);cursor:pointer;transition:all .2s;white-space:nowrap;}
-  .seg-btn.active{background:#fff;color:var(--primary);box-shadow:0 1px 3px rgba(0,0,0,.1);font-weight:600;}
-  .seg-btn:hover:not(.active){color:var(--text);}
-  .voice-control{display:flex;gap:6px;align-items:center;flex:1;justify-content:flex-end;max-width:420px;min-width:0;}
-  .voice-control select{flex:1;min-width:0;padding:8px 10px;font-size:13px;border:1px solid var(--border);border-radius:8px;background:#fff;cursor:pointer;}
-  .voice-control select:focus{border-color:var(--primary);outline:none;}
-  .dictation-layout{display:flex;gap:20px;align-items:stretch;}
-  .dictation-main{flex:1;min-width:0;}
-  .dictation-sidebar{width:56px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;}
-  .vp-container{position:relative;flex:1;width:100%;display:flex;flex-direction:column;align-items:center;}
-  .vp-label{font-size:11px;font-weight:700;color:var(--text-light);margin-bottom:8px;text-align:center;white-space:nowrap;}
-  .vp-track{position:relative;width:6px;flex:1;background:#E2E8F0;border-radius:3px;min-height:200px;}
-  .vp-fill{position:absolute;top:0;left:0;width:100%;background:linear-gradient(180deg,var(--primary),#60A5FA);border-radius:3px;transition:height .4s ease,width .4s ease;}
-  .vp-dot{position:absolute;width:16px;height:16px;border-radius:50%;border:2px solid #CBD5E1;background:#fff;transition:all .3s;z-index:2;transform:translate(-50%,-50%);}
-  .vp-dot.completed{border-color:var(--success);background:var(--success);}
-  .vp-dot.current{border-color:var(--primary);background:var(--primary);box-shadow:0 0 0 4px rgba(37,99,235,.2);animation:vpPulse 1.5s infinite;}
-  .vp-dot.upcoming{border-color:#CBD5E1;background:#fff;}
-  @keyframes vpPulse{0%,100%{box-shadow:0 0 0 4px rgba(37,99,235,.2)}50%{box-shadow:0 0 0 8px rgba(37,99,235,.1)}}
-  .vp-count{font-size:12px;font-weight:700;color:var(--primary);margin-top:8px;}
-  .dictation-display{background:linear-gradient(135deg,#F8FAFC 0%,#EFF6FF 100%);border:2px dashed var(--border);border-radius:16px;padding:36px 20px;text-align:center;margin:8px 0;min-height:140px;display:flex;align-items:center;justify-content:center;position:relative;}
-  .dictation-text{font-size:34px;font-weight:700;line-height:1.5;letter-spacing:2px;transition:filter .3s;}
-  .dictation-text.hidden-text{filter:blur(12px);user-select:none;color:var(--text-light);}
-  .review-banner{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:var(--warning);color:#fff;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;}
-  .manual-timer-wrap{display:none;justify-content:center;gap:12px;margin:0 0 12px 0;flex-wrap:wrap;}
-  .manual-timer-wrap.visible{display:flex;}
-  .mt-chip{background:#F1F5F9;border-radius:20px;padding:6px 16px;font-size:13px;color:var(--text-light);}
-  .mt-chip strong{color:var(--text);font-variant-numeric:tabular-nums;margin-left:2px;}
-  .time-chip{background:#F1F5F9;border-radius:12px;padding:3px 10px;font-size:12px;color:var(--text-light);margin-right:10px;white-space:nowrap;font-variant-numeric:tabular-nums;}
-  .slim-timer-wrap{margin:0 0 12px 0;display:none;align-items:center;gap:10px;}
-  .slim-timer-wrap.visible{display:flex;}
-  .slim-timer-track{flex:1;height:6px;background:#E2E8F0;border-radius:3px;overflow:hidden;}
-  .slim-timer-fill{height:100%;border-radius:3px;transition:width 1s linear,background .5s;background:var(--primary);}
-  .slim-timer-fill.safe{background:#10B981;}.slim-timer-fill.warning{background:#F59E0B;}.slim-timer-fill.danger{background:#EF4444;}
-  .slim-timer-text{font-size:12px;font-weight:700;color:var(--text-light);min-width:32px;text-align:right;}
-  .slim-timer-status{font-size:11px;color:var(--text-light);min-width:60px;}
-  .settings-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px;}
-  .settings-row:last-child{border-bottom:none;}
-  .settings-label{font-size:14px;font-weight:500;display:flex;align-items:center;gap:6px;}
-  .toggle{position:relative;display:inline-block;width:44px;height:24px;}
-  .toggle input{opacity:0;width:0;height:0;}
-  .toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#CBD5E1;border-radius:24px;transition:.3s;}
-  .toggle-slider:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
-  input:checked+.toggle-slider{background:var(--primary);}
-  input:checked+.toggle-slider:before{transform:translateX(20px);}
-  .countdown-ring{width:56px;height:56px;border-radius:50%;background:conic-gradient(var(--primary) 0%,#E2E8F0 0%);display:flex;align-items:center;justify-content:center;margin:8px auto;}
-  .countdown-inner{width:46px;height:46px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--primary);}
-  .check-item{display:flex;align-items:center;padding:16px;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;transition:.2s;background:#fff;}
-  .check-item.correct{border-color:var(--success);background:#F0FDF4;}
-  .check-item.wrong{border-color:var(--danger);background:#FEF2F2;}
-  .check-item .answer{flex:1;font-size:16px;font-weight:500;}
-  .check-btns{display:flex;gap:10px;}
-  .check-btn{width:44px;height:44px;border-radius:50%;border:2px solid var(--border);background:#fff;font-size:20px;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;}
-  .check-btn:hover{transform:scale(1.1);}
-  .check-btn.btn-correct.active{background:var(--success);border-color:var(--success);color:#fff;}
-  .check-btn.btn-wrong.active{background:var(--danger);border-color:var(--danger);color:#fff;}
-  .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:20px 0;}
-  .stat-box{text-align:center;padding:20px;background:#F8FAFC;border-radius:12px;border:1px solid var(--border);}
-  .stat-box .value{font-size:32px;font-weight:800;color:var(--primary);}
-  .stat-box .label{font-size:13px;color:var(--text-light);margin-top:4px;font-weight:500;}
-  .scan-area{border:2px dashed #CBD5E1;border-radius:12px;padding:40px;text-align:center;cursor:pointer;transition:.2s;background:#F8FAFC;}
-  .scan-area:hover{border-color:var(--primary);background:var(--primary-light);}
-  .scan-area .icon{font-size:40px;margin-bottom:12px;}
-  .scan-preview{max-width:100%;max-height:200px;border-radius:8px;margin:12px 0;object-fit:contain;border:1px solid var(--border);}
-  .ocr-progress .bar{height:6px;background:#E2E8F0;border-radius:3px;overflow:hidden;}
-  .ocr-progress .fill{height:100%;background:var(--primary);transition:width .3s;}
-  .ocr-item{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#F8FAFC;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;font-size:14px;}
-  .ocr-item.editing{background:#EFF6FF;border-color:var(--primary);}
-  .ocr-item .oi-num{width:24px;height:24px;background:var(--primary);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
-  .ocr-item .oi-text{flex:1;line-height:1.4;min-width:0;word-break:break-word;}
-  .ocr-item .oi-actions{display:flex;gap:4px;flex-shrink:0;align-items:center;}
-  .ocr-detect-info{background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:10px 14px;font-size:13px;color:#1E40AF;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
-  .start-settings{background:#F8FAFC;border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:16px;}
-  .start-settings .ss-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;flex-wrap:wrap;gap:8px;}
-  .start-settings .ss-label{font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px;}
-  .sample-note{background:#F5F3FF;border:1px solid #DDD6FE;border-radius:8px;padding:10px 14px;font-size:13px;color:#5B21B6;margin-bottom:12px;}
-  .sync-section{border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:20px;background:#fff;box-shadow:var(--shadow);}
-  .sync-section h3{font-size:16px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px;}
-  .section-desc{font-size:13px;color:var(--text-light);margin-bottom:16px;line-height:1.5;}
-  .last-sync-info{font-size:13px;color:var(--text);background:var(--primary-light);border:1px solid #BFDBFE;padding:8px 14px;border-radius:8px;display:inline-block;font-weight:500;}
-  .import-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0;}
-  .import-stat-box{background:#F8FAFC;border:1px solid var(--border);border-radius:12px;padding:18px 12px;text-align:center;transition:.2s;}
-  .import-stat-box:hover{border-color:var(--primary);box-shadow:0 2px 8px rgba(37,99,235,.08);}
-  .is-icon{font-size:20px;margin-bottom:6px;}
-  .is-value{font-size:28px;font-weight:800;color:var(--primary);line-height:1.2;}
-  .is-label{font-size:12px;color:var(--text-light);margin-top:4px;}
-  .import-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;}
-  .sync-status{margin-top:12px;padding:10px 14px;border-radius:8px;font-size:14px;display:none;}
-  .sync-status.show{display:block;}
-  .sync-status.success{background:#F0FDF4;color:#065F46;border:1px solid #A7F3D0;}
-  .sync-status.error{background:#FEF2F2;color:#991B1B;border:1px solid #FECACA;}
-  .sync-status.loading{background:#EFF6FF;color:#1E40AF;border:1px solid #BFDBFE;}
-  .sheet-format-box{background:#F8FAFC;border:1px solid var(--border);padding:14px;border-radius:8px;margin:10px 0;font-family:monospace;font-size:12px;line-height:1.6;color:var(--text);}
-  .sheet-id-box{background:#F8FAFC;border:1px solid var(--border);border-radius:8px;padding:12px;}
-  .debug-box{font-size:11px;background:#0F172A;color:#94A3B8;padding:12px;border-radius:8px;white-space:pre-wrap;word-break:break-all;max-height:220px;overflow-y:auto;font-family:monospace;margin-top:10px;}
-  details summary{cursor:pointer;color:var(--primary);font-size:14px;font-weight:500;}
-  .export-summary{font-size:16px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px;list-style:none;cursor:pointer;}
-  .export-summary::-webkit-details-marker{display:none;}
-  .export-summary::after{content:'▼';margin-left:auto;font-size:11px;color:var(--text-light);transition:transform .2s;}
-  details[open]>.export-summary::after{transform:rotate(180deg);}
-  .export-body{margin-top:14px;}
-  .export-table-wrap{margin-top:12px;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
-  .export-table-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#F1F5F9;font-weight:600;font-size:14px;}
-  .export-table{width:100%;border-collapse:collapse;font-size:13px;}
-  .export-table th,.export-table td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);}
-  .export-table th{background:#F8FAFC;font-weight:600;font-size:12px;color:var(--text-light);text-transform:uppercase;}
-  .export-table tr:last-child td{border-bottom:none;}
-  .export-table td{max-width:300px;}
-  .export-table td.wrap{white-space:normal;word-break:break-word;}
-  .export-table td.nowrap{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .export-actions{display:flex;gap:8px;margin-top:14px;align-items:center;flex-wrap:wrap;}
-  .copy-confirm{color:var(--success);font-size:13px;margin-left:8px;display:none;}
-  .modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.6);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center;padding:20px;}
-  .modal.show{display:flex;}
-  .modal-content{background:#fff;border-radius:16px;padding:28px;max-width:560px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 25px -5px rgba(0,0,0,.1);animation:slideUp .3s ease;position:relative;}
-  @keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
-  .modal-title{font-size:18px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:8px;padding-right:36px;}
-  .modal-close{position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:50%;background:#F1F5F9;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:#64748B;transition:.2s;z-index:10;}
-  .modal-close:hover{background:#E2E8F0;color:#0F172A;transform:rotate(90deg);}
-  .review-options{display:flex;gap:12px;margin-top:20px;}
-  .review-option{flex:1;padding:20px;border:2px solid var(--border);border-radius:12px;text-align:center;cursor:pointer;transition:.2s;background:#fff;}
-  .review-option:hover{border-color:var(--primary);background:var(--primary-light);}
-  .review-option .ro-icon{font-size:32px;margin-bottom:8px;}
-  .review-option .ro-title{font-weight:600;font-size:15px;margin-bottom:4px;}
-  .review-option .ro-desc{font-size:12px;color:var(--text-light);}
-  .hidden{display:none!important;}.text-center{text-align:center;}
-  .mt-2{margin-top:16px;}.mt-3{margin-top:24px;}.mb-2{margin-bottom:16px;}
-  .flex-between{display:flex;justify-content:space-between;align-items:center;}
-  .list-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
-  .hint{font-size:12px;color:var(--text-light);}
-  @media(max-width:640px){
-    .app-title{font-size:20px;letter-spacing:2px;padding:5px 20px;}
-    .nav-btn{padding:6px 10px;font-size:12px;}
-    .container{padding:12px;}.card{padding:16px;}
-    .stats-grid{grid-template-columns:1fr;}
-    .import-stats{grid-template-columns:1fr;}
-    .home-cols{grid-template-columns:1fr;}
-    .segmented-control{width:100%;}.seg-btn{flex:1;text-align:center;padding:8px 6px;font-size:12px;}
-    .dictation-text{font-size:26px;}
-    .settings-row{flex-direction:column;align-items:flex-start;}
-    .dictation-layout{flex-direction:column;}
-    .dictation-sidebar{width:100%;flex-direction:row;justify-content:center;}
-    .vp-track{min-height:auto;width:auto;height:6px;flex:1;}
-    .vp-container{flex-direction:row;width:100%;}
-    .vp-label{margin-bottom:0;margin-right:8px;}
-    .vp-count{margin-top:0;margin-left:8px;}
-    .vp-fill{height:100%!important;transition:width .4s ease;}
-    .vp-dot{transform:translate(-50%,-50%);}
-    .review-options{flex-direction:column;}
-    .content-item{flex-wrap:wrap;}
-    .content-item .actions{width:100%;justify-content:flex-end;margin-top:6px;}
-    .page-header-title{font-size:16px;}
-    .btn-icon{width:40px;height:40px;font-size:16px;}
-    .voice-control{max-width:100%;width:100%;}
-  }
+/* ========== 1. 設計變數 ========== */
+:root{
+  --bg:#F4F6FA;--card:#fff;--line:#E6E9F0;
+  --ink:#0E1526;--ink2:#5B6472;--ink3:#9AA3B2;
+  --blue:#2F6BED;--blue-d:#1E55C8;--blue-l:#EAF1FE;
+  --green:#12B76A;--green-l:#E7F8F0;--red:#EF4444;--red-l:#FEF3F2;--amber:#F59E0B;
+  --r:16px;--sh:0 1px 2px rgba(16,24,40,.04),0 4px 12px rgba(16,24,40,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft JhengHei","PingFang HK",sans-serif;}
+body{background:var(--bg);min-height:100vh;color:var(--ink);display:flex;flex-direction:column;}
+button{font-family:inherit;}
+.hidden{display:none!important;}
+/* ========== 2. 頂欄＋導覽 ========== */
+.topbar{position:sticky;top:0;z-index:100;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:10px 20px;}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:17px;cursor:pointer;}
+.logo{width:36px;height:36px;border-radius:10px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:var(--sh);}
+.ver{font-size:11px;color:var(--ink3);background:var(--bg);border:1px solid var(--line);padding:3px 8px;border-radius:99px;font-weight:600;}
+.tabs{display:flex;gap:4px;margin-left:auto;}
+.tab{display:flex;align-items:center;gap:7px;padding:8px 14px;border:0;background:transparent;border-radius:10px;color:var(--ink2);font-size:14px;font-weight:600;cursor:pointer;transition:.15s;}
+.tab .ic{font-size:15px;}
+.tab:hover{background:var(--bg);}
+.tab.active{background:var(--blue-l);color:var(--blue);}
+/* ========== 3. 版面 ========== */
+.page{max-width:860px;margin:0 auto;padding:22px 20px 40px;width:100%;flex:1;}
+.phead{margin-bottom:18px;}
+.crumb{font-size:13px;color:var(--ink3);margin-bottom:6px;}
+.crumb b{color:var(--ink2);font-weight:600;}
+.ptitle{font-size:26px;font-weight:800;letter-spacing:.2px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.ptitle.sm{font-size:21px;}
+.psub{color:var(--ink2);font-size:14px;margin-top:6px;line-height:1.5;}
+.pactions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
+.pactions .btn{flex:1 1 150px;}
+.row-between{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap;}
+.hgroup{display:flex;gap:8px;align-items:center;}
+/* ========== 4. 组件 ========== */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:var(--sh);margin-bottom:14px;}
+.card-t{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.card-t .sp{flex:1;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:12px 18px;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;transition:.15s;}
+.btn:active{transform:scale(.97);}
+.btn-p{background:var(--blue);color:#fff;box-shadow:0 6px 14px rgba(47,107,237,.22);}
+.btn-p:hover{background:var(--blue-d);}
+.btn-s{background:#fff;border:1px solid var(--line);color:var(--ink);}
+.btn-s:hover{border-color:var(--blue);color:var(--blue);}
+.btn-dg{background:var(--red-l);border:1px solid #FECDCA;color:#D92D20;}
+.btn-sm{padding:7px 12px;font-size:13px;border-radius:10px;}
+.btn-block{width:100%;}
+.ib{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;flex-shrink:0;transition:.15s;}
+.ib:hover{border-color:var(--blue);}
+.ib.edit{background:var(--blue-l);border-color:#C9DBFD;}
+.ib.go{background:var(--green-l);border-color:#B5E8D0;}
+.ib.del{background:var(--red-l);border-color:#FECDCA;}
+.ib.sm{width:32px;height:32px;font-size:13px;border-radius:8px;}
+.ib:disabled{opacity:.4;cursor:not-allowed;}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:5px 12px;border-radius:99px;background:#fff;border:1px solid var(--line);color:var(--ink2);}
+.chip.blue{background:var(--blue-l);border-color:#C9DBFD;color:var(--blue-d);}
+.chip.purple{background:#F0EBFE;border-color:#DDD0FB;color:#6D28D9;}
+.note{background:#F5F3FF;border:1px solid #DDD6FE;border-radius:12px;padding:10px 14px;font-size:13px;color:#5B21B6;margin-bottom:12px;}
+.stat{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--sh);}
+.s-label{font-size:13px;color:var(--ink2);font-weight:600;}
+.s-value{font-size:34px;font-weight:800;margin:6px 0 10px;line-height:1.1;}
+.s-value .unit{font-size:15px;font-weight:700;color:var(--ink3);margin-left:3px;}
+.bar{height:8px;background:#EDF0F5;border-radius:99px;overflow:hidden;}
+.bar i{display:block;height:100%;background:var(--blue);border-radius:99px;transition:width .4s;}
+.s-sub{font-size:12px;color:var(--ink3);margin-top:10px;}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.ghead{font-size:13px;font-weight:700;color:var(--ink2);margin:16px 0 10px;display:flex;align-items:center;gap:8px;}
+.lhead{display:inline-flex;padding:6px 13px;border-radius:99px;font-size:13px;font-weight:700;margin-bottom:12px;}
+.lhead.zh{background:#FFF1F0;color:#C0392B;}
+.lhead.en{background:var(--blue-l);color:var(--blue-d);}
+.row{display:flex;align-items:center;gap:12px;padding:14px;background:#fff;border:1px solid var(--line);border-radius:14px;margin-bottom:10px;box-shadow:var(--sh);}
+.row .rbody{flex:1;min-width:0;}
+.row .rtitle{font-weight:700;font-size:15px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.row .rmeta{font-size:12px;color:var(--ink3);margin-top:3px;}
+.row .racts{display:flex;gap:6px;}
+.empty-hint{color:var(--ink3);font-size:13px;text-align:center;padding:22px 12px;background:var(--bg);border-radius:12px;border:1px dashed var(--line);}
+.field,.field select,.field textarea{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;font-size:14px;background:#fff;}
+.field:focus,select:focus,textarea:focus{border-color:var(--blue);outline:none;box-shadow:0 0 0 3px rgba(47,107,237,.12);}
+textarea.field{min-height:110px;resize:vertical;line-height:1.6;}
+.seg{display:inline-flex;background:#EDF0F5;border-radius:10px;padding:4px;gap:4px;flex-wrap:wrap;}
+.seg-btn{padding:8px 14px;border:none;background:transparent;border-radius:8px;font-size:13px;font-weight:600;color:var(--ink2);cursor:pointer;}
+.seg-btn.active{background:#fff;color:var(--blue);box-shadow:0 1px 3px rgba(0,0,0,.1);}
+.settingsbox{background:#F8FAFC;border:1px solid var(--line);border-radius:12px;padding:4px 14px;margin-top:14px;}
+.srow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+.srow:last-of-type{border-bottom:0;}
+.slabel{font-size:14px;font-weight:600;color:var(--ink2);display:flex;align-items:center;gap:7px;}
+.voice-control{display:flex;gap:6px;align-items:center;flex:1;justify-content:flex-end;max-width:400px;min-width:0;}
+.voice-control select{flex:1;min-width:0;padding:8px 10px;font-size:13px;border:1px solid var(--line);border-radius:10px;background:#fff;}
+.toggle{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;cursor:pointer;inset:0;background:#CBD5E1;border-radius:24px;transition:.3s;}
+.toggle-slider:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;}
+input:checked+.toggle-slider{background:var(--blue);}
+input:checked+.toggle-slider:before{transform:translateX(20px);}
+details summary{cursor:pointer;color:var(--blue);font-size:14px;font-weight:600;padding:6px 0;}
+.dsum{font-size:15px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:8px;list-style:none;}
+.dsum::-webkit-details-marker{display:none;}
+.dsum::after{content:'▼';margin-left:auto;font-size:11px;color:var(--ink3);transition:.2s;}
+details[open]>.dsum::after{transform:rotate(180deg);}
+.hint{font-size:12px;color:var(--ink3);}
+/* ========== 5. 默書頁 ========== */
+.ddisplay{position:relative;min-height:150px;display:flex;align-items:center;justify-content:center;text-align:center;padding:40px 20px;background:linear-gradient(180deg,#FBFCFE,#F3F7FD);border:1px solid var(--line);border-radius:var(--r);margin-bottom:12px;}
+.dtext{font-size:34px;font-weight:800;line-height:1.5;letter-spacing:2px;transition:filter .3s;}
+.hidden-text{filter:blur(12px);user-select:none;color:var(--ink3);}
+.review-banner{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:var(--amber);color:#fff;padding:4px 14px;border-radius:99px;font-size:12px;font-weight:700;}
+.dlayout{display:flex;gap:16px;align-items:stretch;}
+.dmain{flex:1;min-width:0;}
+.dside{width:56px;display:flex;flex-direction:column;align-items:center;}
+.vp-label{font-size:11px;font-weight:700;color:var(--ink3);margin-bottom:8px;}
+.vp-track{position:relative;flex:1;width:6px;background:#EDF0F5;border-radius:99px;min-height:220px;}
+.vp-fill{position:absolute;top:0;left:0;width:100%;border-radius:99px;background:linear-gradient(180deg,var(--blue),#7AA5F4);transition:height .4s,width .4s;}
+.vp-dot{position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid #D5DBE5;transform:translate(-50%,-50%);z-index:2;}
+.vp-dot.completed{background:var(--green);border-color:var(--green);}
+.vp-dot.current{background:var(--blue);border-color:var(--blue);box-shadow:0 0 0 4px rgba(47,107,237,.18);}
+.vp-count{margin-top:8px;font-size:12px;font-weight:700;color:var(--ink2);}
+.mtimer{display:none;justify-content:center;gap:10px;margin:0 0 12px;flex-wrap:wrap;}
+.mtimer.visible{display:flex;}
+.mchip{background:#fff;border:1px solid var(--line);border-radius:99px;padding:6px 16px;font-size:13px;color:var(--ink2);font-weight:600;}
+.mchip strong{color:var(--ink);font-variant-numeric:tabular-nums;}
+.stimer{margin:0 0 12px;display:none;align-items:center;gap:10px;}
+.stimer.visible{display:flex;}
+.stimer-track{flex:1;height:6px;background:#EDF0F5;border-radius:99px;overflow:hidden;}
+.stimer-fill{height:100%;border-radius:99px;transition:width 1s linear,background .5s;background:var(--blue);}
+.stimer-fill.safe{background:var(--green);}.stimer-fill.warning{background:var(--amber);}.stimer-fill.danger{background:var(--red);}
+.stimer-text{font-size:12px;font-weight:700;color:var(--ink2);min-width:32px;text-align:right;}
+.stimer-status{font-size:11px;color:var(--ink3);min-width:56px;font-weight:600;}
+.ring{width:56px;height:56px;border-radius:50%;background:conic-gradient(var(--blue) 0%,#EDF0F5 0%);display:flex;align-items:center;justify-content:center;margin:8px auto;}
+.ring-in{width:46px;height:46px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:var(--blue);}
+/* ========== 6. 列表／表格 ========== */
+.citem{display:flex;align-items:center;padding:12px 14px;background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;gap:10px;}
+.citem.editing{background:var(--blue-l);border-color:#C9DBFD;}
+.citem .num{width:26px;height:26px;background:var(--blue-l);color:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
+.citem .text{flex:1;font-size:15px;line-height:1.5;min-width:0;word-break:break-word;}
+.citem .actions{display:flex;gap:4px;flex-shrink:0;align-items:center;}
+.edit-input{padding:8px 12px;font-size:15px;flex:1;min-width:0;border:1px solid var(--line);border-radius:10px;}
+.chk{display:flex;align-items:center;padding:14px;border:1px solid var(--line);border-radius:12px;margin-bottom:10px;background:#fff;}
+.chk.correct{border-color:#A7F3D0;background:#F0FDF4;}
+.chk.wrong{border-color:#FECACA;background:#FEF2F2;}
+.chk .answer{flex:1;font-size:16px;font-weight:600;}
+.chk-btns{display:flex;gap:10px;}
+.cbtn{width:44px;height:44px;border-radius:50%;border:2px solid var(--line);background:#fff;font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.cbtn.ok.active{background:var(--green);border-color:var(--green);color:#fff;}
+.cbtn.no.active{background:var(--red);border-color:var(--red);color:#fff;}
+.tbl-wrap{margin-top:12px;border:1px solid var(--line);border-radius:12px;overflow:hidden;}
+.tbl-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#F8FAFC;font-weight:700;font-size:14px;}
+table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.tbl th,.tbl td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);}
+.tbl th{background:#F8FAFC;font-weight:700;font-size:11px;color:var(--ink2);text-transform:uppercase;letter-spacing:.4px;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl td{max-width:300px;}
+.tbl td.wrap{white-space:normal;word-break:break-word;}
+.tbl td.nowrap{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.copy-confirm{color:var(--green);font-size:13px;margin-left:8px;display:none;font-weight:600;}
+/* ========== 7. 同步頁 ========== */
+.sync-status{margin-top:12px;padding:10px 14px;border-radius:12px;font-size:14px;display:none;font-weight:600;}
+.sync-status.show{display:block;}
+.sync-status.success{background:#F0FDF4;color:#065F46;border:1px solid #A7F3D0;}
+.sync-status.error{background:#FEF2F2;color:#991B1B;border:1px solid #FECACA;}
+.sync-status.loading{background:var(--blue-l);color:#1E40AF;border:1px solid #BFDBFE;}
+.mono-box{background:#F8FAFC;border:1px solid var(--line);border-radius:10px;padding:12px;font-family:monospace;font-size:12px;line-height:1.6;word-break:break-all;}
+.debug-box{font-size:11px;background:#0F172A;color:#94A3B8;padding:12px;border-radius:10px;white-space:pre-wrap;word-break:break-all;max-height:200px;overflow-y:auto;font-family:monospace;margin-top:10px;}
+/* ========== 8. 彈窗／頁腳 ========== */
+.modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center;padding:20px;}
+.modal.show{display:flex;}
+.modal-card{background:#fff;border-radius:20px;padding:26px;max-width:540px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,.2);position:relative;animation:up .25s ease;}
+@keyframes up{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-t{font-size:17px;font-weight:800;margin-bottom:18px;padding-right:36px;}
+.mclose{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;background:var(--bg);border:1px solid var(--line);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--ink2);}
+.mclose:hover{color:var(--red);border-color:#FECDCA;}
+.ropts{display:flex;gap:12px;margin-top:18px;}
+.ropt{flex:1;padding:18px;border:1px solid var(--line);border-radius:14px;text-align:center;cursor:pointer;background:#fff;box-shadow:var(--sh);}
+.ropt:hover{border-color:var(--blue);background:var(--blue-l);}
+.ropt .i{font-size:30px;margin-bottom:6px;}
+.ropt .t{font-weight:700;font-size:15px;}
+.ropt .d{font-size:12px;color:var(--ink3);margin-top:3px;}
+.app-footer{text-align:center;padding:20px 16px 26px;color:var(--ink3);font-size:12px;}
+/* ========== 9. 響應式 ========== */
+@media(max-width:768px){
+  .tabs{position:fixed;left:0;right:0;bottom:0;margin:0;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:6px 4px calc(8px + env(safe-area-inset-bottom));z-index:90;box-shadow:0 -4px 16px rgba(16,24,40,.06);}
+  .tab{flex:1;flex-direction:column;gap:2px;font-size:11px;padding:6px 4px;}
+  .tab .ic{font-size:19px;}
+  .tab.active{background:transparent;color:var(--blue);}
+  .ver{display:none;}
+  .page{padding:16px 14px 90px;}
+  .topbar{padding:10px 14px;}
+}
+@media(max-width:640px){
+  .stats-row,.grid2{grid-template-columns:1fr;}
+  .ptitle{font-size:22px;}
+  .dtext{font-size:26px;}
+  .dlayout{flex-direction:column;}
+  .dside{width:100%;flex-direction:row;gap:10px;align-items:center;}
+  .vp-track{min-height:0;height:6px;width:auto;flex:1;}
+  .vp-label,.vp-count{margin:0;}
+  .seg{width:100%;}.seg-btn{flex:1;text-align:center;}
+  .voice-control{max-width:100%;width:100%;}
+  .srow{flex-direction:column;align-items:flex-start;}
+  .ropts{flex-direction:column;}
+  .citem{flex-wrap:wrap;}
+  .citem .actions{width:100%;justify-content:flex-end;margin-top:6px;}
+}
 </style>
 </head>
 <body>
 
-<header class="app-header">
-  <div class="app-title-bar">
-    <h1 class="app-title">📋 中英文默書系統</h1>
-  </div>
-  <nav class="app-nav">
-    <button class="nav-btn active" onclick="navTo('home')">🏠 主頁</button>
-    <button class="nav-btn" onclick="navTo('projects')">📁 默書庫</button>
-    <button class="nav-btn" onclick="navTo('records')">📊 記錄</button>
-    <button class="nav-btn" onclick="navTo('settings')">⚙️ 設定</button>
+<header class="topbar">
+  <div class="brand" onclick="navTo('home')"><span class="logo">📋</span><span>中英文默書系統</span></div>
+  <span class="ver" id="verChip"></span>
+  <nav class="tabs" id="tabs">
+    <button class="tab active" data-p="home" onclick="navTo('home')"><span class="ic">🏠</span><span>主頁</span></button>
+    <button class="tab" data-p="projects" onclick="navTo('projects')"><span class="ic">📁</span><span>默書庫</span></button>
+    <button class="tab" data-p="records" onclick="navTo('records')"><span class="ic">📊</span><span>記錄</span></button>
+    <button class="tab" data-p="settings" onclick="navTo('settings')"><span class="ic">⚙️</span><span>設定</span></button>
   </nav>
 </header>
 
-<div class="container">
-  <!-- ===== 主頁 ===== -->
-  <div id="page-home">
-    <div class="home-section-title">🆕 最新默書表</div>
-    <div class="home-cols">
-      <div class="home-lang-card zh">
-        <div class="lang-card-head">🈶 中文默書</div>
-        <div id="quickZh"></div>
-      </div>
-      <div class="home-lang-card en">
-        <div class="lang-card-head">🔤 英文默書</div>
-        <div id="quickEn"></div>
-      </div>
-    </div>
-    <button class="btn btn-primary btn-block mt-2" onclick="navTo('projects')">📁 瀏覽默書庫</button>
-    <div class="card mt-3">
-      <div class="card-title">📊 最近成績</div>
-      <div id="recentScores"></div>
+<main class="page">
+<!-- ===== 主頁 ===== -->
+<div id="page-home">
+  <div class="phead">
+    <div class="crumb">主頁</div>
+    <h1 class="ptitle">最新默書表</h1>
+    <p class="psub">快速開始最近嘅默書表，並掌握整體學習狀況</p>
+    <div class="pactions">
+      <button class="btn btn-s" onclick="navTo('records')">📊 查看記錄</button>
+      <button class="btn btn-p" onclick="navTo('projects')">📁 瀏覽默書庫</button>
     </div>
   </div>
+  <div class="stats-row">
+    <div class="stat"><div class="s-label">默書表</div><div class="s-value" id="hsSheets">0</div><div class="s-sub" id="hsSheetsSub">—</div></div>
+    <div class="stat"><div class="s-label">默書內容</div><div class="s-value" id="hsItems">0</div><div class="s-sub" id="hsItemsSub">—</div></div>
+    <div class="stat"><div class="s-label">平均得分</div><div class="s-value" id="hsAvg">—</div><div class="bar"><i id="hsAvgBar" style="width:0%"></i></div><div class="s-sub" id="hsAvgSub">未有記錄</div></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><div class="lhead zh">🈶 中文默書</div><div id="quickZh"></div></div>
+    <div class="card"><div class="lhead en">🔤 英文默書</div><div id="quickEn"></div></div>
+  </div>
+  <div class="card"><div class="card-t">📊 最近成績</div><div id="recentScores"></div></div>
+</div>
 
-  <!-- ===== 默書庫 ===== -->
-  <div id="page-projects" class="hidden">
-    <div class="card">
-      <div class="flex-between">
-        <div class="card-title" style="margin-bottom:0;">📁 默書庫</div>
-        <button class="btn btn-primary" onclick="showModal('modalNewProject')">➕ 新增默書表</button>
-      </div>
-    </div>
-    <div class="card">
-      <div class="section-head">🈶 中文默書</div>
-      <div id="projListZh"></div>
-    </div>
-    <div class="card">
-      <div class="section-head">🔤 英文默書</div>
-      <div id="projListEn"></div>
+<!-- ===== 默書庫 ===== -->
+<div id="page-projects" class="hidden">
+  <div class="phead">
+    <div class="crumb">默書庫</div>
+    <h1 class="ptitle">默書庫</h1>
+    <p class="psub">管理所有中文與英文默書表</p>
+    <div class="pactions"><button class="btn btn-p" onclick="showModal('modalNewProject')">➕ 新增默書表</button></div>
+  </div>
+  <div class="ghead">🈶 中文默書</div><div id="projListZh"></div>
+  <div class="ghead">🔤 英文默書</div><div id="projListEn"></div>
+</div>
+
+<!-- ===== 默書表詳情 ===== -->
+<div id="page-project-detail" class="hidden">
+  <div class="phead">
+    <div class="crumb" id="crumbDetail">默書庫 / —</div>
+    <h1 class="ptitle" id="detailTitle"></h1>
+    <p class="psub" id="detailBadge"></p>
+    <div class="pactions">
+      <button class="btn btn-s" onclick="goBack()">⬅️ 返回</button>
+      <button class="btn btn-p" onclick="startDictation()">▶️ 開始默書</button>
     </div>
   </div>
-
-  <!-- ===== 默書表詳情 ===== -->
-  <div id="page-project-detail" class="hidden">
-    <div class="card">
-      <div class="page-header">
-        <div class="page-header-left">
-          <button class="btn btn-outline btn-sm" onclick="goBack()">⬅️ 返回</button>
-          <span class="page-header-title" id="detailTitle"></span>
-        </div>
-        <div class="page-header-right" id="detailBadge"></div>
-      </div>
+  <div id="sampleNote" class="note hidden">🎁 呢個係系統預設嘅示例默書表，可以隨意編輯或刪除。</div>
+  <div class="card">
+    <div class="card-t">📝 默書內容 (<span id="contentCount">0</span>)<span class="sp"></span>
+      <button class="btn btn-s btn-sm" onclick="showModal('modalAddContent')">✍️ 加入</button>
+      <button class="btn btn-s btn-sm" onclick="openScanModal()">📷 掃描</button>
     </div>
-    <div class="card">
-      <div id="sampleNote" class="sample-note hidden">🎁 呢個係系統預設嘅示例默書表，可以隨意編輯或刪除。</div>
-      <div class="list-toolbar">
-        <div class="card-title" style="margin-bottom:0;">📝 默書內容 (<span id="contentCount">0</span>)</div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-primary btn-sm" onclick="showModal('modalAddContent')">✍️ 手動加入</button>
-          <button class="btn btn-outline btn-sm" onclick="openScanModal()">📷 掃描</button></div></div>
-      <div class="hint" style="margin-bottom:12px;">💡 ✏️ 編輯 ⬆️⬇️ 排序 ✖ 刪除</div>
-      <div id="contentList"></div>
-      <div class="start-settings">
-        <div class="ss-row"><div class="ss-label">🔀 隨機打亂</div>
-          <label class="toggle"><input type="checkbox" id="preRandomToggle"><span class="toggle-slider"></span></label></div>
-        <div class="ss-row"><div class="ss-label">🔊 朗讀速度</div>
-          <div class="segmented-control" id="preSpeedControl">
-            <button class="seg-btn" onclick="setPreSpeed(0.4,this)">0.4x</button>
-            <button class="seg-btn" onclick="setPreSpeed(0.6,this)">0.6x</button>
-            <button class="seg-btn active" onclick="setPreSpeed(0.8,this)">0.8x</button>
-            <button class="seg-btn" onclick="setPreSpeed(1.0,this)">1.0x</button></div></div>
-        <div class="ss-row"><div class="ss-label">⏱️ 播放模式</div>
-          <div class="segmented-control" id="preModeControl">
-            <button class="seg-btn active" data-mode="manual" onclick="setPreMode('manual',this)">✋ 手動</button>
-            <button class="seg-btn" data-mode="auto" onclick="setPreMode('auto',this)">🤖 自動</button></div></div>
-        <div class="ss-row hidden" id="preAutoRow"><div class="ss-label">⏳ 間隔</div>
-          <div class="segmented-control" id="preIntervalControl">
-            <button class="seg-btn" onclick="setPreInterval(5,this)">5秒</button>
-            <button class="seg-btn active" onclick="setPreInterval(7,this)">7秒</button>
-            <button class="seg-btn" onclick="setPreInterval(10,this)">10秒</button>
-            <button class="seg-btn" onclick="setPreInterval(15,this)">15秒</button>
-            <button class="seg-btn" onclick="setPreInterval(20,this)">20秒</button></div></div>
-        <div class="hint" style="margin-top:10px;">💡 語音及音調設定請到「⚙️ 設定」分頁</div>
-      </div>
-      <div class="mt-3 text-center"><button class="btn btn-success btn-lg btn-block" onclick="startDictation()">▶️ 開始默書</button></div>
+    <div class="hint" style="margin-bottom:10px;">💡 ✏️ 編輯 ⬆️️ 排序 ✖ 刪除 🔊 試讀</div>
+    <div id="contentList"></div>
+    <div class="settingsbox">
+      <div class="srow"><div class="slabel">🔀 隨機打亂</div><label class="toggle"><input type="checkbox" id="preRandomToggle"><span class="toggle-slider"></span></label></div>
+      <div class="srow"><div class="slabel">🔊 朗讀速度</div>
+        <div class="seg" id="preSpeedControl">
+          <button class="seg-btn" onclick="setPreSpeed(0.4,this)">0.4x</button>
+          <button class="seg-btn" onclick="setPreSpeed(0.6,this)">0.6x</button>
+          <button class="seg-btn active" onclick="setPreSpeed(0.8,this)">0.8x</button>
+          <button class="seg-btn" onclick="setPreSpeed(1.0,this)">1.0x</button></div></div>
+      <div class="srow"><div class="slabel">⏱️ 播放模式</div>
+        <div class="seg" id="preModeControl">
+          <button class="seg-btn active" onclick="setPreMode('manual',this)">✋ 手動</button>
+          <button class="seg-btn" onclick="setPreMode('auto',this)">🤖 自動</button></div></div>
+      <div class="srow hidden" id="preAutoRow"><div class="slabel">⏳ 間隔</div>
+        <div class="seg" id="preIntervalControl">
+          <button class="seg-btn" onclick="setPreInterval(5,this)">5秒</button>
+          <button class="seg-btn active" onclick="setPreInterval(7,this)">7秒</button>
+          <button class="seg-btn" onclick="setPreInterval(10,this)">10秒</button>
+          <button class="seg-btn" onclick="setPreInterval(15,this)">15秒</button>
+          <button class="seg-btn" onclick="setPreInterval(20,this)">20秒</button></div></div>
     </div>
-  </div>
-
-  <!-- ===== 默書進行中 ===== -->
-  <div id="page-dictation" class="hidden">
-    <div class="card" style="padding:16px;">
-      <div class="page-header">
-        <div class="page-header-left">
-          <button class="btn btn-outline btn-sm" onclick="requestExitDictation()">❌ 退出</button>
-          <span class="page-header-title">📝 默書進行中</span>
-        </div>
-        <div class="page-header-right">
-          <span class="badge badge-purple hidden" id="reviewBadge">🔄 溫習中</span>
-          <span class="badge badge-blue" id="dictProgressBadge">1 / 5</span>
-        </div>
-      </div>
-      <div class="dictation-layout">
-        <div class="dictation-main">
-          <div class="dictation-display" id="dictDisplay">
-            <div class="review-banner hidden" id="reviewBanner">🔄 快速溫習模式</div>
-            <div class="dictation-text hidden-text" id="dictText">準備好了嗎？</div></div>
-          <div class="manual-timer-wrap" id="manualTimerWrap">
-            <span class="mt-chip">⏱️ 本題 <strong id="mtWord">0秒</strong></span>
-            <span class="mt-chip">Σ 總計 <strong id="mtTotal">0秒</strong></span></div>
-          <div class="slim-timer-wrap" id="slimTimerWrap">
-            <span class="slim-timer-status" id="slimTimerStatus">🔊 朗讀中</span>
-            <div class="slim-timer-track"><div class="slim-timer-fill safe" id="slimTimerFill" style="width:100%"></div></div>
-            <span class="slim-timer-text" id="slimTimerText">--</span></div>
-          <div id="countdownArea" class="hidden text-center">
-            <div class="countdown-ring" id="countdownRing"><div class="countdown-inner" id="countdownNum">7</div></div>
-            <button class="btn btn-outline btn-sm" id="pauseBtn" onclick="togglePause()">⏸️ 暫停</button></div>
-          <div class="text-center mt-2" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-            <button class="btn btn-primary btn-lg" onclick="speakCurrentManual()">🔊 朗讀</button>
-            <button class="btn btn-outline btn-lg" onclick="toggleText()">👁️ 顯示/隱藏</button>
-            <button class="btn btn-success btn-lg" id="btnNext" onclick="nextDictItem()">➡️ 下一題</button></div>
-          <div class="text-center mt-2">
-            <button class="btn btn-outline btn-sm" id="btnEnd" onclick="requestEndDictation()">⏹️ 結束默書</button></div>
-        </div>
-        <div class="dictation-sidebar">
-          <div class="vp-container" id="vpContainer">
-            <div class="vp-label" id="vpLabel">進度</div>
-            <div class="vp-track" id="vpTrack"><div class="vp-fill" id="vpFill" style="height:0%"></div></div>
-            <div class="vp-count" id="vpCount">0/0</div></div></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== 校對 ===== -->
-  <div id="page-checking" class="hidden">
-    <div class="card">
-      <div class="page-header">
-        <div class="page-header-left">
-          <button class="btn btn-outline btn-sm" onclick="goBack()">⬅️ 返回</button>
-          <span class="page-header-title">✅ 家長校對</span>
-        </div>
-      </div>
-      <p style="color:var(--text-light);margin-bottom:16px;font-size:14px;">請對照學生喺紙上寫嘅答案，逐題標記對錯：</p>
-      <div id="checkList"></div>
-    </div>
-    <div class="card text-center"><button class="btn btn-primary btn-lg btn-block" onclick="finishChecking()">📊 完成校對</button></div>
-  </div>
-
-  <!-- ===== 結果 ===== -->
-  <div id="page-result" class="hidden">
-    <div class="card text-center">
-      <div class="page-header">
-        <div class="page-header-left">
-          <button class="btn btn-outline btn-sm" onclick="goBack()">⬅️ 返回</button>
-          <span class="page-header-title">🎯 默書結果</span>
-        </div>
-      </div>
-      <div style="font-size:64px;margin-bottom:12px;" id="resultEmoji">🎉</div>
-      <h2 id="resultTitle" style="margin-bottom:20px;">默書完成！</h2>
-      <div class="stats-grid">
-        <div class="stat-box"><div class="value" id="resultScore">0</div><div class="label">答對題數</div></div>
-        <div class="stat-box"><div class="value" id="resultTotal">0</div><div class="label">總題數</div></div>
-        <div class="stat-box"><div class="value" id="resultPercent">0%</div><div class="label">得分</div></div></div>
-      <div id="timeStats" class="hidden" style="text-align:left;">
-        <div class="card-title">⏱️ 用時統計</div>
-        <div class="stats-grid">
-          <div class="stat-box"><div class="value" id="statTotalTime" style="font-size:24px;">--</div><div class="label">總用時</div></div>
-          <div class="stat-box"><div class="value" id="statAvgTime" style="font-size:24px;">--</div><div class="label">平均每題</div></div>
-          <div class="stat-box"><div class="value" id="statSlowest" style="font-size:24px;">--</div><div class="label">最慢一題</div></div></div>
-        <div id="perWordTimes"></div></div>
-      <div id="resultWrong" class="hidden" style="text-align:left;margin-top:20px;">
-        <h4 style="margin-bottom:10px;font-size:15px;">❌ 錯咗嘅內容：</h4><div id="wrongList"></div></div>
-      <div class="mt-3" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-        <button class="btn btn-outline" onclick="navTo('home')">🏠 返回主頁</button>
-        <button class="btn btn-primary" onclick="retryWrong()">🔄 只溫錯題</button></div>
-    </div>
-  </div>
-
-  <!-- ===== 記錄 ===== -->
-  <div id="page-records" class="hidden">
-    <div class="card"><div class="card-title">📊 歷史成績</div><canvas id="recordChart" width="800" height="280" style="width:100%;"></canvas></div>
-    <div class="card"><div id="recordTable"></div>
-      <div class="text-center mt-2"><button class="btn btn-danger btn-sm" onclick="clearAllRecords()">🗑️ 清除所有記錄</button></div></div></div>
-
-  <!-- ===== ⚙️ 設定 ===== -->
-  <div id="page-settings" class="hidden">
-    <!-- 語音設定 -->
-    <div class="card">
-      <div class="card-title">🔊 語音設定</div>
-      <p style="color:var(--text-light);margin-bottom:14px;font-size:13px;">設定默書時使用嘅語音同音調，揀完可以撳「試聽」。如果只見到「自動」，請稍等或重新整理。</p>
-      <div class="settings-row">
-        <div class="settings-label">🈶 中文語音</div>
-        <div class="voice-control">
-          <select id="zhVoiceSelect" onchange="saveVoicePref('zh')"></select>
-          <button class="btn btn-outline btn-sm" onclick="testVoice('zh')">🔊 試聽</button>
-        </div>
-      </div>
-      <div class="settings-row">
-        <div class="settings-label">🔤 英文語音</div>
-        <div class="voice-control">
-          <select id="enVoiceSelect" onchange="saveVoicePref('en')"></select>
-          <button class="btn btn-outline btn-sm" onclick="testVoice('en')">🔊 試聽</button>
-        </div>
-      </div>
-      <div class="settings-row" style="border-bottom:none;">
-        <div class="settings-label">🎵 音調</div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <div class="segmented-control" id="pitchControl">
-            <button class="seg-btn" data-pitch="0.7" onclick="setPitch(0.7)">低</button>
-            <button class="seg-btn active" data-pitch="1.0" onclick="setPitch(1.0)">正常</button>
-            <button class="seg-btn" data-pitch="1.3" onclick="setPitch(1.3)">高</button>
-          </div>
-          <button class="btn btn-outline btn-sm" onclick="testPitch()">🔊 試聽</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Google Sheets -->
-    <div class="sync-section">
-      <h3>☁️ Google Sheets 默書資料</h3>
-      <p class="section-desc">從 Google Sheets 匯入默書資料到本機，離線都可以使用。</p>
-      <div style="margin-bottom:4px;">
-        <span class="last-sync-info" id="lastSyncInfo">上次匯入：未匯入</span>
-      </div>
-      <div class="import-stats" id="importStats"></div>
-      <div class="import-actions">
-        <button class="btn btn-primary" onclick="syncAll()" id="syncAllBtn">🔄 匯入全部</button>
-        <button class="btn btn-outline" onclick="syncSingle('zh')" id="syncZhBtn">🈶 只匯入中文</button>
-        <button class="btn btn-outline" onclick="syncSingle('en')" id="syncEnBtn">🔤 只匯入英文</button>
-      </div>
-      <div class="sync-status" id="syncStatus"></div>
-      <details class="mt-3">
-        <summary>🔗 已連接試算表 ID</summary>
-        <div class="sheet-id-box" style="margin-top:10px;">
-          <code id="sheetIdDisplay" style="font-size:12px;word-break:break-all;color:var(--text);"></code>
-        </div>
-      </details>
-      <details class="mt-2">
-        <summary>📖 試算表格式說明</summary>
-        <div class="mt-2" style="font-size:13px;color:var(--text-light);line-height:1.7;">
-          <p style="margin-bottom:8px;">試算表有兩個分頁，每個分頁有 3 欄：</p>
-          <div class="sheet-format-box">Project,Type,Details<br>第一課,詞語,學校;老師;同學<br>第二課,句子,我喜歡上學;天氣很好</div>
-          <ul style="padding-left:20px;margin-bottom:8px;">
-            <li><strong>Project</strong>：默書表名稱</li>
-            <li><strong>Type</strong>：類型（詞語／句子／文章 或 words/sentences/paragraphs）</li>
-            <li><strong>Details</strong>：默書內容，用 <strong>;</strong> 分隔每一項</li>
-          </ul>
-          <p>⚠️ 請確保試算表共用設定為「<strong>知道連結的任何人</strong>」都可檢視。</p>
-          <p>💡 再次匯入會以試算表為準（覆蓋同名默書表內容）。</p>
-        </div>
-      </details>
-      <details class="mt-2">
-        <summary>⚙️ 進階：分頁名稱設定</summary>
-        <div class="mt-2">
-          <div class="form-group"><label class="form-label">中文分頁名稱</label><input type="text" class="form-input" id="tabNameZh"></div>
-          <div class="form-group"><label class="form-label">英文分頁名稱</label><input type="text" class="form-input" id="tabNameEn"></div>
-          <button class="btn btn-outline btn-sm" onclick="saveTabNames()">💾 儲存分頁名稱</button>
-          <span id="tabNameSaved" style="color:var(--success);font-size:13px;margin-left:8px;display:none;">✅ 已儲存</span>
-        </div>
-      </details>
-      <details class="mt-2">
-        <summary>🔍 除錯資訊（匯入失敗時睇呢度）</summary>
-        <div class="debug-box" id="debugContent">（暫無）</div>
-        <button class="btn btn-outline btn-sm mt-2" onclick="clearDebug()">🗑️ 清除除錯記錄</button>
-      </details>
-    </div>
-
-    <!-- 匯出 -->
-    <div class="sync-section">
-      <details id="exportDetails">
-        <summary class="export-summary">📤 匯出資料（表格格式）</summary>
-        <div class="export-body">
-          <p class="section-desc">以下表格同你嘅 Google Sheets 格式一致（3 欄：Project / Type / Details），中英文分開兩表。撳「複製」後可直接貼入 Google Sheets。</p>
-          <div id="exportTables"></div>
-        </div>
-      </details>
-    </div>
+    <div style="margin-top:16px;"><button class="btn btn-p btn-block" onclick="startDictation()">▶️ 開始默書</button></div>
   </div>
 </div>
 
+<!-- ===== 默書進行中 ===== -->
+<div id="page-dictation" class="hidden">
+  <div class="phead row-between">
+    <div>
+      <div class="crumb" id="crumbDict">默書庫 / —</div>
+      <h1 class="ptitle sm">📝 默書進行中 <span class="chip purple hidden" id="reviewBadge">🔄 溫習中</span></h1>
+    </div>
+    <div class="hgroup">
+      <button class="btn btn-s btn-sm" onclick="requestExitDictation()">❌ 退出</button>
+      <span class="chip blue" id="dictProgressBadge">1 / 5</span>
+    </div>
+  </div>
+  <div class="dlayout">
+    <div class="dmain">
+      <div class="ddisplay">
+        <div class="review-banner hidden" id="reviewBanner">🔄 快速溫習模式</div>
+        <div class="dtext hidden-text" id="dictText">準備好了嗎？</div>
+      </div>
+      <div class="mtimer" id="manualTimerWrap">
+        <span class="mchip">⏱️ 本題 <strong id="mtWord">0秒</strong></span>
+        <span class="mchip">Σ 總計 <strong id="mtTotal">0秒</strong></span>
+      </div>
+      <div class="stimer" id="slimTimerWrap">
+        <span class="stimer-status" id="slimTimerStatus">🔊 朗讀中</span>
+        <div class="stimer-track"><div class="stimer-fill safe" id="slimTimerFill" style="width:100%"></div></div>
+        <span class="stimer-text" id="slimTimerText">--</span>
+      </div>
+      <div id="countdownArea" class="hidden text-center">
+        <div class="ring" id="countdownRing"><div class="ring-in" id="countdownNum">7</div></div>
+        <button class="btn btn-s btn-sm" id="pauseBtn" onclick="togglePause()">⏸️ 暫停</button>
+      </div>
+      <div class="pactions">
+        <button class="btn btn-s" onclick="speakCurrentManual()">🔊 朗讀</button>
+        <button class="btn btn-s" onclick="toggleText()">👁️ 顯示/隱藏</button>
+        <button class="btn btn-p" id="btnNext" onclick="nextDictItem()">➡️ 下一題</button>
+      </div>
+      <div class="text-center" style="margin-top:10px;">
+        <button class="btn btn-s btn-sm" id="btnEnd" onclick="requestEndDictation()">⏹️ 結束默書</button>
+      </div>
+    </div>
+    <aside class="dside">
+      <div class="vp-label" id="vpLabel">進度</div>
+      <div class="vp-track" id="vpTrack"><div class="vp-fill" id="vpFill" style="height:0%"></div></div>
+      <div class="vp-count" id="vpCount">0/0</div>
+    </aside>
+  </div>
+</div>
+
+<!-- ===== 校對 ===== -->
+<div id="page-checking" class="hidden">
+  <div class="phead">
+    <div class="crumb">默書 / 校對</div>
+    <h1 class="ptitle">✅ 家長校對</h1>
+    <p class="psub">請對照學生喺紙上寫嘅答案，逐題標記對錯</p>
+    <div class="pactions">
+      <button class="btn btn-s" onclick="goBack()">⬅️ 返回</button>
+      <button class="btn btn-p" onclick="finishChecking()">📊 完成校對</button>
+    </div>
+  </div>
+  <div class="card"><div id="checkList"></div></div>
+</div>
+
+<!-- ===== 結果 ===== -->
+<div id="page-result" class="hidden">
+  <div class="phead">
+    <div class="crumb">默書 / 結果</div>
+    <h1 class="ptitle"><span id="resultEmoji">🎉</span><span id="resultTitle">默書完成！</span></h1>
+  </div>
+  <div class="stats-row">
+    <div class="stat"><div class="s-label">答對題數</div><div class="s-value" id="resultScore">0</div><div class="s-sub">題</div></div>
+    <div class="stat"><div class="s-label">總題數</div><div class="s-value" id="resultTotal">0</div><div class="s-sub">題</div></div>
+    <div class="stat"><div class="s-label">得分</div><div class="s-value" id="resultPercent">0<span class="unit">%</span></div><div class="bar"><i id="resultBar" style="width:0%"></i></div></div>
+  </div>
+  <div id="timeStats" class="card hidden">
+    <div class="card-t">⏱️ 用時統計</div>
+    <div class="stats-row" style="margin-bottom:6px;">
+      <div class="stat"><div class="s-label">總用時</div><div class="s-value" id="statTotalTime" style="font-size:24px;">--</div></div>
+      <div class="stat"><div class="s-label">平均每題</div><div class="s-value" id="statAvgTime" style="font-size:24px;">--</div></div>
+      <div class="stat"><div class="s-label">最慢一題</div><div class="s-value" id="statSlowest" style="font-size:24px;">--</div></div>
+    </div>
+    <div id="perWordTimes"></div>
+  </div>
+  <div id="resultWrong" class="card hidden">
+    <div class="card-t">❌ 錯咗嘅內容</div><div id="wrongList"></div>
+  </div>
+  <div class="pactions">
+    <button class="btn btn-s" onclick="goBack()">⬅️ 返回</button>
+    <button class="btn btn-s" onclick="navTo('home')">🏠 主頁</button>
+    <button class="btn btn-p" onclick="retryWrong()">🔄 只溫錯題</button>
+  </div>
+</div>
+
+<!-- ===== 記錄 ===== -->
+<div id="page-records" class="hidden">
+  <div class="phead">
+    <div class="crumb">記錄</div>
+    <h1 class="ptitle">歷史成績</h1>
+    <p class="psub">歷次默書嘅得分趨勢與詳細記錄</p>
+    <div class="pactions"><button class="btn btn-dg" onclick="clearAllRecords()">🗑️ 清除所有記錄</button></div>
+  </div>
+  <div class="stats-row">
+    <div class="stat"><div class="s-label">總測驗次數</div><div class="s-value" id="rcTests">0</div><div class="s-sub">次</div></div>
+    <div class="stat"><div class="s-label">平均得分</div><div class="s-value" id="rcAvg">—</div><div class="bar"><i id="rcAvgBar" style="width:0%"></i></div></div>
+    <div class="stat"><div class="s-label">累計寫字用時</div><div class="s-value" id="rcTime" style="font-size:24px;">—</div><div class="s-sub">手動模式累計</div></div>
+  </div>
+  <div class="card"><div class="card-t">📈 得分趨勢</div><canvas id="recordChart" width="800" height="280" style="width:100%;"></canvas></div>
+  <div class="card"><div class="card-t">📋 最近記錄</div><div id="recordTable"></div></div>
+</div>
+
+<!-- ===== 設定 ===== -->
+<div id="page-settings" class="hidden">
+  <div class="phead">
+    <div class="crumb">設定</div>
+    <h1 class="ptitle">⚙️ 設定</h1>
+    <p class="psub">語音、Google Sheets 同步與資料匯出</p>
+  </div>
+
+  <div class="card">
+    <div class="card-t">🔊 語音設定</div>
+    <p class="hint" style="margin-bottom:12px;">設定默書時使用嘅語音同音調，揀完可以試聽。如果只見到「自動」，請稍等或重新整理。</p>
+    <div class="srow" style="border-top:1px solid var(--line);">
+      <div class="slabel">🈶 中文語音</div>
+      <div class="voice-control"><select id="zhVoiceSelect" onchange="saveVoicePref('zh')"></select><button class="btn btn-s btn-sm" onclick="testVoice('zh')">🔊 試聽</button></div>
+    </div>
+    <div class="srow">
+      <div class="slabel">🔤 英文語音</div>
+      <div class="voice-control"><select id="enVoiceSelect" onchange="saveVoicePref('en')"></select><button class="btn btn-s btn-sm" onclick="testVoice('en')">🔊 試聽</button></div>
+    </div>
+    <div class="srow">
+      <div class="slabel">🎵 音調</div>
+      <div class="hgroup">
+        <div class="seg" id="pitchControl">
+          <button class="seg-btn" data-pitch="0.7" onclick="setPitch(0.7)">低</button>
+          <button class="seg-btn active" data-pitch="1.0" onclick="setPitch(1.0)">正常</button>
+          <button class="seg-btn" data-pitch="1.3" onclick="setPitch(1.3)">高</button>
+        </div>
+        <button class="btn btn-s btn-sm" onclick="testPitch()">🔊 試聽</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-t">☁️ Google Sheets 默書資料</div>
+    <span class="chip blue" id="lastSyncInfo">上次匯入：未匯入</span>
+    <div class="stats-row" id="importStats" style="margin-top:14px;"></div>
+    <div class="pactions">
+      <button class="btn btn-p" onclick="syncAll()" id="syncAllBtn">🔄 匯入全部</button>
+      <button class="btn btn-s" onclick="syncSingle('zh')" id="syncZhBtn">🈶 中文</button>
+      <button class="btn btn-s" onclick="syncSingle('en')" id="syncEnBtn">🔤 英文</button>
+    </div>
+    <div class="sync-status" id="syncStatus"></div>
+    <details style="margin-top:14px;"><summary>🔗 已連接試算表 ID</summary><div class="mono-box" style="margin-top:8px;" id="sheetIdDisplay"></div></details>
+    <details><summary>📖 試算表格式說明</summary>
+      <div style="margin-top:8px;font-size:13px;color:var(--ink2);line-height:1.7;">
+        <p style="margin-bottom:8px;">試算表有兩個分頁，每個分頁有 3 欄：</p>
+        <div class="mono-box">Project,Type,Details<br>第一課,詞語,學校;老師;同學<br>第二課,句子,我喜歡上學;天氣很好</div>
+        <ul style="padding-left:20px;margin:8px 0;">
+          <li><strong>Project</strong>：默書表名稱</li>
+          <li><strong>Type</strong>：類型（詞語／句子／文章 或 words/sentences/paragraphs）</li>
+          <li><strong>Details</strong>：默書內容，用 <strong>;</strong> 分隔每一項</li>
+        </ul>
+        <p>⚠️ 試算表須共用為「知道連結的任何人」都可檢視。</p>
+        <p>💡 再次匯入會以試算表為準（覆蓋同名默書表內容）。</p>
+      </div>
+    </details>
+    <details><summary>⚙️ 進階：分頁名稱設定</summary>
+      <div style="margin-top:10px;">
+        <div class="srow"><div class="slabel">中文分頁</div><input class="field" style="max-width:220px;" id="tabNameZh"></div>
+        <div class="srow"><div class="slabel">英文分頁</div><input class="field" style="max-width:220px;" id="tabNameEn"></div>
+        <button class="btn btn-s btn-sm" onclick="saveTabNames()">💾 儲存分頁名稱</button>
+        <span id="tabNameSaved" style="color:var(--green);font-size:13px;margin-left:8px;display:none;font-weight:600;">✅ 已儲存</span>
+      </div>
+    </details>
+    <details><summary>🔍 除錯資訊</summary>
+      <div class="debug-box" id="debugContent">（暫無）</div>
+      <button class="btn btn-s btn-sm" style="margin-top:8px;" onclick="clearDebug()">🗑️ 清除</button>
+    </details>
+  </div>
+
+  <div class="card">
+    <details id="exportDetails">
+      <summary class="dsum">📤 匯出資料（表格格式）</summary>
+      <div style="margin-top:12px;">
+        <p class="psub">表格同 Google Sheets 格式一致（3 欄），中英文分開兩表，複製後可直接貼入。</p>
+        <div id="exportTables"></div>
+      </div>
+    </details>
+  </div>
+</div>
+</main>
+
 <footer class="app-footer">中英文默書系統 · 版本 <span id="appVersion"></span></footer>
 
-<!-- ===== 模態框 ===== -->
-<div class="modal" id="modalNewProject"><div class="modal-content">
-  <button class="modal-close" onclick="closeModal('modalNewProject')">✕</button>
-  <div class="modal-title">➕ 新增默書表</div>
-  <div class="form-group"><label class="form-label">名稱</label><input type="text" class="form-input" id="newProjectName" placeholder="例如：第三課詞語"></div>
-  <div class="form-group"><label class="form-label">語言</label>
-    <select class="form-select" id="newProjectLang"><option value="zh">🈶 中文</option><option value="en">🔤 英文</option></select></div>
-  <div class="form-group"><label class="form-label">內容類型</label>
-    <select class="form-select" id="newProjectType"><option value="words">📝 詞語</option><option value="sentences">📄 句子</option><option value="passage">📖 文章</option></select></div>
-  <button class="btn btn-primary btn-block mt-2" onclick="createProject()">✅ 建立</button></div></div>
+<!-- ===== 彈窗 ===== -->
+<div class="modal" id="modalNewProject"><div class="modal-card">
+  <button class="mclose" onclick="closeModal('modalNewProject')">✕</button>
+  <div class="modal-t">➕ 新增默書表</div>
+  <div class="srow"><div class="slabel">名稱</div><input class="field" id="newProjectName" placeholder="例如：第三課詞語"></div>
+  <div class="srow"><div class="slabel">語言</div><select class="field" id="newProjectLang" style="max-width:160px;"><option value="zh">🈶 中文</option><option value="en">🔤 英文</option></select></div>
+  <div class="srow"><div class="slabel">類型</div><select class="field" id="newProjectType" style="max-width:160px;"><option value="words">📝 詞語</option><option value="sentences">📄 句子</option><option value="passage">📖 文章</option></select></div>
+  <button class="btn btn-p btn-block" style="margin-top:14px;" onclick="createProject()">✅ 建立</button>
+</div></div>
 
-<div class="modal" id="modalAddContent"><div class="modal-content">
-  <button class="modal-close" onclick="closeModal('modalAddContent')">✕</button>
-  <div class="modal-title">✍️ 加入默書內容</div>
-  <div class="form-group"><label class="form-label">內容（每行一項）</label><textarea class="form-textarea" id="newContentText"></textarea></div>
-  <button class="btn btn-primary btn-block mt-2" onclick="addContent()">✅ 加入內容</button></div></div>
+<div class="modal" id="modalAddContent"><div class="modal-card">
+  <button class="mclose" onclick="closeModal('modalAddContent')">✕</button>
+  <div class="modal-t">✍️ 加入默書內容</div>
+  <div class="hint" style="margin-bottom:8px;">每行一項</div>
+  <textarea class="field" id="newContentText"></textarea>
+  <button class="btn btn-p btn-block" style="margin-top:14px;" onclick="addContent()">✅ 加入內容</button>
+</div></div>
 
-<div class="modal" id="modalScan"><div class="modal-content">
-  <button class="modal-close" onclick="cancelScan()">✕</button>
-  <div class="modal-title">📷 掃描輸入（OCR）</div>
-  <div class="scan-area" id="scanArea" onclick="document.getElementById('scanInput').click()">
-    <div class="icon">📸</div><p style="font-weight:500;">撳呢度影相或選擇圖片</p>
-    <p style="font-size:12px;color:var(--text-light);margin-top:6px;">自動轉換為繁體中文</p></div>
+<div class="modal" id="modalScan"><div class="modal-card">
+  <button class="mclose" onclick="cancelScan()">✕</button>
+  <div class="modal-t">📷 掃描輸入（OCR）</div>
+  <div id="scanArea" onclick="document.getElementById('scanInput').click()" style="border:2px dashed var(--line);border-radius:14px;padding:34px;text-align:center;cursor:pointer;background:#F8FAFC;">
+    <div style="font-size:36px;margin-bottom:8px;">📸</div>
+    <p style="font-weight:700;">撳呢度影相或選擇圖片</p>
+    <p class="hint" style="margin-top:4px;">自動轉換為繁體中文</p>
+  </div>
   <input type="file" id="scanInput" accept="image/*" capture="environment" style="display:none;" onchange="handleScanImage(this)">
   <div id="scanPreview" class="hidden text-center">
-    <img id="previewImg" class="scan-preview">
-    <div class="ocr-progress" id="ocrProgress" style="display:none;">
-      <p style="font-size:13px;color:var(--text-light);margin-bottom:6px;">🔄 正在辨識並轉換繁體...</p>
-      <div class="bar"><div class="fill" id="ocrFill" style="width:0%"></div></div></div></div>
-  <div id="scanResult" class="hidden mt-2">
-    <div class="ocr-detect-info" id="ocrDetectInfo">🧠 智能分行結果</div>
-    <div class="hint" style="margin-bottom:8px;">💡 ✏️ 編輯 ⬆️⬇️ 排序 ✖ 刪除</div>
-    <div id="ocrItemsList" style="max-height:280px;overflow-y:auto;margin-bottom:12px;"></div>
-    <div style="display:flex;gap:8px;">
-      <button class="btn btn-primary" style="flex:1;" onclick="confirmScan()">✅ 確認加入</button>
-      <button class="btn btn-outline" style="flex:1;" onclick="retryOcrEdit()">✏️ 批量編輯</button></div></div>
-  <div id="scanEditArea" class="hidden mt-2">
-    <label class="form-label">手動編輯（每行一項）：</label>
-    <textarea class="form-textarea" id="ocrEditText"></textarea>
-    <button class="btn btn-primary btn-block mt-2" onclick="confirmScanEdit()">✅ 確認加入</button></div></div></div>
+    <img id="previewImg" style="max-width:100%;max-height:180px;border-radius:10px;margin:10px 0;border:1px solid var(--line);">
+    <div id="ocrProgress" style="display:none;">
+      <p class="hint" style="margin-bottom:5px;">🔄 正在辨識並轉換繁體...</p>
+      <div class="bar"><i id="ocrFill" style="width:0%"></i></div>
+    </div>
+  </div>
+  <div id="scanResult" class="hidden" style="margin-top:12px;">
+    <div class="chip blue" id="ocrDetectInfo">🧠 智能分行結果</div>
+    <div class="hint" style="margin:8px 0;">💡 ✏️ 編輯 ⬆️️ 排序 ✖ 刪除</div>
+    <div id="ocrItemsList" style="max-height:240px;overflow-y:auto;"></div>
+    <div class="pactions">
+      <button class="btn btn-p" onclick="confirmScan()">✅ 確認加入</button>
+      <button class="btn btn-s" onclick="retryOcrEdit()">✏️ 批量編輯</button>
+    </div>
+  </div>
+  <div id="scanEditArea" class="hidden" style="margin-top:12px;">
+    <div class="hint" style="margin-bottom:6px;">手動編輯（每行一項）</div>
+    <textarea class="field" id="ocrEditText"></textarea>
+    <button class="btn btn-p btn-block" style="margin-top:10px;" onclick="confirmScanEdit()">✅ 確認加入</button>
+  </div>
+</div></div>
 
-<div class="modal" id="modalReview"><div class="modal-content">
-  <button class="modal-close" onclick="closeModal('modalReview');goToMarking()">✕</button>
-  <div class="modal-title">📝 默書完成</div>
-  <p style="color:var(--text-light);margin-bottom:8px;">想喺校對前快速溫習一次嗎？</p>
-  <div class="review-options">
-    <div class="review-option" onclick="startQuickReview()"><div class="ro-icon">🔄</div><div class="ro-title">快速溫習</div><div class="ro-desc">自動重播所有詞語</div></div>
-    <div class="review-option" onclick="closeModal('modalReview');goToMarking()"><div class="ro-icon">➡️</div><div class="ro-title">直接校對</div><div class="ro-desc">跳過溫習</div></div></div></div></div>
+<div class="modal" id="modalReview"><div class="modal-card">
+  <button class="mclose" onclick="closeModal('modalReview');goToMarking()">✕</button>
+  <div class="modal-t">📝 默書完成</div>
+  <p class="psub">想喺校對前快速溫習一次嗎？</p>
+  <div class="ropts">
+    <div class="ropt" onclick="startQuickReview()"><div class="i">🔄</div><div class="t">快速溫習</div><div class="d">自動重播所有詞語</div></div>
+    <div class="ropt" onclick="closeModal('modalReview');goToMarking()"><div class="i">➡️</div><div class="t">直接校對</div><div class="d">跳過溫習</div></div>
+  </div>
+</div></div>
 
 <script>
-const APP_VERSION='16.2';
+/* ================= 設定 ================= */
+const APP_VERSION='17.0';
 const SHEET_ID='1Ok4OH76O2W5rtkHw-1Q_F6W4c4jD-WoQTA0UwAXv4t0';
-const TAB_CONFIG={
-  zh:{defaultName:'Chinese',label:'中文默書'},
-  en:{defaultName:'English',label:'英文默書'}
-};
+const TAB_CONFIG={zh:{defaultName:'Chinese',label:'中文默書'},en:{defaultName:'English',label:'英文默書'}};
 const MAIN_PAGES=['home','projects','records','settings'];
-let lastMainPage='home';
-let currentPage='home';
 
-let projects=[];
-try{projects=JSON.parse(localStorage.getItem('dict_p8')||'[]');}catch(e){projects=[];}
-if(!Array.isArray(projects))projects=[];
-let records=[];
-try{records=JSON.parse(localStorage.getItem('dict_r8')||'[]');}catch(e){records=[];}
-if(!Array.isArray(records))records=[];
-
+/* ================= 狀態 ================= */
+let lastMainPage='home',currentPage='home';
+let projects=safeParse('dict_p8'),records=safeParse('dict_r8');
 let currentProject=null,currentDictIndex=0,dictItems=[],originalItems=[],checkResults=[];
-let speechRate=0.8,isRandomized=false,playMode='manual',autoInterval=7;
+let speechRate=.8,isRandomized=false,playMode='manual',autoInterval=7;
 let speechPitch=parseFloat(localStorage.getItem('dict_pitch')||'1.0');
 let countdownTimer=null,currentCountdown=0,isPaused=false,isReviewMode=false;
-let ocrParsedItems=[],editingContentIndex=-1,editingOcrIndex=-1;
-let speakToken=0;
+let ocrParsedItems=[],editingContentIndex=-1,editingOcrIndex=-1,speakToken=0;
 let wordTimes=[],wordStartTime=0,totalStartTime=0,totalDictationSeconds=0,wordTimerInterval=null,manualTiming=false;
-let debugLines=[];
+let debugLines=[],s2tReady=false,s2tConvert=null;
 
-function saveProjects(){try{localStorage.setItem('dict_p8',JSON.stringify(projects));}catch(e){debugLog('儲存失敗：'+e.message);}}
+function safeParse(k){try{const v=JSON.parse(localStorage.getItem(k)||'[]');return Array.isArray(v)?v:[];}catch(e){return[];}}
+function saveProjects(){try{localStorage.setItem('dict_p8',JSON.stringify(projects));}catch(e){}}
 function saveRecords(){try{localStorage.setItem('dict_r8',JSON.stringify(records));}catch(e){}}
+function el(id){return document.getElementById(id);}
 
-function debugLog(msg){
-  const line='['+new Date().toLocaleTimeString()+'] '+msg;
-  debugLines.push(line);
-  if(debugLines.length>60)debugLines.shift();
-  const el=document.getElementById('debugContent');
-  if(el)el.innerText=debugLines.join('\n');
-  console.log('[DictationSync]',msg);
-}
-function clearDebug(){debugLines=[];const el=document.getElementById('debugContent');if(el)el.innerText='（暫無）';}
-
-function generateIdFromName(name,lang){
-  const str=(name||'')+'_'+(lang||'zh');let h=0;
-  for(let i=0;i<str.length;i++){h=((h<<5)-h)+str.charCodeAt(i);h|=0;}
-  return Math.abs(h)||1;
-}
-function migrateIds(){
-  let fixed=0;
-  projects.forEach(p=>{
-    if(typeof p.id!=='number'||isNaN(p.id)){
-      if(p.fromSheet&&p.name){p.id=generateIdFromName(p.name,p.lang||'zh');}
-      else{p.id=Date.now()+Math.floor(Math.random()*10000);}
-      fixed++;
-    }
-  });
-  if(fixed>0){saveProjects();debugLog('已自動修正 '+fixed+' 個默書表的 ID 格式');}
-}
-function migrateTimestamps(){
-  let changed=false;
-  projects.forEach(p=>{
-    if(!p.createdTs){
-      let t=NaN;
-      if(p.createdAt){t=Date.parse(p.createdAt);}
-      p.createdTs=(t&&!isNaN(t))?t:1;
-      changed=true;
-    }
-    if(!p.updatedTs){p.updatedTs=p.createdTs;changed=true;}
-  });
-  if(changed)saveProjects();
-}
-function sameId(a,b){return String(a)===String(b);}
-function touchProject(p){if(p)p.updatedTs=Date.now();}
-function formatTs(ts){
-  if(!ts)return '—';
-  const d=new Date(ts);
-  if(isNaN(d.getTime()))return '—';
-  return d.getFullYear()+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0');
-}
-
-function seedSampleProject(){
-  if(localStorage.getItem('dict_seeded_v11'))return;
-  if(projects.length===0){
-    const now=Date.now();
-    projects.push({id:999999,name:'示例：常見詞語',type:'words',lang:'zh',isSample:true,
-      contents:['學校','老師','同學','書包','功課'],createdTs:now,updatedTs:now});
-    saveProjects();
-  }
-  localStorage.setItem('dict_seeded_v11','1');
-}
-
+/* ================= 導覽 ================= */
 function showPage(p){
   currentPage=p;
-  if(MAIN_PAGES.indexOf(p)>=0)lastMainPage=p;
+  if(MAIN_PAGES.includes(p))lastMainPage=p;
   document.querySelectorAll('[id^="page-"]').forEach(x=>x.classList.add('hidden'));
-  const target=document.getElementById('page-'+p);
-  if(target)target.classList.remove('hidden');
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  const activeMain=(MAIN_PAGES.indexOf(p)>=0)?p:lastMainPage;
-  const map={home:0,projects:1,records:2,settings:3};
-  const navBtns=document.querySelectorAll('.nav-btn');
-  if(map[activeMain]!==undefined&&navBtns[map[activeMain]])navBtns[map[activeMain]].classList.add('active');
+  el('page-'+p).classList.remove('hidden');
+  const active=MAIN_PAGES.includes(p)?p:lastMainPage;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.p===active));
   if(p==='home')renderHome();
   if(p==='projects')renderProjects();
   if(p==='records')renderRecords();
   if(p==='settings'){loadSettingsPage();renderExportTables();}
 }
-function navTo(p){
-  if(currentPage==='dictation'){
-    requestExitDictation();
-  }else{
-    showPage(p);
-  }
-}
-function goBack(){
-  showPage(lastMainPage);
-}
-function showModal(id){document.getElementById(id).classList.add('show');}
-function closeModal(id){document.getElementById(id).classList.remove('show');}
-
-function stopDictationSession(){
-  stopCountdown();
-  stopWordTimer();
-  if('speechSynthesis' in window)window.speechSynthesis.cancel();
-  isReviewMode=false;
-}
+function navTo(p){currentPage==='dictation'?requestExitDictation():showPage(p);}
+function goBack(){showPage(lastMainPage);}
+function showModal(id){el(id).classList.add('show');}
+function closeModal(id){el(id).classList.remove('show');}
 function requestExitDictation(){
-  if(confirm('你正在默書中。\n確定要退出默書嗎？\n\n按「確定」→ 終止默書並返回上一頁\n按「取消」→ 繼續默書')){
-    stopDictationSession();
-    showPage(lastMainPage);
+  if(confirm('你正在默書中。\n確定要退出默書嗎？\n\n按「確定」→ 終止默書並返回\n按「取消」→ 繼續默書')){
+    stopCountdown();stopWordTimer();
+    if('speechSynthesis' in window)speechSynthesis.cancel();
+    isReviewMode=false;showPage(lastMainPage);
   }
 }
 
-// ===== 語音 =====
-function getAvailableVoices(){
-  if(!('speechSynthesis' in window))return [];
-  return window.speechSynthesis.getVoices()||[];
-}
-function filterVoices(lang){
-  const voices=getAvailableVoices();
-  if(lang==='zh'){
-    return voices.filter(v=>v.lang&&/^(zh|cmn|yue|nan|hak)/i.test(v.lang));
-  }
-  return voices.filter(v=>v.lang&&v.lang.toLowerCase().startsWith('en'));
-}
-function setupVoiceSelect(lang){
-  const sel=document.getElementById(lang==='zh'?'zhVoiceSelect':'enVoiceSelect');
-  if(!sel)return;
-  const saved=localStorage.getItem('dict_voice_'+lang)||'';
-  const list=filterVoices(lang);
-  sel.innerHTML='';
-  const autoOpt=document.createElement('option');
-  autoOpt.value='';
-  autoOpt.textContent='自動（系統預設）';
-  sel.appendChild(autoOpt);
-  list.forEach(v=>{
-    const opt=document.createElement('option');
-    opt.value=v.name;
-    opt.textContent=v.name+' ['+v.lang+']';
-    sel.appendChild(opt);
+/* ================= 工具 ================= */
+function escapeHtml(s){const d=document.createElement('div');d.textContent=(s==null)?'':String(s);return d.innerHTML;}
+function escapeAttr(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function escapeTsv(s){return String(s==null?'':s).replace(/[\t\r\n]/g,' ').trim();}
+function sameId(a,b){return String(a)===String(b);}
+function formatTime(s){if(s==null)return '--';const m=Math.floor(s/60),x=s%60;return m>0?m+'分'+x+'秒':x+'秒';}
+function formatTs(ts){if(!ts)return '—';const d=new Date(ts);return isNaN(d)?'—':d.getFullYear()+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0');}
+function shuffleArray(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function generateIdFromName(n,l){const s=(n||'')+'_'+(l||'zh');let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return Math.abs(h)||1;}
+function debugLog(m){const line='['+new Date().toLocaleTimeString()+'] '+m;debugLines.push(line);if(debugLines.length>60)debugLines.shift();const e=el('debugContent');if(e)e.innerText=debugLines.join('\n');console.log('[Sync]',m);}
+function clearDebug(){debugLines=[];const e=el('debugContent');if(e)e.innerText='（暫無）';}
+
+/* ================= 資料迁移 ================= */
+function migrateData(){
+  let ch=false;
+  projects.forEach(p=>{
+    if(typeof p.id!=='number'||isNaN(p.id)){p.id=(p.fromSheet&&p.name)?generateIdFromName(p.name,p.lang||'zh'):Date.now()+Math.floor(Math.random()*1e4);ch=true;}
+    if(!p.createdTs){p.createdTs=Date.parse(p.createdAt)||1;ch=true;}
+    if(!p.updatedTs){p.updatedTs=p.createdTs;ch=true;}
   });
-  if(saved){
-    sel.value=saved;
-    if(sel.value!==saved){
-      sel.value='';
-      localStorage.setItem('dict_voice_'+lang,'');
-    }
+  if(ch)saveProjects();
+}
+function seedSample(){
+  if(localStorage.getItem('dict_seeded_v11'))return;
+  if(!projects.length){const n=Date.now();projects.push({id:999999,name:'示例：常見詞語',type:'words',lang:'zh',isSample:true,contents:['學校','老師','同學','書包','功課'],createdTs:n,updatedTs:n});saveProjects();}
+  localStorage.setItem('dict_seeded_v11','1');
+}
+
+/* ================= 語音 ================= */
+function getVoices(){return ('speechSynthesis' in window)?(speechSynthesis.getVoices()||[]):[];}
+function filterVoices(l){const v=getVoices();return l==='zh'?v.filter(x=>x.lang&&/^(zh|cmn|yue|nan|hak)/i.test(x.lang)):v.filter(x=>x.lang&&x.lang.toLowerCase().startsWith('en'));}
+function setupVoiceSelect(l){
+  const sel=el(l==='zh'?'zhVoiceSelect':'enVoiceSelect');if(!sel)return;
+  const saved=localStorage.getItem('dict_voice_'+l)||'';
+  sel.innerHTML='<option value="">自動（系統預設）</option>';
+  filterVoices(l).forEach(v=>{const o=document.createElement('option');o.value=v.name;o.textContent=v.name+' ['+v.lang+']';sel.appendChild(o);});
+  if(saved){sel.value=saved;if(sel.value!==saved){sel.value='';localStorage.setItem('dict_voice_'+l,'');}}
+}
+function populateVoiceSelects(){setupVoiceSelect('zh');setupVoiceSelect('en');}
+function saveVoicePref(l){const sel=el(l==='zh'?'zhVoiceSelect':'enVoiceSelect');if(sel)localStorage.setItem('dict_voice_'+l,sel.value);}
+function testVoice(l){saveVoicePref(l);speakText(l==='zh'?'你好，呢個係中文語音測試。':'Hello, this is an English voice test.',l);}
+function setPitch(p){speechPitch=p;localStorage.setItem('dict_pitch',String(p));restorePitchControl();}
+function restorePitchControl(){document.querySelectorAll('#pitchControl .seg-btn').forEach(b=>b.classList.toggle('active',parseFloat(b.dataset.pitch)===speechPitch));}
+function testPitch(){speakText('呢個係音調測試，聽下啱唔啱。','zh');}
+function speakText(text,lang,onDone){
+  if(!('speechSynthesis' in window)){if(onDone)onDone();return false;}
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text),voices=getVoices();
+  let v=null;const saved=localStorage.getItem('dict_voice_'+lang)||'';
+  if(saved)v=voices.find(x=>x.name===saved);
+  if(v){u.voice=v;u.lang=v.lang;}
+  else{
+    if(lang==='en'){u.lang='en-US';v=voices.find(x=>x.lang&&x.lang.toLowerCase().startsWith('en'));}
+    else{u.lang='zh-HK';v=voices.find(x=>x.lang&&/^(zh|cmn|yue)/i.test(x.lang));}
+    if(v)u.voice=v;
   }
-}
-function populateVoiceSelects(){
-  setupVoiceSelect('zh');
-  setupVoiceSelect('en');
-}
-function saveVoicePref(lang){
-  const sel=document.getElementById(lang==='zh'?'zhVoiceSelect':'enVoiceSelect');
-  if(sel){
-    localStorage.setItem('dict_voice_'+lang,sel.value);
-  }
-}
-function testVoice(lang){
-  saveVoicePref(lang);
-  const sample=lang==='zh'?'你好，呢個係中文語音測試。':'Hello, this is an English voice test.';
-  speakText(sample,lang);
+  u.rate=speechRate;u.pitch=speechPitch;
+  if(onDone){u.onend=onDone;u.onerror=onDone;}
+  speechSynthesis.speak(u);return true;
 }
 
-function setPitch(p){
-  speechPitch=p;
-  localStorage.setItem('dict_pitch',String(p));
-  document.querySelectorAll('#pitchControl .seg-btn').forEach(b=>{
-    b.classList.toggle('active',parseFloat(b.getAttribute('data-pitch'))===p);
-  });
-}
-function restorePitchControl(){
-  document.querySelectorAll('#pitchControl .seg-btn').forEach(b=>{
-    b.classList.toggle('active',parseFloat(b.getAttribute('data-pitch'))===speechPitch);
-  });
-}
-function testPitch(){
-  const sample='呢個係音調測試，聽下啱唔啱。';
-  speakText(sample,'zh');
-}
-
-function escapeHtml(s){const d=document.createElement('div');d.textContent=(s===null||s===undefined)?'':String(s);return d.innerHTML;}
-function escapeAttr(s){return String(s===null||s===undefined?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function escapeTsv(s){return String(s===null||s===undefined?'':s).replace(/[\t\r\n]/g,' ').trim();}
-
-// ===== Google Sheets =====
-function getTabName(lang){return localStorage.getItem('dict_tab_'+lang)||TAB_CONFIG[lang].defaultName;}
-function getSheetUrl(lang){
-  return 'https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(getTabName(lang));
-}
+/* ================= Google Sheets ================= */
+function getTabName(l){return localStorage.getItem('dict_tab_'+l)||TAB_CONFIG[l].defaultName;}
+function getSheetUrl(l){return 'https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(getTabName(l));}
 function loadSettingsPage(){
-  renderImportStats();
-  populateVoiceSelects();
-  restorePitchControl();
-  document.getElementById('sheetIdDisplay').innerText=SHEET_ID;
+  renderImportStats();populateVoiceSelects();restorePitchControl();
+  el('sheetIdDisplay').innerText=SHEET_ID;
   const last=localStorage.getItem('dict_last_sync');
-  document.getElementById('lastSyncInfo').innerText='上次匯入：'+(last||'未匯入');
-  document.getElementById('tabNameZh').value=getTabName('zh');
-  document.getElementById('tabNameEn').value=getTabName('en');
-  debugLog('就緒。中文分頁="'+getTabName('zh')+'"，英文分頁="'+getTabName('en')+'"，現有默書表：'+projects.length);
+  el('lastSyncInfo').innerText='上次匯入：'+(last||'未匯入');
+  el('tabNameZh').value=getTabName('zh');el('tabNameEn').value=getTabName('en');
 }
 function saveTabNames(){
-  const zh=document.getElementById('tabNameZh').value.trim();
-  const en=document.getElementById('tabNameEn').value.trim();
+  const zh=el('tabNameZh').value.trim(),en=el('tabNameEn').value.trim();
   if(zh)localStorage.setItem('dict_tab_zh',zh);
   if(en)localStorage.setItem('dict_tab_en',en);
-  debugLog('已更新分頁名稱');
-  const el=document.getElementById('tabNameSaved');
-  el.style.display='inline';
-  setTimeout(()=>{el.style.display='none';},2000);
+  el('tabNameSaved').style.display='inline';setTimeout(()=>el('tabNameSaved').style.display='none',2000);
 }
 function renderImportStats(){
-  const el=document.getElementById('importStats');
-  if(!el)return;
-  const zhList=projects.filter(p=>p.lang==='zh'&&p.fromSheet);
-  const enList=projects.filter(p=>p.lang==='en'&&p.fromSheet);
-  const zhCount=zhList.length;
-  const enCount=enList.length;
-  const totalContent=zhList.concat(enList).reduce((s,p)=>s+(p.contents?p.contents.length:0),0);
-  el.innerHTML=
-    '<div class="import-stat-box"><div class="is-icon">🈶</div><div class="is-value">'+zhCount+'</div><div class="is-label">中文默書表</div></div>'+
-    '<div class="import-stat-box"><div class="is-icon">🔤</div><div class="is-value">'+enCount+'</div><div class="is-label">英文默書表</div></div>'+
-    '<div class="import-stat-box"><div class="is-icon">📝</div><div class="is-value">'+totalContent+'</div><div class="is-label">匯入內容</div></div>';
+  const zh=projects.filter(p=>p.lang==='zh'&&p.fromSheet),en=projects.filter(p=>p.lang==='en'&&p.fromSheet);
+  const items=zh.concat(en).reduce((s,p)=>s+(p.contents?p.contents.length:0),0);
+  el('importStats').innerHTML=
+    '<div class="stat"><div class="s-label">中文默書表</div><div class="s-value">'+zh.length+'</div><div class="s-sub">來自 Google Sheets</div></div>'+
+    '<div class="stat"><div class="s-label">英文默書表</div><div class="s-value">'+en.length+'</div><div class="s-sub">來自 Google Sheets</div></div>'+
+    '<div class="stat"><div class="s-label">匯入內容</div><div class="s-value">'+items+'</div><div class="s-sub">項內容總數</div></div>';
 }
 function parseCSV(text){
   if(text.charCodeAt(0)===0xFEFF)text=text.slice(1);
-  const rows=[];let row=[];let field='';let inQ=false;
-  for(let i=0;i<text.length;i++){
-    const c=text[i];
-    if(inQ){
-      if(c==='"'){if(text[i+1]==='"'){field+='"';i++;}else inQ=false;}
-      else field+=c;
-    }else{
-      if(c==='"')inQ=true;
-      else if(c===','){row.push(field);field='';}
-      else if(c==='\n'){row.push(field);rows.push(row);row=[];field='';}
-      else if(c==='\r'){}
-      else field+=c;
-    }
+  const rows=[];let row=[],f='',q=false;
+  for(let i=0;i<text.length;i++){const c=text[i];
+    if(q){if(c==='"'){if(text[i+1]==='"'){f+='"';i++;}else q=false;}else f+=c;}
+    else{if(c==='"')q=true;else if(c===','){row.push(f);f='';}else if(c==='\n'){row.push(f);rows.push(row);row=[];f='';}else if(c!=='\r')f+=c;}
   }
-  if(field!==''||row.length>0){row.push(field);rows.push(row);}
-  return rows.filter(r=>r.some(cell=>(cell||'').trim()!==''));
+  if(f!==''||row.length){row.push(f);rows.push(row);}
+  return rows.filter(r=>r.some(c=>(c||'').trim()!==''));
 }
-function parseDetails(details){return details.split(/[;；]/).map(s=>s.trim()).filter(s=>s.length>0);}
-function normalizeType(t){
-  t=(t||'').toLowerCase();
-  if(t.includes('句')||t.includes('sentence'))return 'sentences';
-  if(t.includes('文章')||t.includes('passage')||t.includes('段')||t.includes('paragraph'))return 'passage';
-  return 'words';
-}
-function parseSheetCSV(csvText,lang){
-  const rows=parseCSV(csvText);
-  if(!rows.length)return [];
-  let projIdx=0,typeIdx=1,detailIdx=2,startIdx=0;
-  const header=rows[0].map(c=>(c||'').trim().toLowerCase());
-  const hasHeader=header.some(h=>h.includes('project')||h.includes('type')||h.includes('detail')||h.includes('項目')||h.includes('類型')||h.includes('內容'));
-  if(hasHeader){
-    startIdx=1;
-    const pi=header.findIndex(h=>h.includes('project')||h.includes('項目')||h.includes('名稱'));
-    const ti=header.findIndex(h=>h.includes('type')||h.includes('類型'));
-    const di=header.findIndex(h=>h.includes('detail')||h.includes('內容'));
-    if(pi>=0)projIdx=pi;
-    if(ti>=0)typeIdx=ti;
-    if(di>=0)detailIdx=di;
+function parseSheetCSV(csv,lang){
+  const rows=parseCSV(csv);if(!rows.length)return[];
+  let pi=0,ti=1,di=2,start=0;
+  const h=rows[0].map(c=>(c||'').trim().toLowerCase());
+  if(h.some(x=>x.includes('project')||x.includes('type')||x.includes('detail')||x.includes('項目')||x.includes('類型')||x.includes('內容'))){
+    start=1;
+    const a=h.findIndex(x=>x.includes('project')||x.includes('項目')||x.includes('名稱'));
+    const b=h.findIndex(x=>x.includes('type')||x.includes('類型'));
+    const c=h.findIndex(x=>x.includes('detail')||x.includes('內容'));
+    if(a>=0)pi=a;if(b>=0)ti=b;if(c>=0)di=c;
   }
-  debugLog('['+lang+'] 標題行：'+(hasHeader?'有':'無')+'；欄位 P='+projIdx+' T='+typeIdx+' D='+detailIdx);
-  const projectMap={};
-  const now=Date.now();
-  for(let i=startIdx;i<rows.length;i++){
-    const r=rows[i];
-    const name=(r[projIdx]||'').trim();
-    const type=(r[typeIdx]||'').trim();
-    const details=(r[detailIdx]||'').trim();
-    if(!name||!details)continue;
-    const items=parseDetails(details);
+  const map={};
+  for(let i=start;i<rows.length;i++){
+    const r=rows[i],name=(r[pi]||'').trim(),type=(r[ti]||'').trim(),det=(r[di]||'').trim();
+    if(!name||!det)continue;
+    const items=det.split(/[;；]/).map(s=>s.trim()).filter(Boolean);
     if(!items.length)continue;
-    if(!projectMap[name]){
-      projectMap[name]={id:generateIdFromName(name,lang),name:name,type:normalizeType(type),lang:lang,contents:[],fromSheet:true,createdTs:now,updatedTs:now};
-    }
-    items.forEach(item=>{if(!projectMap[name].contents.includes(item))projectMap[name].contents.push(item);});
+    if(!map[name]){const t=(type||'').toLowerCase();map[name]={id:generateIdFromName(name,lang),name,type:t.includes('句')||t.includes('sentence')?'sentences':(t.includes('文章')||t.includes('passage')||t.includes('段')||t.includes('paragraph'))?'passage':'words',lang,contents:[],fromSheet:true,createdTs:Date.now(),updatedTs:Date.now()};}
+    items.forEach(it=>{if(!map[name].contents.includes(it))map[name].contents.push(it);});
   }
-  return Object.values(projectMap);
+  return Object.values(map);
 }
-function mergeSheetProjects(sheetProjects){
+function mergeSheetProjects(list){
   let added=0,updated=0;
-  sheetProjects.forEach(sp=>{
-    const idx=projects.findIndex(p=>sameId(p.id,sp.id)||(p.name===sp.name&&p.lang===sp.lang));
-    if(idx>=0){
-      projects[idx].id=sp.id;
-      projects[idx].contents=[...sp.contents];
-      projects[idx].type=sp.type;
-      projects[idx].fromSheet=true;
-      projects[idx].updatedTs=Date.now();
-      if(!projects[idx].createdTs)projects[idx].createdTs=sp.createdTs;
-      updated++;
-    }else{projects.push(sp);added++;}
+  list.forEach(sp=>{
+    const i=projects.findIndex(p=>sameId(p.id,sp.id)||(p.name===sp.name&&p.lang===sp.lang));
+    if(i>=0){Object.assign(projects[i],{id:sp.id,contents:[...sp.contents],type:sp.type,fromSheet:true,updatedTs:Date.now()});updated++;}
+    else{projects.push(sp);added++;}
   });
-  return {added,updated};
+  return{added,updated};
 }
-function setSyncStatus(type,msg){
-  const el=document.getElementById('syncStatus');
-  el.className='sync-status show '+type;
-  const ic={loading:'⏳',success:'✅',error:'❌'};
-  el.innerText=(ic[type]||'')+' '+msg;
-}
-function setBtnLoading(loading){['syncAllBtn','syncZhBtn','syncEnBtn'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=loading;});}
+function setSyncStatus(t,m){const e=el('syncStatus');e.className='sync-status show '+t;e.innerText=({loading:'⏳',success:'✅',error:'❌'}[t]||'')+' '+m;}
+function setBtnLoading(on){['syncAllBtn','syncZhBtn','syncEnBtn'].forEach(id=>{const b=el(id);if(b)b.disabled=on;});}
 async function syncTab(lang){
-  const tabName=getTabName(lang);
-  const url=getSheetUrl(lang);
-  debugLog('['+lang+'] 請求：'+url);
-  let res;
-  try{res=await fetch(url);}
-  catch(netErr){debugLog('['+lang+'] 網絡錯誤：'+netErr.message);throw new Error('網絡錯誤，無法連線');}
-  debugLog('['+lang+'] HTTP 狀態：'+res.status);
-  if(!res.ok)throw new Error('HTTP '+res.status+'（請檢查分頁名稱「'+tabName+'」同共用設定）');
-  const text=await res.text();
-  debugLog('['+lang+'] 回應長度：'+text.length+' 字元');
-  debugLog('['+lang+'] 回應預覽：'+text.substring(0,120).replace(/\n/g,'⏎'));
-  const trimmed=text.trim();
-  if(trimmed.startsWith('<')||/<html/i.test(trimmed)||trimmed.toLowerCase().includes('<!doctype')){
-    throw new Error('收到 HTML 而唔係 CSV。請確認試算表已共用為「知道連結的任何人」都可檢視');
-  }
-  if(/google\.visualization|Error|invalid/i.test(trimmed.split('\n')[0])&&trimmed.length<300){
-    throw new Error('Google 返回錯誤，可能分頁「'+tabName+'」唔存在');
-  }
+  const url=getSheetUrl(lang);debugLog('['+lang+'] 請求：'+url);
+  let res;try{res=await fetch(url);}catch(e){throw new Error('網絡錯誤，無法連線');}
+  debugLog('['+lang+'] HTTP '+res.status);
+  if(!res.ok)throw new Error('HTTP '+res.status+'（檢查分頁名稱「'+getTabName(lang)+'」同共用設定）');
+  const text=await res.text(),t=text.trim();
+  if(t.startsWith('<')||/<html/i.test(t))throw new Error('收到 HTML 而唔係 CSV，請確認試算表已共用');
   const sp=parseSheetCSV(text,lang);
-  debugLog('['+lang+'] 成功解析默書表數：'+sp.length);
-  if(!sp.length)throw new Error('讀取唔到有效資料。請檢查分頁「'+tabName+'」格式（Project / Type / Details，用 ; 分隔）');
+  debugLog('['+lang+'] 解析到 '+sp.length+' 個默書表');
+  if(!sp.length)throw new Error('讀取唔到有效資料（Project / Type / Details，用 ; 分隔）');
   return mergeSheetProjects(sp);
 }
-async function syncAll(){
-  setBtnLoading(true);
-  setSyncStatus('loading','正在匯入中文同英文分頁...');
-  let added=0,updated=0;const errors=[];
-  for(const lang of ['zh','en']){
-    try{const r=await syncTab(lang);added+=r.added;updated+=r.updated;}
-    catch(e){errors.push(TAB_CONFIG[lang].label+'：'+e.message);}
-  }
+function afterSync(){
   saveProjects();
   const now=new Date().toLocaleString('zh-HK');
   localStorage.setItem('dict_last_sync',now);
-  document.getElementById('lastSyncInfo').innerText='上次匯入：'+now;
+  el('lastSyncInfo').innerText='上次匯入：'+now;
   renderImportStats();renderHome();renderProjects();renderExportTables();
-  if(errors.length&&(added===0&&updated===0)){setSyncStatus('error','匯入失敗：'+errors.join('　'));}
-  else if(errors.length){setSyncStatus('success','部分匯入成功：新增 '+added+'，更新 '+updated+'。問題：'+errors.join('　'));}
-  else{setSyncStatus('success','匯入成功！新增 '+added+' 個，更新 '+updated+' 個默書表');}
+}
+async function syncAll(){
+  setBtnLoading(true);setSyncStatus('loading','正在匯入中文同英文分頁...');
+  let a=0,u=0;const errs=[];
+  for(const l of['zh','en']){try{const r=await syncTab(l);a+=r.added;u+=r.updated;}catch(e){errs.push(TAB_CONFIG[l].label+'：'+e.message);}}
+  afterSync();
+  if(errs.length&&!(a+u))setSyncStatus('error','匯入失敗：'+errs.join('　'));
+  else if(errs.length)setSyncStatus('success','部分匯入成功：新增 '+a+'、更新 '+u+'。問題：'+errs.join('　'));
+  else setSyncStatus('success','匯入成功！新增 '+a+' 個、更新 '+u+' 個默書表');
   setBtnLoading(false);
 }
 async function syncSingle(lang){
-  setBtnLoading(true);
-  setSyncStatus('loading','正在匯入'+TAB_CONFIG[lang].label+'分頁...');
-  try{
-    const r=await syncTab(lang);
-    saveProjects();
-    const now=new Date().toLocaleString('zh-HK');
-    localStorage.setItem('dict_last_sync',now);
-    document.getElementById('lastSyncInfo').innerText='上次匯入：'+now;
-    renderImportStats();renderHome();renderProjects();renderExportTables();
-    setSyncStatus('success',TAB_CONFIG[lang].label+'匯入成功！新增 '+r.added+' 個，更新 '+r.updated+' 個默書表');
-  }catch(e){setSyncStatus('error','匯入失敗：'+e.message);}
+  setBtnLoading(true);setSyncStatus('loading','正在匯入'+TAB_CONFIG[lang].label+'...');
+  try{const r=await syncTab(lang);afterSync();setSyncStatus('success',TAB_CONFIG[lang].label+'匯入成功！新增 '+r.added+'、更新 '+r.updated+' 個默書表');}
+  catch(e){setSyncStatus('error','匯入失敗：'+e.message);}
   setBtnLoading(false);
 }
 
-function sampleBadge(p){return p.isSample?'<span class="badge badge-purple">示例</span>':'';}
-function typeBadge(p){
-  const tl={words:'詞語',sentences:'句子',passage:'文章'};
-  const tb={words:'badge-blue',sentences:'badge-green',passage:'badge-orange'};
-  return '<span class="badge '+(tb[p.type]||'badge-blue')+'">'+(tl[p.type]||'詞語')+'</span>';
+/* ================= 渲染：卡片 ================= */
+function badges(p){
+  const tl={words:'詞語',sentences:'句子',passage:'文章'},tb={words:'chip blue',sentences:'chip',passage:'chip'};
+  let s='<span class="'+(tb[p.type]||'chip')+'">'+(tl[p.type]||'詞語')+'</span>';
+  if(p.isSample)s+='<span class="chip purple">示例</span>';
+  return s;
 }
-function countLabel(p){
-  const cnt=(p.contents?p.contents.length:0);
-  if(p.type==='sentences')return cnt+' 個句子';
-  if(p.type==='passage')return cnt+' 段文章';
-  return cnt+' 個詞條';
-}
+function countLabel(p){const n=(p.contents||[]).length;return p.type==='sentences'?n+' 個句子':p.type==='passage'?n+' 段文章':n+' 個詞條';}
 function homeCardHTML(p){
-  return '<div class="proj-card home-card">'+
-    '<div class="home-card-body">'+
-      '<div class="proj-card-top"><span class="proj-name">'+escapeHtml(p.name||'(未命名)')+'</span>'+
-      '<span style="display:flex;gap:4px;flex-shrink:0;">'+sampleBadge(p)+typeBadge(p)+'</span></div>'+
-      '<div class="proj-card-meta">'+countLabel(p)+'</div>'+
-      '<div class="proj-card-time">'+formatTs(p.updatedTs)+'</div>'+
-    '</div>'+
-    '<button class="btn btn-success btn-icon" onclick="openProject('+p.id+');startDictation()" title="開始默書">▶️</button>'+
-  '</div>';
+  return '<div class="row"><div class="rbody"><div class="rtitle">'+escapeHtml(p.name||'(未命名)')+' '+badges(p)+'</div>'+
+    '<div class="rmeta">'+countLabel(p)+' · '+formatTs(p.updatedTs)+'</div></div>'+
+    '<button class="ib go" onclick="openProject('+p.id+');startDictation()" title="開始默書">▶️</button></div>';
 }
 function libraryCardHTML(p){
-  return '<div class="proj-card">'+
-    '<div class="proj-card-top"><span class="proj-name">'+escapeHtml(p.name||'(未命名)')+'</span>'+
-    '<span style="display:flex;gap:4px;flex-shrink:0;">'+sampleBadge(p)+typeBadge(p)+'</span></div>'+
-    '<div class="proj-card-meta">'+countLabel(p)+'</div>'+
-    '<div class="proj-card-time">建立 '+formatTs(p.createdTs)+' · 更新 '+formatTs(p.updatedTs)+'</div>'+
-    '<div class="proj-card-actions">'+
-      '<button class="btn btn-primary btn-icon sm" onclick="openProject('+p.id+')" title="編輯">✏️</button>'+
-      '<button class="btn btn-success btn-icon sm" onclick="openProject('+p.id+');startDictation()" title="默書">▶️</button>'+
-      '<button class="btn btn-danger btn-icon sm" onclick="deleteProject('+p.id+',event)" title="刪除">🗑️</button>'+
-    '</div></div>';
+  return '<div class="row"><div class="rbody"><div class="rtitle">'+escapeHtml(p.name||'(未命名)')+' '+badges(p)+'</div>'+
+    '<div class="rmeta">'+countLabel(p)+' · 建立 '+formatTs(p.createdTs)+' · 更新 '+formatTs(p.updatedTs)+'</div></div>'+
+    '<div class="racts"><button class="ib edit" onclick="openProject('+p.id+')" title="編輯">✏️</button>'+
+    '<button class="ib go" onclick="openProject('+p.id+');startDictation()" title="默書">▶️</button>'+
+    '<button class="ib del" onclick="deleteProject('+p.id+',event)" title="刪除">🗑️</button></div></div>';
 }
-function renderLangList(elId,lang,limit,cardFn){
-  const el=document.getElementById(elId);
-  if(!el)return;
+function renderLangList(id,lang,limit,fn){
+  const e=el(id);if(!e)return;
   const list=projects.filter(p=>p.lang===lang).sort((a,b)=>(b.createdTs||0)-(a.createdTs||0));
   const shown=limit?list.slice(0,limit):list;
-  if(!shown.length){
-    el.innerHTML='<div class="empty-hint">暫時未有'+(lang==='zh'?'中文':'英文')+'默書表</div>';
-    return;
-  }
-  el.innerHTML=shown.map(cardFn).join('');
+  e.innerHTML=shown.length?shown.map(fn).join(''):'<div class="empty-hint">暫時未有'+(lang==='zh'?'中文':'英文')+'默書表</div>';
 }
 function renderHome(){
   renderLangList('quickZh','zh',3,homeCardHTML);
   renderLangList('quickEn','en',3,homeCardHTML);
-  const rs=document.getElementById('recentScores');
-  rs.innerHTML=records.length?records.slice(-5).reverse().map(r=>'<div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);"><span style="font-weight:500;">'+escapeHtml(r.project)+'</span><span style="font-weight:700;color:'+(r.percent>=70?'var(--success)':'var(--danger)')+';">'+r.percent+'%</span></div>').join('')
-  :'<p style="color:var(--text-light);text-align:center;padding:20px;">暫時未有記錄</p>';
+  const zh=projects.filter(p=>p.lang==='zh').length,en=projects.length-zh;
+  const items=projects.reduce((s,p)=>s+(p.contents?p.contents.length:0),0);
+  el('hsSheets').textContent=projects.length;
+  el('hsSheetsSub').textContent=zh+' 中文 · '+en+' 英文';
+  el('hsItems').innerHTML=items+'<span class="unit">項</span>';
+  el('hsItemsSub').textContent=projects.length?'分佈於 '+projects.length+' 張默書表':'尚未有內容';
+  if(records.length){
+    const avg=Math.round(records.reduce((s,r)=>s+r.percent,0)/records.length);
+    el('hsAvg').innerHTML=avg+'<span class="unit">%</span>';
+    el('hsAvgBar').style.width=avg+'%';
+    el('hsAvgSub').textContent='共 '+records.length+' 次測驗';
+  }else{el('hsAvg').textContent='—';el('hsAvgBar').style.width='0%';el('hsAvgSub').textContent='未有記錄';}
+  el('recentScores').innerHTML=records.length?records.slice(-5).reverse().map(r=>
+    '<div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line);"><span style="font-weight:600;">'+escapeHtml(r.project)+'</span><span style="font-weight:800;color:'+(r.percent>=70?'var(--green)':'var(--red)')+';">'+r.percent+'%</span></div>').join('')
+    :'<div class="empty-hint">暫時未有記錄</div>';
 }
 function renderProjects(){
   renderLangList('projListZh','zh',0,libraryCardHTML);
   renderLangList('projListEn','en',0,libraryCardHTML);
 }
 
+/* ================= 項目管理 ================= */
 function createProject(){
-  const n=document.getElementById('newProjectName').value.trim();
-  const t=document.getElementById('newProjectType').value;
-  const lang=document.getElementById('newProjectLang').value;
-  if(!n){alert('請輸入名稱');return;}
+  const n=el('newProjectName').value.trim();if(!n){alert('請輸入名稱');return;}
   const now=Date.now();
-  projects.push({id:now,name:n,type:t,lang:lang,contents:[],createdTs:now,updatedTs:now});
-  saveProjects();closeModal('modalNewProject');
-  document.getElementById('newProjectName').value='';
-  renderProjects();
+  projects.push({id:now,name:n,type:el('newProjectType').value,lang:el('newProjectLang').value,contents:[],createdTs:now,updatedTs:now});
+  saveProjects();closeModal('modalNewProject');el('newProjectName').value='';renderProjects();
 }
 function deleteProject(id,e){
-  if(e&&e.stopPropagation)e.stopPropagation();
-  if(confirm('確定刪除？')){
-    projects=projects.filter(p=>!sameId(p.id,id));
-    saveProjects();renderProjects();renderHome();
-  }
+  if(e)e.stopPropagation();
+  if(confirm('確定刪除？')){projects=projects.filter(p=>!sameId(p.id,id));saveProjects();renderProjects();renderHome();}
 }
 function openProject(id){
   currentProject=projects.find(p=>sameId(p.id,id))||null;
-  if(!currentProject){debugLog('找不到默書表 id='+id);alert('找不到該默書表，請返回重試。');return;}
+  if(!currentProject){alert('找不到該默書表');return;}
   if(!Array.isArray(currentProject.contents))currentProject.contents=[];
   editingContentIndex=-1;
-  const tl={words:'📝 詞語',sentences:'📄 句子',passage:'📖 文章'};
-  const tb={words:'badge-blue',sentences:'badge-green',passage:'badge-orange'};
-  document.getElementById('detailTitle').innerText=currentProject.name||'(未命名)';
-  document.getElementById('detailBadge').innerHTML='<span class="badge '+(tb[currentProject.type]||'badge-blue')+'">'+(tl[currentProject.type]||'📝 詞語')+'</span> '+sampleBadge(currentProject);
-  document.getElementById('sampleNote').classList.toggle('hidden',!currentProject.isSample);
-  renderContentList();
-  showPage('project-detail');
+  el('crumbDetail').innerHTML='默書庫 / <b>'+escapeHtml(currentProject.name)+'</b>';
+  el('detailTitle').textContent=currentProject.name||'(未命名)';
+  el('detailBadge').innerHTML=badges(currentProject)+' <span class="chip">'+countLabel(currentProject)+'</span>';
+  el('sampleNote').classList.toggle('hidden',!currentProject.isSample);
+  renderContentList();showPage('project-detail');
 }
-function getCurLang(){return (currentProject&&currentProject.lang)?currentProject.lang:'zh';}
-function speakContentAt(i){
-  if(currentProject&&currentProject.contents&&currentProject.contents[i]!==undefined){
-    speakText(currentProject.contents[i],getCurLang());
-  }
-}
+function speakContentAt(i){if(currentProject&&currentProject.contents[i]!==undefined)speakText(currentProject.contents[i],currentProject.lang||'zh');}
 function renderContentList(){
-  const l=document.getElementById('contentList');
-  if(!Array.isArray(currentProject.contents))currentProject.contents=[];
-  document.getElementById('contentCount').innerText=currentProject.contents.length;
-  if(!currentProject.contents.length){l.innerHTML='<p style="color:var(--text-light);text-align:center;padding:30px;">未有內容</p>';return;}
-  const total=currentProject.contents.length;
-  l.innerHTML=currentProject.contents.map((c,i)=>{
-    if(editingContentIndex===i){
-      return '<div class="content-item editing"><div class="num">'+(i+1)+'</div><input type="text" class="form-input edit-input" id="contentEditInput" value="'+escapeAttr(c)+'" onkeydown="if(event.key===\'Enter\')saveContentEdit('+i+');if(event.key===\'Escape\')cancelContentEdit();"><div class="actions"><button class="btn btn-success btn-sm btn-icon" onclick="saveContentEdit('+i+')">✓</button><button class="btn btn-outline btn-sm btn-icon" onclick="cancelContentEdit()">✕</button></div></div>';
-    }
-    return '<div class="content-item"><div class="num">'+(i+1)+'</div><div class="text">'+escapeHtml(c)+'</div><div class="actions"><button class="btn btn-outline btn-sm btn-icon" onclick="speakContentAt('+i+')">🔊</button><button class="btn btn-outline btn-sm btn-icon" onclick="startContentEdit('+i+')">✏️</button><button class="btn btn-outline btn-sm btn-icon" onclick="moveContent('+i+',-1)" '+(i===0?'disabled':'')+'>⬆</button><button class="btn btn-outline btn-sm btn-icon" onclick="moveContent('+i+',1)" '+(i===total-1?'disabled':'')+'>⬇</button><button class="btn btn-danger btn-sm btn-icon" onclick="deleteContent('+i+')">✖</button></div></div>';
+  const l=el('contentList'),cs=currentProject.contents;
+  el('contentCount').textContent=cs.length;
+  if(!cs.length){l.innerHTML='<div class="empty-hint">未有內容</div>';return;}
+  l.innerHTML=cs.map((c,i)=>{
+    if(editingContentIndex===i)return '<div class="citem editing"><div class="num">'+(i+1)+'</div><input class="edit-input" id="contentEditInput" value="'+escapeAttr(c)+'" onkeydown="if(event.key===\'Enter\')saveContentEdit('+i+');if(event.key===\'Escape\')cancelContentEdit();"><div class="actions"><button class="ib sm go" onclick="saveContentEdit('+i+')">✓</button><button class="ib sm" onclick="cancelContentEdit()">✕</button></div></div>';
+    return '<div class="citem"><div class="num">'+(i+1)+'</div><div class="text">'+escapeHtml(c)+'</div><div class="actions">'+
+      '<button class="ib sm" onclick="speakContentAt('+i+')" title="試讀">🔊</button>'+
+      '<button class="ib sm edit" onclick="startContentEdit('+i+')" title="編輯">✏️</button>'+
+      '<button class="ib sm" onclick="moveContent('+i+',-1)" '+(i===0?'disabled':'')+' title="上移">⬆</button>'+
+      '<button class="ib sm" onclick="moveContent('+i+',1)" '+(i===cs.length-1?'disabled':'')+' title="下移">⬇</button>'+
+      '<button class="ib sm del" onclick="deleteContent('+i+')" title="刪除">✖</button></div></div>';
   }).join('');
-  if(editingContentIndex>=0)setTimeout(()=>{const inp=document.getElementById('contentEditInput');if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);}},50);
+  if(editingContentIndex>=0)setTimeout(()=>{const inp=el('contentEditInput');if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);}},50);
 }
 function startContentEdit(i){editingContentIndex=i;renderContentList();}
-function saveContentEdit(i){const inp=document.getElementById('contentEditInput');if(inp&&inp.value.trim()){currentProject.contents[i]=inp.value.trim();touchProject(currentProject);saveProjects();}editingContentIndex=-1;renderContentList();}
+function saveContentEdit(i){const inp=el('contentEditInput');if(inp&&inp.value.trim()){currentProject.contents[i]=inp.value.trim();touch();saveProjects();}editingContentIndex=-1;renderContentList();}
 function cancelContentEdit(){editingContentIndex=-1;renderContentList();}
-function moveContent(i,dir){const ni=i+dir;if(ni<0||ni>=currentProject.contents.length)return;[currentProject.contents[i],currentProject.contents[ni]]=[currentProject.contents[ni],currentProject.contents[i]];touchProject(currentProject);saveProjects();renderContentList();}
-function deleteContent(i){if(confirm('確定刪除「'+currentProject.contents[i]+'」？')){currentProject.contents.splice(i,1);touchProject(currentProject);saveProjects();renderContentList();}}
-function addContent(){const t=document.getElementById('newContentText').value.trim();if(!t){alert('請輸入內容');return;}currentProject.contents.push(...t.split('\n').map(l=>l.trim()).filter(l=>l));touchProject(currentProject);saveProjects();document.getElementById('newContentText').value='';closeModal('modalAddContent');renderContentList();}
+function moveContent(i,d){const n=i+d,cs=currentProject.contents;if(n<0||n>=cs.length)return;[cs[i],cs[n]]=[cs[n],cs[i]];touch();saveProjects();renderContentList();}
+function deleteContent(i){if(confirm('確定刪除「'+currentProject.contents[i]+'」？')){currentProject.contents.splice(i,1);touch();saveProjects();renderContentList();}}
+function addContent(){const t=el('newContentText').value.trim();if(!t){alert('請輸入內容');return;}currentProject.contents.push(...t.split('\n').map(l=>l.trim()).filter(Boolean));touch();saveProjects();el('newContentText').value='';closeModal('modalAddContent');renderContentList();}
+function touch(){if(currentProject)currentProject.updatedTs=Date.now();}
 
-function setPreSpeed(s,el){speechRate=s;document.querySelectorAll('#preSpeedControl .seg-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
-function setPreMode(m,el){playMode=m;document.querySelectorAll('#preModeControl .seg-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');document.getElementById('preAutoRow').classList.toggle('hidden',m!=='auto');}
-function setPreInterval(t,el){autoInterval=t;document.querySelectorAll('#preIntervalControl .seg-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
+/* ================= 默書設定 ================= */
+function setPreSpeed(s,b){speechRate=s;document.querySelectorAll('#preSpeedControl .seg-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');}
+function setPreMode(m,b){playMode=m;document.querySelectorAll('#preModeControl .seg-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');el('preAutoRow').classList.toggle('hidden',m!=='auto');}
+function setPreInterval(t,b){autoInterval=t;document.querySelectorAll('#preIntervalControl .seg-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');}
 
-function formatTime(s){if(s===null||s===undefined)return '--';const m=Math.floor(s/60),sec=s%60;return m>0?m+'分'+sec+'秒':sec+'秒';}
-function startWordTimer(){stopWordTimer();wordStartTime=Date.now();manualTiming=true;document.getElementById('manualTimerWrap').classList.add('visible');updateManualTimer();wordTimerInterval=setInterval(updateManualTimer,1000);}
-function stopWordTimer(){manualTiming=false;clearInterval(wordTimerInterval);wordTimerInterval=null;}
-function updateManualTimer(){if(!manualTiming)return;const we=Math.floor((Date.now()-wordStartTime)/1000);const te=Math.floor((Date.now()-totalStartTime)/1000);document.getElementById('mtWord').innerText=formatTime(we);document.getElementById('mtTotal').innerText=formatTime(te);}
-
-let s2tReady=false,s2tConvert=null;
-function loadOpenCC(){return new Promise((resolve)=>{if(window.OpenCC){try{initOpenCC();resolve(true);}catch(e){resolve(false);}return;}const script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/opencc.js';script.onload=()=>{try{initOpenCC();resolve(true);}catch(e){resolve(false);}};script.onerror=()=>resolve(false);document.head.appendChild(script);});}
-function initOpenCC(){s2tConvert=OpenCC.Converter({from:'cn',to:'hk'});s2tReady=true;}
-function toTraditional(text){if(s2tReady&&s2tConvert){try{return s2tConvert(text);}catch(e){return text;}}return text;}
+/* ================= OCR ================= */
+function loadOpenCC(){return new Promise(res=>{if(window.OpenCC){init();res(true);return;}const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/opencc.js';s.onload=()=>{init();res(true);};s.onerror=()=>res(false);document.head.appendChild(s);function init(){try{s2tConvert=OpenCC.Converter({from:'cn',to:'hk'});s2tReady=true;}catch(e){}}});}
+function toTraditional(t){if(s2tReady&&s2tConvert){try{return s2tConvert(t);}catch(e){}}return t;}
 function openScanModal(){showModal('modalScan');resetScanModal();}
 function handleScanImage(input){
-  const file=input.files[0];if(!file)return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    document.getElementById('previewImg').src=e.target.result;
-    document.getElementById('scanPreview').classList.remove('hidden');
-    document.getElementById('scanArea').classList.add('hidden');
-    document.getElementById('scanResult').classList.add('hidden');
-    document.getElementById('scanEditArea').classList.add('hidden');
-    document.getElementById('ocrProgress').style.display='block';
-    Tesseract.recognize(e.target.result,'chi_tra+chi_sim+eng',{
-      logger:m=>{if(m.status==='recognizing text')document.getElementById('ocrFill').style.width=Math.round(m.progress*100)+'%';}
-    }).then(async({data:{text}})=>{
-      if(!s2tReady){await loadOpenCC();}
-      const tradText=toTraditional(text);
-      document.getElementById('ocrProgress').style.display='none';
-      ocrParsedItems=intelligentSplit(tradText,currentProject.type);
-      editingOcrIndex=-1;renderOcrItems();
-      document.getElementById('scanResult').classList.remove('hidden');
-    }).catch(()=>{document.getElementById('ocrProgress').style.display='none';alert('辨識失敗');cancelScan();});
+  const f=input.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    el('previewImg').src=e.target.result;
+    el('scanPreview').classList.remove('hidden');el('scanArea').classList.add('hidden');
+    el('scanResult').classList.add('hidden');el('scanEditArea').classList.add('hidden');
+    el('ocrProgress').style.display='block';
+    Tesseract.recognize(e.target.result,'chi_tra+chi_sim+eng',{logger:m=>{if(m.status==='recognizing text')el('ocrFill').style.width=Math.round(m.progress*100)+'%';}})
+    .then(async({data:{text}})=>{
+      if(!s2tReady)await loadOpenCC();
+      el('ocrProgress').style.display='none';
+      ocrParsedItems=intelligentSplit(toTraditional(text),currentProject.type);
+      editingOcrIndex=-1;renderOcrItems();el('scanResult').classList.remove('hidden');
+    }).catch(()=>{el('ocrProgress').style.display='none';alert('辨識失敗');cancelScan();});
   };
-  reader.readAsDataURL(file);
+  r.readAsDataURL(f);
 }
 function intelligentSplit(text,type){
-  let t=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').replace(/\t/g,' ').trim();
-  t=t.replace(/[|_~`]/g,'');let items=[];
+  let t=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').replace(/\t/g,' ').trim().replace(/[|_~`]/g,'');
+  let items=[];
   if(type==='words'){
-    let lines=t.split('\n').map(l=>l.trim()).filter(l=>l);
-    if(lines.length<=3&&t.length>15){let joined=lines.join(' ');let parts=joined.split(/[,，、;；\s]+/).map(s=>s.trim()).filter(s=>s);if(parts.length>lines.length)items=parts;else items=lines;}
+    let lines=t.split('\n').map(l=>l.trim()).filter(Boolean);
+    if(lines.length<=3&&t.length>15){const parts=lines.join(' ').split(/[,，、;；\s]+/).map(s=>s.trim()).filter(Boolean);items=parts.length>lines.length?parts:lines;}
     else items=lines;
     items=items.map(i=>i.replace(/^[\d]+[.、．)\]】:：]\s*/,'').replace(/^[①②③④⑤⑥⑦⑧⑨⑩]\s*/,'').replace(/^[-–—•·]\s*/,'').trim());
   }else if(type==='sentences'){
-    let sentences=t.split(/(?<=[。！？!?；;])/);
-    if(sentences.length<=1)sentences=t.split('\n').map(l=>l.trim()).filter(l=>l);
-    items=sentences.map(s=>s.replace(/^[\d]+[.、．)\]】:：]\s*/,'').trim()).filter(s=>s);
+    let s=t.split(/(?<=[。！？!?；;])/);
+    if(s.length<=1)s=t.split('\n').map(l=>l.trim()).filter(Boolean);
+    items=s.map(x=>x.replace(/^[\d]+[.、．)\]】:：]\s*/,'').trim()).filter(Boolean);
   }else{
-    let paras=t.split(/\n\s*\n/);if(paras.length<=1)paras=t.split('\n').map(l=>l.trim()).filter(l=>l);
-    items=paras.map(p=>p.replace(/\n/g,' ').trim()).filter(p=>p);
+    let p=t.split(/\n\s*\n/);
+    if(p.length<=1)p=t.split('\n').map(l=>l.trim()).filter(Boolean);
+    items=p.map(x=>x.replace(/\n/g,' ').trim()).filter(Boolean);
   }
-  return items.filter(i=>i.length>0);
+  return items.filter(i=>i.length);
 }
 function renderOcrItems(){
-  const tl={words:'詞語',sentences:'句子',passage:'段落'};
-  document.getElementById('ocrDetectInfo').innerHTML='🧠 識別到 <strong>'+ocrParsedItems.length+'</strong> 項'+(tl[currentProject.type]||'內容')+(s2tReady?'（已轉繁體）':'');
-  const total=ocrParsedItems.length;
-  document.getElementById('ocrItemsList').innerHTML=ocrParsedItems.map((item,i)=>{
-    if(editingOcrIndex===i){return '<div class="ocr-item editing"><div class="oi-num">'+(i+1)+'</div><input type="text" class="form-input edit-input" id="ocrEditInput" value="'+escapeAttr(item)+'" onkeydown="if(event.key===\'Enter\')saveOcrEdit('+i+');if(event.key===\'Escape\')cancelOcrEdit();"><div class="oi-actions"><button class="btn btn-success btn-sm btn-icon" onclick="saveOcrEdit('+i+')">✓</button><button class="btn btn-outline btn-sm btn-icon" onclick="cancelOcrEdit()">✕</button></div></div>';}
-    return '<div class="ocr-item"><div class="oi-num">'+(i+1)+'</div><div class="oi-text">'+escapeHtml(item)+'</div><div class="oi-actions"><button class="btn btn-outline btn-sm btn-icon" onclick="startOcrEdit('+i+')">✏️</button><button class="btn btn-outline btn-sm btn-icon" onclick="moveOcrItem('+i+',-1)" '+(i===0?'disabled':'')+'>⬆</button><button class="btn btn-outline btn-sm btn-icon" onclick="moveOcrItem('+i+',1)" '+(i===total-1?'disabled':'')+'>⬇</button><button class="btn btn-danger btn-sm btn-icon" onclick="removeOcrItem('+i+')">✖</button></div></div>';
+  el('ocrDetectInfo').innerText='🧠 識別到 '+ocrParsedItems.length+' 項'+(s2tReady?'（已轉繁體）':'');
+  el('ocrItemsList').innerHTML=ocrParsedItems.map((it,i)=>{
+    if(editingOcrIndex===i)return '<div class="citem editing"><div class="num">'+(i+1)+'</div><input class="edit-input" id="ocrEditInput" value="'+escapeAttr(it)+'" onkeydown="if(event.key===\'Enter\')saveOcrEdit('+i+');if(event.key===\'Escape\')cancelOcrEdit();"><div class="actions"><button class="ib sm go" onclick="saveOcrEdit('+i+')">✓</button><button class="ib sm" onclick="cancelOcrEdit()">✕</button></div></div>';
+    return '<div class="citem"><div class="num">'+(i+1)+'</div><div class="text">'+escapeHtml(it)+'</div><div class="actions"><button class="ib sm edit" onclick="startOcrEdit('+i+')">✏️</button><button class="ib sm" onclick="moveOcrItem('+i+',-1)" '+(i===0?'disabled':'')+'>⬆</button><button class="ib sm" onclick="moveOcrItem('+i+',1)" '+(i===ocrParsedItems.length-1?'disabled':'')+'>⬇</button><button class="ib sm del" onclick="removeOcrItem('+i+')">✖</button></div></div>';
   }).join('');
-  if(editingOcrIndex>=0)setTimeout(()=>{const inp=document.getElementById('ocrEditInput');if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);}},50);
 }
 function startOcrEdit(i){editingOcrIndex=i;renderOcrItems();}
-function saveOcrEdit(i){const inp=document.getElementById('ocrEditInput');if(inp&&inp.value.trim())ocrParsedItems[i]=inp.value.trim();editingOcrIndex=-1;renderOcrItems();}
+function saveOcrEdit(i){const inp=el('ocrEditInput');if(inp&&inp.value.trim())ocrParsedItems[i]=inp.value.trim();editingOcrIndex=-1;renderOcrItems();}
 function cancelOcrEdit(){editingOcrIndex=-1;renderOcrItems();}
-function moveOcrItem(i,dir){const ni=i+dir;if(ni<0||ni>=ocrParsedItems.length)return;[ocrParsedItems[i],ocrParsedItems[ni]]=[ocrParsedItems[ni],ocrParsedItems[i]];renderOcrItems();}
+function moveOcrItem(i,d){const n=i+d;if(n<0||n>=ocrParsedItems.length)return;[ocrParsedItems[i],ocrParsedItems[n]]=[ocrParsedItems[n],ocrParsedItems[i]];renderOcrItems();}
 function removeOcrItem(i){ocrParsedItems.splice(i,1);renderOcrItems();}
-function retryOcrEdit(){document.getElementById('scanResult').classList.add('hidden');document.getElementById('scanEditArea').classList.remove('hidden');document.getElementById('ocrEditText').value=ocrParsedItems.join('\n');}
-function confirmScan(){if(!ocrParsedItems.length){alert('沒有內容');return;}currentProject.contents.push(...ocrParsedItems);touchProject(currentProject);saveProjects();closeModal('modalScan');resetScanModal();renderContentList();}
-function confirmScanEdit(){const t=document.getElementById('ocrEditText').value.trim();if(!t){alert('沒有內容');return;}currentProject.contents.push(...t.split('\n').map(l=>l.trim()).filter(l=>l));touchProject(currentProject);saveProjects();closeModal('modalScan');resetScanModal();renderContentList();}
+function retryOcrEdit(){el('scanResult').classList.add('hidden');el('scanEditArea').classList.remove('hidden');el('ocrEditText').value=ocrParsedItems.join('\n');}
+function confirmScan(){if(!ocrParsedItems.length){alert('沒有內容');return;}currentProject.contents.push(...ocrParsedItems);touch();saveProjects();closeModal('modalScan');resetScanModal();renderContentList();}
+function confirmScanEdit(){const t=el('ocrEditText').value.trim();if(!t){alert('沒有內容');return;}currentProject.contents.push(...t.split('\n').map(l=>l.trim()).filter(Boolean));touch();saveProjects();closeModal('modalScan');resetScanModal();renderContentList();}
 function cancelScan(){closeModal('modalScan');resetScanModal();}
-function resetScanModal(){document.getElementById('scanInput').value='';document.getElementById('scanPreview').classList.add('hidden');document.getElementById('scanResult').classList.add('hidden');document.getElementById('scanEditArea').classList.add('hidden');document.getElementById('scanArea').classList.remove('hidden');document.getElementById('ocrProgress').style.display='none';ocrParsedItems=[];editingOcrIndex=-1;}
+function resetScanModal(){el('scanInput').value='';el('scanPreview').classList.add('hidden');el('scanResult').classList.add('hidden');el('scanEditArea').classList.add('hidden');el('scanArea').classList.remove('hidden');el('ocrProgress').style.display='none';ocrParsedItems=[];editingOcrIndex=-1;}
 
-function speakText(text,lang,onDone){
-  if('speechSynthesis' in window){
-    window.speechSynthesis.cancel();
-    const u=new SpeechSynthesisUtterance(text);
-    const voices=getAvailableVoices();
-    let v=null;
-    const savedName=localStorage.getItem('dict_voice_'+lang)||'';
-    if(savedName){
-      v=voices.find(x=>x.name===savedName);
-    }
-    if(v){
-      u.voice=v;
-      u.lang=v.lang;
-    }else{
-      if(lang==='en'){
-        u.lang='en-US';
-        v=voices.find(x=>x.lang&&x.lang.toLowerCase().startsWith('en'));
-      }else{
-        u.lang='zh-HK';
-        v=voices.find(x=>x.lang&&/^(zh|cmn|yue)/i.test(x.lang));
-      }
-      if(v)u.voice=v;
-    }
-    u.rate=speechRate;
-    u.pitch=speechPitch;
-    if(onDone){u.onend=onDone;u.onerror=onDone;}
-    window.speechSynthesis.speak(u);
-    return true;
-  }
-  if(onDone)onDone();
-  return false;
-}
-function speakCurrentManual(){stopCountdown();if(currentDictIndex<dictItems.length)speakAndSchedule(dictItems[currentDictIndex]);}
+/* ================= 默書流程 ================= */
 function speakAndSchedule(text){
-  speakToken++;const myToken=speakToken;
-  const lang=getCurLang();
+  speakToken++;const my=speakToken,lang=currentProject?currentProject.lang||'zh':'zh';
   if(playMode==='auto'||isReviewMode){
-    setTimerStatus('🔊 朗讀中');
-    const spoken=speakText(text,lang,()=>{
-      if(myToken!==speakToken)return;
-      setTimerStatus('⏳ 倒數中');
-      startCountdown();
-    });
-    if(!spoken&&myToken===speakToken){setTimerStatus('⏳ 倒數中');startCountdown();}
-  }else{speakText(text,lang);}
+    el('slimTimerStatus').innerText='🔊 朗讀中';
+    const ok=speakText(text,lang,()=>{if(my!==speakToken)return;el('slimTimerStatus').innerText='⏳ 倒數中';startCountdown();});
+    if(!ok&&my===speakToken){el('slimTimerStatus').innerText='⏳ 倒數中';startCountdown();}
+  }else speakText(text,lang);
 }
-function setTimerStatus(t){document.getElementById('slimTimerStatus').innerText=t;}
 function startDictation(){
   if(!currentProject||!currentProject.contents||!currentProject.contents.length){alert('請先加入默書內容');return;}
-  isRandomized=document.getElementById('preRandomToggle').checked;
+  isRandomized=el('preRandomToggle').checked;
   originalItems=[...currentProject.contents];
   dictItems=isRandomized?shuffleArray([...originalItems]):[...originalItems];
   currentDictIndex=0;isReviewMode=false;
   checkResults=new Array(dictItems.length).fill(null);
   totalStartTime=Date.now();wordTimes=[];totalDictationSeconds=0;
-  showPage('dictation');updateReviewUI();updateSlimTimerVisibility();showDictItem();
+  el('crumbDict').innerHTML='默書庫 / <b>'+escapeHtml(currentProject.name)+'</b>';
+  showPage('dictation');updateReviewUI();updateSlimVis();showDictItem();
 }
 function showDictItem(){
-  const total=dictItems.length,current=currentDictIndex;
-  document.getElementById('dictProgressBadge').innerText=(current+1)+' / '+total;
-  const textEl=document.getElementById('dictText');
-  textEl.innerText=dictItems[current];
-  textEl.classList.add('hidden-text');
-  document.getElementById('btnNext').innerText=current===total-1?(isReviewMode?'✅ 完成溫習':'✅ 完成'):'➡️ 下一題';
-  updateVerticalProgress();
-  stopCountdown();
-  if(playMode==='manual'&&!isReviewMode){startWordTimer();}
-  else{stopWordTimer();document.getElementById('manualTimerWrap').classList.remove('visible');}
-  speakAndSchedule(dictItems[current]);
+  const total=dictItems.length,cur=currentDictIndex;
+  el('dictProgressBadge').innerText=(cur+1)+' / '+total;
+  const t=el('dictText');t.innerText=dictItems[cur];t.classList.add('hidden-text');
+  el('btnNext').innerText=cur===total-1?(isReviewMode?'✅ 完成溫習':'✅ 完成'):'➡️ 下一題';
+  updateVerticalProgress();stopCountdown();
+  if(playMode==='manual'&&!isReviewMode)startWordTimer();
+  else{stopWordTimer();el('manualTimerWrap').classList.remove('visible');}
+  speakAndSchedule(dictItems[cur]);
 }
-function toggleText(){document.getElementById('dictText').classList.toggle('hidden-text');}
+function toggleText(){el('dictText').classList.toggle('hidden-text');}
+function speakCurrentManual(){stopCountdown();if(currentDictIndex<dictItems.length)speakAndSchedule(dictItems[currentDictIndex]);}
 function nextDictItem(){
   stopCountdown();
   if(playMode==='manual'&&manualTiming){wordTimes[currentDictIndex]=Math.floor((Date.now()-wordStartTime)/1000);stopWordTimer();}
   if(currentDictIndex<dictItems.length-1){currentDictIndex++;showDictItem();}
-  else{if(isReviewMode)finishReview();else requestEndDictation();}
+  else{isReviewMode?finishReview():requestEndDictation();}
 }
 function requestEndDictation(){
   stopCountdown();
@@ -1228,126 +971,100 @@ function requestEndDictation(){
   totalDictationSeconds=Math.floor((Date.now()-totalStartTime)/1000);
   showModal('modalReview');
 }
-function startQuickReview(){closeModal('modalReview');isReviewMode=true;currentDictIndex=0;updateReviewUI();updateSlimTimerVisibility();showDictItem();}
+function startQuickReview(){closeModal('modalReview');isReviewMode=true;currentDictIndex=0;updateReviewUI();updateSlimVis();showDictItem();}
 function finishReview(){stopCountdown();isReviewMode=false;updateReviewUI();goToMarking();}
 function goToMarking(){stopCountdown();showPage('checking');renderCheckList();}
 function updateReviewUI(){
-  const b=document.getElementById('reviewBanner'),bg=document.getElementById('reviewBadge'),e=document.getElementById('btnEnd');
-  if(isReviewMode){b.classList.remove('hidden');bg.classList.remove('hidden');e.classList.add('hidden');}
-  else{b.classList.add('hidden');bg.classList.add('hidden');e.classList.remove('hidden');}
+  const on=isReviewMode;
+  el('reviewBanner').classList.toggle('hidden',!on);
+  el('reviewBadge').classList.toggle('hidden',!on);
+  el('btnEnd').classList.toggle('hidden',on);
 }
-function updateSlimTimerVisibility(){document.getElementById('slimTimerWrap').classList.toggle('visible',(playMode==='auto'||isReviewMode));}
-function updateSlimTimer(){
-  const pct=(currentCountdown/autoInterval)*100;
-  const fill=document.getElementById('slimTimerFill');
-  document.getElementById('slimTimerText').innerText=currentCountdown+'s';
-  fill.style.width=pct+'%';
-  fill.classList.remove('safe','warning','danger');
-  if(pct>50)fill.classList.add('safe');else if(pct>25)fill.classList.add('warning');else fill.classList.add('danger');
-}
+function updateSlimVis(){el('slimTimerWrap').classList.toggle('visible',playMode==='auto'||isReviewMode);}
+function startWordTimer(){stopWordTimer();wordStartTime=Date.now();manualTiming=true;el('manualTimerWrap').classList.add('visible');updateManualTimer();wordTimerInterval=setInterval(updateManualTimer,1000);}
+function stopWordTimer(){manualTiming=false;clearInterval(wordTimerInterval);wordTimerInterval=null;}
+function updateManualTimer(){if(!manualTiming)return;el('mtWord').innerText=formatTime(Math.floor((Date.now()-wordStartTime)/1000));el('mtTotal').innerText=formatTime(Math.floor((Date.now()-totalStartTime)/1000));}
 function startCountdown(){
-  stopCountdown();isPaused=false;
-  document.getElementById('pauseBtn').innerText='⏸️ 暫停';
-  currentCountdown=autoInterval;
-  updateSlimTimer();updateCountdownRing();
-  countdownTimer=setInterval(()=>{
-    if(!isPaused){
-      currentCountdown--;
-      updateSlimTimer();updateCountdownRing();
-      if(currentCountdown<=0){stopCountdown();nextDictItem();}
-    }
-  },1000);
+  stopCountdown();isPaused=false;el('pauseBtn').innerText='⏸️ 暫停';
+  currentCountdown=autoInterval;updateSlimTimer();updateRing();
+  countdownTimer=setInterval(()=>{if(!isPaused){currentCountdown--;updateSlimTimer();updateRing();if(currentCountdown<=0){stopCountdown();nextDictItem();}}},1000);
 }
 function stopCountdown(){clearInterval(countdownTimer);countdownTimer=null;}
-function togglePause(){isPaused=!isPaused;document.getElementById('pauseBtn').innerText=isPaused?'▶️ 繼續':'⏸️ 暫停';}
-function updateCountdownRing(){
-  document.getElementById('countdownNum').innerText=currentCountdown;
-  document.getElementById('countdownRing').style.background='conic-gradient(var(--primary) '+((currentCountdown/autoInterval)*100)+'%,#E2E8F0 '+((currentCountdown/autoInterval)*100)+'%)';
+function togglePause(){isPaused=!isPaused;el('pauseBtn').innerText=isPaused?'▶️ 繼續':'⏸️ 暫停';}
+function updateSlimTimer(){
+  const pct=(currentCountdown/autoInterval)*100,f=el('slimTimerFill');
+  el('slimTimerText').innerText=currentCountdown+'s';
+  f.style.width=pct+'%';
+  f.classList.remove('safe','warning','danger');
+  f.classList.add(pct>50?'safe':pct>25?'warning':'danger');
 }
-
-// ===== 進度條（修復版）=====
+function updateRing(){
+  el('countdownNum').innerText=currentCountdown;
+  const pct=(currentCountdown/autoInterval)*100;
+  el('countdownRing').style.background='conic-gradient(var(--blue) '+pct+'%,#EDF0F5 '+pct+'%)';
+}
 function updateVerticalProgress(){
-  const total=dictItems.length,current=currentDictIndex;
-  const track=document.getElementById('vpTrack'),fill=document.getElementById('vpFill');
+  const total=dictItems.length,cur=currentDictIndex;
+  const track=el('vpTrack'),fill=el('vpFill');
   if(!track||!fill)return;
-  
-  document.getElementById('vpCount').innerText=(current+1)+'/'+total;
-  document.getElementById('vpLabel').innerText=isReviewMode?'溫習':'進度';
-  
-  // 修復：用 (current+1)/total 計算，第一題唔會係 0%
-  const pct=(total>0?((current+1)/total)*100:0);
-  const isMobile=window.innerWidth<=640;
-  
-  // 修復：偵測螢幕寬度，設置正確方向
-  if(isMobile){
-    fill.style.width=pct+'%';
-    fill.style.height='100%';
-  }else{
-    fill.style.height=pct+'%';
-    fill.style.width='100%';
-  }
-  
+  el('vpCount').innerText=(cur+1)+'/'+total;
+  el('vpLabel').innerText=isReviewMode?'溫習':'進度';
+  const pct=total>0?((cur+1)/total)*100:0,isMob=window.innerWidth<=640;
+  if(isMob){fill.style.width=pct+'%';fill.style.height='100%';}else{fill.style.height=pct+'%';fill.style.width='100%';}
   track.querySelectorAll('.vp-dot').forEach(d=>d.remove());
-  const maxDots=Math.min(total,30);
-  for(let i=0;i<maxDots;i++){
-    const dot=document.createElement('div');dot.className='vp-dot';
-    const dotPct=(maxDots>1?(i/(maxDots-1))*100:50);
-    // 修復：根據螢幕寬度設置正確位置
-    if(isMobile){
-      dot.style.left=dotPct+'%';
-      dot.style.top='50%';
-    }else{
-      dot.style.top=dotPct+'%';
-      dot.style.left='50%';
-    }
-    if(i<current)dot.classList.add('completed');
-    else if(i===current)dot.classList.add('current');
-    else dot.classList.add('upcoming');
-    track.appendChild(dot);
+  const n=Math.min(total,30);
+  for(let i=0;i<n;i++){
+    const d=document.createElement('div');d.className='vp-dot';
+    const pos=n>1?(i/(n-1))*100:50;
+    if(isMob){d.style.left=pos+'%';d.style.top='50%';}else{d.style.top=pos+'%';d.style.left='50%';}
+    d.classList.add(i<cur?'completed':i===cur?'current':'');
+    track.appendChild(d);
   }
 }
 
+/* ================= 校對／結果 ================= */
 function renderCheckList(){
-  document.getElementById('checkList').innerHTML=dictItems.map((item,i)=>{
-    const t=(playMode==='manual'&&wordTimes[i]!==undefined)?'<span class="time-chip">⏱ '+formatTime(wordTimes[i])+'</span>':'';
-    return '<div class="check-item" id="checkItem'+i+'"><div class="num">'+(i+1)+'</div><div class="answer">'+escapeHtml(item)+'</div>'+t+'<div class="check-btns"><button class="check-btn btn-correct" onclick="markResult('+i+',true)" id="correct'+i+'">✓</button><button class="check-btn btn-wrong" onclick="markResult('+i+',false)" id="wrong'+i+'">✗</button></div></div>';
+  el('checkList').innerHTML=dictItems.map((it,i)=>{
+    const t=(playMode==='manual'&&wordTimes[i]!==undefined)?'<span class="chip" style="margin-right:10px;">⏱ '+formatTime(wordTimes[i])+'</span>':'';
+    return '<div class="chk" id="checkItem'+i+'"><div class="num" style="width:26px;height:26px;background:var(--blue-l);color:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;margin-right:12px;flex-shrink:0;">'+(i+1)+'</div><div class="answer">'+escapeHtml(it)+'</div>'+t+'<div class="chk-btns"><button class="cbtn ok" onclick="markResult('+i+',true)" id="correct'+i+'">✓</button><button class="cbtn no" onclick="markResult('+i+',false)" id="wrong'+i+'">✗</button></div></div>';
   }).join('');
 }
-function markResult(i,ok){checkResults[i]=ok;const item=document.getElementById('checkItem'+i);item.classList.remove('correct','wrong');document.getElementById('correct'+i).classList.remove('active');document.getElementById('wrong'+i).classList.remove('active');if(ok){item.classList.add('correct');document.getElementById('correct'+i).classList.add('active');}else{item.classList.add('wrong');document.getElementById('wrong'+i).classList.add('active');}}
+function markResult(i,ok){
+  checkResults[i]=ok;
+  const it=el('checkItem'+i);it.classList.remove('correct','wrong');
+  el('correct'+i).classList.remove('active');el('wrong'+i).classList.remove('active');
+  it.classList.add(ok?'correct':'wrong');
+  el(ok?'correct'+i:'wrong'+i).classList.add('active');
+}
 function finishChecking(){
   const total=dictItems.length,correct=checkResults.filter(r=>r===true).length;
   const unchecked=checkResults.filter(r=>r===null).length;
   if(unchecked>0&&!confirm('仲有 '+unchecked+' 題未校對，確定結束？'))return;
-  const percent=Math.round((correct/total)*100);
-  showPage('result');
-  document.getElementById('resultScore').innerText=correct;
-  document.getElementById('resultTotal').innerText=total;
-  document.getElementById('resultPercent').innerText=percent+'%';
-  let emoji='🌟',title='太厲害喇！';
-  if(percent<50){emoji='💪';title='繼續努力！';}else if(percent<70){emoji='📖';title='唔錯呀！';}else if(percent<90){emoji='😊';title='好叻呀！';}
-  document.getElementById('resultEmoji').innerText=emoji;
-  document.getElementById('resultTitle').innerText=title;
-  const isManual=(playMode==='manual'&&wordTimes.length>0);
+  const pct=Math.round(correct/total*100);
+  el('resultScore').innerText=correct;
+  el('resultTotal').innerText=total;
+  el('resultPercent').innerHTML=pct+'<span class="unit">%</span>';
+  el('resultBar').style.width=pct+'%';
+  let e='🌟',t='太厲害喇！';
+  if(pct<50){e='💪';t='繼續努力！';}else if(pct<70){e='📖';t='唔錯呀！';}else if(pct<90){e='😊';t='好叻呀！';}
+  el('resultEmoji').innerText=e;el('resultTitle').innerText=t;
+  const isManual=playMode==='manual'&&wordTimes.length>0;
   if(isManual){
-    document.getElementById('timeStats').classList.remove('hidden');
-    document.getElementById('statTotalTime').innerText=formatTime(totalDictationSeconds);
-    const avg=Math.round(totalDictationSeconds/total);
-    document.getElementById('statAvgTime').innerText=formatTime(avg);
-    let maxT=0;wordTimes.forEach(t=>{if((t||0)>maxT)maxT=t;});
-    document.getElementById('statSlowest').innerText=formatTime(maxT);
-    let ph='';
-    dictItems.forEach((w,i)=>{
-      const t=wordTimes[i];const wrong=checkResults[i]!==true;
-      ph+='<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;"><span>'+(i+1)+'. '+escapeHtml(w)+(wrong?' <span style="color:var(--danger)">❌</span>':'')+'</span><span style="font-weight:700;color:'+((t||0)>30?'var(--danger)':(t||0)>15?'var(--warning)':'var(--text-light)')+';">'+(t!==undefined?formatTime(t):'--')+'</span></div>';
-    });
-    document.getElementById('perWordTimes').innerHTML=ph;
-  }else{document.getElementById('timeStats').classList.add('hidden');}
+    el('timeStats').classList.remove('hidden');
+    el('statTotalTime').innerText=formatTime(totalDictationSeconds);
+    el('statAvgTime').innerText=formatTime(Math.round(totalDictationSeconds/total));
+    let mx=0;wordTimes.forEach(x=>{if((x||0)>mx)mx=x;});
+    el('statSlowest').innerText=formatTime(mx);
+    el('perWordTimes').innerHTML=dictItems.map((w,i)=>{
+      const tm=wordTimes[i],wrong=checkResults[i]!==true;
+      return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px;"><span>'+(i+1)+'. '+escapeHtml(w)+(wrong?' <span style="color:var(--red);">❌</span>':'')+'</span><strong style="color:'+((tm||0)>30?'var(--red)':(tm||0)>15?'var(--amber)':'var(--ink2)')+';">'+(tm!==undefined?formatTime(tm):'--')+'</strong></div>';
+    }).join('');
+  }else el('timeStats').classList.add('hidden');
   const wi=dictItems.filter((_,i)=>checkResults[i]!==true);
-  if(wi.length){document.getElementById('resultWrong').classList.remove('hidden');
-    document.getElementById('wrongList').innerHTML=wi.map(w=>'<div style="padding:10px;background:#FEF2F2;border-radius:8px;margin-bottom:8px;color:var(--danger);font-weight:500;">❌ '+escapeHtml(w)+'</div>').join('');}
-  else document.getElementById('resultWrong').classList.add('hidden');
-  records.push({date:new Date().toLocaleString('zh-HK',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}),project:currentProject.name,correct,total,percent,totalTime:isManual?totalDictationSeconds:null});
-  saveRecords();
+  if(wi.length){el('resultWrong').classList.remove('hidden');el('wrongList').innerHTML=wi.map(w=>'<div style="padding:10px 12px;background:var(--red-l);border:1px solid #FECDCA;border-radius:10px;margin-bottom:8px;color:#B42318;font-weight:600;">❌ '+escapeHtml(w)+'</div>').join('');}
+  else el('resultWrong').classList.add('hidden');
+  records.push({date:new Date().toLocaleString('zh-HK',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}),project:currentProject.name,correct,total,percent:pct,totalTime:isManual?totalDictationSeconds:null});
+  saveRecords();showPage('result');
 }
 function retryWrong(){
   const wi=dictItems.filter((_,i)=>checkResults[i]!==true);
@@ -1355,157 +1072,87 @@ function retryWrong(){
   originalItems=wi;dictItems=isRandomized?shuffleArray([...originalItems]):[...originalItems];
   currentDictIndex=0;isReviewMode=false;checkResults=new Array(dictItems.length).fill(null);
   totalStartTime=Date.now();wordTimes=[];totalDictationSeconds=0;
-  showPage('dictation');updateReviewUI();updateSlimTimerVisibility();showDictItem();
+  showPage('dictation');updateReviewUI();updateSlimVis();showDictItem();
 }
+
+/* ================= 記錄 ================= */
 function renderRecords(){
-  const c=document.getElementById('recordChart'),ctx=c.getContext('2d');
+  const n=records.length;
+  el('rcTests').innerText=n;
+  if(n){
+    const avg=Math.round(records.reduce((s,r)=>s+r.percent,0)/n);
+    el('rcAvg').innerHTML=avg+'<span class="unit">%</span>';el('rcAvgBar').style.width=avg+'%';
+    const tt=records.reduce((s,r)=>s+(r.totalTime||0),0);
+    el('rcTime').innerText=tt?formatTime(tt):'—';
+  }else{el('rcAvg').textContent='—';el('rcAvgBar').style.width='0%';el('rcTime').textContent='—';}
+  const c=el('recordChart'),ctx=c.getContext('2d');
   ctx.clearRect(0,0,c.width,c.height);ctx.fillStyle='#F8FAFC';ctx.fillRect(0,0,c.width,c.height);
-  ctx.strokeStyle='#E2E8F0';ctx.lineWidth=1;
-  for(let i=0;i<=10;i++){const y=20+i*24;ctx.beginPath();ctx.moveTo(40,y);ctx.lineTo(c.width-10,y);ctx.stroke();ctx.fillStyle='#94A3B8';ctx.font='11px sans-serif';ctx.fillText((100-i*10)+'',10,y+4);}
-  if(!records.length){ctx.fillStyle='#94A3B8';ctx.font='14px sans-serif';ctx.fillText('暫時未有記錄',c.width/2-40,c.height/2);}
-  else{const rec=records.slice(-20),step=(c.width-60)/Math.max(rec.length-1,1);ctx.strokeStyle='#2563EB';ctx.lineWidth=3;ctx.beginPath();rec.forEach((r,i)=>{const x=40+i*step,y=260-(r.percent*2.4);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.stroke();rec.forEach((r,i)=>{const x=40+i*step,y=260-(r.percent*2.4);ctx.fillStyle=r.percent>=70?'#10B981':'#EF4444';ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fill();});}
-  let html='<table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:16px;"><tr style="background:#F1F5F9;"><th style="padding:12px;text-align:left;">日期</th><th style="text-align:left;">默書表</th><th>成績</th><th>得分</th><th>用時</th></tr>';
-  records.slice().reverse().slice(0,15).forEach(r=>{
-    const tt=(r.totalTime!==null&&r.totalTime!==undefined)?formatTime(r.totalTime):'--';
-    html+='<tr style="border-bottom:1px solid var(--border);"><td style="padding:12px;">'+r.date+'</td><td>'+escapeHtml(r.project)+'</td><td style="text-align:center;">'+r.correct+'/'+r.total+'</td><td style="text-align:center;font-weight:700;color:'+(r.percent>=70?'var(--success)':'var(--danger)')+';">'+r.percent+'%</td><td style="text-align:center;color:var(--text-light);">'+tt+'</td></tr>';});
-  html+='</table>';document.getElementById('recordTable').innerHTML=html;
+  ctx.strokeStyle='#E6E9F0';ctx.lineWidth=1;
+  for(let i=0;i<=10;i++){const y=20+i*24;ctx.beginPath();ctx.moveTo(40,y);ctx.lineTo(c.width-10,y);ctx.stroke();ctx.fillStyle='#9AA3B2';ctx.font='11px sans-serif';ctx.fillText((100-i*10)+'',12,y+4);}
+  if(!n){ctx.fillStyle='#9AA3B2';ctx.font='14px sans-serif';ctx.fillText('暫時未有記錄',c.width/2-40,c.height/2);}
+  else{
+    const rec=records.slice(-20),step=(c.width-60)/Math.max(rec.length-1,1);
+    ctx.strokeStyle='#2F6BED';ctx.lineWidth=3;ctx.beginPath();
+    rec.forEach((r,i)=>{const x=40+i*step,y=260-r.percent*2.4;i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
+    ctx.stroke();
+    rec.forEach((r,i)=>{const x=40+i*step,y=260-r.percent*2.4;ctx.fillStyle=r.percent>=70?'#12B76A':'#EF4444';ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fill();});
+  }
+  el('recordTable').innerHTML='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>日期</th><th>默書表</th><th>成績</th><th>得分</th><th>用時</th></tr></thead><tbody>'+
+    (records.slice().reverse().slice(0,15).map(r=>'<tr><td class="nowrap">'+r.date+'</td><td>'+escapeHtml(r.project)+'</td><td>'+r.correct+'/'+r.total+'</td><td><strong style="color:'+(r.percent>=70?'var(--green)':'var(--red)')+';">'+r.percent+'%</strong></td><td>'+(r.totalTime!=null?formatTime(r.totalTime):'--')+'</td></tr>').join('')||'<tr><td colspan="5" style="text-align:center;color:var(--ink3);padding:18px;">暫無資料</td></tr>')+
+    '</tbody></table></div>';
 }
 function clearAllRecords(){if(confirm('確定清除所有記錄？')){records=[];saveRecords();renderRecords();}}
-function shuffleArray(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
-function typeLabelForExport(p){
-  if(p.lang==='en'){
-    return {words:'words',sentences:'sentences',passage:'paragraphs'}[p.type]||'words';
-  }
-  return {words:'詞語',sentences:'句子',passage:'文章'}[p.type]||'詞語';
-}
-function buildProjectsTsv(lang){
-  const list=projects.filter(p=>p.lang===lang);
-  const lines=['Project\tType\tDetails'];
-  list.forEach(p=>{
-    const details=(p.contents||[]).join(';');
-    lines.push([escapeTsv(p.name),typeLabelForExport(p),escapeTsv(details)].join('\t'));
-  });
-  return lines.join('\n');
-}
-function buildRecordsTsv(){
-  const lines=['日期\t默書表\t答對\t總數\t得分(%)\t用時'];
-  records.slice().reverse().forEach(r=>{
-    const tt=(r.totalTime!==null&&r.totalTime!==undefined)?formatTime(r.totalTime):'';
-    lines.push([r.date,escapeTsv(r.project),r.correct,r.total,r.percent,tt].join('\t'));
-  });
-  return lines.join('\n');
-}
-function renderProjectTable(lang,title){
-  const list=projects.filter(p=>p.lang===lang);
-  const rows=list.map(p=>
-    '<tr><td class="nowrap">'+escapeHtml(p.name)+'</td><td class="nowrap">'+typeLabelForExport(p)+'</td><td class="wrap">'+escapeHtml((p.contents||[]).join(';'))+'</td></tr>'
-  ).join('');
-  const copyFn=lang==='zh'?'copyProjectsZh()':'copyProjectsEn()';
-  const confirmId=lang==='zh'?'copyProjZhConfirm':'copyProjEnConfirm';
-  return '<div class="export-table-wrap">'+
-    '<div class="export-table-head"><span>'+title+'（'+list.length+' 張）</span>'+
-    '<button class="btn btn-primary btn-sm" onclick="'+copyFn+'">📋 複製</button></div>'+
-    '<div style="max-height:220px;overflow:auto;">'+
-    '<table class="export-table"><thead><tr><th>Project</th><th>Type</th><th>Details</th></tr></thead>'+
-    '<tbody>'+(rows||'<tr><td colspan="3" style="text-align:center;color:var(--text-light);padding:20px;">暫無資料</td></tr>')+'</tbody></table></div>'+
-    '<span class="copy-confirm" id="'+confirmId+'">✅ 已複製！可貼入 Google Sheets</span>'+
-  '</div>';
-}
-function renderRecordsExportTable(){
-  const recList=records.slice().reverse().slice(0,100);
-  const rows=recList.map(r=>{
-    const tt=(r.totalTime!==null&&r.totalTime!==undefined)?formatTime(r.totalTime):'—';
-    return '<tr><td class="nowrap">'+escapeHtml(r.date)+'</td><td class="nowrap">'+escapeHtml(r.project)+'</td><td class="nowrap">'+r.correct+'/'+r.total+'</td><td class="nowrap">'+r.percent+'%</td><td class="nowrap">'+tt+'</td></tr>';
-  }).join('');
-  return '<div class="export-table-wrap" style="margin-top:16px;">'+
-    '<div class="export-table-head"><span>📊 成績記錄（'+records.length+' 筆）</span>'+
-    '<button class="btn btn-primary btn-sm" onclick="copyRecords()">📋 複製</button></div>'+
-    '<div style="max-height:220px;overflow:auto;">'+
-    '<table class="export-table"><thead><tr><th>日期</th><th>默書表</th><th>成績</th><th>得分</th><th>用時</th></tr></thead>'+
-    '<tbody>'+(rows||'<tr><td colspan="5" style="text-align:center;color:var(--text-light);padding:20px;">暫無資料</td></tr>')+'</tbody></table></div>'+
-    '<span class="copy-confirm" id="copyRecConfirm">✅ 已複製！可貼入 Google Sheets</span>'+
-  '</div>';
+/* ================= 匯出 ================= */
+function typeLabelForExport(p){return p.lang==='en'?{words:'words',sentences:'sentences',passage:'paragraphs'}[p.type]||'words':{words:'詞語',sentences:'句子',passage:'文章'}[p.type]||'詞語';}
+function buildProjectsTsv(l){return['Project\tType\tDetails'].concat(projects.filter(p=>p.lang===l).map(p=>[escapeTsv(p.name),typeLabelForExport(p),escapeTsv((p.contents||[]).join(';'))].join('\t'))).join('\n');}
+function buildRecordsTsv(){return['日期\t默書表\t答對\t總數\t得分(%)\t用時'].concat(records.slice().reverse().map(r=>[r.date,escapeTsv(r.project),r.correct,r.total,r.percent,r.totalTime!=null?formatTime(r.totalTime):''].join('\t'))).join('\n');}
+function exportTable(title,cols,rows,copyFn,confirmId){
+  return '<div class="tbl-wrap"><div class="tbl-head"><span>'+title+'</span><button class="btn btn-p btn-sm" onclick="'+copyFn+'">📋 複製</button></div>'+
+    '<div style="max-height:220px;overflow:auto;"><table class="tbl"><thead><tr>'+cols.map(c=>'<th>'+c+'</th>').join('')+'</tr></thead><tbody>'+
+    (rows.map(r=>'<tr>'+r.map((c,i)=>'<td class="'+(i===cols.length-1?'wrap':'nowrap')+'">'+c+'</td>').join('')+'</tr>').join('')||'<tr><td colspan="'+cols.length+'" style="text-align:center;color:var(--ink3);padding:18px;">暫無資料</td></tr>')+
+    '</tbody></table></div><span class="copy-confirm" id="'+confirmId+'">✅ 已複製！可貼入 Google Sheets</span></div>';
 }
 function renderExportTables(){
-  const wrap=document.getElementById('exportTables');
-  if(!wrap)return;
-  wrap.innerHTML=
-    renderProjectTable('zh','🈶 中文默書表')+
-    renderProjectTable('en','🔤 英文默書表')+
-    renderRecordsExportTable()+
-    '<div class="export-actions">'+
-      '<button class="btn btn-outline btn-sm" onclick="downloadTsv()">⬇️ 下載 TSV 檔（全部）</button>'+
-      '<span class="hint">💡 複製後可直接貼入 Google Sheets，會自動分欄</span>'+
-    '</div>';
+  const w=el('exportTables');if(!w)return;
+  const zhRows=projects.filter(p=>p.lang==='zh').map(p=>[escapeHtml(p.name),typeLabelForExport(p),escapeHtml((p.contents||[]).join(';'))]);
+  const enRows=projects.filter(p=>p.lang==='en').map(p=>[escapeHtml(p.name),typeLabelForExport(p),escapeHtml((p.contents||[]).join(';'))]);
+  const rcRows=records.slice().reverse().slice(0,100).map(r=>[escapeHtml(r.date),escapeHtml(r.project),r.correct+'/'+r.total,r.percent+'%',r.totalTime!=null?formatTime(r.totalTime):'—']);
+  w.innerHTML=
+    exportTable('🈶 中文默書表（'+zhRows.length+' 張）',['Project','Type','Details'],zhRows,'copyProjectsZh()','copyProjZhConfirm')+
+    '<div style="height:12px;"></div>'+
+    exportTable('🔤 英文默書表（'+enRows.length+' 張）',['Project','Type','Details'],enRows,'copyProjectsEn()','copyProjEnConfirm')+
+    '<div style="height:12px;"></div>'+
+    exportTable('📊 成績記錄（'+rcRows.length+' 筆）',['日期','默書表','成績','得分','用時'],rcRows,'copyRecords()','copyRecConfirm')+
+    '<div class="pactions"><button class="btn btn-s" onclick="downloadTsv()">⬇️ 下載 TSV 檔（全部）</button><span class="hint" style="align-self:center;">💡 複製後可直接貼入 Google Sheets</span></div>';
 }
-function copyToClipboard(text){
-  if(navigator.clipboard&&navigator.clipboard.writeText){
-    return navigator.clipboard.writeText(text);
-  }
-  const ta=document.createElement('textarea');
-  ta.value=text;ta.style.position='fixed';ta.style.top='0';ta.style.left='0';ta.style.opacity='0';
-  document.body.appendChild(ta);ta.select();
+function copyToClipboard(t){
+  if(navigator.clipboard&&navigator.clipboard.writeText)return navigator.clipboard.writeText(t);
+  const a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;opacity:0';document.body.appendChild(a);a.select();
   try{document.execCommand('copy');}catch(e){}
-  document.body.removeChild(ta);
-  return Promise.resolve();
+  document.body.removeChild(a);return Promise.resolve();
 }
-function copyProjectsZh(){
-  copyToClipboard(buildProjectsTsv('zh')).then(()=>{
-    const el=document.getElementById('copyProjZhConfirm');
-    if(el){el.style.display='inline';setTimeout(()=>{el.style.display='none';},2500);}
-  });
-}
-function copyProjectsEn(){
-  copyToClipboard(buildProjectsTsv('en')).then(()=>{
-    const el=document.getElementById('copyProjEnConfirm');
-    if(el){el.style.display='inline';setTimeout(()=>{el.style.display='none';},2500);}
-  });
-}
-function copyRecords(){
-  copyToClipboard(buildRecordsTsv()).then(()=>{
-    const el=document.getElementById('copyRecConfirm');
-    if(el){el.style.display='inline';setTimeout(()=>{el.style.display='none';},2500);}
-  });
-}
+function flash(id){const e=el(id);if(e){e.style.display='inline';setTimeout(()=>e.style.display='none',2500);}}
+function copyProjectsZh(){copyToClipboard(buildProjectsTsv('zh')).then(()=>flash('copyProjZhConfirm'));}
+function copyProjectsEn(){copyToClipboard(buildProjectsTsv('en')).then(()=>flash('copyProjEnConfirm'));}
+function copyRecords(){copyToClipboard(buildRecordsTsv()).then(()=>flash('copyRecConfirm'));}
 function downloadTsv(){
-  const combined=
-    '# 中文默書表 (Project / Type / Details)\n'+buildProjectsTsv('zh')+'\n\n'+
-    '# 英文默書表 (Project / Type / Details)\n'+buildProjectsTsv('en')+'\n\n'+
-    '# 成績記錄\n'+buildRecordsTsv();
-  const blob=new Blob(['\uFEFF'+combined],{type:'text/tab-separated-values;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  const d=new Date();
-  a.href=url;
-  a.download='默書資料_'+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'.tsv';
-  a.click();
-  URL.revokeObjectURL(url);
+  const s='# 中文默書表\n'+buildProjectsTsv('zh')+'\n\n# 英文默書表\n'+buildProjectsTsv('en')+'\n\n# 成績記錄\n'+buildRecordsTsv();
+  const b=new Blob(['\uFEFF'+s],{type:'text/tab-separated-values;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a'),d=new Date();
+  a.href=u;a.download='默書資料_'+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'.tsv';a.click();URL.revokeObjectURL(u);
 }
 
-// ===== 初始化 =====
+/* ================= 初始化 ================= */
 window.onload=()=>{
-  document.getElementById('appVersion').innerText=APP_VERSION;
-  migrateIds();
-  migrateTimestamps();
-  seedSampleProject();
-  loadOpenCC();
+  el('appVersion').innerText=APP_VERSION;
+  el('verChip').innerText='v'+APP_VERSION;
+  migrateData();seedSample();loadOpenCC();
   if('speechSynthesis' in window){
-    populateVoiceSelects();
-    restorePitchControl();
-    window.speechSynthesis.onvoiceschanged=()=>{
-      window.speechSynthesis.getVoices();
-      populateVoiceSelects();
-    };
+    populateVoiceSelects();restorePitchControl();
+    speechSynthesis.onvoiceschanged=()=>{speechSynthesis.getVoices();populateVoiceSelects();};
   }
   showPage('home');
-  
-  // 修復：轉屏後更新進度條
-  window.addEventListener('resize',()=>{
-    if(currentPage==='dictation'){
-      updateVerticalProgress();
-    }
-  });
+  window.addEventListener('resize',()=>{if(currentPage==='dictation')updateVerticalProgress();});
 };
 </script>
 </body>
