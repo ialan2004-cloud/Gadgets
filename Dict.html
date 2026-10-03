@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中英文默書系統 18.2</title>
+<title>中英文默書系統 18.3</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
 :root{
@@ -291,7 +291,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
       <button class="btn btn-s btn-sm" onclick="showModal('modalAddContent')">✍️ 加入</button>
       <button class="btn btn-s btn-sm" onclick="openScanModal()">📷 掃描</button>
     </div>
-    <div class="hint" style="margin-bottom:10px;">💡 ✏️ 編輯 ⬆️⬇️ 排序 ✖ 刪除 🔊 試讀 ｜ ▶️ 開始默書請返去默書庫撳綠色按鈕</div>
+    <div class="hint" style="margin-bottom:10px;">💡 ✏️ 編輯 ⬆️️ 排序 ✖ 刪除 🔊 試讀 ｜ ▶️ 開始默書請返去默書庫撳綠色按鈕</div>
     <div id="contentList"></div>
     <div class="settingsbox">
       <div class="srow"><div class="slabel">🌐 跟隨全局默書設定</div><label class="toggle"><input type="checkbox" id="ovGlobal" onchange="toggleOverride()"><span class="toggle-slider"></span></label></div>
@@ -381,7 +381,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
     </div>
     <div id="perWordTimes"></div>
   </div>
-  <div id="resultWrong" class="card hidden"><div class="card-t">❌ 錯內容</div><div id="wrongList"></div></div>
+  <div id="resultWrong" class="card hidden"><div class="card-t">❌ 錯嘅內容</div><div id="wrongList"></div></div>
   <div class="pactions">
     <button class="btn btn-s" onclick="goBack()">⬅️ 返回</button>
     <button class="btn btn-s" onclick="navTo('home')">🏠 主頁</button>
@@ -582,7 +582,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 <script>
 'use strict';
 /* ============ 1. 常數 ============ */
-const APP_VERSION='18.2';
+const APP_VERSION='18.3';
 const SCHEMA_VERSION=3;
 const SHEET_ID='1Ok4OH76O2W5rtkHw-1Q_F6W4c4jD-WoQTA0UwAXv4t0';
 const TAB_CONFIG={zh:{defaultName:'Chinese',label:'中文默書'},en:{defaultName:'English',label:'英文默書'}};
@@ -591,9 +591,8 @@ const RATE_OPTS=[{v:'0.4',label:'0.4x'},{v:'0.6',label:'0.6x'},{v:'0.8',label:'0
 const MODE_OPTS=[{v:'manual',label:'✋ 手動'},{v:'auto',label:'🤖 自動'}];
 const INT_OPTS=[5,7,10,15,20].map(v=>({v:String(v),label:v+'秒'}));
 const PITCH_OPTS=[{v:'0.7',label:'低'},{v:'1',label:'正常'},{v:'1.3',label:'高'}];
-/* 標點朗讀對照表 */
-const PUNCT_ZH=[['……','省略號'],['，','逗號'],['。','句號'],['！','感嘆號'],['？','問號'],['；','分號'],['：','冒號'],['、','頓號'],['「','前引號'],['」','後引號'],['『','前引號'],['』','後引號'],['（','左括號'),('）','右括號'],['—','破折號']];
-const PUNCT_EN=[['…','ellipsis'],[',',' comma '],['!',' exclamation '],['?',' question mark '],[';',' semicolon '],[':',' colon '],['“',' quote '],['”',' quote '],['(',' open bracket '],[')',' close bracket ']];
+/* 中文標點→讀音對照（多字元放最前） */
+const PUNCT_ZH=[['……','省略號'],['，','逗號'],['。','句號'],['！','感嘆號'],['？','問號'],['；','分號'],['：','冒號'],['、','頓號'],['「','開引號'],['」','關引號'],['『','開引號'],['』','關引號'],['（','開括號'],['）','關括號'],['—','破折號']];
 
 /* ============ 2. Store ============ */
 const Store={
@@ -900,11 +899,11 @@ function speakPunct(text,lang){
            .replace(/\?/g,' question mark ')
            .replace(/;/g,' semicolon ')
            .replace(/:/g,' colon ')
-           .replace(/[“”"]/g,' quote ')
+           .replace(/["""]/g,' quote ')
            .replace(/\(/g,' open bracket ')
            .replace(/\)/g,' close bracket ');
   }else{
-    PUNCT_ZH.forEach(([k,name])=>{out=out.split(k).join(' '+name+' ');});
+    PUNCT_ZH.forEach(pair=>{out=out.split(pair[0]).join(' '+pair[1]+' ');});
   }
   return out.replace(/[ \t]+/g,' ').trim();
 }
@@ -1441,7 +1440,7 @@ function paintCountdown(){
   f.classList.remove('safe','warning','danger');
   f.classList.add(pct>50?'safe':pct>25?'warning':'danger');
 }
-/* ===== 進度條：rail 內邊界對齊（圓點 0%→100%，填充頭=當前圓點） ===== */
+/* 進度條：rail 邊界對齊 */
 function updateVerticalProgress(){
   const D=State.dict,total=D.items.length,cur=D.index;
   const rail=el('vpRail'),fill=el('vpFill');
