@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中英文默書系統 19.0</title>
+<title>中英文默書系統 20.0</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
 :root{
@@ -17,7 +17,6 @@
 body{background:var(--bg);min-height:100vh;color:var(--ink);display:flex;flex-direction:column;}
 button{font-family:inherit;}
 .hidden{display:none!important;}
-/* ===== 圖示系統 ===== */
 .ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;vertical-align:middle;}
 .ic.sm{width:14px;height:14px;}.ic.lg{width:24px;height:24px;}.ic.xl{width:38px;height:38px;stroke-width:1.6;}
 /* ===== 頂欄 ===== */
@@ -49,12 +48,12 @@ button{font-family:inherit;}
 .page{max-width:860px;margin:0 auto;padding:22px 20px 40px;width:100%;flex:1;}
 .phead{margin-bottom:18px;}
 .phead-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.phead-top .chip{margin-left:auto;}
 .phead-main{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;}
 .phead-acts{display:flex;gap:8px;flex-wrap:wrap;}
 .crumb{font-size:13px;color:var(--ink3);}
 .crumb b{color:var(--ink2);font-weight:600;}
 .ptitle{font-size:26px;font-weight:800;letter-spacing:.2px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-.ptitle.sm{font-size:21px;}
 .psub{color:var(--ink2);font-size:14px;margin-top:6px;line-height:1.5;}
 /* ===== 通用组件 ===== */
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:var(--sh);margin-bottom:14px;}
@@ -87,7 +86,7 @@ button{font-family:inherit;}
 .chip.blue{background:var(--blue-l);border-color:#C9DBFD;color:var(--blue-d);}
 .chip.purple{background:#F0EBFE;border-color:#DDD0FB;color:#6D28D9;}
 .note{background:#F5F3FF;border:1px solid #DDD6FE;border-radius:12px;padding:10px 14px;font-size:13px;color:#5B21B6;margin-bottom:12px;display:flex;gap:7px;align-items:flex-start;}
-.note .ic{width:15px;height:15px;margin-top:2px;}
+.note .ic{width:15px;height:15px;margin-top:2px;flex-shrink:0;}
 .stat{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--sh);}
 .s-label{font-size:13px;color:var(--ink2);font-weight:600;}
 .s-value{font-size:34px;font-weight:800;margin:6px 0 10px;line-height:1.1;}
@@ -120,6 +119,7 @@ textarea.field{min-height:110px;resize:vertical;line-height:1.6;}
 .srow:last-of-type{border-bottom:0;}
 .slabel{font-size:14px;font-weight:600;color:var(--ink2);display:flex;align-items:center;gap:7px;}
 .slabel .ic{width:16px;height:16px;color:var(--ink3);}
+.hgroup{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
 .voice-control{display:flex;gap:6px;align-items:center;flex:1;justify-content:flex-end;max-width:400px;min-width:0;}
 .voice-control select{flex:1;min-width:0;padding:8px 10px;font-size:13px;border:1px solid var(--line);border-radius:10px;background:#fff;}
 .toggle{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;}
@@ -132,8 +132,11 @@ details summary{cursor:pointer;color:var(--blue);font-size:14px;font-weight:600;
 details summary::-webkit-details-marker{display:none;}
 details summary .ic{width:15px;height:15px;}
 .chev::after{content:"";width:8px;height:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);transition:transform .2s;margin-left:8px;flex-shrink:0;}
+details summary.chev::after{margin-left:auto;}
 details[open]>summary.chev::after{transform:rotate(225deg);}
 .hint{font-size:12px;color:var(--ink3);}
+.hint.flex{display:flex;align-items:flex-start;gap:6px;}
+.hint.flex .ic{margin-top:1px;}
 .text-center{text-align:center;}
 /* ===== 手風琴 ===== */
 .acc-card{background:#fff;border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:12px;overflow:hidden;}
@@ -147,38 +150,50 @@ details[open]>summary.chev::after{transform:rotate(225deg);}
 .pactions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
 .qr-wrap{display:flex;align-items:center;justify-content:center;padding:16px;background:#F8FAFC;border:1px solid var(--line);border-radius:12px;min-height:210px;}
 .qr-wrap img,.qr-wrap canvas{border-radius:8px;background:#fff;}
-/* ===== 默書頁 ===== */
-.ddisplay{position:relative;min-height:150px;display:flex;align-items:center;justify-content:center;text-align:center;padding:40px 20px;background:linear-gradient(180deg,#FBFCFE,#F3F7FD);border:1px solid var(--line);border-radius:var(--r);margin-bottom:12px;}
-.dtext{font-size:34px;font-weight:800;line-height:1.5;letter-spacing:2px;transition:filter .3s;}
-.hidden-text{filter:blur(12px);user-select:none;color:var(--ink3);}
-.review-banner{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:var(--amber);color:#fff;padding:4px 14px;border-radius:99px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;}
-.review-banner .ic{width:13px;height:13px;}
-.dlayout{display:flex;gap:16px;align-items:stretch;}
-.dmain{flex:1;min-width:0;}
-.dside{width:56px;display:flex;flex-direction:column;align-items:center;}
-.vp-label{font-size:11px;font-weight:700;color:var(--ink3);margin-bottom:8px;}
-.vp-track{position:relative;flex:1;width:6px;background:#EDF0F5;border-radius:99px;min-height:220px;}
-.vp-rail{position:absolute;top:8px;bottom:8px;left:0;right:0;}
-.vp-fill{position:absolute;top:0;left:0;width:100%;height:0%;border-radius:99px;background:linear-gradient(180deg,var(--blue),#7AA5F4);transition:height .4s,width .4s;}
-.vp-dot{position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid #D5DBE5;transform:translate(-50%,-50%);z-index:2;}
-.vp-dot.completed{background:var(--green);border-color:var(--green);}
-.vp-dot.current{background:var(--blue);border-color:var(--blue);box-shadow:0 0 0 4px rgba(47,107,237,.18);}
-.vp-count{margin-top:8px;font-size:12px;font-weight:700;color:var(--ink2);}
-.mtimer{display:none;justify-content:center;gap:10px;margin:0 0 12px;flex-wrap:wrap;}
-.mtimer.visible{display:flex;}
-.mchip{background:#fff;border:1px solid var(--line);border-radius:99px;padding:6px 16px;font-size:13px;color:var(--ink2);font-weight:600;display:inline-flex;align-items:center;gap:6px;}
+/* ===== 默書頁（v20 重設計） ===== */
+.sess{display:flex;align-items:center;gap:10px;}
+.sess-info{flex:1;min-width:0;}
+.sess-title{font-weight:800;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sess-meta{font-size:12px;color:var(--ink3);margin-top:2px;}
+.sess-count{font-weight:800;font-size:15px;color:var(--blue-d);background:var(--blue-l);border:1px solid #C9DBFD;padding:6px 13px;border-radius:99px;font-variant-numeric:tabular-nums;flex-shrink:0;}
+.prog{display:flex;gap:4px;margin:14px 0 20px;}
+.prog i{flex:1;height:6px;border-radius:99px;background:#E3E8EF;transition:background .3s;}
+.prog i.done{background:var(--blue);}
+.prog i.cur{background:#7AA5F4;box-shadow:0 0 0 3px rgba(47,107,237,.14);}
+.prog.single{display:block;height:8px;background:#E3E8EF;border-radius:99px;overflow:hidden;}
+.prog.single i{display:block;height:100%;background:var(--blue);border-radius:99px;transition:width .4s;}
+.stage-status{display:flex;justify-content:center;margin-bottom:12px;}
+.spill{display:inline-flex;align-items:center;gap:7px;padding:7px 16px;border-radius:99px;font-size:13px;font-weight:700;}
+.spill .ic{width:15px;height:15px;}
+.spill.speak{background:var(--blue-l);color:var(--blue-d);}
+.spill.count{background:#FEF3C7;color:#92400E;}
+.spill.write{background:var(--green-l);color:#067647;}
+.spill.review{background:#F0EBFE;color:#6D28D9;}
+.stage-card{position:relative;background:linear-gradient(180deg,#fff,#F8FAFC);border:1px solid var(--line);border-radius:20px;min-height:230px;display:flex;align-items:center;justify-content:center;padding:56px 24px;box-shadow:var(--sh);}
+.dtext{font-size:44px;font-weight:800;line-height:1.45;letter-spacing:2px;transition:filter .25s;text-align:center;word-break:break-word;}
+.dtext.hidden-text{filter:blur(14px);user-select:none;color:var(--ink3);}
+.eye-btn{position:absolute;top:12px;right:12px;width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--ink2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.15s;}
+.eye-btn:hover{border-color:var(--blue);color:var(--blue);}
+.eye-btn.on{background:var(--blue-l);border-color:#C9DBFD;color:var(--blue-d);}
+.eye-btn .ic{width:18px;height:18px;}
+.stage-hint{position:absolute;bottom:10px;left:16px;right:16px;text-align:center;font-size:11px;color:var(--ink3);}
+.stage-timer{margin-top:14px;display:flex;justify-content:center;}
+.tmod{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 14px;box-shadow:var(--sh);width:min(440px,100%);flex-wrap:wrap;justify-content:center;}
+.tbar{flex:1;min-width:120px;height:6px;background:#EDF0F5;border-radius:99px;overflow:hidden;}
+.tfill{height:100%;border-radius:99px;background:var(--green);transition:width .25s linear,background .4s;}
+.tfill.warning{background:var(--amber);}
+.tfill.danger{background:var(--red);}
+.tsec{font-weight:800;font-size:15px;min-width:34px;text-align:right;font-variant-numeric:tabular-nums;color:var(--ink2);}
+.mchip{background:#F8FAFC;border:1px solid var(--line);border-radius:99px;padding:6px 14px;font-size:13px;color:var(--ink2);font-weight:600;display:inline-flex;align-items:center;gap:6px;}
 .mchip .ic{width:13px;height:13px;}
 .mchip strong{color:var(--ink);font-variant-numeric:tabular-nums;}
-.stimer{margin:0 0 12px;display:none;align-items:center;gap:10px;}
-.stimer.visible{display:flex;}
-.stimer-track{flex:1;height:6px;background:#EDF0F5;border-radius:99px;overflow:hidden;}
-.stimer-fill{height:100%;border-radius:99px;transition:width .25s linear,background .5s;background:var(--blue);}
-.stimer-fill.safe{background:var(--green);}.stimer-fill.warning{background:var(--amber);}.stimer-fill.danger{background:var(--red);}
-.stimer-text{font-size:12px;font-weight:700;color:var(--ink2);min-width:32px;text-align:right;}
-.stimer-status{font-size:11px;color:var(--ink3);min-width:64px;font-weight:600;display:inline-flex;align-items:center;gap:5px;}
-.stimer-status .ic{width:12px;height:12px;}
-.dacts{display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:8px;}
-.dend{display:flex;justify-content:center;margin-top:12px;}
+.dock{display:flex;gap:10px;margin-top:18px;}
+.dock #btnSpeak{flex:1;}
+.dock #btnNext{flex:1.4;}
+.dock-sub{display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:10px;flex-wrap:wrap;}
+.linkbtn{display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:var(--ink3);font-size:13px;font-weight:600;cursor:pointer;padding:6px 4px;}
+.linkbtn:hover{color:var(--red);}
+.linkbtn .ic{width:14px;height:14px;}
 /* ===== 列表／表格 ===== */
 .citem{display:flex;align-items:center;padding:12px 14px;background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;gap:10px;}
 .citem.editing{background:var(--blue-l);border-color:#C9DBFD;}
@@ -205,11 +220,11 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 .tbl td{max-width:300px;}
 .tbl td.wrap{white-space:normal;word-break:break-word;}
 .tbl td.nowrap{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.copy-confirm{color:var(--green);font-size:13px;margin-left:8px;display:none;font-weight:600;}
+.copy-confirm{color:var(--green);font-size:13px;margin-left:8px;display:none;font-weight:600;align-items:center;gap:5px;}
 /* ===== 同步 ===== */
 .sync-status{margin-top:12px;padding:10px 14px;border-radius:12px;font-size:14px;display:none;font-weight:600;align-items:center;gap:8px;}
 .sync-status.show{display:flex;}
-.sync-status .ic{width:16px;height:16px;}
+.sync-status .ic{width:16px;height:16px;flex-shrink:0;}
 .sync-status.success{background:#F0FDF4;color:#065F46;border:1px solid #A7F3D0;}
 .sync-status.error{background:#FEF2F2;color:#991B1B;border:1px solid #FECACA;}
 .sync-status.loading{background:var(--blue-l);color:#1E40AF;border:1px solid #BFDBFE;}
@@ -256,26 +271,23 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
   .phead-main{flex-direction:column;align-items:stretch;}
   .phead-acts{width:100%;}
   .phead-acts .btn{flex:1;}
-  .dtext{font-size:26px;}
-  .dlayout{flex-direction:column;}
-  .dside{width:100%;flex-direction:row;gap:10px;align-items:center;}
-  .vp-track{min-height:0;height:6px;width:auto;flex:1;}
-  .vp-rail{top:0;bottom:0;left:8px;right:8px;}
-  .vp-label,.vp-count{margin:0;}
+  .dtext{font-size:30px;letter-spacing:1px;}
+  .stage-card{min-height:190px;padding:48px 18px;}
+  .hide-sm{display:none;}
+  .sess-count{padding:5px 10px;font-size:13px;}
+  .dock{gap:8px;}
   .seg{width:100%;}.seg-btn{flex:1;}
   .voice-control{max-width:100%;width:100%;}
   .srow{flex-direction:column;align-items:flex-start;}
   .ropts{flex-direction:column;}
   .citem{flex-wrap:wrap;}
   .citem .actions{width:100%;justify-content:flex-end;margin-top:6px;}
-  .card-foot{justify-content:stretch;}
   .card-foot .btn{flex:1;}
 }
 </style>
 </head>
 <body>
 
-<!-- ===== SVG 圖示庫 ===== -->
 <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
 <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></symbol>
 <symbol id="i-folder" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></symbol>
@@ -388,7 +400,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
       <button class="btn btn-s btn-sm" onclick="showModal('modalAddContent')"><svg class="ic"><use href="#i-plus"/></svg>加入</button>
       <button class="btn btn-s btn-sm" onclick="openScanModal()"><svg class="ic"><use href="#i-cam"/></svg>掃描</button>
     </div>
-    <div class="hint" style="margin-bottom:10px;">💡 編輯／排序／刪除／試讀請用每行右側按鈕 ｜ 開始默書請返去默書庫撳綠色按鈕</div>
+    <div class="hint flex" style="margin-bottom:10px;"><svg class="ic sm"><use href="#i-info"/></svg><span>編輯／排序／刪除／試讀請用每行右側按鈕；開始默書請返去默書庫撳該表開始按鈕</span></div>
     <div id="contentList"></div>
     <div class="settingsbox">
       <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-globe"/></svg>跟隨全局默書設定</div><label class="toggle"><input type="checkbox" id="ovGlobal" onchange="toggleOverride()"><span class="toggle-slider"></span></label></div>
@@ -404,46 +416,44 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
   </div>
 </div>
 
+<!-- ===== 默書頁（v20 重設計） ===== -->
 <div id="page-dictation" class="hidden">
-  <div class="phead">
-    <div class="phead-top">
-      <button class="ib sm" onclick="requestExitDictation()" title="退出默書"><svg class="ic sm"><use href="#i-x"/></svg></button>
-      <div class="crumb" id="crumbDict">默書庫 / —</div>
-      <span class="chip purple hidden" id="reviewBadge"><svg class="ic"><use href="#i-reset"/></svg>溫習中</span>
+  <div class="sess">
+    <button class="ib sm" onclick="requestExitDictation()" title="退出默書（Esc）"><svg class="ic sm"><use href="#i-x"/></svg></button>
+    <div class="sess-info">
+      <div class="sess-title" id="sessTitle">默書</div>
+      <div class="sess-meta" id="sessMeta"></div>
     </div>
-    <div class="phead-main">
-      <h1 class="ptitle sm">默書進行中</h1>
-      <span class="chip blue" id="dictProgressBadge">1 / 5</span>
-    </div>
+    <span class="chip purple hidden" id="reviewBadge"><svg class="ic"><use href="#i-reset"/></svg>溫習中</span>
+    <span class="sess-count" id="dictProgressBadge">1/5</span>
   </div>
-  <div class="dlayout">
-    <div class="dmain">
-      <div class="ddisplay">
-        <div class="review-banner hidden" id="reviewBanner"><svg class="ic"><use href="#i-reset"/></svg>快速溫習模式</div>
-        <div class="dtext hidden-text" id="dictText">準備好了嗎？</div>
-      </div>
-      <div class="mtimer" id="manualTimerWrap">
+  <div class="prog" id="progBar"></div>
+  <div class="stage">
+    <div class="stage-status"><span class="spill write" id="stagePill"></span></div>
+    <div class="stage-card">
+      <button class="eye-btn" id="eyeBtn" onclick="toggleText()" title="顯示／隱藏（H）"><svg class="ic"><use href="#i-eye"/></svg></button>
+      <div class="dtext hidden-text" id="dictText">準備好了嗎？</div>
+      <div class="stage-hint">撳右上角眼睛或 H 鍵顯示／隱藏答案</div>
+    </div>
+    <div class="stage-timer">
+      <div class="tmod hidden" id="manualMod">
         <span class="mchip"><svg class="ic"><use href="#i-clock"/></svg>本題 <strong id="mtWord">0秒</strong></span>
         <span class="mchip"><svg class="ic"><use href="#i-clock"/></svg>總計 <strong id="mtTotal">0秒</strong></span>
       </div>
-      <div class="stimer" id="slimTimerWrap">
-        <span class="stimer-status" id="slimTimerStatus">朗讀中</span>
-        <div class="stimer-track"><div class="stimer-fill safe" id="slimTimerFill" style="width:100%"></div></div>
-        <span class="stimer-text" id="slimTimerText">--</span>
-        <button class="btn btn-s btn-sm" id="pauseBtn" onclick="togglePause()"><svg class="ic"><use href="#i-pause"/></svg>暫停</button>
+      <div class="tmod hidden" id="countMod">
+        <button class="ib sm" id="pauseBtn" onclick="togglePause()" title="暫停／繼續（P）"><svg class="ic sm"><use href="#i-pause"/></svg></button>
+        <div class="tbar"><div class="tfill" id="slimTimerFill" style="width:100%"></div></div>
+        <span class="tsec" id="slimTimerText">--</span>
       </div>
-      <div class="dacts">
-        <button class="btn btn-s" onclick="speakCurrentManual()"><svg class="ic"><use href="#i-vol"/></svg>朗讀</button>
-        <button class="btn btn-s" onclick="toggleText()"><svg class="ic"><use href="#i-eye"/></svg>顯示/隱藏</button>
-        <button class="btn btn-p" id="btnNext" onclick="nextDictItem()"><svg class="ic"><use href="#i-next"/></svg>下一題</button>
-      </div>
-      <div class="dend"><button class="btn btn-s btn-sm" id="btnEnd" onclick="requestEndDictation()"><svg class="ic"><use href="#i-stop"/></svg>結束默書</button></div>
     </div>
-    <aside class="dside">
-      <div class="vp-label" id="vpLabel">進度</div>
-      <div class="vp-track" id="vpTrack"><div class="vp-rail" id="vpRail"><div class="vp-fill" id="vpFill"></div></div></div>
-      <div class="vp-count" id="vpCount">0/0</div>
-    </aside>
+  </div>
+  <div class="dock">
+    <button class="btn btn-s" id="btnSpeak" onclick="speakCurrentManual()"><svg class="ic"><use href="#i-vol"/></svg>朗讀</button>
+    <button class="btn btn-p" id="btnNext" onclick="nextDictItem()"><svg class="ic"><use href="#i-next"/></svg>下一題</button>
+  </div>
+  <div class="dock-sub">
+    <button class="linkbtn" id="btnEnd" onclick="requestEndDictation()"><svg class="ic"><use href="#i-stop"/></svg>結束默書</button>
+    <span class="hint hide-sm">快捷鍵：Space 下一題 · R 朗讀 · H 顯示/隱藏 · P 暫停 · Esc 退出</span>
   </div>
 </div>
 
@@ -534,8 +544,8 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
             <li><strong>Type</strong>：類型（詞語／句子／文章 或 words/sentences/paragraphs）</li>
             <li><strong>Details</strong>：默書內容，用 <strong>;</strong> 分隔每一項</li>
           </ul>
-          <p>⚠️ 試算表須共用為「知道連結的任何人」都可檢視。</p>
-          <p>💡 再次匯入會以試算表為準（覆蓋同名默書表內容）。</p>
+          <p style="display:flex;gap:6px;align-items:flex-start;"><svg class="ic sm" style="margin-top:2px;color:var(--amber);"><use href="#i-warn"/></svg><span>試算表須共用為「知道連結的任何人」都可檢視。</span></p>
+          <p style="display:flex;gap:6px;align-items:flex-start;margin-top:6px;"><svg class="ic sm" style="margin-top:2px;color:var(--blue);"><use href="#i-info"/></svg><span>再次匯入會以試算表為準（覆蓋同名默書表內容）。</span></p>
         </div>
       </details>
       <details><summary class="chev"><svg class="ic"><use href="#i-sliders"/></svg>進階：分頁名稱設定</summary>
@@ -599,7 +609,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
   <div class="acc-card" data-sec="reset">
     <button class="acc-head chev"><span><svg class="ic"><use href="#i-trash"/></svg>重置數據</span></button>
     <div class="acc-body">
-      <p class="hint" style="margin:12px 0;">⚠️ 重置操作無法復原，請謹慎使用。</p>
+      <p class="hint flex" style="margin:12px 0;color:#B42318;"><svg class="ic sm"><use href="#i-warn"/></svg><span>重置操作無法復原，請謹慎使用。</span></p>
       <div class="srow" style="border-top:1px solid var(--line);">
         <div class="slabel">重置成績</div>
         <button class="btn btn-dg btn-sm" onclick="resetRecords()"><svg class="ic"><use href="#i-trash"/></svg>清除所有默書記錄</button>
@@ -694,7 +704,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 <script>
 'use strict';
 /* ============ 1. 常數 ============ */
-const APP_VERSION='19.0';
+const APP_VERSION='20.0';
 const SCHEMA_VERSION=3;
 const SHEET_ID='1Ok4OH76O2W5rtkHw-1Q_F6W4c4jD-WoQTA0UwAXv4t0';
 const TAB_CONFIG={zh:{defaultName:'Chinese',label:'中文默書'},en:{defaultName:'English',label:'英文默書'}};
@@ -703,7 +713,7 @@ const RATE_OPTS=[{v:'0.4',label:'0.4x'},{v:'0.6',label:'0.6x'},{v:'0.8',label:'0
 const MODE_OPTS=[{v:'manual',label:'手動',icon:'user'},{v:'auto',label:'自動',icon:'cpu'}];
 const INT_OPTS=[5,7,10,15,20].map(v=>({v:String(v),label:v+'秒'}));
 const PITCH_OPTS=[{v:'0.7',label:'低'},{v:'1',label:'正常'},{v:'1.3',label:'高'}];
-const PUNCT_ZH=[['……','省略號'],['，','逗號'],['。','句號'],['！','感嘆號'],['？','問號'],['；','分號'],['：','冒號'],['、','頓號'],['「','開引號'],['」','關引號'],['『','開引號'],['』','關引號'],['（','開括號'],['）','關括號'],['—','破折號']];
+const PUNCT_ZH=[['……','省略號'],['，','逗號'],['。','句號'],['！','感嘆號'],['？','問號'],['；','分號'],['：','冒號'],['、','頓號'],['「','開引號'],['】','關引號'],['『','開引號'],['』','關引號'],['（','開括號'],['）','關括號'],['—','破折號']];
 
 /* ============ 2. Store ============ */
 const Store={
@@ -864,6 +874,19 @@ function setupDelegation(){
     const p=el('notifPanel');
     if(p&&!p.classList.contains('hidden')&&!p.contains(e.target)&&!e.target.closest('.bell'))p.classList.add('hidden');
   });
+  /* 默書頁鍵盤快捷鍵 */
+  document.addEventListener('keydown',e=>{
+    if(State.page!=='dictation')return;
+    const tag=(e.target.tagName||'').toLowerCase();
+    if(tag==='input'||tag==='textarea'||tag==='select')return;
+    const ae=document.activeElement;
+    if(ae&&ae.tagName==='BUTTON')ae.blur();
+    if(e.key===' '||e.key==='Enter'){e.preventDefault();nextDictItem();}
+    else if(e.key==='r'||e.key==='R')speakCurrentManual();
+    else if(e.key==='h'||e.key==='H')toggleText();
+    else if(e.key==='p'||e.key==='P')togglePause();
+    else if(e.key==='Escape')requestExitDictation();
+  });
   el('page-home').addEventListener('click',e=>{
     const b=e.target.closest('[data-act="start"]');
     if(b){openProject(+b.dataset.id);startDictation();}
@@ -915,10 +938,7 @@ function setupDelegation(){
     const k=b.dataset.copy;
     if(k==='zh')copyProjectsZh();else if(k==='en')copyProjectsEn();else if(k==='rec')copyRecords();else if(k==='tsv')downloadTsv();
   });
-  window.addEventListener('resize',debounce(()=>{
-    moveIndicator();
-    if(State.page==='dictation')updateVerticalProgress();
-  },120));
+  window.addEventListener('resize',debounce(moveIndicator,120));
 }
 
 /* ============ 9. Seg factory ============ */
@@ -1417,7 +1437,7 @@ function renderOcrItems(){
         '<div class="actions"><button class="ib sm go" data-act="save" data-i="'+i+'" title="儲存">'+ic('check')+'</button><button class="ib sm" data-act="cancel" title="取消">'+ic('x')+'</button></div></div>';
     return '<div class="citem"><div class="num">'+(i+1)+'</div><div class="text">'+escapeHtml(it)+'</div><div class="actions">'+
       '<button class="ib sm edit" data-act="edit" data-i="'+i+'" title="編輯">'+ic('edit')+'</button>'+
-      '<button class="ib sm" data-act="up" data-i="'+i+'"'+(i===0?' disabled':'')+' title="上移">'+ic('up')+'</button>'+
+      '<button class="ib sm" data-act="up" data-i="'+i+'"'+(i===0?' disabled':'')+'>⬆'+ic('up')+'</button>'+
       '<button class="ib sm" data-act="down" data-i="'+i+'"'+(i===list.length-1?' disabled':'')+' title="下移">'+ic('down')+'</button>'+
       '<button class="ib sm del" data-act="del" data-i="'+i+'" title="刪除">'+ic('trash')+'</button></div></div>';
   }).join('');
@@ -1450,19 +1470,48 @@ function resetScanModal(){
   State.ocr.items=[];State.ocr.editIndex=-1;
 }
 
-/* ============ 20. 默書流程 ============ */
+/* ============ 20. 默書流程（v20 舞台式） ============ */
+function setPill(phase){
+  const p=el('stagePill');
+  const map={speak:['speak','vol','朗讀中'],count:['count','clock','倒數中'],write:['write','edit','書寫中'],review:['review','reset','溫習模式']};
+  const m=map[phase]||map.write;
+  p.className='spill '+m[0];
+  p.innerHTML=ic(m[1])+m[2];
+}
+function updateProgress(){
+  const D=State.dict,total=D.items.length,cur=D.index;
+  const bar=el('progBar');
+  if(!bar)return;
+  if(total<=30){
+    bar.className='prog';
+    let html='';
+    for(let i=0;i<total;i++)html+='<i class="'+(i<cur?'done':i===cur?'cur':'')+'"></i>';
+    bar.innerHTML=html;
+  }else{
+    bar.className='prog single';
+    bar.innerHTML='<i style="width:'+Math.round(((cur+1)/total)*100)+'%"></i>';
+  }
+}
+function updateTimerModules(){
+  const manual=State.session.mode==='manual'&&!State.dict.review;
+  el('manualMod').classList.toggle('hidden',!manual);
+  el('countMod').classList.toggle('hidden',manual);
+}
 function speakAndSchedule(text){
   const D=State.dict;D.token++;
   const my=D.token,lang=State.current?State.current.lang||'zh':'zh';
   const payload=speakItemText(text);
   if(State.session.mode==='auto'||D.review){
-    el('slimTimerStatus').innerHTML=ic('vol','sm')+'朗讀中';
+    setPill('speak');
     const ok=speakText(payload,lang,()=>{
       if(my!==D.token)return;
-      el('slimTimerStatus').innerHTML=ic('clock','sm')+'倒數中';startCountdown();
+      setPill('count');startCountdown();
     },State.session.rate);
-    if(!ok&&my===D.token){el('slimTimerStatus').innerHTML=ic('clock','sm')+'倒數中';startCountdown();}
-  }else speakText(payload,lang,null,State.session.rate);
+    if(!ok&&my===D.token){setPill('count');startCountdown();}
+  }else{
+    setPill('write');
+    speakText(payload,lang,null,State.session.rate);
+  }
 }
 function startDictation(){
   const c=State.current;
@@ -1475,21 +1524,35 @@ function startDictation(){
   D.index=0;D.review=false;
   D.checks=new Array(D.items.length).fill(null);
   D.totalStart=Date.now();D.wordTimes=[];D.totalSec=0;
-  el('crumbDict').innerHTML='默書庫 / <b>'+escapeHtml(c.name)+'</b>';
-  showPage('dictation');updateReviewUI();updateSlimVis();showDictItem();
+  const tl={words:'詞語',sentences:'句子',passage:'文章'};
+  el('sessTitle').textContent=c.name||'(未命名)';
+  el('sessMeta').innerText=(c.lang==='en'?'英文':'中文')+' · '+(tl[c.type]||'詞語')+' · '+(o.mode==='auto'?'自動 '+o.interval+'s':'手動計時')+(o.random?' · 隨機':'');
+  showPage('dictation');updateReviewUI();showDictItem();
 }
 function showDictItem(){
   const D=State.dict,total=D.items.length,cur=D.index;
   if(!total)return;
-  el('dictProgressBadge').innerText=(cur+1)+' / '+total;
+  el('dictProgressBadge').innerText=(cur+1)+'/'+total;
   const t=el('dictText');t.innerText=D.items[cur];t.classList.add('hidden-text');
+  el('eyeBtn').classList.remove('on');
   el('btnNext').innerHTML=cur===total-1?(D.review?ic('check')+'完成溫習':ic('check')+'完成'):ic('next')+'下一題';
-  updateVerticalProgress();stopCountdown();
-  if(State.session.mode==='manual'&&!D.review)startWordTimer();
-  else{stopWordTimer();el('manualTimerWrap').classList.remove('visible');}
+  updateProgress();
+  updateTimerModules();
+  stopCountdown();
+  const manual=State.session.mode==='manual'&&!D.review;
+  if(manual)startWordTimer();
+  else{
+    stopWordTimer();
+    el('slimTimerFill').style.width='100%';
+    el('slimTimerFill').className='tfill';
+    el('slimTimerText').innerText='--';
+  }
   speakAndSchedule(D.items[cur]);
 }
-function toggleText(){el('dictText').classList.toggle('hidden-text');}
+function toggleText(){
+  const hidden=el('dictText').classList.toggle('hidden-text');
+  el('eyeBtn').classList.toggle('on',!hidden);
+}
 function speakCurrentManual(){stopCountdown();const D=State.dict;if(D.index<D.items.length)speakAndSchedule(D.items[D.index]);}
 function nextDictItem(){
   stopCountdown();
@@ -1505,20 +1568,18 @@ function requestEndDictation(){
   D.totalSec=Math.floor((Date.now()-D.totalStart)/1000);
   showModal('modalReview');
 }
-function startQuickReview(){closeModal('modalReview');const D=State.dict;D.review=true;D.index=0;updateReviewUI();updateSlimVis();showDictItem();}
+function startQuickReview(){closeModal('modalReview');const D=State.dict;D.review=true;D.index=0;updateReviewUI();showDictItem();}
 function finishReview(){stopCountdown();State.dict.review=false;updateReviewUI();goToMarking();}
 function goToMarking(){stopCountdown();showPage('checking');renderCheckList();}
 function updateReviewUI(){
   const on=State.dict.review;
-  el('reviewBanner').classList.toggle('hidden',!on);
   el('reviewBadge').classList.toggle('hidden',!on);
   el('btnEnd').classList.toggle('hidden',on);
+  if(on)setPill('review');
 }
-function updateSlimVis(){el('slimTimerWrap').classList.toggle('visible',State.session.mode==='auto'||State.dict.review);}
 function startWordTimer(){
   const T=State.timers;stopWordTimer();
   T.wordStart=Date.now();T.wordOn=true;
-  el('manualTimerWrap').classList.add('visible');
   paintWord();T.wordInt=setInterval(paintWord,1000);
 }
 function stopWordTimer(){const T=State.timers;T.wordOn=false;clearInterval(T.wordInt);T.wordInt=null;}
@@ -1531,7 +1592,7 @@ function startCountdown(){
   stopCountdown();
   const T=State.timers;
   T.paused=false;T.cdEnd=Date.now()+State.session.interval*1000;
-  el('pauseBtn').innerHTML=ic('pause')+'暫停';
+  el('pauseBtn').innerHTML=ic('pause','sm');
   T.countdown=State.session.interval;paintCountdown();
   T.cdInt=setInterval(tickCountdown,250);
 }
@@ -1545,37 +1606,16 @@ function tickCountdown(){
 }
 function togglePause(){
   const T=State.timers;
-  if(!T.paused){T.paused=true;T.cdPaused=Date.now();el('pauseBtn').innerHTML=ic('play')+'繼續';}
-  else{T.paused=false;T.cdEnd+=Date.now()-T.cdPaused;el('pauseBtn').innerHTML=ic('pause')+'暫停';}
+  if(!T.paused){T.paused=true;T.cdPaused=Date.now();el('pauseBtn').innerHTML=ic('play','sm');}
+  else{T.paused=false;T.cdEnd+=Date.now()-T.cdPaused;el('pauseBtn').innerHTML=ic('pause','sm');}
 }
 function paintCountdown(){
   const T=State.timers,iv=State.session.interval||1,c=T.countdown;
   const pct=Math.max(0,Math.min(100,(c/iv)*100)),f=el('slimTimerFill');
   el('slimTimerText').innerText=c+'s';
   f.style.width=pct+'%';
-  f.classList.remove('safe','warning','danger');
-  f.classList.add(pct>50?'safe':pct>25?'warning':'danger');
-}
-function updateVerticalProgress(){
-  const D=State.dict,total=D.items.length,cur=D.index;
-  const rail=el('vpRail'),fill=el('vpFill');
-  if(!rail||!fill)return;
-  el('vpCount').innerText=(cur+1)+'/'+total;
-  el('vpLabel').innerText=D.review?'溫習':'進度';
-  const isMob=window.innerWidth<=640;
-  const pct=total>1?(cur/(total-1))*100:50;
-  if(isMob){fill.style.width=pct+'%';fill.style.height='100%';}
-  else{fill.style.height=pct+'%';fill.style.width='100%';}
-  rail.querySelectorAll('.vp-dot').forEach(d=>d.remove());
-  if(total<=20){
-    for(let i=0;i<total;i++){
-      const d=document.createElement('div');d.className='vp-dot';
-      const pos=total>1?(i/(total-1))*100:50;
-      if(isMob){d.style.left=pos+'%';d.style.top='50%';}else{d.style.top=pos+'%';d.style.left='50%';}
-      if(i<cur)d.classList.add('completed');else if(i===cur)d.classList.add('current');
-      rail.appendChild(d);
-    }
-  }
+  f.classList.remove('warning','danger');
+  if(pct<=25)f.classList.add('danger');else if(pct<=50)f.classList.add('warning');
 }
 
 /* ============ 21. 校對／結果 ============ */
@@ -1638,7 +1678,7 @@ function retryWrong(){
   D.items=State.session.random?shuffleArray([...D.original]):[...D.original];
   D.index=0;D.review=false;D.checks=new Array(D.items.length).fill(null);
   D.totalStart=Date.now();D.wordTimes=[];D.totalSec=0;
-  showPage('dictation');updateReviewUI();updateSlimVis();showDictItem();
+  showPage('dictation');updateReviewUI();showDictItem();
 }
 
 /* ============ 22. 記錄 ============ */
