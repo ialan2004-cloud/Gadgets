@@ -3,10 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中英文默書系統 17.2</title>
+<title>中英文默書系統 17.5</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
-/* ===== 1. 變數 ===== */
 :root{
   --bg:#F4F6FA;--card:#fff;--line:#E6E9F0;
   --ink:#0E1526;--ink2:#5B6472;--ink3:#9AA3B2;
@@ -18,7 +17,6 @@
 body{background:var(--bg);min-height:100vh;color:var(--ink);display:flex;flex-direction:column;}
 button{font-family:inherit;}
 .hidden{display:none!important;}
-/* ===== 2. 頂欄＋通知 ===== */
 .topwrap{position:sticky;top:0;z-index:100;}
 .topbar{position:relative;background:linear-gradient(135deg,#2563EB 0%,#1E40AF 100%);display:flex;align-items:center;gap:10px;padding:12px 18px;color:#fff;}
 .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:17px;color:#fff;cursor:pointer;}
@@ -36,14 +34,12 @@ button{font-family:inherit;}
 .ni-t{font-size:13px;font-weight:700;}
 .ni-d{font-size:12px;color:var(--ink2);margin-top:2px;line-height:1.5;}
 .ni-dot{margin-left:auto;width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0;margin-top:5px;}
-/* ===== 3. Tabs＋指示條 ===== */
 .tabs{position:relative;background:#fff;display:flex;justify-content:center;gap:2px;border-bottom:1px solid var(--line);}
 .tab{display:flex;align-items:center;gap:7px;padding:11px 24px;border:0;background:transparent;color:var(--ink2);font-size:14px;font-weight:600;cursor:pointer;transition:.15s;}
 .tab .ic{font-size:15px;}
 .tab:hover{color:var(--blue);}
 .tab.active{color:var(--blue);background:var(--blue-l);}
 .tab-ind{position:absolute;top:0;height:3px;background:var(--blue);border-radius:0 0 4px 4px;transition:left .25s ease,width .25s ease;}
-/* ===== 4. 版面 ===== */
 .page{max-width:860px;margin:0 auto;padding:22px 20px 40px;width:100%;flex:1;}
 .phead{margin-bottom:18px;}
 .crumb{font-size:13px;color:var(--ink3);margin-bottom:6px;}
@@ -55,7 +51,6 @@ button{font-family:inherit;}
 .pactions .btn{flex:1 1 150px;}
 .row-between{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap;}
 .hgroup{display:flex;gap:8px;align-items:center;}
-/* ===== 5. 组件 ===== */
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:var(--sh);margin-bottom:14px;}
 .card-t{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .card-t .sp{flex:1;}
@@ -66,6 +61,7 @@ button{font-family:inherit;}
 .btn-s{background:#fff;border:1px solid var(--line);color:var(--ink);}
 .btn-s:hover{border-color:var(--blue);color:var(--blue);}
 .btn-dg{background:var(--red-l);border:1px solid #FECDCA;color:#D92D20;}
+.btn-dg:hover{background:#FEE4E2;}
 .btn-sm{padding:7px 12px;font-size:13px;border-radius:10px;}
 .btn-block{width:100%;}
 .ib{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;flex-shrink:0;transition:.15s;}
@@ -118,7 +114,6 @@ input:checked+.toggle-slider:before{transform:translateX(20px);}
 details summary{cursor:pointer;color:var(--blue);font-size:14px;font-weight:600;padding:6px 0;}
 .hint{font-size:12px;color:var(--ink3);}
 .text-center{text-align:center;}
-/* ===== 6. 手風琴卡片（設定頁） ===== */
 .acc-card{background:#fff;border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:12px;overflow:hidden;}
 .acc-head{width:100%;display:flex;align-items:center;gap:10px;padding:16px 18px;background:#fff;border:0;cursor:pointer;font-size:15px;font-weight:700;color:var(--ink);text-align:left;}
 .acc-head>span:first-child{flex:1;}
@@ -129,7 +124,6 @@ details summary{cursor:pointer;color:var(--blue);font-size:14px;font-weight:600;
 .acc-card.open .acc-body{display:block;}
 .qr-wrap{display:flex;align-items:center;justify-content:center;padding:16px;background:#F8FAFC;border:1px solid var(--line);border-radius:12px;min-height:210px;}
 .qr-wrap img,.qr-wrap canvas{border-radius:8px;background:#fff;}
-/* ===== 7. 默書頁 ===== */
 .ddisplay{position:relative;min-height:150px;display:flex;align-items:center;justify-content:center;text-align:center;padding:40px 20px;background:linear-gradient(180deg,#FBFCFE,#F3F7FD);border:1px solid var(--line);border-radius:var(--r);margin-bottom:12px;}
 .dtext{font-size:34px;font-weight:800;line-height:1.5;letter-spacing:2px;transition:filter .3s;}
 .hidden-text{filter:blur(12px);user-select:none;color:var(--ink3);}
@@ -157,7 +151,6 @@ details summary{cursor:pointer;color:var(--blue);font-size:14px;font-weight:600;
 .stimer-status{font-size:11px;color:var(--ink3);min-width:56px;font-weight:600;}
 .ring{width:56px;height:56px;border-radius:50%;background:conic-gradient(var(--blue) 0%,#EDF0F5 0%);display:flex;align-items:center;justify-content:center;margin:8px auto;}
 .ring-in{width:46px;height:46px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:var(--blue);}
-/* ===== 8. 列表／表格 ===== */
 .citem{display:flex;align-items:center;padding:12px 14px;background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;gap:10px;}
 .citem.editing{background:var(--blue-l);border-color:#C9DBFD;}
 .citem .num{width:26px;height:26px;background:var(--blue-l);color:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
@@ -183,7 +176,6 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 .tbl td.wrap{white-space:normal;word-break:break-word;}
 .tbl td.nowrap{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .copy-confirm{color:var(--green);font-size:13px;margin-left:8px;display:none;font-weight:600;}
-/* ===== 9. 同步狀態 ===== */
 .sync-status{margin-top:12px;padding:10px 14px;border-radius:12px;font-size:14px;display:none;font-weight:600;}
 .sync-status.show{display:block;}
 .sync-status.success{background:#F0FDF4;color:#065F46;border:1px solid #A7F3D0;}
@@ -191,7 +183,6 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 .sync-status.loading{background:var(--blue-l);color:#1E40AF;border:1px solid #BFDBFE;}
 .mono-box{background:#F8FAFC;border:1px solid var(--line);border-radius:10px;padding:12px;font-family:monospace;font-size:12px;line-height:1.6;word-break:break-all;}
 .debug-box{font-size:11px;background:#0F172A;color:#94A3B8;padding:12px;border-radius:10px;white-space:pre-wrap;word-break:break-all;max-height:200px;overflow-y:auto;font-family:monospace;margin-top:10px;}
-/* ===== 10. 彈窗／頁腳 ===== */
 .modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center;padding:20px;}
 .modal.show{display:flex;}
 .modal-card{background:#fff;border-radius:20px;padding:26px;max-width:540px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,.2);position:relative;animation:up .25s ease;}
@@ -206,14 +197,14 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 .ropt .t{font-weight:700;font-size:15px;}
 .ropt .d{font-size:12px;color:var(--ink3);margin-top:3px;}
 .app-footer{text-align:center;padding:20px 16px 26px;color:var(--ink3);font-size:12px;}
-/* ===== 11. 響應式 ===== */
 @media(max-width:768px){
-  .tabs{position:fixed;left:0;right:0;bottom:0;border-bottom:0;border-top:1px solid var(--line);justify-content:space-around;padding:4px 4px calc(6px + env(safe-area-inset-bottom));box-shadow:0 -4px 16px rgba(16,24,40,.06);gap:0;z-index:90;}
-  .tab{flex:1;flex-direction:column;gap:2px;font-size:11px;padding:8px 4px 4px;}
-  .tab .ic{font-size:19px;}
-  .tab.active{background:transparent;}
+  .tabs{position:fixed;left:0;right:0;bottom:0;border-bottom:0;border-top:1px solid var(--line);justify-content:space-around;padding:6px 8px calc(10px + env(safe-area-inset-bottom));box-shadow:0 -4px 16px rgba(16,24,40,.06);gap:0;z-index:90;background:#fff;}
+  .tab{flex:1;flex-direction:column;gap:4px;font-size:13px;font-weight:700;letter-spacing:.2px;padding:10px 4px 8px;border-radius:12px;}
+  .tab .ic{font-size:24px;line-height:1;}
+  .tab.active{background:transparent;color:var(--blue);}
   .ver{display:none;}
-  .page{padding:16px 14px 96px;}
+  .page{padding:16px 14px 118px;}
+  .app-footer{padding:20px 16px 118px;}
 }
 @media(max-width:640px){
   .stats-row,.grid2{grid-template-columns:1fr;}
@@ -268,7 +259,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
   <div class="card"><div class="card-t">📊 最近成績</div><div id="recentScores"></div></div>
 </div>
 
-<!-- ===== 默書庫（寬屏雙欄） ===== -->
+<!-- ===== 默書庫 ===== -->
 <div id="page-projects" class="hidden">
   <div class="phead">
     <div class="crumb">默書庫</div>
@@ -282,15 +273,14 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
   </div>
 </div>
 
-<!-- ===== 默書表詳情 ===== -->
+<!-- ===== 默書表編輯頁 ===== -->
 <div id="page-project-detail" class="hidden">
   <div class="phead">
     <div class="crumb" id="crumbDetail">默書庫 / —</div>
     <h1 class="ptitle" id="detailTitle"></h1>
     <p class="psub" id="detailBadge"></p>
     <div class="pactions">
-      <button class="btn btn-s" onclick="goBack()">⬅️ 返回</button>
-      <button class="btn btn-p" onclick="startDictation()">▶️ 開始默書</button>
+      <button class="btn btn-s" onclick="goBack()">⬅️ 返回默書庫</button>
     </div>
   </div>
   <div id="sampleNote" class="note hidden">🎁 呢個係系統預設嘅示例默書表，可以隨意編輯或刪除。</div>
@@ -299,29 +289,39 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
       <button class="btn btn-s btn-sm" onclick="showModal('modalAddContent')">✍️ 加入</button>
       <button class="btn btn-s btn-sm" onclick="openScanModal()">📷 掃描</button>
     </div>
-    <div class="hint" style="margin-bottom:10px;">💡 ✏️ 編輯 ⬆️️ 排序 ✖ 刪除 🔊 試讀</div>
+    <div class="hint" style="margin-bottom:10px;">💡 ✏️ 編輯 ⬆️️ 排序 ✖ 刪除  試讀 ｜ ▶️ 開始默書請返去默書庫撳該表嘅綠色按鈕</div>
     <div id="contentList"></div>
     <div class="settingsbox">
-      <div class="srow"><div class="slabel">🔀 隨機打亂</div><label class="toggle"><input type="checkbox" id="preRandomToggle"><span class="toggle-slider"></span></label></div>
-      <div class="srow"><div class="slabel">🔊 朗讀速度</div>
-        <div class="seg" id="preSpeedControl">
-          <button class="seg-btn" onclick="setPreSpeed(0.4,this)">0.4x</button>
-          <button class="seg-btn" onclick="setPreSpeed(0.6,this)">0.6x</button>
-          <button class="seg-btn active" onclick="setPreSpeed(0.8,this)">0.8x</button>
-          <button class="seg-btn" onclick="setPreSpeed(1.0,this)">1.0x</button></div></div>
-      <div class="srow"><div class="slabel">⏱️ 播放模式</div>
-        <div class="seg" id="preModeControl">
-          <button class="seg-btn active" onclick="setPreMode('manual',this)">✋ 手動</button>
-          <button class="seg-btn" onclick="setPreMode('auto',this)">🤖 自動</button></div></div>
-      <div class="srow hidden" id="preAutoRow"><div class="slabel">⏳ 間隔</div>
-        <div class="seg" id="preIntervalControl">
-          <button class="seg-btn" onclick="setPreInterval(5,this)">5秒</button>
-          <button class="seg-btn active" onclick="setPreInterval(7,this)">7秒</button>
-          <button class="seg-btn" onclick="setPreInterval(10,this)">10秒</button>
-          <button class="seg-btn" onclick="setPreInterval(15,this)">15秒</button>
-          <button class="seg-btn" onclick="setPreInterval(20,this)">20秒</button></div></div>
+      <div class="srow"><div class="slabel">🌐 跟隨全局默書設定</div><label class="toggle"><input type="checkbox" id="ovGlobal" onchange="toggleOverride()"><span class="toggle-slider"></span></label></div>
+      <div id="ovControls" class="hidden">
+        <div class="srow"><div class="slabel">🔊 朗讀速度</div>
+          <div class="seg" id="ovSpeedControl">
+            <button class="seg-btn" data-v="0.4" onclick="setOvSpeed(0.4,this)">0.4x</button>
+            <button class="seg-btn" data-v="0.6" onclick="setOvSpeed(0.6,this)">0.6x</button>
+            <button class="seg-btn" data-v="0.8" onclick="setOvSpeed(0.8,this)">0.8x</button>
+            <button class="seg-btn" data-v="1" onclick="setOvSpeed(1,this)">1.0x</button>
+          </div></div>
+        <div class="srow"><div class="slabel">⏱️ 播放模式</div>
+          <div class="seg" id="ovModeControl">
+            <button class="seg-btn" data-v="manual" onclick="setOvMode('manual',this)">✋ 手動</button>
+            <button class="seg-btn" data-v="auto" onclick="setOvMode('auto',this)">🤖 自動</button>
+          </div></div>
+        <div class="srow hidden" id="ovAutoRow"><div class="slabel">⏳ 自動間隔</div>
+          <div class="seg" id="ovIntervalControl">
+            <button class="seg-btn" data-v="5" onclick="setOvInterval(5,this)">5秒</button>
+            <button class="seg-btn" data-v="7" onclick="setOvInterval(7,this)">7秒</button>
+            <button class="seg-btn" data-v="10" onclick="setOvInterval(10,this)">10秒</button>
+            <button class="seg-btn" data-v="15" onclick="setOvInterval(15,this)">15秒</button>
+            <button class="seg-btn" data-v="20" onclick="setOvInterval(20,this)">20秒</button>
+          </div></div>
+        <div class="srow"><div class="slabel">🔀 隨機打亂</div><label class="toggle"><input type="checkbox" id="ovRandomToggle" onchange="ovRandom=this.checked;updateOvHint()"><span class="toggle-slider"></span></label></div>
+      </div>
+      <div class="hint" style="margin-top:10px;" id="ovHint"></div>
     </div>
-    <div style="margin-top:16px;"><button class="btn btn-p btn-block" onclick="startDictation()">▶️ 開始默書</button></div>
+    <div style="margin-top:16px;display:flex;align-items:center;gap:10px;">
+      <button class="btn btn-p btn-block" onclick="saveProjectOpts()">💾 儲存設定</button>
+      <span class="copy-confirm" id="ovSaved">✅ 已儲存</span>
+    </div>
   </div>
 </div>
 
@@ -408,7 +408,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
     <div id="perWordTimes"></div>
   </div>
   <div id="resultWrong" class="card hidden">
-    <div class="card-t">❌ 錯內容</div><div id="wrongList"></div>
+    <div class="card-t">❌ 錯嘅內容</div><div id="wrongList"></div>
   </div>
   <div class="pactions">
     <button class="btn btn-s" onclick="goBack()">⬅️ 返回</button>
@@ -417,13 +417,12 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
   </div>
 </div>
 
-<!-- ===== 記錄 ===== -->
+<!-- ===== 記錄（已移除重置按鈕） ===== -->
 <div id="page-records" class="hidden">
   <div class="phead">
     <div class="crumb">記錄</div>
     <h1 class="ptitle">歷史成績</h1>
-    <p class="psub">歷次默書嘅得分趨勢與詳細記錄</p>
-    <div class="pactions"><button class="btn btn-dg" onclick="clearAllRecords()">🗑️ 清除所有記錄</button></div>
+    <p class="psub">歷次默書嘅得分趨勢與詳細記錄（如需重置，請到「⚙️ 設定」）</p>
   </div>
   <div class="stats-row">
     <div class="stat"><div class="s-label">總測驗次數</div><div class="s-value" id="rcTests">0</div><div class="s-sub">次</div></div>
@@ -434,15 +433,14 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
   <div class="card"><div class="card-t">📋 最近記錄</div><div id="recordTable"></div></div>
 </div>
 
-<!-- ===== 設定（手風琴） ===== -->
+<!-- ===== 設定 ===== -->
 <div id="page-settings" class="hidden">
   <div class="phead">
     <div class="crumb">設定</div>
     <h1 class="ptitle">⚙️ 設定</h1>
-    <p class="psub">常用功能排喺最頂；所有卡片預設摺疊，同一時間只展開一個。</p>
+    <p class="psub">全局設定套用於所有默書；個別默書表可喺編輯頁微調覆蓋。</p>
   </div>
 
-  <!-- 1️⃣ Google Sheets -->
   <div class="acc-card" data-sec="sheet">
     <button class="acc-head" onclick="toggleAcc(this)"><span>☁️ Google Sheets 默書資料</span><span class="chip blue" id="lastSyncChip">未匯入</span><span class="acc-chev">▼</span></button>
     <div class="acc-body">
@@ -482,11 +480,10 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
     </div>
   </div>
 
-  <!-- 2️⃣ 語音 -->
   <div class="acc-card" data-sec="voice">
-    <button class="acc-head" onclick="toggleAcc(this)"><span>🔊 語音設定</span><span class="acc-chev">▼</span></button>
+    <button class="acc-head" onclick="toggleAcc(this)"><span>🔊 朗讀與默書設定（全局）</span><span class="acc-chev">▼</span></button>
     <div class="acc-body">
-      <p class="hint" style="margin:12px 0;">設定默書時使用嘅語音同音調，揀完可以試聽。如果只見到「自動」，請稍等或重新整理。</p>
+      <p class="hint" style="margin:12px 0;">以下設定套用於整個系統嘅默書功能；如需為個別默書表微調，請到該表嘅編輯頁關閉「跟隨全局」。</p>
       <div class="srow" style="border-top:1px solid var(--line);">
         <div class="slabel">🈶 中文語音</div>
         <div class="voice-control"><select id="zhVoiceSelect" onchange="saveVoicePref('zh')"></select><button class="btn btn-s btn-sm" onclick="testVoice('zh')">🔊 試聽</button></div>
@@ -506,10 +503,39 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
           <button class="btn btn-s btn-sm" onclick="testPitch()">🔊 試聽</button>
         </div>
       </div>
+      <div class="srow">
+        <div class="slabel">🔊 朗讀速度</div>
+        <div class="seg" id="gSpeedControl">
+          <button class="seg-btn" data-v="0.4" onclick="setGSpeed(0.4,this)">0.4x</button>
+          <button class="seg-btn" data-v="0.6" onclick="setGSpeed(0.6,this)">0.6x</button>
+          <button class="seg-btn" data-v="0.8" onclick="setGSpeed(0.8,this)">0.8x</button>
+          <button class="seg-btn" data-v="1" onclick="setGSpeed(1,this)">1.0x</button>
+        </div>
+      </div>
+      <div class="srow">
+        <div class="slabel">⏱️ 播放模式</div>
+        <div class="seg" id="gModeControl">
+          <button class="seg-btn" data-v="manual" onclick="setGMode('manual',this)">✋ 手動</button>
+          <button class="seg-btn" data-v="auto" onclick="setGMode('auto',this)">🤖 自動</button>
+        </div>
+      </div>
+      <div class="srow hidden" id="gAutoRow">
+        <div class="slabel">⏳ 自動間隔</div>
+        <div class="seg" id="gIntervalControl">
+          <button class="seg-btn" data-v="5" onclick="setGInterval(5,this)">5秒</button>
+          <button class="seg-btn" data-v="7" onclick="setGInterval(7,this)">7秒</button>
+          <button class="seg-btn" data-v="10" onclick="setGInterval(10,this)">10秒</button>
+          <button class="seg-btn" data-v="15" onclick="setGInterval(15,this)">15秒</button>
+          <button class="seg-btn" data-v="20" onclick="setGInterval(20,this)">20秒</button>
+        </div>
+      </div>
+      <div class="srow">
+        <div class="slabel">🔀 隨機打亂</div>
+        <label class="toggle"><input type="checkbox" id="gRandomToggle" onchange="setGRandom(this.checked)"><span class="toggle-slider"></span></label>
+      </div>
     </div>
   </div>
 
-  <!-- 3️⃣ 匯出 -->
   <div class="acc-card" data-sec="export">
     <button class="acc-head" onclick="toggleAcc(this)"><span>📤 匯出資料（表格格式）</span><span class="acc-chev">▼</span></button>
     <div class="acc-body">
@@ -518,7 +544,6 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
     </div>
   </div>
 
-  <!-- 4️⃣ 分享 -->
   <div class="acc-card" data-sec="share">
     <button class="acc-head" onclick="toggleAcc(this)"><span>🔗 分享頁面（QR Code）</span><span class="acc-chev">▼</span></button>
     <div class="acc-body">
@@ -531,6 +556,22 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
       </div>
       <span class="copy-confirm" id="shareCopyOk">✅ 已複製！</span>
       <div class="note hidden" id="qrNote" style="margin-top:12px;margin-bottom:0;">⚠️ 目前以本機檔案（file://）開啟，QR 連結只限呢部裝置使用。如需跨裝置分享，請將頁面託管到網站（如 GitHub Pages）。</div>
+    </div>
+  </div>
+
+  <!-- 🗑️ 重置數據（只喺設定頁） -->
+  <div class="acc-card" data-sec="reset">
+    <button class="acc-head" onclick="toggleAcc(this)"><span>🗑️ 重置數據</span><span class="acc-chev">▼</span></button>
+    <div class="acc-body">
+      <p class="hint" style="margin:12px 0;">⚠️ 重置操作無法復原，請謹慎使用。</p>
+      <div class="srow" style="border-top:1px solid var(--line);">
+        <div class="slabel">📊 重置成績</div>
+        <button class="btn btn-dg btn-sm" onclick="resetRecords()">🗑️ 清除所有默書記錄</button>
+      </div>
+      <div class="srow">
+        <div class="slabel">📁 重置默書庫</div>
+        <button class="btn btn-dg btn-sm" onclick="resetProjects()">🗑️ 清除所有默書表</button>
+      </div>
     </div>
   </div>
 </div>
@@ -600,7 +641,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 
 <script>
 /* ========== 設定 ========== */
-const APP_VERSION='17.2';
+const APP_VERSION='17.5';
 const SHEET_ID='1Ok4OH76O2W5rtkHw-1Q_F6W4c4jD-WoQTA0UwAXv4t0';
 const TAB_CONFIG={zh:{defaultName:'Chinese',label:'中文默書'},en:{defaultName:'English',label:'英文默書'}};
 const MAIN_PAGES=['home','projects','records','settings'];
@@ -609,8 +650,13 @@ const MAIN_PAGES=['home','projects','records','settings'];
 let lastMainPage='home',currentPage='home';
 let projects=safeParse('dict_p8'),records=safeParse('dict_r8');
 let currentProject=null,currentDictIndex=0,dictItems=[],originalItems=[],checkResults=[];
-let speechRate=.8,isRandomized=false,playMode='manual',autoInterval=7;
+let gRate=parseFloat(localStorage.getItem('dict_rate')||'0.8');
+let gMode=localStorage.getItem('dict_mode')||'manual';
+let gInterval=parseInt(localStorage.getItem('dict_interval')||'7',10);
+let gRandom=localStorage.getItem('dict_random')==='1';
 let speechPitch=parseFloat(localStorage.getItem('dict_pitch')||'1.0');
+let speechRate=gRate,playMode=gMode,autoInterval=gInterval,isRandomized=gRandom;
+let ovRate,ovMode,ovInterval,ovRandom;
 let countdownTimer=null,currentCountdown=0,isPaused=false,isReviewMode=false;
 let ocrParsedItems=[],editingContentIndex=-1,editingOcrIndex=-1,speakToken=0;
 let wordTimes=[],wordStartTime=0,totalStartTime=0,totalDictationSeconds=0,wordTimerInterval=null,manualTiming=false;
@@ -621,7 +667,7 @@ function saveProjects(){try{localStorage.setItem('dict_p8',JSON.stringify(projec
 function saveRecords(){try{localStorage.setItem('dict_r8',JSON.stringify(records));}catch(e){}}
 function el(id){return document.getElementById(id);}
 
-/* ========== 導覽＋指示條 ========== */
+/* ========== 導覽 ========== */
 function showPage(p){
   currentPage=p;
   if(MAIN_PAGES.includes(p))lastMainPage=p;
@@ -653,7 +699,7 @@ function requestExitDictation(){
   }
 }
 
-/* ========== 手風琴（設定頁） ========== */
+/* ========== 手風琴 ========== */
 function toggleAcc(btn){
   const card=btn.closest('.acc-card');
   const was=card.classList.contains('open');
@@ -662,7 +708,7 @@ function toggleAcc(btn){
   card.classList.add('open');
   const sec=card.dataset.sec;
   if(sec==='sheet')loadSheetSection();
-  else if(sec==='voice'){populateVoiceSelects();restorePitchControl();}
+  else if(sec==='voice'){populateVoiceSelects();restorePitchControl();initGlobalControls();}
   else if(sec==='export')renderExportTables();
   else if(sec==='share')renderShare();
 }
@@ -677,6 +723,83 @@ function loadSheetSection(){
   el('tabNameZh').value=getTabName('zh');
   el('tabNameEn').value=getTabName('en');
   updateSyncChip();
+}
+
+/* ========== 重置（只喺設定頁） ========== */
+function resetRecords(){
+  if(!records.length){alert('目前沒有任何成績記錄。');return;}
+  if(confirm('確定要重置成績？\n所有默書記錄（'+records.length+' 筆）將會永久刪除，無法復原。')){
+    records=[];saveRecords();
+    renderHome();refreshNotifications();
+    if(currentPage==='records')renderRecords();
+    alert('✅ 成績已重置。');
+  }
+}
+function resetProjects(){
+  if(!projects.length){alert('目前沒有任何默書表。');return;}
+  if(confirm('確定要重置默書庫？\n所有默書表（'+projects.length+' 張，包括 Google Sheets 匯入嘅內容）將會永久刪除，無法復原。')){
+    projects=[];currentProject=null;saveProjects();
+    renderHome();renderProjects();renderImportStats();renderExportTables();refreshNotifications();
+    alert('✅ 默書庫已重置。');
+  }
+}
+
+/* ========== 全局默書設定 ========== */
+function segActive(id,b){document.querySelectorAll('#'+id+' .seg-btn').forEach(x=>x.classList.remove('active'));if(b)b.classList.add('active');}
+function setGSpeed(s,b){gRate=s;localStorage.setItem('dict_rate',String(s));segActive('gSpeedControl',b);}
+function setGMode(m,b){gMode=m;localStorage.setItem('dict_mode',m);segActive('gModeControl',b);el('gAutoRow').classList.toggle('hidden',m!=='auto');}
+function setGInterval(t,b){gInterval=t;localStorage.setItem('dict_interval',String(t));segActive('gIntervalControl',b);}
+function setGRandom(v){gRandom=v;localStorage.setItem('dict_random',v?'1':'0');}
+function initGlobalControls(){
+  document.querySelectorAll('#gSpeedControl .seg-btn').forEach(b=>b.classList.toggle('active',parseFloat(b.dataset.v)===gRate));
+  document.querySelectorAll('#gModeControl .seg-btn').forEach(b=>b.classList.toggle('active',b.dataset.v===gMode));
+  document.querySelectorAll('#gIntervalControl .seg-btn').forEach(b=>b.classList.toggle('active',parseInt(b.dataset.v,10)===gInterval));
+  el('gRandomToggle').checked=gRandom;
+  el('gAutoRow').classList.toggle('hidden',gMode!=='auto');
+}
+function effectiveOpts(p){
+  const o=(p&&p.opts)?p.opts:null;
+  return o?{rate:o.rate!=null?o.rate:gRate,mode:o.mode||gMode,interval:o.interval!=null?o.interval:gInterval,random:o.random!=null?o.random:gRandom}
+         :{rate:gRate,mode:gMode,interval:gInterval,random:gRandom};
+}
+
+/* ========== 編輯頁微調 ========== */
+function initOverrideUI(){
+  const o=(currentProject&&currentProject.opts)?currentProject.opts:null;
+  const follow=!o;
+  el('ovGlobal').checked=follow;
+  el('ovControls').classList.toggle('hidden',follow);
+  if(follow){ovRate=gRate;ovMode=gMode;ovInterval=gInterval;ovRandom=gRandom;}
+  else{ovRate=o.rate!=null?o.rate:gRate;ovMode=o.mode||gMode;ovInterval=o.interval!=null?o.interval:gInterval;ovRandom=o.random!=null?o.random:gRandom;}
+  paintOverride();updateOvHint();
+}
+function toggleOverride(){
+  const follow=el('ovGlobal').checked;
+  el('ovControls').classList.toggle('hidden',follow);
+  if(!follow)paintOverride();
+  updateOvHint();
+}
+function setOvSpeed(s,b){ovRate=s;segActive('ovSpeedControl',b);updateOvHint();}
+function setOvMode(m,b){ovMode=m;segActive('ovModeControl',b);el('ovAutoRow').classList.toggle('hidden',m!=='auto');updateOvHint();}
+function setOvInterval(t,b){ovInterval=t;segActive('ovIntervalControl',b);updateOvHint();}
+function paintOverride(){
+  document.querySelectorAll('#ovSpeedControl .seg-btn').forEach(b=>b.classList.toggle('active',parseFloat(b.dataset.v)===ovRate));
+  document.querySelectorAll('#ovModeControl .seg-btn').forEach(b=>b.classList.toggle('active',b.dataset.v===ovMode));
+  document.querySelectorAll('#ovIntervalControl .seg-btn').forEach(b=>b.classList.toggle('active',parseInt(b.dataset.v,10)===ovInterval));
+  el('ovRandomToggle').checked=ovRandom;
+  el('ovAutoRow').classList.toggle('hidden',ovMode!=='auto');
+}
+function optsText(o){return '語速 '+o.rate+'x · '+(o.mode==='auto'?'自動 '+o.interval+'s':'手動')+' · 隨機 '+(o.random?'開':'關');}
+function updateOvHint(){
+  const follow=el('ovGlobal').checked;
+  const o=follow?{rate:gRate,mode:gMode,interval:gInterval,random:gRandom}:{rate:ovRate,mode:ovMode,interval:ovInterval,random:ovRandom};
+  el('ovHint').innerText=(follow?'目前跟隨全局設定：':'呢張表自訂：')+optsText(o);
+}
+function saveProjectOpts(){
+  if(!currentProject)return;
+  currentProject.opts=el('ovGlobal').checked?null:{rate:ovRate,mode:ovMode,interval:ovInterval,random:ovRandom};
+  touch();saveProjects();updateOvHint();
+  const s=el('ovSaved');s.style.display='inline';setTimeout(()=>s.style.display='none',2000);
 }
 
 /* ========== 分享 QR ========== */
@@ -700,7 +823,7 @@ function drawQR(box,url){
 }
 function copyShareUrl(){copyToClipboard(location.href).then(()=>flash('shareCopyOk'));}
 
-/* ========== 通知中心 ========== */
+/* ========== 通知 ========== */
 function notifRead(){try{return JSON.parse(localStorage.getItem('dict_notif_read')||'[]');}catch(e){return[];}}
 function buildNotifications(){
   const out=[],now=Date.now(),today=new Date();
@@ -782,10 +905,10 @@ function setupVoiceSelect(l){
 }
 function populateVoiceSelects(){setupVoiceSelect('zh');setupVoiceSelect('en');}
 function saveVoicePref(l){const sel=el(l==='zh'?'zhVoiceSelect':'enVoiceSelect');if(sel)localStorage.setItem('dict_voice_'+l,sel.value);}
-function testVoice(l){saveVoicePref(l);speakText(l==='zh'?'你好，呢個係中文語音測試。':'Hello, this is an English voice test.',l);}
+function testVoice(l){saveVoicePref(l);speechRate=gRate;speakText(l==='zh'?'你好，呢個係中文語音測試。':'Hello, this is an English voice test.',l);}
 function setPitch(p){speechPitch=p;localStorage.setItem('dict_pitch',String(p));restorePitchControl();}
 function restorePitchControl(){document.querySelectorAll('#pitchControl .seg-btn').forEach(b=>b.classList.toggle('active',parseFloat(b.dataset.pitch)===speechPitch));}
-function testPitch(){speakText('呢個係音調測試，聽下啱唔啱。','zh');}
+function testPitch(){speechRate=gRate;speakText('呢個係音調測試，聽下啱唔啱。','zh');}
 function speakText(text,lang,onDone){
   if(!('speechSynthesis' in window)){if(onDone)onDone();return false;}
   speechSynthesis.cancel();
@@ -961,7 +1084,9 @@ function openProject(id){
   el('detailTitle').textContent=currentProject.name||'(未命名)';
   el('detailBadge').innerHTML=badges(currentProject)+' <span class="chip">'+countLabel(currentProject)+'</span>';
   el('sampleNote').classList.toggle('hidden',!currentProject.isSample);
-  renderContentList();showPage('project-detail');
+  renderContentList();
+  initOverrideUI();
+  showPage('project-detail');
 }
 function speakContentAt(i){if(currentProject&&currentProject.contents[i]!==undefined)speakText(currentProject.contents[i],currentProject.lang||'zh');}
 function renderContentList(){
@@ -986,11 +1111,6 @@ function moveContent(i,d){const n=i+d,cs=currentProject.contents;if(n<0||n>=cs.l
 function deleteContent(i){if(confirm('確定刪除「'+currentProject.contents[i]+'」？')){currentProject.contents.splice(i,1);touch();saveProjects();renderContentList();}}
 function addContent(){const t=el('newContentText').value.trim();if(!t){alert('請輸入內容');return;}currentProject.contents.push(...t.split('\n').map(l=>l.trim()).filter(Boolean));touch();saveProjects();el('newContentText').value='';closeModal('modalAddContent');renderContentList();}
 function touch(){if(currentProject)currentProject.updatedTs=Date.now();}
-
-/* ========== 默書設定 ========== */
-function setPreSpeed(s,b){speechRate=s;document.querySelectorAll('#preSpeedControl .seg-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');}
-function setPreMode(m,b){playMode=m;document.querySelectorAll('#preModeControl .seg-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');el('preAutoRow').classList.toggle('hidden',m!=='auto');}
-function setPreInterval(t,b){autoInterval=t;document.querySelectorAll('#preIntervalControl .seg-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');}
 
 /* ========== OCR ========== */
 function loadOpenCC(){return new Promise(res=>{if(window.OpenCC){init();res(true);return;}const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/opencc.js';s.onload=()=>{init();res(true);};s.onerror=()=>res(false);document.head.appendChild(s);function init(){try{s2tConvert=OpenCC.Converter({from:'cn',to:'hk'});s2tReady=true;}catch(e){}}});}
@@ -1062,7 +1182,8 @@ function speakAndSchedule(text){
 }
 function startDictation(){
   if(!currentProject||!currentProject.contents||!currentProject.contents.length){alert('請先加入默書內容');return;}
-  isRandomized=el('preRandomToggle').checked;
+  const o=effectiveOpts(currentProject);
+  speechRate=o.rate;playMode=o.mode;autoInterval=o.interval;isRandomized=o.random;
   originalItems=[...currentProject.contents];
   dictItems=isRandomized?shuffleArray([...originalItems]):[...originalItems];
   currentDictIndex=0;isReviewMode=false;
@@ -1133,16 +1254,19 @@ function updateVerticalProgress(){
   if(!track||!fill)return;
   el('vpCount').innerText=(cur+1)+'/'+total;
   el('vpLabel').innerText=isReviewMode?'溫習':'進度';
-  const pct=total>0?((cur+1)/total)*100:0,isMob=window.innerWidth<=640;
-  if(isMob){fill.style.width=pct+'%';fill.style.height='100%';}else{fill.style.height=pct+'%';fill.style.width='100%';}
+  const isMob=window.innerWidth<=640;
+  const pct=total>0?((cur+0.5)/total)*100:0;
+  if(isMob){fill.style.width=pct+'%';fill.style.height='100%';}
+  else{fill.style.height=pct+'%';fill.style.width='100%';}
   track.querySelectorAll('.vp-dot').forEach(d=>d.remove());
-  const n=Math.min(total,30);
-  for(let i=0;i<n;i++){
-    const d=document.createElement('div');d.className='vp-dot';
-    const pos=n>1?(i/(n-1))*100:50;
-    if(isMob){d.style.left=pos+'%';d.style.top='50%';}else{d.style.top=pos+'%';d.style.left='50%';}
-    if(i<cur)d.classList.add('completed');else if(i===cur)d.classList.add('current');
-    track.appendChild(d);
+  if(total<=20){
+    for(let i=0;i<total;i++){
+      const d=document.createElement('div');d.className='vp-dot';
+      const pos=((i+0.5)/total)*100;
+      if(isMob){d.style.left=pos+'%';d.style.top='50%';}else{d.style.top=pos+'%';d.style.left='50%';}
+      if(i<cur)d.classList.add('completed');else if(i===cur)d.classList.add('current');
+      track.appendChild(d);
+    }
   }
 }
 
@@ -1225,7 +1349,6 @@ function renderRecords(){
     (records.slice().reverse().slice(0,15).map(r=>'<tr><td class="nowrap">'+r.date+'</td><td>'+escapeHtml(r.project)+'</td><td>'+r.correct+'/'+r.total+'</td><td><strong style="color:'+(r.percent>=70?'var(--green)':'var(--red)')+';">'+r.percent+'%</strong></td><td>'+(r.totalTime!=null?formatTime(r.totalTime):'--')+'</td></tr>').join('')||'<tr><td colspan="5" style="text-align:center;color:var(--ink3);padding:18px;">暫無資料</td></tr>')+
     '</tbody></table></div>';
 }
-function clearAllRecords(){if(confirm('確定清除所有記錄？')){records=[];saveRecords();renderRecords();refreshNotifications();}}
 
 /* ========== 匯出 ========== */
 function typeLabelForExport(p){return p.lang==='en'?{words:'words',sentences:'sentences',passage:'paragraphs'}[p.type]||'words':{words:'詞語',sentences:'句子',passage:'文章'}[p.type]||'詞語';}
@@ -1274,6 +1397,7 @@ window.onload=()=>{
   if('speechSynthesis' in window){
     speechSynthesis.onvoiceschanged=()=>{speechSynthesis.getVoices();populateVoiceSelects();};
   }
+  initGlobalControls();
   updateSyncChip();
   refreshNotifications();
   showPage('home');
