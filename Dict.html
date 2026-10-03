@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中英文默書系統 18.3</title>
+<title>中英文默書系統 19.0</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
 :root{
@@ -17,45 +17,54 @@
 body{background:var(--bg);min-height:100vh;color:var(--ink);display:flex;flex-direction:column;}
 button{font-family:inherit;}
 .hidden{display:none!important;}
+/* ===== 圖示系統 ===== */
+.ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;vertical-align:middle;}
+.ic.sm{width:14px;height:14px;}.ic.lg{width:24px;height:24px;}.ic.xl{width:38px;height:38px;stroke-width:1.6;}
+/* ===== 頂欄 ===== */
 .topwrap{position:sticky;top:0;z-index:100;}
 .topbar{position:relative;background:linear-gradient(135deg,#2563EB 0%,#1E40AF 100%);display:flex;align-items:center;gap:10px;padding:12px 18px;color:#fff;}
 .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:17px;color:#fff;cursor:pointer;}
-.logo{width:36px;height:36px;border-radius:10px;background:#fff;color:#2563EB;display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 2px 6px rgba(0,0,0,.18);}
+.logo{width:36px;height:36px;border-radius:10px;background:#fff;color:#2563EB;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.18);}
 .ver{font-size:11px;font-weight:700;color:#fff;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);padding:3px 9px;border-radius:99px;}
-.bell{margin-left:auto;position:relative;width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;font-size:17px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.15s;}
+.bell{margin-left:auto;position:relative;width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.15s;}
 .bell:hover{background:rgba(255,255,255,.26);}
 .bell-badge{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#EF4444;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid #2563EB;}
 .notif-panel{position:absolute;top:calc(100% + 10px);right:14px;width:330px;max-width:calc(100vw - 28px);background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 40px rgba(16,24,40,.18);z-index:300;overflow:hidden;color:var(--ink);}
-.np-head{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--line);font-weight:700;font-size:14px;background:#F8FAFC;}
-.np-close{width:26px;height:26px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;color:var(--ink2);font-size:13px;display:flex;align-items:center;justify-content:center;}
+.np-head{display:flex;align-items:center;gap:7px;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--line);font-weight:700;font-size:14px;background:#F8FAFC;}
+.np-close{width:26px;height:26px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;color:var(--ink2);display:flex;align-items:center;justify-content:center;}
 .ni{display:flex;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);align-items:flex-start;}
 .ni:last-child{border-bottom:0;}
-.ni-ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.ni-ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ni-ic .ic{width:17px;height:17px;}
 .ni-t{font-size:13px;font-weight:700;}
 .ni-d{font-size:12px;color:var(--ink2);margin-top:2px;line-height:1.5;}
 .ni-dot{margin-left:auto;width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0;margin-top:5px;}
+/* ===== Tabs ===== */
 .tabs{position:relative;background:#fff;display:flex;justify-content:center;gap:2px;border-bottom:1px solid var(--line);}
 .tab{display:flex;align-items:center;gap:7px;padding:11px 24px;border:0;background:transparent;color:var(--ink2);font-size:14px;font-weight:600;cursor:pointer;transition:.15s;}
-.tab .ic{font-size:15px;}
 .tab:hover{color:var(--blue);}
 .tab.active{color:var(--blue);background:var(--blue-l);}
 .tab-ind{position:absolute;top:0;height:3px;background:var(--blue);border-radius:0 0 4px 4px;transition:left .25s ease,width .25s ease;}
+/* ===== 頁面結構 ===== */
 .page{max-width:860px;margin:0 auto;padding:22px 20px 40px;width:100%;flex:1;}
 .phead{margin-bottom:18px;}
-.crumb{font-size:13px;color:var(--ink3);margin-bottom:6px;}
+.phead-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.phead-main{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;}
+.phead-acts{display:flex;gap:8px;flex-wrap:wrap;}
+.crumb{font-size:13px;color:var(--ink3);}
 .crumb b{color:var(--ink2);font-weight:600;}
 .ptitle{font-size:26px;font-weight:800;letter-spacing:.2px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 .ptitle.sm{font-size:21px;}
 .psub{color:var(--ink2);font-size:14px;margin-top:6px;line-height:1.5;}
-.pactions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
-.pactions .btn{flex:1 1 150px;}
-.row-between{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap;}
-.hgroup{display:flex;gap:8px;align-items:center;}
+/* ===== 通用组件 ===== */
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:var(--sh);margin-bottom:14px;}
 .card-t{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.card-t .ic{color:var(--ink2);}
 .card-t .sp{flex:1;}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:12px 18px;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;transition:.15s;}
+.card-foot{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:16px;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 18px;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;transition:.15s;}
 .btn:active{transform:scale(.97);}
+.btn .ic{width:16px;height:16px;}
 .btn-p{background:var(--blue);color:#fff;box-shadow:0 6px 14px rgba(47,107,237,.22);}
 .btn-p:hover{background:var(--blue-d);}
 .btn-s{background:#fff;border:1px solid var(--line);color:var(--ink);}
@@ -63,18 +72,22 @@ button{font-family:inherit;}
 .btn-dg{background:var(--red-l);border:1px solid #FECDCA;color:#D92D20;}
 .btn-dg:hover{background:#FEE4E2;}
 .btn-sm{padding:7px 12px;font-size:13px;border-radius:10px;}
-.btn-block{width:100%;}
-.ib{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;flex-shrink:0;transition:.15s;}
-.ib:hover{border-color:var(--blue);}
-.ib.edit{background:var(--blue-l);border-color:#C9DBFD;}
-.ib.go{background:var(--green-l);border-color:#B5E8D0;}
-.ib.del{background:var(--red-l);border-color:#FECDCA;}
-.ib.sm{width:32px;height:32px;font-size:13px;border-radius:8px;}
+.btn-sm .ic{width:14px;height:14px;}
+.ib{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:.15s;color:var(--ink2);}
+.ib:hover{border-color:var(--blue);color:var(--blue);}
+.ib .ic{width:16px;height:16px;}
+.ib.edit{background:var(--blue-l);border-color:#C9DBFD;color:var(--blue-d);}
+.ib.go{background:var(--green-l);border-color:#B5E8D0;color:#067647;}
+.ib.del{background:var(--red-l);border-color:#FECDCA;color:#B42318;}
+.ib.sm{width:30px;height:30px;border-radius:8px;}
+.ib.sm .ic{width:14px;height:14px;}
 .ib:disabled{opacity:.4;cursor:not-allowed;}
 .chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:5px 12px;border-radius:99px;background:#fff;border:1px solid var(--line);color:var(--ink2);}
+.chip .ic{width:13px;height:13px;}
 .chip.blue{background:var(--blue-l);border-color:#C9DBFD;color:var(--blue-d);}
 .chip.purple{background:#F0EBFE;border-color:#DDD0FB;color:#6D28D9;}
-.note{background:#F5F3FF;border:1px solid #DDD6FE;border-radius:12px;padding:10px 14px;font-size:13px;color:#5B21B6;margin-bottom:12px;}
+.note{background:#F5F3FF;border:1px solid #DDD6FE;border-radius:12px;padding:10px 14px;font-size:13px;color:#5B21B6;margin-bottom:12px;display:flex;gap:7px;align-items:flex-start;}
+.note .ic{width:15px;height:15px;margin-top:2px;}
 .stat{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--sh);}
 .s-label{font-size:13px;color:var(--ink2);font-weight:600;}
 .s-value{font-size:34px;font-weight:800;margin:6px 0 10px;line-height:1.1;}
@@ -84,7 +97,8 @@ button{font-family:inherit;}
 .s-sub{font-size:12px;color:var(--ink3);margin-top:10px;}
 .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px;}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.lhead{display:inline-flex;padding:6px 13px;border-radius:99px;font-size:13px;font-weight:700;margin-bottom:12px;}
+.lhead{display:inline-flex;align-items:center;gap:7px;padding:6px 13px;border-radius:99px;font-size:13px;font-weight:700;margin-bottom:12px;}
+.lhead .ic{width:15px;height:15px;}
 .lhead.zh{background:#FFF1F0;color:#C0392B;}
 .lhead.en{background:var(--blue-l);color:var(--blue-d);}
 .row{display:flex;align-items:center;gap:12px;padding:14px;background:#fff;border:1px solid var(--line);border-radius:14px;margin-bottom:10px;box-shadow:var(--sh);}
@@ -93,16 +107,19 @@ button{font-family:inherit;}
 .row .rmeta{font-size:12px;color:var(--ink3);margin-top:3px;}
 .row .racts{display:flex;gap:6px;}
 .empty-hint{color:var(--ink3);font-size:13px;text-align:center;padding:22px 12px;background:var(--bg);border-radius:12px;border:1px dashed var(--line);}
+.empty-hint .ic{display:block;margin:0 auto 8px;width:26px;height:26px;opacity:.5;}
 .field{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;font-size:14px;background:#fff;}
 textarea.field{min-height:110px;resize:vertical;line-height:1.6;}
 .field:focus,select:focus,textarea:focus{border-color:var(--blue);outline:none;box-shadow:0 0 0 3px rgba(47,107,237,.12);}
 .seg{display:inline-flex;background:#EDF0F5;border-radius:10px;padding:4px;gap:4px;flex-wrap:wrap;}
-.seg-btn{padding:8px 14px;border:none;background:transparent;border-radius:8px;font-size:13px;font-weight:600;color:var(--ink2);cursor:pointer;}
+.seg-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:8px 14px;border:none;background:transparent;border-radius:8px;font-size:13px;font-weight:600;color:var(--ink2);cursor:pointer;}
+.seg-btn .ic{width:14px;height:14px;}
 .seg-btn.active{background:#fff;color:var(--blue);box-shadow:0 1px 3px rgba(0,0,0,.1);}
 .settingsbox{background:#F8FAFC;border:1px solid var(--line);border-radius:12px;padding:4px 14px;margin-top:14px;}
 .srow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);flex-wrap:wrap;}
 .srow:last-of-type{border-bottom:0;}
 .slabel{font-size:14px;font-weight:600;color:var(--ink2);display:flex;align-items:center;gap:7px;}
+.slabel .ic{width:16px;height:16px;color:var(--ink3);}
 .voice-control{display:flex;gap:6px;align-items:center;flex:1;justify-content:flex-end;max-width:400px;min-width:0;}
 .voice-control select{flex:1;min-width:0;padding:8px 10px;font-size:13px;border:1px solid var(--line);border-radius:10px;background:#fff;}
 .toggle{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;}
@@ -111,23 +128,31 @@ textarea.field{min-height:110px;resize:vertical;line-height:1.6;}
 .toggle-slider:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;}
 input:checked+.toggle-slider{background:var(--blue);}
 input:checked+.toggle-slider:before{transform:translateX(20px);}
-details summary{cursor:pointer;color:var(--blue);font-size:14px;font-weight:600;padding:6px 0;}
+details summary{cursor:pointer;color:var(--blue);font-size:14px;font-weight:600;padding:6px 0;display:flex;align-items:center;gap:7px;list-style:none;}
+details summary::-webkit-details-marker{display:none;}
+details summary .ic{width:15px;height:15px;}
+.chev::after{content:"";width:8px;height:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);transition:transform .2s;margin-left:8px;flex-shrink:0;}
+details[open]>summary.chev::after{transform:rotate(225deg);}
 .hint{font-size:12px;color:var(--ink3);}
 .text-center{text-align:center;}
+/* ===== 手風琴 ===== */
 .acc-card{background:#fff;border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:12px;overflow:hidden;}
 .acc-head{width:100%;display:flex;align-items:center;gap:10px;padding:16px 18px;background:#fff;border:0;cursor:pointer;font-size:15px;font-weight:700;color:var(--ink);text-align:left;}
-.acc-head>span:first-child{flex:1;}
+.acc-head .ic{width:18px;height:18px;color:var(--ink2);}
+.acc-head>span:first-child{flex:1;display:flex;align-items:center;gap:10px;}
 .acc-head:hover{background:#F8FAFC;}
-.acc-chev{font-size:12px;color:var(--ink3);transition:transform .25s;flex-shrink:0;}
-.acc-card.open .acc-chev{transform:rotate(180deg);}
+.acc-card.open .acc-head.chev::after{transform:rotate(225deg);}
 .acc-body{display:none;padding:0 18px 18px;border-top:1px solid var(--line);}
 .acc-card.open .acc-body{display:block;}
+.pactions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
 .qr-wrap{display:flex;align-items:center;justify-content:center;padding:16px;background:#F8FAFC;border:1px solid var(--line);border-radius:12px;min-height:210px;}
 .qr-wrap img,.qr-wrap canvas{border-radius:8px;background:#fff;}
+/* ===== 默書頁 ===== */
 .ddisplay{position:relative;min-height:150px;display:flex;align-items:center;justify-content:center;text-align:center;padding:40px 20px;background:linear-gradient(180deg,#FBFCFE,#F3F7FD);border:1px solid var(--line);border-radius:var(--r);margin-bottom:12px;}
 .dtext{font-size:34px;font-weight:800;line-height:1.5;letter-spacing:2px;transition:filter .3s;}
 .hidden-text{filter:blur(12px);user-select:none;color:var(--ink3);}
-.review-banner{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:var(--amber);color:#fff;padding:4px 14px;border-radius:99px;font-size:12px;font-weight:700;}
+.review-banner{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:var(--amber);color:#fff;padding:4px 14px;border-radius:99px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;}
+.review-banner .ic{width:13px;height:13px;}
 .dlayout{display:flex;gap:16px;align-items:stretch;}
 .dmain{flex:1;min-width:0;}
 .dside{width:56px;display:flex;flex-direction:column;align-items:center;}
@@ -141,7 +166,8 @@ details summary{cursor:pointer;color:var(--blue);font-size:14px;font-weight:600;
 .vp-count{margin-top:8px;font-size:12px;font-weight:700;color:var(--ink2);}
 .mtimer{display:none;justify-content:center;gap:10px;margin:0 0 12px;flex-wrap:wrap;}
 .mtimer.visible{display:flex;}
-.mchip{background:#fff;border:1px solid var(--line);border-radius:99px;padding:6px 16px;font-size:13px;color:var(--ink2);font-weight:600;}
+.mchip{background:#fff;border:1px solid var(--line);border-radius:99px;padding:6px 16px;font-size:13px;color:var(--ink2);font-weight:600;display:inline-flex;align-items:center;gap:6px;}
+.mchip .ic{width:13px;height:13px;}
 .mchip strong{color:var(--ink);font-variant-numeric:tabular-nums;}
 .stimer{margin:0 0 12px;display:none;align-items:center;gap:10px;}
 .stimer.visible{display:flex;}
@@ -149,7 +175,11 @@ details summary{cursor:pointer;color:var(--blue);font-size:14px;font-weight:600;
 .stimer-fill{height:100%;border-radius:99px;transition:width .25s linear,background .5s;background:var(--blue);}
 .stimer-fill.safe{background:var(--green);}.stimer-fill.warning{background:var(--amber);}.stimer-fill.danger{background:var(--red);}
 .stimer-text{font-size:12px;font-weight:700;color:var(--ink2);min-width:32px;text-align:right;}
-.stimer-status{font-size:11px;color:var(--ink3);min-width:56px;font-weight:600;}
+.stimer-status{font-size:11px;color:var(--ink3);min-width:64px;font-weight:600;display:inline-flex;align-items:center;gap:5px;}
+.stimer-status .ic{width:12px;height:12px;}
+.dacts{display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:8px;}
+.dend{display:flex;justify-content:center;margin-top:12px;}
+/* ===== 列表／表格 ===== */
 .citem{display:flex;align-items:center;padding:12px 14px;background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;gap:10px;}
 .citem.editing{background:var(--blue-l);border-color:#C9DBFD;}
 .citem .num{width:26px;height:26px;background:var(--blue-l);color:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
@@ -162,7 +192,8 @@ details summary{cursor:pointer;color:var(--blue);font-size:14px;font-weight:600;
 .chk .num{width:26px;height:26px;background:var(--blue-l);color:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;margin-right:12px;flex-shrink:0;}
 .chk .answer{flex:1;font-size:16px;font-weight:600;}
 .chk-btns{display:flex;gap:10px;}
-.cbtn{width:44px;height:44px;border-radius:50%;border:2px solid var(--line);background:#fff;font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.cbtn{width:44px;height:44px;border-radius:50%;border:2px solid var(--line);background:#fff;color:var(--ink2);cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.cbtn .ic{width:20px;height:20px;}
 .cbtn.ok.active{background:var(--green);border-color:var(--green);color:#fff;}
 .cbtn.no.active{background:var(--red);border-color:var(--red);color:#fff;}
 .tbl-wrap{margin-top:12px;border:1px solid var(--line);border-radius:12px;overflow:hidden;}
@@ -175,28 +206,35 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 .tbl td.wrap{white-space:normal;word-break:break-word;}
 .tbl td.nowrap{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .copy-confirm{color:var(--green);font-size:13px;margin-left:8px;display:none;font-weight:600;}
-.sync-status{margin-top:12px;padding:10px 14px;border-radius:12px;font-size:14px;display:none;font-weight:600;}
-.sync-status.show{display:block;}
+/* ===== 同步 ===== */
+.sync-status{margin-top:12px;padding:10px 14px;border-radius:12px;font-size:14px;display:none;font-weight:600;align-items:center;gap:8px;}
+.sync-status.show{display:flex;}
+.sync-status .ic{width:16px;height:16px;}
 .sync-status.success{background:#F0FDF4;color:#065F46;border:1px solid #A7F3D0;}
 .sync-status.error{background:#FEF2F2;color:#991B1B;border:1px solid #FECACA;}
 .sync-status.loading{background:var(--blue-l);color:#1E40AF;border:1px solid #BFDBFE;}
 .mono-box{background:#F8FAFC;border:1px solid var(--line);border-radius:10px;padding:12px;font-family:monospace;font-size:12px;line-height:1.6;word-break:break-all;}
 .debug-box{font-size:11px;background:#0F172A;color:#94A3B8;padding:12px;border-radius:10px;white-space:pre-wrap;word-break:break-all;max-height:200px;overflow-y:auto;font-family:monospace;margin-top:10px;}
+/* ===== 彈窗／Toast ===== */
 .modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center;padding:20px;}
 .modal.show{display:flex;}
 .modal-card{background:#fff;border-radius:20px;padding:26px;max-width:540px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,.2);position:relative;animation:up .25s ease;}
 @keyframes up{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
-.modal-t{font-size:17px;font-weight:800;margin-bottom:14px;padding-right:36px;}
-.mclose{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;background:var(--bg);border:1px solid var(--line);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--ink2);}
+.modal-t{font-size:17px;font-weight:800;margin-bottom:14px;padding-right:36px;display:flex;align-items:center;gap:8px;}
+.modal-t .ic{width:19px;height:19px;color:var(--blue);}
+.mclose{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;background:var(--bg);border:1px solid var(--line);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink2);}
+.mclose .ic{width:14px;height:14px;}
 .mclose:hover{color:var(--red);border-color:#FECDCA;}
+.mfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;}
 .ropts{display:flex;gap:12px;margin-top:18px;}
-.ropt{flex:1;padding:18px;border:1px solid var(--line);border-radius:14px;text-align:center;cursor:pointer;background:#fff;box-shadow:var(--sh);}
+.ropt{flex:1;padding:18px;border:1px solid var(--line);border-radius:14px;text-align:center;cursor:pointer;background:#fff;box-shadow:var(--sh);color:var(--ink);}
 .ropt:hover{border-color:var(--blue);background:var(--blue-l);}
-.ropt .i{font-size:30px;margin-bottom:6px;}
+.ropt>.ic{display:block;margin:0 auto 8px;width:30px;height:30px;color:var(--blue);}
 .ropt .t{font-weight:700;font-size:15px;}
 .ropt .d{font-size:12px;color:var(--ink3);margin-top:3px;}
 #toastWrap{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:1200;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;}
-.toast{background:#0E1526;color:#fff;padding:10px 20px;border-radius:99px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.28);animation:tin .25s ease;max-width:86vw;text-align:center;}
+.toast{background:#0E1526;color:#fff;padding:10px 20px;border-radius:99px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.28);animation:tin .25s ease;max-width:86vw;text-align:center;display:flex;align-items:center;gap:7px;}
+.toast .ic{width:15px;height:15px;}
 .toast.ok{background:#067647;}
 .toast.err{background:#B42318;}
 .toast.out{opacity:0;transform:translateY(-6px);transition:.3s;}
@@ -204,8 +242,8 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 .app-footer{text-align:center;padding:20px 16px 26px;color:var(--ink3);font-size:12px;}
 @media(max-width:768px){
   .tabs{position:fixed;left:0;right:0;bottom:0;border-bottom:0;border-top:1px solid var(--line);justify-content:space-around;padding:6px 8px calc(10px + env(safe-area-inset-bottom));box-shadow:0 -4px 16px rgba(16,24,40,.06);gap:0;z-index:90;background:#fff;}
-  .tab{flex:1;flex-direction:column;gap:4px;font-size:13px;font-weight:700;letter-spacing:.2px;padding:10px 4px 8px;border-radius:12px;}
-  .tab .ic{font-size:24px;line-height:1;}
+  .tab{flex:1;flex-direction:column;gap:4px;font-size:12px;font-weight:700;letter-spacing:.2px;padding:9px 4px 6px;border-radius:12px;}
+  .tab .ic{width:22px;height:22px;}
   .tab.active{background:transparent;color:var(--blue);}
   .ver{display:none;}
   .page{padding:16px 14px 118px;}
@@ -215,131 +253,191 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 @media(max-width:640px){
   .stats-row,.grid2{grid-template-columns:1fr;}
   .ptitle{font-size:22px;}
+  .phead-main{flex-direction:column;align-items:stretch;}
+  .phead-acts{width:100%;}
+  .phead-acts .btn{flex:1;}
   .dtext{font-size:26px;}
   .dlayout{flex-direction:column;}
   .dside{width:100%;flex-direction:row;gap:10px;align-items:center;}
   .vp-track{min-height:0;height:6px;width:auto;flex:1;}
   .vp-rail{top:0;bottom:0;left:8px;right:8px;}
   .vp-label,.vp-count{margin:0;}
-  .seg{width:100%;}.seg-btn{flex:1;text-align:center;}
+  .seg{width:100%;}.seg-btn{flex:1;}
   .voice-control{max-width:100%;width:100%;}
   .srow{flex-direction:column;align-items:flex-start;}
   .ropts{flex-direction:column;}
   .citem{flex-wrap:wrap;}
   .citem .actions{width:100%;justify-content:flex-end;margin-top:6px;}
+  .card-foot{justify-content:stretch;}
+  .card-foot .btn{flex:1;}
 }
 </style>
 </head>
 <body>
 
+<!-- ===== SVG 圖示庫 ===== -->
+<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></symbol>
+<symbol id="i-folder" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-6"/></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24"><path d="M21 4h-7"/><path d="M10 4H3"/><path d="M21 12h-9"/><path d="M8 12H3"/><path d="M21 20h-5"/><path d="M12 20H3"/><path d="M14 2v4"/><path d="M8 10v4"/><path d="M16 18v4"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></symbol>
+<symbol id="i-clip" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/></symbol>
+<symbol id="i-vol" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-next" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></symbol>
+<symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></symbol>
+<symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></symbol>
+<symbol id="i-down" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M19 12l-7 7-7-7"/></symbol>
+<symbol id="i-pause" viewBox="0 0 24 24"><path d="M10 5v14"/><path d="M14 5v14"/></symbol>
+<symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></symbol>
+<symbol id="i-cam" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></symbol>
+<symbol id="i-sync" viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></symbol>
+<symbol id="i-dl" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+<symbol id="i-qr" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3z"/><path d="M18 18h3v3h-3z"/></symbol>
+<symbol id="i-cloud" viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></symbol>
+<symbol id="i-reset" viewBox="0 0 24 24"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></symbol>
+<symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></symbol>
+<symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></symbol>
+<symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a13.5 13.5 0 0 1 0 18 13.5 13.5 0 0 1 0-18z"/></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/></symbol>
+<symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></symbol>
+<symbol id="i-warn" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
+<symbol id="i-head" viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></symbol>
+<symbol id="i-gauge" viewBox="0 0 24 24"><path d="M12 14l4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+<symbol id="i-cpu" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/><rect x="10" y="10" width="4" height="4"/><path d="M9 2v3"/><path d="M15 2v3"/><path d="M9 19v3"/><path d="M15 19v3"/><path d="M2 9h3"/><path d="M2 15h3"/><path d="M19 9h3"/><path d="M19 15h3"/></symbol>
+<symbol id="i-table" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/></symbol>
+<symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+<symbol id="i-okc" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></symbol>
+<symbol id="i-trend" viewBox="0 0 24 24"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></symbol>
+<symbol id="i-trenddown" viewBox="0 0 24 24"><path d="M23 18l-9.5-9.5-5 5L1 6"/><path d="M17 18h6v-6"/></symbol>
+<symbol id="i-inbox" viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol>
+<symbol id="i-type" viewBox="0 0 24 24"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></symbol>
+<symbol id="i-lang" viewBox="0 0 24 24"><path d="M5 8l6 6"/><path d="M4 14l6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="M22 22l-5-10-5 10"/><path d="M14 18h6"/></symbol>
+</svg>
+
 <div class="topwrap">
   <header class="topbar">
-    <div class="brand" onclick="navTo('home')"><span class="logo">📋</span><span>中英文默書系統</span></div>
+    <div class="brand" onclick="navTo('home')"><span class="logo"><svg class="ic"><use href="#i-clip"/></svg></span><span>中英文默書系統</span></div>
     <span class="ver" id="verChip"></span>
-    <button class="bell" onclick="toggleNotif()" title="消息通知">🔔<span class="bell-badge hidden" id="bellBadge">0</span></button>
+    <button class="bell" onclick="toggleNotif()" title="消息通知"><svg class="ic"><use href="#i-bell"/></svg><span class="bell-badge hidden" id="bellBadge">0</span></button>
     <div class="notif-panel hidden" id="notifPanel">
-      <div class="np-head"><span>📬 消息通知</span><button class="np-close" onclick="closeNotif()">✕</button></div>
+      <div class="np-head"><span style="display:flex;align-items:center;gap:7px;"><svg class="ic sm"><use href="#i-bell"/></svg>消息通知</span><button class="np-close" onclick="closeNotif()"><svg class="ic sm"><use href="#i-x"/></svg></button></div>
       <div id="notifList"></div>
     </div>
   </header>
   <nav class="tabs" id="tabs">
     <span class="tab-ind" id="tabInd"></span>
-    <button class="tab active" data-p="home"><span class="ic">🏠</span><span>主頁</span></button>
-    <button class="tab" data-p="projects"><span class="ic">📁</span><span>默書庫</span></button>
-    <button class="tab" data-p="records"><span class="ic">📊</span><span>記錄</span></button>
-    <button class="tab" data-p="settings"><span class="ic">⚙️</span><span>設定</span></button>
+    <button class="tab active" data-p="home"><svg class="ic"><use href="#i-home"/></svg><span>主頁</span></button>
+    <button class="tab" data-p="projects"><svg class="ic"><use href="#i-folder"/></svg><span>默書庫</span></button>
+    <button class="tab" data-p="records"><svg class="ic"><use href="#i-chart"/></svg><span>記錄</span></button>
+    <button class="tab" data-p="settings"><svg class="ic"><use href="#i-sliders"/></svg><span>設定</span></button>
   </nav>
 </div>
 
 <main class="page">
 <div id="page-home">
   <div class="phead">
-    <div class="crumb">主頁</div>
-    <h1 class="ptitle">最新默書表</h1>
-    <p class="psub">快速開始最近嘅中文與英文默書表</p>
+    <div class="phead-main">
+      <div><h1 class="ptitle">最新默書表</h1><p class="psub">快速開始最近嘅中文與英文默書表</p></div>
+    </div>
   </div>
   <div class="grid2">
-    <div class="card"><div class="lhead zh">🈶 中文默書</div><div id="quickZh"></div></div>
-    <div class="card"><div class="lhead en">🔤 英文默書</div><div id="quickEn"></div></div>
+    <div class="card"><div class="lhead zh"><svg class="ic"><use href="#i-lang"/></svg>中文默書</div><div id="quickZh"></div></div>
+    <div class="card"><div class="lhead en"><svg class="ic"><use href="#i-lang"/></svg>英文默書</div><div id="quickEn"></div></div>
   </div>
-  <div class="card"><div class="card-t">📊 最近成績</div><div id="recentScores"></div></div>
+  <div class="card"><div class="card-t"><svg class="ic"><use href="#i-chart"/></svg>最近成績</div><div id="recentScores"></div></div>
 </div>
 
 <div id="page-projects" class="hidden">
   <div class="phead">
-    <div class="crumb">默書庫</div>
-    <h1 class="ptitle">默書庫</h1>
-    <p class="psub">管理所有中文與英文默書表</p>
-    <div class="pactions"><button class="btn btn-p" onclick="showModal('modalNewProject')">➕ 新增默書表</button></div>
+    <div class="phead-main">
+      <div><h1 class="ptitle">默書庫</h1><p class="psub">管理所有中文與英文默書表</p></div>
+      <div class="phead-acts"><button class="btn btn-p" onclick="showModal('modalNewProject')"><svg class="ic"><use href="#i-plus"/></svg>新增默書表</button></div>
+    </div>
   </div>
   <div class="grid2">
-    <div class="card"><div class="lhead zh">🈶 中文默書</div><div id="projListZh"></div></div>
-    <div class="card"><div class="lhead en">🔤 英文默書</div><div id="projListEn"></div></div>
+    <div class="card"><div class="lhead zh"><svg class="ic"><use href="#i-lang"/></svg>中文默書</div><div id="projListZh"></div></div>
+    <div class="card"><div class="lhead en"><svg class="ic"><use href="#i-lang"/></svg>英文默書</div><div id="projListEn"></div></div>
   </div>
 </div>
 
 <div id="page-project-detail" class="hidden">
   <div class="phead">
-    <div class="crumb" id="crumbDetail">默書庫 / —</div>
-    <h1 class="ptitle" id="detailTitle"></h1>
-    <p class="psub" id="detailBadge"></p>
-    <div class="pactions"><button class="btn btn-s" onclick="goBack()">⬅️ 返回默書庫</button></div>
-  </div>
-  <div id="sampleNote" class="note hidden">🎁 呢個係系統預設嘅示例默書表，可以隨意編輯或刪除。</div>
-  <div class="card">
-    <div class="card-t">📝 默書內容 (<span id="contentCount">0</span>)<span class="sp"></span>
-      <button class="btn btn-s btn-sm" onclick="showModal('modalAddContent')">✍️ 加入</button>
-      <button class="btn btn-s btn-sm" onclick="openScanModal()">📷 掃描</button>
+    <div class="phead-top">
+      <button class="ib sm" onclick="goBack()" title="返回"><svg class="ic sm"><use href="#i-back"/></svg></button>
+      <div class="crumb" id="crumbDetail">默書庫 / —</div>
     </div>
-    <div class="hint" style="margin-bottom:10px;">💡 ✏️ 編輯 ⬆️️ 排序 ✖ 刪除 🔊 試讀 ｜ ▶️ 開始默書請返去默書庫撳綠色按鈕</div>
+    <div class="phead-main">
+      <div><h1 class="ptitle" id="detailTitle"></h1><p class="psub" id="detailBadge"></p></div>
+    </div>
+  </div>
+  <div id="sampleNote" class="note hidden"><svg class="ic"><use href="#i-info"/></svg><span>呢個係系統預設嘅示例默書表，可以隨意編輯或刪除。</span></div>
+  <div class="card">
+    <div class="card-t"><svg class="ic"><use href="#i-file"/></svg>默書內容 (<span id="contentCount">0</span>)<span class="sp"></span>
+      <button class="btn btn-s btn-sm" onclick="showModal('modalAddContent')"><svg class="ic"><use href="#i-plus"/></svg>加入</button>
+      <button class="btn btn-s btn-sm" onclick="openScanModal()"><svg class="ic"><use href="#i-cam"/></svg>掃描</button>
+    </div>
+    <div class="hint" style="margin-bottom:10px;">💡 編輯／排序／刪除／試讀請用每行右側按鈕 ｜ 開始默書請返去默書庫撳綠色按鈕</div>
     <div id="contentList"></div>
     <div class="settingsbox">
-      <div class="srow"><div class="slabel">🌐 跟隨全局默書設定</div><label class="toggle"><input type="checkbox" id="ovGlobal" onchange="toggleOverride()"><span class="toggle-slider"></span></label></div>
+      <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-globe"/></svg>跟隨全局默書設定</div><label class="toggle"><input type="checkbox" id="ovGlobal" onchange="toggleOverride()"><span class="toggle-slider"></span></label></div>
       <div id="ovControls" class="hidden">
-        <div class="srow"><div class="slabel">🔊 朗讀速度</div><div class="seg" id="ovSpeedControl"></div></div>
-        <div class="srow"><div class="slabel">⏱️ 播放模式</div><div class="seg" id="ovModeControl"></div></div>
-        <div class="srow hidden" id="ovAutoRow"><div class="slabel">⏳ 自動間隔</div><div class="seg" id="ovIntervalControl"></div></div>
-        <div class="srow"><div class="slabel">🔀 隨機打亂</div><label class="toggle"><input type="checkbox" id="ovRandomToggle" onchange="setOvRandom(this.checked)"><span class="toggle-slider"></span></label></div>
+        <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-gauge"/></svg>朗讀速度</div><div class="seg" id="ovSpeedControl"></div></div>
+        <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-user"/></svg>播放模式</div><div class="seg" id="ovModeControl"></div></div>
+        <div class="srow hidden" id="ovAutoRow"><div class="slabel"><svg class="ic"><use href="#i-clock"/></svg>自動間隔</div><div class="seg" id="ovIntervalControl"></div></div>
+        <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-shuffle"/></svg>隨機打亂</div><label class="toggle"><input type="checkbox" id="ovRandomToggle" onchange="setOvRandom(this.checked)"><span class="toggle-slider"></span></label></div>
       </div>
       <div class="hint" style="margin-top:10px;" id="ovHint"></div>
     </div>
-    <div style="margin-top:16px;"><button class="btn btn-p btn-block" onclick="saveProjectOpts()">💾 儲存設定</button></div>
+    <div class="card-foot"><button class="btn btn-p" onclick="saveProjectOpts()"><svg class="ic"><use href="#i-save"/></svg>儲存設定</button></div>
   </div>
 </div>
 
 <div id="page-dictation" class="hidden">
-  <div class="phead row-between">
-    <div>
+  <div class="phead">
+    <div class="phead-top">
+      <button class="ib sm" onclick="requestExitDictation()" title="退出默書"><svg class="ic sm"><use href="#i-x"/></svg></button>
       <div class="crumb" id="crumbDict">默書庫 / —</div>
-      <h1 class="ptitle sm">📝 默書進行中 <span class="chip purple hidden" id="reviewBadge">🔄 溫習中</span></h1>
+      <span class="chip purple hidden" id="reviewBadge"><svg class="ic"><use href="#i-reset"/></svg>溫習中</span>
     </div>
-    <div class="hgroup">
-      <button class="btn btn-s btn-sm" onclick="requestExitDictation()">❌ 退出</button>
+    <div class="phead-main">
+      <h1 class="ptitle sm">默書進行中</h1>
       <span class="chip blue" id="dictProgressBadge">1 / 5</span>
     </div>
   </div>
   <div class="dlayout">
     <div class="dmain">
       <div class="ddisplay">
-        <div class="review-banner hidden" id="reviewBanner">🔄 快速溫習模式</div>
+        <div class="review-banner hidden" id="reviewBanner"><svg class="ic"><use href="#i-reset"/></svg>快速溫習模式</div>
         <div class="dtext hidden-text" id="dictText">準備好了嗎？</div>
       </div>
       <div class="mtimer" id="manualTimerWrap">
-        <span class="mchip">⏱️ 本題 <strong id="mtWord">0秒</strong></span>
-        <span class="mchip">Σ 總計 <strong id="mtTotal">0秒</strong></span>
+        <span class="mchip"><svg class="ic"><use href="#i-clock"/></svg>本題 <strong id="mtWord">0秒</strong></span>
+        <span class="mchip"><svg class="ic"><use href="#i-clock"/></svg>總計 <strong id="mtTotal">0秒</strong></span>
       </div>
       <div class="stimer" id="slimTimerWrap">
-        <span class="stimer-status" id="slimTimerStatus">🔊 朗讀中</span>
+        <span class="stimer-status" id="slimTimerStatus">朗讀中</span>
         <div class="stimer-track"><div class="stimer-fill safe" id="slimTimerFill" style="width:100%"></div></div>
         <span class="stimer-text" id="slimTimerText">--</span>
-        <button class="btn btn-s btn-sm" id="pauseBtn" onclick="togglePause()">⏸️ 暫停</button>
+        <button class="btn btn-s btn-sm" id="pauseBtn" onclick="togglePause()"><svg class="ic"><use href="#i-pause"/></svg>暫停</button>
       </div>
-      <div class="pactions">
-        <button class="btn btn-s" onclick="speakCurrentManual()">🔊 朗讀</button>
-        <button class="btn btn-s" onclick="toggleText()">👁️ 顯示/隱藏</button>
-        <button class="btn btn-p" id="btnNext" onclick="nextDictItem()">➡️ 下一題</button>
+      <div class="dacts">
+        <button class="btn btn-s" onclick="speakCurrentManual()"><svg class="ic"><use href="#i-vol"/></svg>朗讀</button>
+        <button class="btn btn-s" onclick="toggleText()"><svg class="ic"><use href="#i-eye"/></svg>顯示/隱藏</button>
+        <button class="btn btn-p" id="btnNext" onclick="nextDictItem()"><svg class="ic"><use href="#i-next"/></svg>下一題</button>
       </div>
-      <div class="text-center" style="margin-top:10px;"><button class="btn btn-s btn-sm" id="btnEnd" onclick="requestEndDictation()">⏹️ 結束默書</button></div>
+      <div class="dend"><button class="btn btn-s btn-sm" id="btnEnd" onclick="requestEndDictation()"><svg class="ic"><use href="#i-stop"/></svg>結束默書</button></div>
     </div>
     <aside class="dside">
       <div class="vp-label" id="vpLabel">進度</div>
@@ -351,12 +449,13 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 
 <div id="page-checking" class="hidden">
   <div class="phead">
-    <div class="crumb">默書 / 校對</div>
-    <h1 class="ptitle">✅ 家長校對</h1>
-    <p class="psub">請對照學生喺紙上寫嘅答案，逐題標記對錯</p>
-    <div class="pactions">
-      <button class="btn btn-s" onclick="goBack()">⬅️ 返回</button>
-      <button class="btn btn-p" onclick="finishChecking()">📊 完成校對</button>
+    <div class="phead-top">
+      <button class="ib sm" onclick="goBack()" title="返回"><svg class="ic sm"><use href="#i-back"/></svg></button>
+      <div class="crumb">默書 / 校對</div>
+    </div>
+    <div class="phead-main">
+      <div><h1 class="ptitle">家長校對</h1><p class="psub">請對照學生喺紙上寫嘅答案，逐題標記對錯</p></div>
+      <div class="phead-acts"><button class="btn btn-p" onclick="finishChecking()"><svg class="ic"><use href="#i-check"/></svg>完成校對</button></div>
     </div>
   </div>
   <div class="card"><div id="checkList"></div></div>
@@ -364,8 +463,17 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 
 <div id="page-result" class="hidden">
   <div class="phead">
-    <div class="crumb">默書 / 結果</div>
-    <h1 class="ptitle"><span id="resultEmoji">🎉</span><span id="resultTitle">默書完成！</span></h1>
+    <div class="phead-top">
+      <button class="ib sm" onclick="goBack()" title="返回"><svg class="ic sm"><use href="#i-back"/></svg></button>
+      <div class="crumb">默書 / 結果</div>
+    </div>
+    <div class="phead-main">
+      <div><h1 class="ptitle"><span id="resultEmoji">🎉</span><span id="resultTitle">默書完成！</span></h1></div>
+      <div class="phead-acts">
+        <button class="btn btn-s" onclick="navTo('home')"><svg class="ic"><use href="#i-home"/></svg>主頁</button>
+        <button class="btn btn-p" onclick="retryWrong()"><svg class="ic"><use href="#i-reset"/></svg>只溫錯題</button>
+      </div>
+    </div>
   </div>
   <div class="stats-row">
     <div class="stat"><div class="s-label">答對題數</div><div class="s-value" id="resultScore">0</div><div class="s-sub">題</div></div>
@@ -373,7 +481,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
     <div class="stat"><div class="s-label">得分</div><div class="s-value" id="resultPercent">0<span class="unit">%</span></div><div class="bar"><i id="resultBar" style="width:0%"></i></div></div>
   </div>
   <div id="timeStats" class="card hidden">
-    <div class="card-t">⏱️ 用時統計</div>
+    <div class="card-t"><svg class="ic"><use href="#i-clock"/></svg>用時統計</div>
     <div class="stats-row" style="margin-bottom:6px;">
       <div class="stat"><div class="s-label">總用時</div><div class="s-value" id="statTotalTime" style="font-size:24px;">--</div></div>
       <div class="stat"><div class="s-label">平均每題</div><div class="s-value" id="statAvgTime" style="font-size:24px;">--</div></div>
@@ -381,48 +489,43 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
     </div>
     <div id="perWordTimes"></div>
   </div>
-  <div id="resultWrong" class="card hidden"><div class="card-t">❌ 錯嘅內容</div><div id="wrongList"></div></div>
-  <div class="pactions">
-    <button class="btn btn-s" onclick="goBack()">⬅️ 返回</button>
-    <button class="btn btn-s" onclick="navTo('home')">🏠 主頁</button>
-    <button class="btn btn-p" onclick="retryWrong()">🔄 只溫錯題</button>
-  </div>
+  <div id="resultWrong" class="card hidden"><div class="card-t"><svg class="ic"><use href="#i-warn"/></svg>錯嘅內容</div><div id="wrongList"></div></div>
 </div>
 
 <div id="page-records" class="hidden">
   <div class="phead">
-    <div class="crumb">記錄</div>
-    <h1 class="ptitle">歷史成績</h1>
-    <p class="psub">歷次默書嘅得分趨勢與詳細記錄（如需重置，請到「⚙️ 設定」）</p>
+    <div class="phead-main">
+      <div><h1 class="ptitle">歷史成績</h1><p class="psub">歷次默書嘅得分趨勢與詳細記錄（如需重置，請到「設定」）</p></div>
+    </div>
   </div>
   <div class="stats-row">
     <div class="stat"><div class="s-label">總測驗次數</div><div class="s-value" id="rcTests">0</div><div class="s-sub">次</div></div>
     <div class="stat"><div class="s-label">平均得分</div><div class="s-value" id="rcAvg">—</div><div class="bar"><i id="rcAvgBar" style="width:0%"></i></div></div>
     <div class="stat"><div class="s-label">累計寫字用時</div><div class="s-value" id="rcTime" style="font-size:24px;">—</div><div class="s-sub">手動模式累計</div></div>
   </div>
-  <div class="card"><div class="card-t">📈 得分趨勢</div><canvas id="recordChart" width="800" height="280" style="width:100%;"></canvas></div>
-  <div class="card"><div class="card-t">📋 最近記錄</div><div id="recordTable"></div></div>
+  <div class="card"><div class="card-t"><svg class="ic"><use href="#i-trend"/></svg>得分趨勢</div><canvas id="recordChart" width="800" height="280" style="width:100%;"></canvas></div>
+  <div class="card"><div class="card-t"><svg class="ic"><use href="#i-table"/></svg>最近記錄</div><div id="recordTable"></div></div>
 </div>
 
 <div id="page-settings" class="hidden">
   <div class="phead">
-    <div class="crumb">設定</div>
-    <h1 class="ptitle">⚙️ 設定</h1>
-    <p class="psub">全局設定套用於所有默書；個別默書表可喺編輯頁微調覆蓋。</p>
+    <div class="phead-main">
+      <div><h1 class="ptitle">設定</h1><p class="psub">全局設定套用於所有默書；個別默書表可喺編輯頁微調覆蓋。</p></div>
+    </div>
   </div>
 
   <div class="acc-card" data-sec="sheet">
-    <button class="acc-head"><span>☁️ Google Sheets 默書資料</span><span class="chip blue" id="lastSyncChip">未匯入</span><span class="acc-chev">▼</span></button>
+    <button class="acc-head chev"><span><svg class="ic"><use href="#i-cloud"/></svg>Google Sheets 默書資料</span><span class="chip blue" id="lastSyncChip">未匯入</span></button>
     <div class="acc-body">
       <div class="stats-row" id="importStats" style="margin-top:14px;"></div>
       <div class="pactions">
-        <button class="btn btn-p" onclick="syncAll()" id="syncAllBtn">🔄 匯入全部</button>
-        <button class="btn btn-s" onclick="syncSingle('zh')" id="syncZhBtn">🈶 中文</button>
-        <button class="btn btn-s" onclick="syncSingle('en')" id="syncEnBtn">🔤 英文</button>
+        <button class="btn btn-p" onclick="syncAll()" id="syncAllBtn"><svg class="ic"><use href="#i-sync"/></svg>匯入全部</button>
+        <button class="btn btn-s" onclick="syncSingle('zh')" id="syncZhBtn">中文</button>
+        <button class="btn btn-s" onclick="syncSingle('en')" id="syncEnBtn">英文</button>
       </div>
       <div class="sync-status" id="syncStatus"></div>
-      <details style="margin-top:12px;"><summary>🔗 已連接試算表 ID</summary><div class="mono-box" style="margin-top:8px;" id="sheetIdDisplay"></div></details>
-      <details><summary>📖 試算表格式說明</summary>
+      <details style="margin-top:12px;"><summary class="chev"><svg class="ic"><use href="#i-link"/></svg>已連接試算表 ID</summary><div class="mono-box" style="margin-top:8px;" id="sheetIdDisplay"></div></details>
+      <details><summary class="chev"><svg class="ic"><use href="#i-file"/></svg>試算表格式說明</summary>
         <div style="margin-top:8px;font-size:13px;color:var(--ink2);line-height:1.7;">
           <p style="margin-bottom:8px;">試算表有兩個分頁，每個分頁有 3 欄：</p>
           <div class="mono-box">Project,Type,Details<br>第一課,詞語,學校;老師;同學<br>第二課,句子,我喜歡上學;天氣很好</div>
@@ -435,43 +538,43 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
           <p>💡 再次匯入會以試算表為準（覆蓋同名默書表內容）。</p>
         </div>
       </details>
-      <details><summary>⚙️ 進階：分頁名稱設定</summary>
+      <details><summary class="chev"><svg class="ic"><use href="#i-sliders"/></svg>進階：分頁名稱設定</summary>
         <div style="margin-top:10px;">
           <div class="srow"><div class="slabel">中文分頁</div><input class="field" style="max-width:220px;" id="tabNameZh"></div>
           <div class="srow"><div class="slabel">英文分頁</div><input class="field" style="max-width:220px;" id="tabNameEn"></div>
-          <button class="btn btn-s btn-sm" onclick="saveTabNames()">💾 儲存分頁名稱</button>
+          <div class="card-foot"><button class="btn btn-s btn-sm" onclick="saveTabNames()"><svg class="ic"><use href="#i-save"/></svg>儲存分頁名稱</button></div>
         </div>
       </details>
-      <details><summary>🔍 除錯資訊</summary>
+      <details><summary class="chev"><svg class="ic"><use href="#i-info"/></svg>除錯資訊</summary>
         <div class="debug-box" id="debugContent">（暫無）</div>
-        <button class="btn btn-s btn-sm" style="margin-top:8px;" onclick="clearDebug()">🗑️ 清除</button>
+        <div class="card-foot"><button class="btn btn-s btn-sm" onclick="clearDebug()"><svg class="ic"><use href="#i-trash"/></svg>清除</button></div>
       </details>
     </div>
   </div>
 
   <div class="acc-card" data-sec="voice">
-    <button class="acc-head"><span>🔊 朗讀與默書設定（全局）</span><span class="acc-chev">▼</span></button>
+    <button class="acc-head chev"><span><svg class="ic"><use href="#i-head"/></svg>朗讀與默書設定（全局）</span></button>
     <div class="acc-body">
       <p class="hint" style="margin:12px 0;">以下設定套用於整個系統；如需為個別默書表微調，請到該表編輯頁關閉「跟隨全局」。</p>
       <div class="srow" style="border-top:1px solid var(--line);">
-        <div class="slabel">🈶 中文語音</div>
-        <div class="voice-control"><select id="zhVoiceSelect" onchange="saveVoicePref('zh')"></select><button class="btn btn-s btn-sm" onclick="testVoice('zh')">🔊 試聽</button></div>
+        <div class="slabel"><svg class="ic"><use href="#i-lang"/></svg>中文語音</div>
+        <div class="voice-control"><select id="zhVoiceSelect" onchange="saveVoicePref('zh')"></select><button class="btn btn-s btn-sm" onclick="testVoice('zh')"><svg class="ic"><use href="#i-vol"/></svg>試聽</button></div>
       </div>
       <div class="srow">
-        <div class="slabel">🔤 英文語音</div>
-        <div class="voice-control"><select id="enVoiceSelect" onchange="saveVoicePref('en')"></select><button class="btn btn-s btn-sm" onclick="testVoice('en')">🔊 試聽</button></div>
+        <div class="slabel"><svg class="ic"><use href="#i-lang"/></svg>英文語音</div>
+        <div class="voice-control"><select id="enVoiceSelect" onchange="saveVoicePref('en')"></select><button class="btn btn-s btn-sm" onclick="testVoice('en')"><svg class="ic"><use href="#i-vol"/></svg>試聽</button></div>
       </div>
-      <div class="srow"><div class="slabel">🎵 音調</div><div class="hgroup"><div class="seg" id="pitchControl"></div><button class="btn btn-s btn-sm" onclick="testPitch()">🔊 試聽</button></div></div>
-      <div class="srow"><div class="slabel">🔊 朗讀速度</div><div class="seg" id="gSpeedControl"></div></div>
-      <div class="srow"><div class="slabel">⏱️ 播放模式</div><div class="seg" id="gModeControl"></div></div>
-      <div class="srow hidden" id="gAutoRow"><div class="slabel">⏳ 自動間隔</div><div class="seg" id="gIntervalControl"></div></div>
-      <div class="srow"><div class="slabel">🔀 隨機打亂</div><label class="toggle"><input type="checkbox" id="gRandomToggle" onchange="setGlobal('random',this.checked)"><span class="toggle-slider"></span></label></div>
-      <div class="srow"><div class="slabel">📣 朗讀標點（句子／文章）</div><label class="toggle"><input type="checkbox" id="gPunctToggle" onchange="setGlobal('readPunct',this.checked)"><span class="toggle-slider"></span></label></div>
+      <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-music"/></svg>音調</div><div class="hgroup"><div class="seg" id="pitchControl"></div><button class="btn btn-s btn-sm" onclick="testPitch()"><svg class="ic"><use href="#i-vol"/></svg>試聽</button></div></div>
+      <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-gauge"/></svg>朗讀速度</div><div class="seg" id="gSpeedControl"></div></div>
+      <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-user"/></svg>播放模式</div><div class="seg" id="gModeControl"></div></div>
+      <div class="srow hidden" id="gAutoRow"><div class="slabel"><svg class="ic"><use href="#i-clock"/></svg>自動間隔</div><div class="seg" id="gIntervalControl"></div></div>
+      <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-shuffle"/></svg>隨機打亂</div><label class="toggle"><input type="checkbox" id="gRandomToggle" onchange="setGlobal('random',this.checked)"><span class="toggle-slider"></span></label></div>
+      <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-type"/></svg>朗讀標點（句子／文章）</div><label class="toggle"><input type="checkbox" id="gPunctToggle" onchange="setGlobal('readPunct',this.checked)"><span class="toggle-slider"></span></label></div>
     </div>
   </div>
 
   <div class="acc-card" data-sec="export">
-    <button class="acc-head"><span>📤 匯出資料（表格格式）</span><span class="acc-chev">▼</span></button>
+    <button class="acc-head chev"><span><svg class="ic"><use href="#i-table"/></svg>匯出資料（表格格式）</span></button>
     <div class="acc-body">
       <p class="hint" style="margin:12px 0;">表格同 Google Sheets 格式一致（3 欄），中英文分開兩表，複製後可直接貼入。</p>
       <div id="exportTables"></div>
@@ -479,31 +582,31 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
   </div>
 
   <div class="acc-card" data-sec="share">
-    <button class="acc-head"><span>🔗 分享頁面（QR Code）</span><span class="acc-chev">▼</span></button>
+    <button class="acc-head chev"><span><svg class="ic"><use href="#i-qr"/></svg>分享頁面（QR Code）</span></button>
     <div class="acc-body">
       <p class="hint" style="margin:12px 0;">掃描 QR Code 或複製連結，即可喺其他裝置開啟呢個默書系統。</p>
       <div class="qr-wrap" id="qrBox"></div>
       <div class="mono-box" style="margin:12px 0;" id="shareUrl"></div>
-      <div class="pactions" style="margin-top:0;">
-        <button class="btn btn-p" onclick="copyShareUrl()">📋 複製連結</button>
-        <button class="btn btn-s" onclick="renderShare()">🔄 重新生成</button>
+      <div class="card-foot" style="justify-content:flex-start;">
+        <button class="btn btn-p" onclick="copyShareUrl()"><svg class="ic"><use href="#i-copy"/></svg>複製連結</button>
+        <button class="btn btn-s" onclick="renderShare()"><svg class="ic"><use href="#i-qr"/></svg>重新生成</button>
       </div>
-      <span class="copy-confirm" id="shareCopyOk">✅ 已複製！</span>
-      <div class="note hidden" id="qrNote" style="margin-top:12px;margin-bottom:0;">⚠️ 目前以本機檔案（file://）開啟，QR 連結只限呢部裝置使用。如需跨裝置分享，請將頁面託管到網站。</div>
+      <span class="copy-confirm" id="shareCopyOk">已複製！</span>
+      <div class="note hidden" id="qrNote" style="margin-top:12px;margin-bottom:0;"><svg class="ic"><use href="#i-warn"/></svg><span>目前以本機檔案（file://）開啟，QR 連結只限呢部裝置使用。如需跨裝置分享，請將頁面託管到網站。</span></div>
     </div>
   </div>
 
   <div class="acc-card" data-sec="reset">
-    <button class="acc-head"><span>🗑️ 重置數據</span><span class="acc-chev">▼</span></button>
+    <button class="acc-head chev"><span><svg class="ic"><use href="#i-trash"/></svg>重置數據</span></button>
     <div class="acc-body">
       <p class="hint" style="margin:12px 0;">⚠️ 重置操作無法復原，請謹慎使用。</p>
       <div class="srow" style="border-top:1px solid var(--line);">
-        <div class="slabel">📊 重置成績</div>
-        <button class="btn btn-dg btn-sm" onclick="resetRecords()">🗑️ 清除所有默書記錄</button>
+        <div class="slabel">重置成績</div>
+        <button class="btn btn-dg btn-sm" onclick="resetRecords()"><svg class="ic"><use href="#i-trash"/></svg>清除所有默書記錄</button>
       </div>
       <div class="srow">
-        <div class="slabel">📁 重置默書庫</div>
-        <button class="btn btn-dg btn-sm" onclick="resetProjects()">🗑️ 清除所有默書表</button>
+        <div class="slabel">重置默書庫</div>
+        <button class="btn btn-dg btn-sm" onclick="resetProjects()"><svg class="ic"><use href="#i-trash"/></svg>清除所有默書表</button>
       </div>
     </div>
   </div>
@@ -514,84 +617,92 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 <div id="toastWrap"></div>
 
 <div class="modal" id="modalConfirm"><div class="modal-card">
-  <button class="mclose" data-close="modalConfirm">✕</button>
-  <div class="modal-t" id="confirmTitle">確認</div>
+  <button class="mclose" data-close="modalConfirm"><svg class="ic sm"><use href="#i-x"/></svg></button>
+  <div class="modal-t"><svg class="ic"><use href="#i-warn"/></svg><span id="confirmTitle">確認</span></div>
   <p id="confirmMsg" style="color:var(--ink2);font-size:14px;line-height:1.7;white-space:pre-line;"></p>
-  <div class="pactions" style="margin-top:18px;">
+  <div class="mfoot">
     <button class="btn btn-s" onclick="closeConfirm(false)">取消</button>
     <button class="btn btn-p" id="confirmOkBtn" onclick="closeConfirm(true)">確定</button>
   </div>
 </div></div>
 
 <div class="modal" id="modalNewProject"><div class="modal-card">
-  <button class="mclose" data-close="modalNewProject">✕</button>
-  <div class="modal-t">➕ 新增默書表</div>
+  <button class="mclose" data-close="modalNewProject"><svg class="ic sm"><use href="#i-x"/></svg></button>
+  <div class="modal-t"><svg class="ic"><use href="#i-plus"/></svg>新增默書表</div>
   <div class="srow"><div class="slabel">名稱</div><input class="field" id="newProjectName" placeholder="例如：第三課詞語"></div>
-  <div class="srow"><div class="slabel">語言</div><select class="field" id="newProjectLang" style="max-width:160px;"><option value="zh">🈶 中文</option><option value="en">🔤 英文</option></select></div>
-  <div class="srow"><div class="slabel">類型</div><select class="field" id="newProjectType" style="max-width:160px;"><option value="words">📝 詞語</option><option value="sentences">📄 句子</option><option value="passage">📖 文章</option></select></div>
-  <button class="btn btn-p btn-block" style="margin-top:14px;" onclick="createProject()">✅ 建立</button>
+  <div class="srow"><div class="slabel">語言</div><select class="field" id="newProjectLang" style="max-width:160px;"><option value="zh">中文</option><option value="en">英文</option></select></div>
+  <div class="srow"><div class="slabel">類型</div><select class="field" id="newProjectType" style="max-width:160px;"><option value="words">詞語</option><option value="sentences">句子</option><option value="passage">文章</option></select></div>
+  <div class="mfoot">
+    <button class="btn btn-s" onclick="closeModal('modalNewProject')">取消</button>
+    <button class="btn btn-p" onclick="createProject()"><svg class="ic"><use href="#i-check"/></svg>建立</button>
+  </div>
 </div></div>
 
 <div class="modal" id="modalAddContent"><div class="modal-card">
-  <button class="mclose" data-close="modalAddContent">✕</button>
-  <div class="modal-t">✍️ 加入默書內容</div>
+  <button class="mclose" data-close="modalAddContent"><svg class="ic sm"><use href="#i-x"/></svg></button>
+  <div class="modal-t"><svg class="ic"><use href="#i-edit"/></svg>加入默書內容</div>
   <div class="hint" style="margin-bottom:8px;">每行一項</div>
   <textarea class="field" id="newContentText"></textarea>
-  <button class="btn btn-p btn-block" style="margin-top:14px;" onclick="addContent()">✅ 加入內容</button>
+  <div class="mfoot">
+    <button class="btn btn-s" onclick="closeModal('modalAddContent')">取消</button>
+    <button class="btn btn-p" onclick="addContent()"><svg class="ic"><use href="#i-plus"/></svg>加入內容</button>
+  </div>
 </div></div>
 
 <div class="modal" id="modalScan"><div class="modal-card">
-  <button class="mclose" data-close="modalScan">✕</button>
-  <div class="modal-t">📷 掃描輸入（OCR）</div>
-  <div id="scanArea" style="border:2px dashed var(--line);border-radius:14px;padding:34px;text-align:center;cursor:pointer;background:#F8FAFC;">
-    <div style="font-size:36px;margin-bottom:8px;">📸</div>
-    <p style="font-weight:700;">撳呢度影相或選擇圖片</p>
+  <button class="mclose" data-close="modalScan"><svg class="ic sm"><use href="#i-x"/></svg></button>
+  <div class="modal-t"><svg class="ic"><use href="#i-cam"/></svg>掃描輸入（OCR）</div>
+  <div id="scanArea" style="border:2px dashed var(--line);border-radius:14px;padding:34px;text-align:center;cursor:pointer;background:#F8FAFC;color:var(--ink2);">
+    <svg class="ic xl" style="display:block;margin:0 auto 8px;"><use href="#i-cam"/></svg>
+    <p style="font-weight:700;color:var(--ink);">撳呢度影相或選擇圖片</p>
     <p class="hint" style="margin-top:4px;">自動轉換為繁體中文</p>
   </div>
   <input type="file" id="scanInput" accept="image/*" capture="environment" style="display:none;">
   <div id="scanPreview" class="hidden text-center">
     <img id="previewImg" style="max-width:100%;max-height:180px;border-radius:10px;margin:10px 0;border:1px solid var(--line);">
-    <div id="ocrProgress" style="display:none;"><p class="hint" style="margin-bottom:5px;">🔄 正在辨識並轉換繁體...</p><div class="bar"><i id="ocrFill" style="width:0%"></i></div></div>
+    <div id="ocrProgress" style="display:none;"><p class="hint" style="margin-bottom:5px;">正在辨識並轉換繁體...</p><div class="bar"><i id="ocrFill" style="width:0%"></i></div></div>
   </div>
   <div id="scanResult" class="hidden" style="margin-top:12px;">
-    <span class="chip blue" id="ocrDetectInfo">🧠 智能分行結果</span>
-    <div class="hint" style="margin:8px 0;">💡 ✏️ 編輯 ⬆️️ 排序 ✖ 刪除</div>
+    <span class="chip blue" id="ocrDetectInfo">智能分行結果</span>
+    <div class="hint" style="margin:8px 0;">編輯／排序／刪除請用每行右側按鈕</div>
     <div id="ocrItemsList" style="max-height:240px;overflow-y:auto;"></div>
-    <div class="pactions">
-      <button class="btn btn-p" onclick="confirmScan()">✅ 確認加入</button>
-      <button class="btn btn-s" onclick="retryOcrEdit()">✏️ 批量編輯</button>
+    <div class="mfoot">
+      <button class="btn btn-s" onclick="retryOcrEdit()"><svg class="ic"><use href="#i-edit"/></svg>批量編輯</button>
+      <button class="btn btn-p" onclick="confirmScan()"><svg class="ic"><use href="#i-check"/></svg>確認加入</button>
     </div>
   </div>
   <div id="scanEditArea" class="hidden" style="margin-top:12px;">
     <div class="hint" style="margin-bottom:6px;">手動編輯（每行一項）</div>
     <textarea class="field" id="ocrEditText"></textarea>
-    <button class="btn btn-p btn-block" style="margin-top:10px;" onclick="confirmScanEdit()">✅ 確認加入</button>
+    <div class="mfoot">
+      <button class="btn btn-s" onclick="retryOcrEdit()">取消</button>
+      <button class="btn btn-p" onclick="confirmScanEdit()"><svg class="ic"><use href="#i-check"/></svg>確認加入</button>
+    </div>
   </div>
 </div></div>
 
 <div class="modal" id="modalReview"><div class="modal-card">
-  <button class="mclose" data-close="modalReview">✕</button>
-  <div class="modal-t">📝 默書完成</div>
+  <button class="mclose" data-close="modalReview"><svg class="ic sm"><use href="#i-x"/></svg></button>
+  <div class="modal-t"><svg class="ic"><use href="#i-okc"/></svg>默書完成</div>
   <p class="psub">想喺校對前快速溫習一次嗎？</p>
   <div class="ropts">
-    <div class="ropt" onclick="startQuickReview()"><div class="i">🔄</div><div class="t">快速溫習</div><div class="d">自動重播所有詞語</div></div>
-    <div class="ropt" onclick="closeModal('modalReview');goToMarking()"><div class="i">➡️</div><div class="t">直接校對</div><div class="d">跳過溫習</div></div>
+    <div class="ropt" onclick="startQuickReview()"><svg class="ic"><use href="#i-reset"/></svg><div class="t">快速溫習</div><div class="d">自動重播所有詞語</div></div>
+    <div class="ropt" onclick="closeModal('modalReview');goToMarking()"><svg class="ic"><use href="#i-next"/></svg><div class="t">直接校對</div><div class="d">跳過溫習</div></div>
   </div>
 </div></div>
 
 <script>
 'use strict';
 /* ============ 1. 常數 ============ */
-const APP_VERSION='18.3';
+const APP_VERSION='19.0';
 const SCHEMA_VERSION=3;
 const SHEET_ID='1Ok4OH76O2W5rtkHw-1Q_F6W4c4jD-WoQTA0UwAXv4t0';
 const TAB_CONFIG={zh:{defaultName:'Chinese',label:'中文默書'},en:{defaultName:'English',label:'英文默書'}};
 const MAIN_PAGES=['home','projects','records','settings'];
 const RATE_OPTS=[{v:'0.4',label:'0.4x'},{v:'0.6',label:'0.6x'},{v:'0.8',label:'0.8x'},{v:'1',label:'1.0x'}];
-const MODE_OPTS=[{v:'manual',label:'✋ 手動'},{v:'auto',label:'🤖 自動'}];
+const MODE_OPTS=[{v:'manual',label:'手動',icon:'user'},{v:'auto',label:'自動',icon:'cpu'}];
 const INT_OPTS=[5,7,10,15,20].map(v=>({v:String(v),label:v+'秒'}));
 const PITCH_OPTS=[{v:'0.7',label:'低'},{v:'1',label:'正常'},{v:'1.3',label:'高'}];
-/* 中文標點→讀音對照（多字元放最前） */
 const PUNCT_ZH=[['……','省略號'],['，','逗號'],['。','句號'],['！','感嘆號'],['？','問號'],['；','分號'],['：','冒號'],['、','頓號'],['「','開引號'],['」','關引號'],['『','開引號'],['』','關引號'],['（','開括號'],['）','關括號'],['—','破折號']];
 
 /* ============ 2. Store ============ */
@@ -618,6 +729,8 @@ let debugLines=[],s2tReady=false,s2tConvert=null,confirmCb=null;
 
 function el(id){return document.getElementById(id);}
 function debounce(fn,ms){let t;return function(){clearTimeout(t);t=setTimeout(fn,ms);};}
+function ic(n,c){return '<svg class="ic'+(c?' '+c:'')+'" aria-hidden="true"><use href="#i-'+n+'"/></svg>';}
+function emptyHint(msg){return '<div class="empty-hint">'+ic('inbox','lg')+msg+'</div>';}
 
 /* ============ 4. 迁移 ============ */
 function loadData(){
@@ -686,7 +799,7 @@ function clearDebug(){debugLines=[];const e=el('debugContent');if(e)e.innerText=
 function toast(msg,type){
   const t=document.createElement('div');
   t.className='toast'+(type?' '+type:'');
-  t.textContent=msg;
+  t.innerHTML=(type==='err'?ic('warn'):type==='ok'?ic('okc'):ic('info'))+escapeHtml(msg);
   el('toastWrap').appendChild(t);
   setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),320);},2400);
 }
@@ -811,7 +924,7 @@ function setupDelegation(){
 /* ============ 9. Seg factory ============ */
 function initSeg(id,opts,current,onPick){
   const box=el(id);if(!box)return;
-  box.innerHTML=opts.map(o=>'<button class="seg-btn'+(String(o.v)===String(current)?' active':'')+'" data-v="'+o.v+'">'+o.label+'</button>').join('');
+  box.innerHTML=opts.map(o=>'<button class="seg-btn'+(String(o.v)===String(current)?' active':'')+'" data-v="'+o.v+'">'+(o.icon?ic(o.icon):'')+o.label+'</button>').join('');
   box.onclick=e=>{
     const b=e.target.closest('.seg-btn');if(!b)return;
     box.querySelectorAll('.seg-btn').forEach(x=>x.classList.toggle('active',x===b));
@@ -868,11 +981,11 @@ function saveProjectOpts(){
   if(!State.current)return;
   State.current.opts=el('ovGlobal').checked?null:{rate:State.ov.rate,mode:State.ov.mode,interval:State.ov.interval,random:State.ov.random};
   touch();Store.write('dict_p8',State.projects);
-  updateOvHint();toast('✅ 已儲存設定','ok');
+  updateOvHint();toast('已儲存設定','ok');
 }
 function touch(){if(State.current)State.current.updatedTs=Date.now();}
 
-/* ============ 11. 語音＋標點朗讀 ============ */
+/* ============ 11. 語音＋標點 ============ */
 function refreshVoices(){State.voices.all=('speechSynthesis' in window)?(speechSynthesis.getVoices()||[]):[];}
 function filterVoices(l){
   const v=State.voices.all;
@@ -888,7 +1001,6 @@ function populateVoiceSelects(){
   });
 }
 function saveVoicePref(l){const sel=el(l==='zh'?'zhVoiceSelect':'enVoiceSelect');if(sel)Store.setRaw('dict_voice_'+l,sel.value);}
-/* 標點轉讀音：只套用於句子／文章 */
 function speakPunct(text,lang){
   let out=text;
   if(lang==='en'){
@@ -942,7 +1054,7 @@ function saveTabNames(){
   const zh=el('tabNameZh').value.trim(),en=el('tabNameEn').value.trim();
   if(zh)Store.setRaw('dict_tab_zh',zh);
   if(en)Store.setRaw('dict_tab_en',en);
-  toast('✅ 已儲存分頁名稱','ok');
+  toast('已儲存分頁名稱','ok');
 }
 function updateSyncChip(){
   const last=Store.raw('dict_last_sync');
@@ -1007,7 +1119,11 @@ function mergeSheetProjects(list){
   });
   return{added,updated};
 }
-function setSyncStatus(t,m){const e=el('syncStatus');e.className='sync-status show '+t;e.innerText=({loading:'⏳',success:'✅',error:'❌'}[t]||'')+' '+m;}
+function setSyncStatus(t,m){
+  const e=el('syncStatus');
+  e.className='sync-status show '+t;
+  e.innerHTML=(t==='loading'?ic('sync'):t==='success'?ic('okc'):ic('warn'))+m;
+}
 function setBtnLoading(on){['syncAllBtn','syncZhBtn','syncEnBtn'].forEach(id=>{const b=el(id);if(b)b.disabled=on;});}
 async function syncTab(lang){
   const url=getSheetUrl(lang);debugLog('['+lang+'] 請求：'+url);
@@ -1053,7 +1169,7 @@ function resetRecords(){
     State.records=[];Store.write('dict_r8',State.records);
     renderHome();refreshNotifications();
     if(State.page==='records')renderRecords();
-    toast('✅ 成績已重置','ok');
+    toast('成績已重置','ok');
   },{danger:true,okLabel:'重置'});
 }
 function resetProjects(){
@@ -1061,7 +1177,7 @@ function resetProjects(){
   confirmDialog('重置默書庫','所有默書表（'+State.projects.length+' 張，包括 Google Sheets 匯入內容）將會永久刪除，無法復原。',()=>{
     State.projects=[];State.current=null;Store.write('dict_p8',State.projects);
     renderHome();renderProjects();renderImportStats();renderExportTables();refreshNotifications();
-    toast('✅ 默書庫已重置','ok');
+    toast('默書庫已重置','ok');
   },{danger:true,okLabel:'重置'});
 }
 
@@ -1070,14 +1186,14 @@ function notifRead(){return Store.read('dict_notif_read',[]);}
 function buildNotifications(){
   const out=[],now=Date.now(),today=new Date();
   const didToday=State.records.some(r=>r.ts&&new Date(r.ts).toDateString()===today.toDateString());
-  if(State.records.length&&!didToday)out.push({id:'practice-'+today.toDateString(),ic:'✍️',bg:'var(--blue-l)',t:'練習提醒',d:'今日未進行默書，抽時間練習一次啦！'});
+  if(State.records.length&&!didToday)out.push({id:'practice-'+today.toDateString(),ic:'edit',bg:'var(--blue-l)',t:'練習提醒',d:'今日未進行默書，抽時間練習一次啦！'});
   const last=State.records[State.records.length-1];
-  if(last&&last.percent<70)out.push({id:'review-'+(last.ts||0),ic:'📉',bg:'var(--red-l)',t:'複習提醒',d:'上次得分 '+last.percent+'%，建議用「只溫錯題」加強練習。'});
+  if(last&&last.percent<70)out.push({id:'review-'+(last.ts||0),ic:'trenddown',bg:'var(--red-l)',t:'複習提醒',d:'上次得分 '+last.percent+'%，建議用「只溫錯題」加強練習。'});
   const sheetCount=State.projects.filter(p=>p.fromSheet).length;
   const syncTs=parseInt(Store.raw('dict_last_sync_ts')||'0',10);
-  if(!sheetCount)out.push({id:'sync-setup',ic:'☁️',bg:'var(--blue-l)',t:'連接 Google Sheets',d:'可以喺「設定」一鍵匯入中英文默書表。'});
-  else if(syncTs&&now-syncTs>7*864e5)out.push({id:'sync-stale',ic:'☁️',bg:'#FEF3C7',t:'數據更新提醒',d:'超過 7 日未匯入 Google Sheets，建議更新。'});
-  else if(syncTs&&now-syncTs<864e5)out.push({id:'sync-new-'+new Date(syncTs).toDateString(),ic:'🆕',bg:'var(--green-l)',t:'新內容已匯入',d:'最近同步咗 Google Sheets 數據，共 '+sheetCount+' 張表可練習。'});
+  if(!sheetCount)out.push({id:'sync-setup',ic:'cloud',bg:'var(--blue-l)',t:'連接 Google Sheets',d:'可以喺「設定」一鍵匯入中英文默書表。'});
+  else if(syncTs&&now-syncTs>7*864e5)out.push({id:'sync-stale',ic:'cloud',bg:'#FEF3C7',t:'數據更新提醒',d:'超過 7 日未匯入 Google Sheets，建議更新。'});
+  else if(syncTs&&now-syncTs<864e5)out.push({id:'sync-new-'+new Date(syncTs).toDateString(),ic:'okc',bg:'var(--green-l)',t:'新內容已匯入',d:'最近同步咗 Google Sheets 數據，共 '+sheetCount+' 張表可練習。'});
   return out;
 }
 function refreshNotifications(){
@@ -1088,8 +1204,8 @@ function refreshNotifications(){
   badge.classList.toggle('hidden',unread===0);
   el('notifList').innerHTML=list.length?list.map(n=>{
     const un=!read.includes(n.id);
-    return '<div class="ni"><span class="ni-ic" style="background:'+n.bg+'">'+n.ic+'</span><div style="flex:1;min-width:0;"><div class="ni-t">'+n.t+'</div><div class="ni-d">'+n.d+'</div></div>'+(un?'<span class="ni-dot"></span>':'')+'</div>';
-  }).join(''):'<div class="ni"><span class="ni-ic" style="background:var(--green-l)">✅</span><div><div class="ni-t">暫無新消息</div><div class="ni-d">保持良好學習狀態！</div></div></div>';
+    return '<div class="ni"><span class="ni-ic" style="background:'+n.bg+'">'+ic(n.ic)+'</span><div style="flex:1;min-width:0;"><div class="ni-t">'+n.t+'</div><div class="ni-d">'+n.d+'</div></div>'+(un?'<span class="ni-dot"></span>':'')+'</div>';
+  }).join(''):'<div class="ni"><span class="ni-ic" style="background:var(--green-l)">'+ic('okc')+'</span><div><div class="ni-t">暫無新消息</div><div class="ni-d">保持良好學習狀態！</div></div></div>';
 }
 function toggleNotif(){
   const p=el('notifPanel'),opening=p.classList.contains('hidden');
@@ -1122,18 +1238,18 @@ function renderShare(){
   el('shareUrl').textContent=url;
   el('qrNote').classList.toggle('hidden',location.protocol!=='file:');
   const box=el('qrBox');
-  box.innerHTML='<div class="empty-hint">⏳ 載入 QR 元件...</div>';
+  box.innerHTML='<div class="empty-hint">'+ic('qr','lg')+'載入 QR 元件...</div>';
   if(window.QRCode){drawQR(box,url);return;}
   const s=document.createElement('script');
   s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
   s.onload=()=>drawQR(box,url);
-  s.onerror=()=>{box.innerHTML='<div class="empty-hint">QR 元件載入失敗（需網絡）<br>請直接複製連結分享</div>';};
+  s.onerror=()=>{box.innerHTML='<div class="empty-hint">'+ic('warn','lg')+'QR 元件載入失敗（需網絡）<br>請直接複製連結分享</div>';};
   document.head.appendChild(s);
 }
 function drawQR(box,url){
   box.innerHTML='';
   try{new QRCode(box,{text:url,width:180,height:180,colorDark:'#0E1526',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});}
-  catch(e){box.innerHTML='<div class="empty-hint">QR 生成失敗</div>';}
+  catch(e){box.innerHTML='<div class="empty-hint">'+ic('warn','lg')+'QR 生成失敗</div>';}
 }
 function copyShareUrl(){copyToClipboard(location.href).then(()=>flash('shareCopyOk'));}
 
@@ -1148,27 +1264,27 @@ function countLabel(p){const n=(p.contents||[]).length;return p.type==='sentence
 function homeCardHTML(p){
   return '<div class="row"><div class="rbody"><div class="rtitle">'+escapeHtml(p.name||'(未命名)')+' '+badges(p)+'</div>'+
     '<div class="rmeta">'+countLabel(p)+' · '+fmtDate(p.updatedTs)+'</div></div>'+
-    '<button class="ib go" data-act="start" data-id="'+p.id+'" title="開始默書">▶️</button></div>';
+    '<button class="ib go" data-act="start" data-id="'+p.id+'" title="開始默書">'+ic('play')+'</button></div>';
 }
 function libraryCardHTML(p){
   return '<div class="row"><div class="rbody"><div class="rtitle">'+escapeHtml(p.name||'(未命名)')+' '+badges(p)+'</div>'+
     '<div class="rmeta">'+countLabel(p)+' · 建立 '+fmtDate(p.createdTs)+' · 更新 '+fmtDate(p.updatedTs)+'</div></div>'+
-    '<div class="racts"><button class="ib edit" data-act="open" data-id="'+p.id+'" title="編輯">✏️</button>'+
-    '<button class="ib go" data-act="start" data-id="'+p.id+'" title="默書">▶️</button>'+
-    '<button class="ib del" data-act="del" data-id="'+p.id+'" title="刪除">🗑️</button></div></div>';
+    '<div class="racts"><button class="ib edit" data-act="open" data-id="'+p.id+'" title="編輯">'+ic('edit')+'</button>'+
+    '<button class="ib go" data-act="start" data-id="'+p.id+'" title="默書">'+ic('play')+'</button>'+
+    '<button class="ib del" data-act="del" data-id="'+p.id+'" title="刪除">'+ic('trash')+'</button></div></div>';
 }
 function renderLangList(id,lang,limit,fn){
   const e=el(id);if(!e)return;
   const list=State.projects.filter(p=>p.lang===lang).sort((a,b)=>(b.createdTs||0)-(a.createdTs||0));
   const shown=limit?list.slice(0,limit):list;
-  e.innerHTML=shown.length?shown.map(fn).join(''):'<div class="empty-hint">暫時未有'+(lang==='zh'?'中文':'英文')+'默書表</div>';
+  e.innerHTML=shown.length?shown.map(fn).join(''):emptyHint('暫時未有'+(lang==='zh'?'中文':'英文')+'默書表');
 }
 function renderHome(){
   renderLangList('quickZh','zh',3,homeCardHTML);
   renderLangList('quickEn','en',3,homeCardHTML);
   el('recentScores').innerHTML=State.records.length?State.records.slice(-5).reverse().map(r=>
     '<div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line);"><span style="font-weight:600;">'+escapeHtml(r.project)+'</span><span style="font-weight:800;color:'+(r.percent>=70?'var(--green)':'var(--red)')+';">'+r.percent+'%</span></div>').join('')
-    :'<div class="empty-hint">暫時未有記錄</div>';
+    :emptyHint('暫時未有記錄');
 }
 function renderProjects(){
   renderLangList('projListZh','zh',0,libraryCardHTML);
@@ -1183,14 +1299,14 @@ function createProject(){
   State.projects.push({id:now,name:n,type:el('newProjectType').value,lang:el('newProjectLang').value,contents:[],createdTs:now,updatedTs:now});
   Store.write('dict_p8',State.projects);
   closeModal('modalNewProject');el('newProjectName').value='';
-  renderProjects();toast('✅ 已建立默書表','ok');
+  renderProjects();toast('已建立默書表','ok');
 }
 function deleteProject(id){
   const p=State.projects.find(x=>sameId(x.id,id));if(!p)return;
   confirmDialog('刪除默書表','確定刪除「'+(p.name||'')+'」？\n此操作無法復原。',()=>{
     State.projects=State.projects.filter(x=>!sameId(x.id,id));
     Store.write('dict_p8',State.projects);
-    renderProjects();renderHome();toast('🗑️ 已刪除','ok');
+    renderProjects();renderHome();toast('已刪除','ok');
   },{danger:true,okLabel:'刪除'});
 }
 function openProject(id){
@@ -1212,17 +1328,17 @@ function speakContentAt(i){
 function renderContentList(){
   const l=el('contentList'),cs=State.current.contents;
   el('contentCount').textContent=cs.length;
-  if(!cs.length){l.innerHTML='<div class="empty-hint">未有內容</div>';return;}
+  if(!cs.length){l.innerHTML=emptyHint('未有內容');return;}
   l.innerHTML=cs.map((c,i)=>{
     if(State.contentEditIndex===i)
       return '<div class="citem editing"><div class="num">'+(i+1)+'</div><input class="edit-input" id="contentEditInput" value="'+escapeAttr(c)+'">'+
-        '<div class="actions"><button class="ib sm go" data-act="save" data-i="'+i+'">✓</button><button class="ib sm" data-act="cancel">✕</button></div></div>';
+        '<div class="actions"><button class="ib sm go" data-act="save" data-i="'+i+'" title="儲存">'+ic('check')+'</button><button class="ib sm" data-act="cancel" title="取消">'+ic('x')+'</button></div></div>';
     return '<div class="citem"><div class="num">'+(i+1)+'</div><div class="text">'+escapeHtml(c)+'</div><div class="actions">'+
-      '<button class="ib sm" data-act="speak" data-i="'+i+'" title="試讀">🔊</button>'+
-      '<button class="ib sm edit" data-act="edit" data-i="'+i+'" title="編輯">✏️</button>'+
-      '<button class="ib sm" data-act="up" data-i="'+i+'"'+(i===0?' disabled':'')+' title="上移">⬆</button>'+
-      '<button class="ib sm" data-act="down" data-i="'+i+'"'+(i===cs.length-1?' disabled':'')+' title="下移">⬇</button>'+
-      '<button class="ib sm del" data-act="del" data-i="'+i+'" title="刪除">✖</button></div></div>';
+      '<button class="ib sm" data-act="speak" data-i="'+i+'" title="試讀">'+ic('vol')+'</button>'+
+      '<button class="ib sm edit" data-act="edit" data-i="'+i+'" title="編輯">'+ic('edit')+'</button>'+
+      '<button class="ib sm" data-act="up" data-i="'+i+'"'+(i===0?' disabled':'')+' title="上移">'+ic('up')+'</button>'+
+      '<button class="ib sm" data-act="down" data-i="'+i+'"'+(i===cs.length-1?' disabled':'')+' title="下移">'+ic('down')+'</button>'+
+      '<button class="ib sm del" data-act="del" data-i="'+i+'" title="刪除">'+ic('trash')+'</button></div></div>';
   }).join('');
   if(State.contentEditIndex>=0)setTimeout(()=>{const inp=el('contentEditInput');if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);}},50);
 }
@@ -1294,16 +1410,16 @@ function intelligentSplit(text,type){
 }
 function renderOcrItems(){
   const list=State.ocr.items;
-  el('ocrDetectInfo').innerText='🧠 識別到 '+list.length+' 項'+(s2tReady?'（已轉繁體）':'');
+  el('ocrDetectInfo').innerHTML=ic('okc')+'識別到 '+list.length+' 項'+(s2tReady?'（已轉繁體）':'');
   el('ocrItemsList').innerHTML=list.map((it,i)=>{
     if(State.ocr.editIndex===i)
       return '<div class="citem editing"><div class="num">'+(i+1)+'</div><input class="edit-input" id="ocrEditInput" value="'+escapeAttr(it)+'">'+
-        '<div class="actions"><button class="ib sm go" data-act="save" data-i="'+i+'">✓</button><button class="ib sm" data-act="cancel">✕</button></div></div>';
+        '<div class="actions"><button class="ib sm go" data-act="save" data-i="'+i+'" title="儲存">'+ic('check')+'</button><button class="ib sm" data-act="cancel" title="取消">'+ic('x')+'</button></div></div>';
     return '<div class="citem"><div class="num">'+(i+1)+'</div><div class="text">'+escapeHtml(it)+'</div><div class="actions">'+
-      '<button class="ib sm edit" data-act="edit" data-i="'+i+'">✏️</button>'+
-      '<button class="ib sm" data-act="up" data-i="'+i+'"'+(i===0?' disabled':'')+'>⬆</button>'+
-      '<button class="ib sm" data-act="down" data-i="'+i+'"'+(i===list.length-1?' disabled':'')+'>⬇</button>'+
-      '<button class="ib sm del" data-act="del" data-i="'+i+'">✖</button></div></div>';
+      '<button class="ib sm edit" data-act="edit" data-i="'+i+'" title="編輯">'+ic('edit')+'</button>'+
+      '<button class="ib sm" data-act="up" data-i="'+i+'"'+(i===0?' disabled':'')+' title="上移">'+ic('up')+'</button>'+
+      '<button class="ib sm" data-act="down" data-i="'+i+'"'+(i===list.length-1?' disabled':'')+' title="下移">'+ic('down')+'</button>'+
+      '<button class="ib sm del" data-act="del" data-i="'+i+'" title="刪除">'+ic('trash')+'</button></div></div>';
   }).join('');
   if(State.ocr.editIndex>=0)setTimeout(()=>{const inp=el('ocrEditInput');if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);}},50);
 }
@@ -1340,12 +1456,12 @@ function speakAndSchedule(text){
   const my=D.token,lang=State.current?State.current.lang||'zh':'zh';
   const payload=speakItemText(text);
   if(State.session.mode==='auto'||D.review){
-    el('slimTimerStatus').innerText='🔊 朗讀中';
+    el('slimTimerStatus').innerHTML=ic('vol','sm')+'朗讀中';
     const ok=speakText(payload,lang,()=>{
       if(my!==D.token)return;
-      el('slimTimerStatus').innerText='⏳ 倒數中';startCountdown();
+      el('slimTimerStatus').innerHTML=ic('clock','sm')+'倒數中';startCountdown();
     },State.session.rate);
-    if(!ok&&my===D.token){el('slimTimerStatus').innerText='⏳ 倒數中';startCountdown();}
+    if(!ok&&my===D.token){el('slimTimerStatus').innerHTML=ic('clock','sm')+'倒數中';startCountdown();}
   }else speakText(payload,lang,null,State.session.rate);
 }
 function startDictation(){
@@ -1367,7 +1483,7 @@ function showDictItem(){
   if(!total)return;
   el('dictProgressBadge').innerText=(cur+1)+' / '+total;
   const t=el('dictText');t.innerText=D.items[cur];t.classList.add('hidden-text');
-  el('btnNext').innerText=cur===total-1?(D.review?'✅ 完成溫習':'✅ 完成'):'➡️ 下一題';
+  el('btnNext').innerHTML=cur===total-1?(D.review?ic('check')+'完成溫習':ic('check')+'完成'):ic('next')+'下一題';
   updateVerticalProgress();stopCountdown();
   if(State.session.mode==='manual'&&!D.review)startWordTimer();
   else{stopWordTimer();el('manualTimerWrap').classList.remove('visible');}
@@ -1415,7 +1531,7 @@ function startCountdown(){
   stopCountdown();
   const T=State.timers;
   T.paused=false;T.cdEnd=Date.now()+State.session.interval*1000;
-  el('pauseBtn').innerText='⏸️ 暫停';
+  el('pauseBtn').innerHTML=ic('pause')+'暫停';
   T.countdown=State.session.interval;paintCountdown();
   T.cdInt=setInterval(tickCountdown,250);
 }
@@ -1429,8 +1545,8 @@ function tickCountdown(){
 }
 function togglePause(){
   const T=State.timers;
-  if(!T.paused){T.paused=true;T.cdPaused=Date.now();el('pauseBtn').innerText='▶️ 繼續';}
-  else{T.paused=false;T.cdEnd+=Date.now()-T.cdPaused;el('pauseBtn').innerText='⏸️ 暫停';}
+  if(!T.paused){T.paused=true;T.cdPaused=Date.now();el('pauseBtn').innerHTML=ic('play')+'繼續';}
+  else{T.paused=false;T.cdEnd+=Date.now()-T.cdPaused;el('pauseBtn').innerHTML=ic('pause')+'暫停';}
 }
 function paintCountdown(){
   const T=State.timers,iv=State.session.interval||1,c=T.countdown;
@@ -1440,7 +1556,6 @@ function paintCountdown(){
   f.classList.remove('safe','warning','danger');
   f.classList.add(pct>50?'safe':pct>25?'warning':'danger');
 }
-/* 進度條：rail 邊界對齊 */
 function updateVerticalProgress(){
   const D=State.dict,total=D.items.length,cur=D.index;
   const rail=el('vpRail'),fill=el('vpFill');
@@ -1467,9 +1582,9 @@ function updateVerticalProgress(){
 function renderCheckList(){
   const D=State.dict;
   el('checkList').innerHTML=D.items.map((it,i)=>{
-    const t=(State.session.mode==='manual'&&D.wordTimes[i]!==undefined)?'<span class="chip" style="margin-right:10px;">⏱ '+fmtTime(D.wordTimes[i])+'</span>':'';
+    const t=(State.session.mode==='manual'&&D.wordTimes[i]!==undefined)?'<span class="chip" style="margin-right:10px;">'+ic('clock','sm')+fmtTime(D.wordTimes[i])+'</span>':'';
     return '<div class="chk" id="checkItem'+i+'"><div class="num">'+(i+1)+'</div><div class="answer">'+escapeHtml(it)+'</div>'+t+
-      '<div class="chk-btns"><button class="cbtn ok" data-act="ok" data-i="'+i+'" id="correct'+i+'">✓</button><button class="cbtn no" data-act="no" data-i="'+i+'" id="wrong'+i+'">✗</button></div></div>';
+      '<div class="chk-btns"><button class="cbtn ok" data-act="ok" data-i="'+i+'" id="correct'+i+'" title="正確">'+ic('check')+'</button><button class="cbtn no" data-act="no" data-i="'+i+'" id="wrong'+i+'" title="錯誤">'+ic('x')+'</button></div></div>';
   }).join('');
 }
 function markResult(i,ok){
@@ -1490,7 +1605,7 @@ function finishChecking(){
     el('resultTotal').innerText=total;
     el('resultPercent').innerHTML=pct+'<span class="unit">%</span>';
     el('resultBar').style.width=pct+'%';
-    let e='🌟',t='太厲害喇！';
+    let e='🎉',t='太厲害喇！';
     if(pct<50){e='💪';t='繼續努力！';}else if(pct<70){e='📖';t='唔錯呀！';}else if(pct<90){e='😊';t='好叻呀！';}
     el('resultEmoji').innerText=e;el('resultTitle').innerText=t;
     const isManual=State.session.mode==='manual'&&D.wordTimes.length>0;
@@ -1502,11 +1617,11 @@ function finishChecking(){
       el('statSlowest').innerText=fmtTime(mx);
       el('perWordTimes').innerHTML=D.items.map((w,i)=>{
         const tm=D.wordTimes[i],wrong=D.checks[i]!==true;
-        return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px;"><span>'+(i+1)+'. '+escapeHtml(w)+(wrong?' <span style="color:var(--red);">❌</span>':'')+'</span><strong style="color:'+((tm||0)>30?'var(--red)':(tm||0)>15?'var(--amber)':'var(--ink2)')+';">'+(tm!==undefined?fmtTime(tm):'--')+'</strong></div>';
+        return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px;"><span>'+(i+1)+'. '+escapeHtml(w)+(wrong?' <span style="color:var(--red);">'+ic('x','sm')+'</span>':'')+'</span><strong style="color:'+((tm||0)>30?'var(--red)':(tm||0)>15?'var(--amber)':'var(--ink2)')+';">'+(tm!==undefined?fmtTime(tm):'--')+'</strong></div>';
       }).join('');
     }else el('timeStats').classList.add('hidden');
     const wi=D.items.filter((_,i)=>D.checks[i]!==true);
-    if(wi.length){el('resultWrong').classList.remove('hidden');el('wrongList').innerHTML=wi.map(w=>'<div style="padding:10px 12px;background:var(--red-l);border:1px solid #FECDCA;border-radius:10px;margin-bottom:8px;color:#B42318;font-weight:600;">❌ '+escapeHtml(w)+'</div>').join('');}
+    if(wi.length){el('resultWrong').classList.remove('hidden');el('wrongList').innerHTML=wi.map(w=>'<div style="padding:10px 12px;background:var(--red-l);border:1px solid #FECDCA;border-radius:10px;margin-bottom:8px;color:#B42318;font-weight:600;display:flex;gap:7px;align-items:center;">'+ic('x','sm')+escapeHtml(w)+'</div>').join('');}
     else el('resultWrong').classList.add('hidden');
     State.records.push({ts:Date.now(),project:State.current.name,correct,total,percent:pct,totalTime:isManual?D.totalSec:null});
     Store.write('dict_r8',State.records);
@@ -1558,10 +1673,10 @@ function typeLabelForExport(p){return p.lang==='en'?{words:'words',sentences:'se
 function buildProjectsTsv(l){return['Project\tType\tDetails'].concat(State.projects.filter(p=>p.lang===l).map(p=>[escapeTsv(p.name),typeLabelForExport(p),escapeTsv((p.contents||[]).join(';'))].join('\t'))).join('\n');}
 function buildRecordsTsv(){return['日期\t默書表\t答對\t總數\t得分(%)\t用時'].concat(State.records.slice().reverse().map(r=>[fmtDateTime(r.ts),escapeTsv(r.project),r.correct,r.total,r.percent,r.totalTime!=null?fmtTime(r.totalTime):''].join('\t'))).join('\n');}
 function exportTable(title,cols,rows,copyKey,confirmId){
-  return '<div class="tbl-wrap"><div class="tbl-head"><span>'+title+'</span><button class="btn btn-p btn-sm" data-copy="'+copyKey+'">📋 複製</button></div>'+
+  return '<div class="tbl-wrap"><div class="tbl-head"><span>'+title+'</span><button class="btn btn-p btn-sm" data-copy="'+copyKey+'">'+ic('copy')+'複製</button></div>'+
     '<div style="max-height:220px;overflow:auto;"><table class="tbl"><thead><tr>'+cols.map(c=>'<th>'+c+'</th>').join('')+'</tr></thead><tbody>'+
     (rows.map(r=>'<tr>'+r.map((c,i)=>'<td class="'+(i===cols.length-1?'wrap':'nowrap')+'">'+c+'</td>').join('')+'</tr>').join('')||'<tr><td colspan="'+cols.length+'" style="text-align:center;color:var(--ink3);padding:18px;">暫無資料</td></tr>')+
-    '</tbody></table></div><span class="copy-confirm" id="'+confirmId+'">✅ 已複製！可貼入 Google Sheets</span></div>';
+    '</tbody></table></div><span class="copy-confirm" id="'+confirmId+'">'+ic('okc','sm')+'已複製！可貼入 Google Sheets</span></div>';
 }
 function renderExportTables(){
   const w=el('exportTables');if(!w)return;
@@ -1569,12 +1684,12 @@ function renderExportTables(){
   const enRows=State.projects.filter(p=>p.lang==='en').map(p=>[escapeHtml(p.name),typeLabelForExport(p),escapeHtml((p.contents||[]).join(';'))]);
   const rcRows=State.records.slice().reverse().slice(0,100).map(r=>[escapeHtml(fmtDateTime(r.ts)),escapeHtml(r.project),r.correct+'/'+r.total,r.percent+'%',r.totalTime!=null?fmtTime(r.totalTime):'—']);
   w.innerHTML=
-    exportTable('🈶 中文默書表（'+zhRows.length+' 張）',['Project','Type','Details'],zhRows,'zh','copyProjZhConfirm')+
+    exportTable('中文默書表（'+zhRows.length+' 張）',['Project','Type','Details'],zhRows,'zh','copyProjZhConfirm')+
     '<div style="height:12px;"></div>'+
-    exportTable('🔤 英文默書表（'+enRows.length+' 張）',['Project','Type','Details'],enRows,'en','copyProjEnConfirm')+
+    exportTable('英文默書表（'+enRows.length+' 張）',['Project','Type','Details'],enRows,'en','copyProjEnConfirm')+
     '<div style="height:12px;"></div>'+
-    exportTable('📊 成績記錄（'+rcRows.length+' 筆）',['日期','默書表','成績','得分','用時'],rcRows,'rec','copyRecConfirm')+
-    '<div class="pactions"><button class="btn btn-s" data-copy="tsv">⬇️ 下載 TSV 檔（全部）</button><span class="hint" style="align-self:center;">💡 複製後可直接貼入 Google Sheets</span></div>';
+    exportTable('成績記錄（'+rcRows.length+' 筆）',['日期','默書表','成績','得分','用時'],rcRows,'rec','copyRecConfirm')+
+    '<div class="card-foot" style="justify-content:flex-start;"><button class="btn btn-s" data-copy="tsv">'+ic('dl')+'下載 TSV 檔（全部）</button><span class="hint" style="align-self:center;">複製後可直接貼入 Google Sheets</span></div>';
 }
 function copyToClipboard(t){
   if(navigator.clipboard&&navigator.clipboard.writeText)return navigator.clipboard.writeText(t);
@@ -1582,7 +1697,7 @@ function copyToClipboard(t){
   try{document.execCommand('copy');}catch(e){}
   document.body.removeChild(a);return Promise.resolve();
 }
-function flash(id){const e=el(id);if(e){e.style.display='inline';setTimeout(()=>e.style.display='none',2500);}}
+function flash(id){const e=el(id);if(e){e.style.display='inline-flex';setTimeout(()=>e.style.display='none',2500);}}
 function copyProjectsZh(){copyToClipboard(buildProjectsTsv('zh')).then(()=>flash('copyProjZhConfirm'));}
 function copyProjectsEn(){copyToClipboard(buildProjectsTsv('en')).then(()=>flash('copyProjEnConfirm'));}
 function copyRecords(){copyToClipboard(buildRecordsTsv()).then(()=>flash('copyRecConfirm'));}
@@ -1590,7 +1705,7 @@ function downloadTsv(){
   const s='# 中文默書表\n'+buildProjectsTsv('zh')+'\n\n# 英文默書表\n'+buildProjectsTsv('en')+'\n\n# 成績記錄\n'+buildRecordsTsv();
   const b=new Blob(['\uFEFF'+s],{type:'text/tab-separated-values;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a'),d=new Date();
   a.href=u;a.download='默書資料_'+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'.tsv';
-  a.click();URL.revokeObjectURL(u);toast('⬇️ 已下載 TSV','ok');
+  a.click();URL.revokeObjectURL(u);toast('已下載 TSV','ok');
 }
 
 /* ============ 24. 初始化 ============ */
