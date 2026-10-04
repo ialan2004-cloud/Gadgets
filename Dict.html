@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中英文默書系統 21.1</title>
+<title>中英文默書系統 21.2</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
 :root{
@@ -169,6 +169,7 @@ details[open]>summary.chev::after{transform:rotate(225deg);}
 .spill.count{background:#FEF3C7;color:#92400E;}
 .spill.write{background:var(--green-l);color:#067647;}
 .spill.review{background:#F0EBFE;color:#6D28D9;}
+.spill.oral{background:#FFF1F0;color:#C0392B;}
 .stage-card{position:relative;background:linear-gradient(180deg,#fff,#F8FAFC);border:1px solid var(--line);border-radius:20px;min-height:230px;display:flex;align-items:center;justify-content:center;padding:56px 24px;box-shadow:var(--sh);}
 .dtext{font-size:44px;font-weight:800;line-height:1.45;letter-spacing:2px;transition:filter .25s;text-align:center;word-break:break-word;}
 .dtext.hidden-text{filter:blur(14px);user-select:none;color:var(--ink3);}
@@ -360,7 +361,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 <div id="page-home">
   <div class="phead">
     <div class="phead-main">
-      <div><h1 class="ptitle">最新默書表</h1><p class="psub">掌握默書日程，快速開始溫習</p></div>
+      <div><h1 class="ptitle">最新默書表</h1><p class="psub">掌握默書日程；▶️ 系統朗讀默書・👤 家長口述默書</p></div>
     </div>
   </div>
   <div class="card"><div class="card-t"><svg class="ic"><use href="#i-cal"/></svg>臨近默書</div><div id="upcomingList"></div></div>
@@ -412,7 +413,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
       </div>
     </div>
     <div class="hint flex hidden" id="planHint" style="margin:10px 0;"><svg class="ic sm"><use href="#i-info"/></svg><span id="planHintText"></span></div>
-    <div class="hint flex" style="margin-bottom:10px;"><svg class="ic sm"><use href="#i-info"/></svg><span>編輯／排序／刪除／試讀請用每行右側按鈕；開始默書請返去默書庫撳該表開始按鈕</span></div>
+    <div class="hint flex" style="margin-bottom:10px;"><svg class="ic sm"><use href="#i-info"/></svg><span>編輯／排序／刪除／試讀請用每行右側按鈕；開始默書請返去默書庫或主頁</span></div>
     <div id="contentList"></div>
     <div class="settingsbox">
       <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-globe"/></svg>跟隨全局默書設定</div><label class="toggle"><input type="checkbox" id="ovGlobal" onchange="toggleOverride()"><span class="toggle-slider"></span></label></div>
@@ -445,7 +446,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
     <div class="stage-card">
       <button class="eye-btn" id="eyeBtn" onclick="toggleText()" title="顯示／隱藏（H）"><svg class="ic"><use href="#i-eye"/></svg></button>
       <div class="dtext hidden-text" id="dictText">準備好了嗎？</div>
-      <div class="stage-hint">撳右上角眼睛或 H 鍵顯示／隱藏答案</div>
+      <div class="stage-hint" id="stageHint">撳右上角眼睛或 H 鍵顯示／隱藏答案</div>
     </div>
     <div class="stage-timer">
       <div class="tmod hidden" id="manualMod">
@@ -523,7 +524,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
   <div class="stats-row">
     <div class="stat"><div class="s-label">總測驗次數</div><div class="s-value" id="rcTests">0</div><div class="s-sub">次</div></div>
     <div class="stat"><div class="s-label">平均得分</div><div class="s-value" id="rcAvg">—</div><div class="bar"><i id="rcAvgBar" style="width:0%"></i></div></div>
-    <div class="stat"><div class="s-label">累計寫字用時</div><div class="s-value" id="rcTime" style="font-size:24px;">—</div><div class="s-sub">手動模式累計</div></div>
+    <div class="stat"><div class="s-label">累計寫字用時</div><div class="s-value" id="rcTime" style="font-size:24px;">—</div><div class="s-sub">手動／口述模式累計</div></div>
   </div>
   <div class="card"><div class="card-t"><svg class="ic"><use href="#i-trend"/></svg>得分趨勢</div><canvas id="recordChart" width="800" height="280" style="width:100%;"></canvas></div>
   <div class="card"><div class="card-t"><svg class="ic"><use href="#i-table"/></svg>最近記錄</div><div id="recordTable"></div></div>
@@ -711,7 +712,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
   <div class="modal-t"><svg class="ic"><use href="#i-okc"/></svg>默書完成</div>
   <p class="psub">想喺校對前快速溫習一次嗎？</p>
   <div class="ropts">
-    <div class="ropt" onclick="startQuickReview()"><svg class="ic"><use href="#i-reset"/></svg><div class="t">快速溫習</div><div class="d">自動重播所有詞語</div></div>
+    <div class="ropt" onclick="startQuickReview()"><svg class="ic"><use href="#i-reset"/></svg><div class="t">快速溫習</div><div class="d" id="reviewOptDesc">自動重播所有詞語</div></div>
     <div class="ropt" onclick="closeModal('modalReview');goToMarking()"><svg class="ic"><use href="#i-next"/></svg><div class="t">直接校對</div><div class="d">跳過溫習</div></div>
   </div>
 </div></div>
@@ -719,7 +720,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 <script>
 'use strict';
 /* ============ 1. 常數 ============ */
-const APP_VERSION='21.1';
+const APP_VERSION='21.2';
 const SCHEMA_VERSION=3;
 const SHEET_ID='1Ok4OH76O2W5rtkHw-1Q_F6W4c4jD-WoQTA0UwAXv4t0';
 const TAB_CONFIG={zh:{defaultName:'Chinese',label:'中文默書'},en:{defaultName:'English',label:'英文默書'}};
@@ -756,6 +757,7 @@ function el(id){return document.getElementById(id);}
 function debounce(fn,ms){let t;return function(){clearTimeout(t);t=setTimeout(fn,ms);};}
 function ic(n,c){return '<svg class="ic'+(c?' '+c:'')+'" aria-hidden="true"><use href="#i-'+n+'"/></svg>';}
 function emptyHint(msg){return '<div class="empty-hint">'+ic('inbox','lg')+msg+'</div>';}
+function isTimedMode(){const m=State.session.mode;return m==='manual'||m==='oral';}
 
 /* ============ 4. 日期工具 ============ */
 function parseDateFlex(s){
@@ -920,7 +922,6 @@ function setupDelegation(){
     const p=el('notifPanel');
     if(p&&!p.classList.contains('hidden')&&!p.contains(e.target)&&!e.target.closest('.bell'))p.classList.add('hidden');
   });
-  /* 默書頁鍵盤快捷鍵（v21.1：彈窗開啟時停用＋忽略組合鍵） */
   document.addEventListener('keydown',e=>{
     if(State.page!=='dictation')return;
     if(document.querySelector('.modal.show'))return;
@@ -947,8 +948,10 @@ function setupDelegation(){
     if(State.page==='dictation'){e.preventDefault();e.returnValue='';}
   });
   el('page-home').addEventListener('click',e=>{
-    const b=e.target.closest('[data-act="start"]');
-    if(b){openProject(+b.dataset.id);startDictation();}
+    const b=e.target.closest('[data-act]');if(!b)return;
+    const id=+b.dataset.id;
+    if(b.dataset.act==='start'){openProject(id);startDictation();}
+    if(b.dataset.act==='oral'){openProject(id);startOral();}
   });
   el('page-projects').addEventListener('click',e=>{
     const b=e.target.closest('[data-act]');if(!b)return;
@@ -1389,7 +1392,8 @@ function countLabel(p){const n=(p.contents||[]).length;return p.type==='sentence
 function homeCardHTML(p){
   return '<div class="row"><div class="rbody"><div class="rtitle">'+escapeHtml(p.name||'(未命名)')+' '+badges(p)+' '+dateChip(p)+'</div>'+
     '<div class="rmeta">'+countLabel(p)+' · '+fmtDate(p.updatedTs)+'</div></div>'+
-    '<button class="ib go" data-act="start" data-id="'+p.id+'" title="開始默書">'+ic('play')+'</button></div>';
+    '<div class="racts"><button class="ib go" data-act="start" data-id="'+p.id+'" title="開始默書（系統朗讀）">'+ic('play')+'</button>'+
+    '<button class="ib edit" data-act="oral" data-id="'+p.id+'" title="檢視內容・家長口述默書">'+ic('user')+'</button></div></div>';
 }
 function libraryCardHTML(p){
   return '<div class="row"><div class="rbody"><div class="rtitle">'+escapeHtml(p.name||'(未命名)')+' '+badges(p)+' '+dateChip(p)+'</div>'+
@@ -1423,7 +1427,8 @@ function renderUpcoming(){
   el('upcomingList').innerHTML=list.length?list.map(p=>
     '<div class="row"><div class="rbody"><div class="rtitle">'+escapeHtml(p.name||'(未命名)')+' '+dateChip(p)+'</div>'+
     '<div class="rmeta">'+(p.lang==='en'?'英文':'中文')+' · '+countLabel(p)+'</div></div>'+
-    '<button class="ib go" data-act="start" data-id="'+p.id+'" title="開始默書">'+ic('play')+'</button></div>'
+    '<div class="racts"><button class="ib go" data-act="start" data-id="'+p.id+'" title="開始默書（系統朗讀）">'+ic('play')+'</button>'+
+    '<button class="ib edit" data-act="oral" data-id="'+p.id+'" title="檢視內容・家長口述默書">'+ic('user')+'</button></div></div>'
   ).join(''):emptyHint('暫無臨近默書日程');
 }
 function renderHome(){
@@ -1599,10 +1604,10 @@ function resetScanModal(){
   State.ocr.items=[];State.ocr.editIndex=-1;
 }
 
-/* ============ 21. 默書流程 ============ */
+/* ============ 21. 默書流程（含家長口述模式） ============ */
 function setPill(phase){
   const p=el('stagePill');
-  const map={speak:['speak','vol','朗讀中'],count:['count','clock','倒數中'],write:['write','edit','書寫中'],review:['review','reset','溫習模式']};
+  const map={speak:['speak','vol','朗讀中'],count:['count','clock','倒數中'],write:['write','edit','書寫中'],review:['review','reset','溫習模式'],oral:['oral','user','家長口述']};
   const m=map[phase]||map.write;
   p.className='spill '+m[0];
   p.innerHTML=ic(m[1])+m[2];
@@ -1622,14 +1627,20 @@ function updateProgress(){
   }
 }
 function updateTimerModules(){
-  const manual=State.session.mode==='manual'&&!State.dict.review;
-  el('manualMod').classList.toggle('hidden',!manual);
-  el('countMod').classList.toggle('hidden',manual);
+  const m=State.session.mode,rev=State.dict.review;
+  const timed=isTimedMode()&&!rev;
+  el('manualMod').classList.toggle('hidden',!timed);
+  el('countMod').classList.toggle('hidden',!((m==='auto'||rev)&&m!=='oral'));
 }
 function speakAndSchedule(text){
   const D=State.dict;D.token++;
   const my=D.token,lang=State.current?State.current.lang||'zh':'zh';
   const payload=speakItemText(text);
+  /* 家長口述模式：系統不發聲、不倒數，由家長自行節奏 */
+  if(State.session.mode==='oral'){
+    setPill(D.review?'review':'oral');
+    return;
+  }
   if(State.session.mode==='auto'||D.review){
     setPill('speak');
     const ok=speakText(payload,lang,()=>{
@@ -1642,12 +1653,12 @@ function speakAndSchedule(text){
     speakText(payload,lang,null,State.session.rate);
   }
 }
-function startDictation(){
+function beginSession(oral){
   const c=State.current;
   if(!c||!c.contents||!c.contents.length){toast('請先加入默書內容','err');return;}
   const o=effectiveOpts(c);
   const shuffle=o.random&&c.type==='words';
-  State.session={rate:o.rate,mode:o.mode,interval:o.interval,random:o.random,shuffle:shuffle};
+  State.session={rate:o.rate,mode:oral?'oral':o.mode,interval:o.interval,random:o.random,shuffle:shuffle};
   const D=State.dict;
   D.original=[...c.contents];
   D.items=shuffle?shuffleArray([...D.original]):[...D.original];
@@ -1657,21 +1668,27 @@ function startDictation(){
   const tl={words:'詞語',sentences:'句子',passage:'文章'};
   const du=c.dictTs?daysUntil(c.dictTs):null;
   el('sessTitle').textContent=c.name||'(未命名)';
-  el('sessMeta').innerText=(c.lang==='en'?'英文':'中文')+' · '+(tl[c.type]||'詞語')+' · '+(o.mode==='auto'?'自動 '+o.interval+'s':'手動計時')+(shuffle?' · 隨機':'')+(du!==null&&du>=0?' · '+(du===0?'今天默書':du+' 日後默書'):'');
+  el('sessMeta').innerText=(c.lang==='en'?'英文':'中文')+' · '+(tl[c.type]||'詞語')+' · '+(oral?'家長口述默書':(o.mode==='auto'?'自動 '+o.interval+'s':'手動計時'))+(shuffle?' · 隨機':'')+(du!==null&&du>=0?' · '+(du===0?'今天默書':du+' 日後默書'):'');
   showPage('dictation');updateReviewUI();showDictItem();
 }
+function startDictation(){beginSession(false);}
+function startOral(){beginSession(true);}
 function showDictItem(){
   const D=State.dict,total=D.items.length,cur=D.index;
   if(!total)return;
+  const oral=State.session.mode==='oral';
   el('dictProgressBadge').innerText=(cur+1)+'/'+total;
-  const t=el('dictText');t.innerText=D.items[cur];t.classList.add('hidden-text');
-  el('eyeBtn').classList.remove('on');
+  const t=el('dictText');
+  t.innerText=D.items[cur];
+  if(oral){t.classList.remove('hidden-text');el('eyeBtn').classList.add('on');}
+  else{t.classList.add('hidden-text');el('eyeBtn').classList.remove('on');}
+  el('stageHint').innerText=oral?'家長口述：念出上方內容俾孩子書寫，完成後撳「下一題」':'撳右上角眼睛或 H 鍵顯示／隱藏答案';
   el('btnNext').innerHTML=cur===total-1?(D.review?ic('check')+'完成溫習':ic('check')+'完成'):ic('next')+'下一題';
   updateProgress();
   updateTimerModules();
   stopCountdown();
-  const manual=State.session.mode==='manual'&&!D.review;
-  if(manual)startWordTimer();
+  const timed=isTimedMode()&&!D.review;
+  if(timed)startWordTimer();
   else{
     stopWordTimer();
     el('slimTimerFill').style.width='100%';
@@ -1688,15 +1705,16 @@ function speakCurrentManual(){stopCountdown();const D=State.dict;if(D.index<D.it
 function nextDictItem(){
   stopCountdown();
   const D=State.dict,T=State.timers;
-  if(State.session.mode==='manual'&&T.wordOn){D.wordTimes[D.index]=Math.floor((Date.now()-T.wordStart)/1000);stopWordTimer();}
+  if(isTimedMode()&&T.wordOn){D.wordTimes[D.index]=Math.floor((Date.now()-T.wordStart)/1000);stopWordTimer();}
   if(D.index<D.items.length-1){D.index++;showDictItem();}
   else{D.review?finishReview():requestEndDictation();}
 }
 function requestEndDictation(){
   stopCountdown();
   const D=State.dict,T=State.timers;
-  if(State.session.mode==='manual'&&T.wordOn){D.wordTimes[D.index]=Math.floor((Date.now()-T.wordStart)/1000);stopWordTimer();}
+  if(isTimedMode()&&T.wordOn){D.wordTimes[D.index]=Math.floor((Date.now()-T.wordStart)/1000);stopWordTimer();}
   D.totalSec=Math.floor((Date.now()-D.totalStart)/1000);
+  el('reviewOptDesc').innerText=State.session.mode==='oral'?'重新顯示所有詞語俾家長再念':'自動重播所有詞語';
   showModal('modalReview');
 }
 function startQuickReview(){closeModal('modalReview');const D=State.dict;D.review=true;D.index=0;updateReviewUI();showDictItem();}
@@ -1752,7 +1770,7 @@ function paintCountdown(){
 function renderCheckList(){
   const D=State.dict;
   el('checkList').innerHTML=D.items.map((it,i)=>{
-    const t=(State.session.mode==='manual'&&D.wordTimes[i]!==undefined)?'<span class="chip" style="margin-right:10px;">'+ic('clock','sm')+fmtTime(D.wordTimes[i])+'</span>':'';
+    const t=(isTimedMode()&&D.wordTimes[i]!==undefined)?'<span class="chip" style="margin-right:10px;">'+ic('clock','sm')+fmtTime(D.wordTimes[i])+'</span>':'';
     return '<div class="chk" id="checkItem'+i+'"><div class="num">'+(i+1)+'</div><div class="answer">'+escapeHtml(it)+'</div>'+t+
       '<div class="chk-btns"><button class="cbtn ok" data-act="ok" data-i="'+i+'" id="correct'+i+'" title="正確">'+ic('check')+'</button><button class="cbtn no" data-act="no" data-i="'+i+'" id="wrong'+i+'" title="錯誤">'+ic('x')+'</button></div></div>';
   }).join('');
@@ -1778,8 +1796,8 @@ function finishChecking(){
     let e='🎉',t='太厲害喇！';
     if(pct<50){e='💪';t='繼續努力！';}else if(pct<70){e='📖';t='唔錯呀！';}else if(pct<90){e='😊';t='好叻呀！';}
     el('resultEmoji').innerText=e;el('resultTitle').innerText=t;
-    const isManual=State.session.mode==='manual'&&D.wordTimes.length>0;
-    if(isManual){
+    const timed=isTimedMode()&&D.wordTimes.length>0;
+    if(timed){
       el('timeStats').classList.remove('hidden');
       el('statTotalTime').innerText=fmtTime(D.totalSec);
       el('statAvgTime').innerText=fmtTime(Math.round(D.totalSec/total));
@@ -1793,7 +1811,7 @@ function finishChecking(){
     const wi=D.items.filter((_,i)=>D.checks[i]!==true);
     if(wi.length){el('resultWrong').classList.remove('hidden');el('wrongList').innerHTML=wi.map(w=>'<div style="padding:10px 12px;background:var(--red-l);border:1px solid #FECDCA;border-radius:10px;margin-bottom:8px;color:#B42318;font-weight:600;display:flex;gap:7px;align-items:center;">'+ic('x','sm')+escapeHtml(w)+'</div>').join('');}
     else el('resultWrong').classList.add('hidden');
-    State.records.push({ts:Date.now(),project:State.current.name,correct,total,percent:pct,totalTime:isManual?D.totalSec:null});
+    State.records.push({ts:Date.now(),project:State.current.name,correct,total,percent:pct,totalTime:timed?D.totalSec:null});
     Store.write('dict_r8',State.records);
     refreshNotifications();showPage('result');
   };
