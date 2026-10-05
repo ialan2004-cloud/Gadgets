@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中英文默書系統 21.2</title>
+<title>中英文默書系統 21.4</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
 :root{
@@ -11,6 +11,7 @@
   --ink:#0E1526;--ink2:#5B6472;--ink3:#9AA3B2;
   --blue:#2F6BED;--blue-d:#1E55C8;--blue-l:#EAF1FE;
   --green:#12B76A;--green-l:#E7F8F0;--red:#EF4444;--red-l:#FEF3F2;--amber:#F59E0B;
+  --purple:#6D28D9;--purple-l:#F0EBFE;
   --r:16px;--sh:0 1px 2px rgba(16,24,40,.04),0 4px 12px rgba(16,24,40,.06);
 }
 *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft JhengHei","PingFang HK",sans-serif;}
@@ -70,19 +71,24 @@ button{font-family:inherit;}
 .btn-dg:hover{background:#FEE4E2;}
 .btn-sm{padding:7px 12px;font-size:13px;border-radius:10px;}
 .btn-sm .ic{width:14px;height:14px;}
+.btn-block{width:100%;}
 .ib{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:.15s;color:var(--ink2);}
 .ib:hover{border-color:var(--blue);color:var(--blue);}
 .ib .ic{width:16px;height:16px;}
 .ib.edit{background:var(--blue-l);border-color:#C9DBFD;color:var(--blue-d);}
 .ib.go{background:var(--green-l);border-color:#B5E8D0;color:#067647;}
+.ib.oral{background:var(--purple-l);border-color:#DDD0FB;color:var(--purple);}
 .ib.del{background:var(--red-l);border-color:#FECDCA;color:#B42318;}
 .ib.sm{width:30px;height:30px;border-radius:8px;}
 .ib.sm .ic{width:14px;height:14px;}
 .ib:disabled{opacity:.4;cursor:not-allowed;}
+.mlink{background:none;border:none;color:var(--ink3);font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:0;margin-left:8px;}
+.mlink:hover{color:var(--blue);}
+.mlink .ic{width:12px;height:12px;}
 .chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:5px 12px;border-radius:99px;background:#fff;border:1px solid var(--line);color:var(--ink2);}
 .chip .ic{width:13px;height:13px;}
 .chip.blue{background:var(--blue-l);border-color:#C9DBFD;color:var(--blue-d);}
-.chip.purple{background:#F0EBFE;border-color:#DDD0FB;color:#6D28D9;}
+.chip.purple{background:var(--purple-l);border-color:#DDD0FB;color:var(--purple);}
 .chip.red{background:var(--red-l);border-color:#FECDCA;color:#B42318;}
 .chip.amber{background:#FEF3C7;border-color:#FDE68A;color:#92400E;}
 .chip.green{background:var(--green-l);border-color:#B5E8D0;color:#067647;}
@@ -104,10 +110,14 @@ button{font-family:inherit;}
 .row{display:flex;align-items:center;gap:12px;padding:14px;background:#fff;border:1px solid var(--line);border-radius:14px;margin-bottom:10px;box-shadow:var(--sh);}
 .row .rbody{flex:1;min-width:0;}
 .row .rtitle{font-weight:700;font-size:15px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
-.row .rmeta{font-size:12px;color:var(--ink3);margin-top:3px;}
+.row .rmeta{font-size:12px;color:var(--ink3);margin-top:3px;display:flex;align-items:center;flex-wrap:wrap;}
 .row .racts{display:flex;gap:6px;}
 .empty-hint{color:var(--ink3);font-size:13px;text-align:center;padding:22px 12px;background:var(--bg);border-radius:12px;border:1px dashed var(--line);}
 .empty-hint .ic{display:block;margin:0 auto 8px;width:26px;height:26px;opacity:.5;}
+.vitem{display:flex;gap:10px;padding:9px 6px;border-bottom:1px solid var(--line);align-items:flex-start;}
+.vitem:last-child{border-bottom:0;}
+.vitem .num{width:24px;height:24px;background:var(--blue-l);color:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
+.vitem .vt{font-size:14px;line-height:1.55;word-break:break-word;}
 .field{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;font-size:14px;background:#fff;}
 textarea.field{min-height:110px;resize:vertical;line-height:1.6;}
 .field:focus,select:focus,textarea:focus{border-color:var(--blue);outline:none;box-shadow:0 0 0 3px rgba(47,107,237,.12);}
@@ -140,6 +150,8 @@ details[open]>summary.chev::after{transform:rotate(225deg);}
 .hint.flex{display:flex;align-items:flex-start;gap:6px;}
 .hint.flex .ic{margin-top:1px;}
 .text-center{text-align:center;}
+.divider{display:flex;align-items:center;gap:10px;margin:14px 0;}
+.divider .line{flex:1;height:1px;background:var(--line);}
 .acc-card{background:#fff;border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:12px;overflow:hidden;}
 .acc-head{width:100%;display:flex;align-items:center;gap:10px;padding:16px 18px;background:#fff;border:0;cursor:pointer;font-size:15px;font-weight:700;color:var(--ink);text-align:left;}
 .acc-head .ic{width:18px;height:18px;color:var(--ink2);}
@@ -168,7 +180,7 @@ details[open]>summary.chev::after{transform:rotate(225deg);}
 .spill.speak{background:var(--blue-l);color:var(--blue-d);}
 .spill.count{background:#FEF3C7;color:#92400E;}
 .spill.write{background:var(--green-l);color:#067647;}
-.spill.review{background:#F0EBFE;color:#6D28D9;}
+.spill.review{background:var(--purple-l);color:var(--purple);}
 .spill.oral{background:#FFF1F0;color:#C0392B;}
 .stage-card{position:relative;background:linear-gradient(180deg,#fff,#F8FAFC);border:1px solid var(--line);border-radius:20px;min-height:230px;display:flex;align-items:center;justify-content:center;padding:56px 24px;box-shadow:var(--sh);}
 .dtext{font-size:44px;font-weight:800;line-height:1.45;letter-spacing:2px;transition:filter .25s;text-align:center;word-break:break-word;}
@@ -281,6 +293,8 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
   .citem{flex-wrap:wrap;}
   .citem .actions{width:100%;justify-content:flex-end;margin-top:6px;}
   .card-foot .btn{flex:1;}
+  .row{flex-wrap:wrap;}
+  .row .racts{width:100%;justify-content:flex-end;}
 }
 </style>
 </head>
@@ -402,7 +416,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
   <div class="card">
     <div class="card-t"><svg class="ic"><use href="#i-file"/></svg>默書內容 (<span id="contentCount">0</span>)<span class="sp"></span>
       <button class="btn btn-s btn-sm" onclick="showModal('modalAddContent')"><svg class="ic"><use href="#i-plus"/></svg>加入</button>
-      <button class="btn btn-s btn-sm" onclick="openScanModal()"><svg class="ic"><use href="#i-cam"/></svg>掃描</button>
+      <button class="btn btn-s btn-sm" onclick="openScanModal()"><svg class="ic"><use href="#i-cam"/></svg>掃描/貼上</button>
     </div>
     <div class="srow" style="border-top:1px solid var(--line);">
       <div class="slabel"><svg class="ic"><use href="#i-cal"/></svg>默書日期</div>
@@ -413,7 +427,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
       </div>
     </div>
     <div class="hint flex hidden" id="planHint" style="margin:10px 0;"><svg class="ic sm"><use href="#i-info"/></svg><span id="planHintText"></span></div>
-    <div class="hint flex" style="margin-bottom:10px;"><svg class="ic sm"><use href="#i-info"/></svg><span>編輯／排序／刪除／試讀請用每行右側按鈕；開始默書請返去默書庫或主頁</span></div>
+    <div class="hint flex" style="margin-bottom:10px;"><svg class="ic sm"><use href="#i-info"/></svg><span>輸入方式：手動加入、掃描圖片（OCR）、或讀取剪貼簿（配合手機系統選字）；編輯／排序／刪除／試讀用每行右側按鈕</span></div>
     <div id="contentList"></div>
     <div class="settingsbox">
       <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-globe"/></svg>跟隨全局默書設定</div><label class="toggle"><input type="checkbox" id="ovGlobal" onchange="toggleOverride()"><span class="toggle-slider"></span></label></div>
@@ -651,6 +665,17 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
   </div>
 </div></div>
 
+<div class="modal" id="modalView"><div class="modal-card">
+  <button class="mclose" data-close="modalView"><svg class="ic sm"><use href="#i-x"/></svg></button>
+  <div class="modal-t"><svg class="ic"><use href="#i-eye"/></svg><span id="viewTitle"></span></div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;" id="viewMeta"></div>
+  <div id="viewList" style="max-height:46vh;overflow-y:auto;border:1px solid var(--line);border-radius:12px;padding:6px 12px;background:#F8FAFC;"></div>
+  <div class="mfoot">
+    <button class="btn btn-s" onclick="viewStart(true)"><svg class="ic"><use href="#i-user"/></svg>口述默書</button>
+    <button class="btn btn-p" onclick="viewStart(false)"><svg class="ic"><use href="#i-play"/></svg>開始默書</button>
+  </div>
+</div></div>
+
 <div class="modal" id="modalNewProject"><div class="modal-card">
   <button class="mclose" data-close="modalNewProject"><svg class="ic sm"><use href="#i-x"/></svg></button>
   <div class="modal-t"><svg class="ic"><use href="#i-plus"/></svg>新增默書表</div>
@@ -677,13 +702,18 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 
 <div class="modal" id="modalScan"><div class="modal-card">
   <button class="mclose" data-close="modalScan"><svg class="ic sm"><use href="#i-x"/></svg></button>
-  <div class="modal-t"><svg class="ic"><use href="#i-cam"/></svg>掃描輸入（OCR）</div>
-  <div id="scanArea" style="border:2px dashed var(--line);border-radius:14px;padding:34px;text-align:center;cursor:pointer;background:#F8FAFC;color:var(--ink2);">
+  <div class="modal-t"><svg class="ic"><use href="#i-cam"/></svg><span id="scanModalTitle">掃描輸入（OCR）</span></div>
+  <div id="scanArea" style="border:2px dashed var(--line);border-radius:14px;padding:30px;text-align:center;cursor:pointer;background:#F8FAFC;color:var(--ink2);">
     <svg class="ic xl" style="display:block;margin:0 auto 8px;"><use href="#i-cam"/></svg>
     <p style="font-weight:700;color:var(--ink);">撳呢度影相或選擇圖片</p>
     <p class="hint" style="margin-top:4px;">自動轉換為繁體中文</p>
   </div>
-  <input type="file" id="scanInput" accept="image/*" capture="environment" style="display:none;">
+  <div id="scanAltWrap">
+    <div class="divider"><span class="line"></span><span class="hint">或</span><span class="line"></span></div>
+    <button class="btn btn-s btn-block" onclick="ingestClipboard()"><svg class="ic"><use href="#i-copy"/></svg>讀取剪貼簿文字（系統 OCR 選字）</button>
+    <p class="hint" style="margin-top:8px;text-align:center;">手機可先用 iOS「原況文字」/ Android「Google Lens」喺圖片選取並複製文字，再喺呢度讀取</p>
+  </div>
+  <input type="file" id="scanInput" accept="image/*" style="display:none;">
   <div id="scanPreview" class="hidden text-center">
     <img id="previewImg" style="max-width:100%;max-height:180px;border-radius:10px;margin:10px 0;border:1px solid var(--line);">
     <div id="ocrProgress" style="display:none;"><p class="hint" style="margin-bottom:5px;">正在辨識並轉換繁體...</p><div class="bar"><i id="ocrFill" style="width:0%"></i></div></div>
@@ -720,7 +750,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 <script>
 'use strict';
 /* ============ 1. 常數 ============ */
-const APP_VERSION='21.2';
+const APP_VERSION='21.4';
 const SCHEMA_VERSION=3;
 const SHEET_ID='1Ok4OH76O2W5rtkHw-1Q_F6W4c4jD-WoQTA0UwAXv4t0';
 const TAB_CONFIG={zh:{defaultName:'Chinese',label:'中文默書'},en:{defaultName:'English',label:'英文默書'}};
@@ -742,7 +772,7 @@ const Store={
 /* ============ 3. State ============ */
 const State={
   projects:[],records:[],global:{rate:.8,mode:'manual',interval:7,random:false,pitch:1,readPunct:true},
-  current:null,page:'home',lastMain:'home',
+  current:null,page:'home',lastMain:'home',viewId:null,
   session:{rate:.8,mode:'manual',interval:7,random:false,shuffle:false},
   dict:{items:[],original:[],index:0,checks:[],wordTimes:[],totalStart:0,totalSec:0,review:false,token:0},
   timers:{wordInt:null,wordStart:0,wordOn:false,cdInt:null,cdEnd:0,cdPaused:0,paused:false,autoPaused:false,countdown:0},
@@ -958,6 +988,8 @@ function setupDelegation(){
     const id=+b.dataset.id;
     if(b.dataset.act==='open')openProject(id);
     if(b.dataset.act==='start'){openProject(id);startDictation();}
+    if(b.dataset.act==='oral'){openProject(id);startOral();}
+    if(b.dataset.act==='view')openView(id);
     if(b.dataset.act==='del')deleteProject(id);
   });
   el('contentList').addEventListener('click',e=>{
@@ -1097,7 +1129,23 @@ function updateDetailHead(){
   }else ph.classList.add('hidden');
 }
 
-/* ============ 12. 語音＋標點 ============ */
+/* ============ 12. 檢視全部內容 ============ */
+function openView(id){
+  const p=State.projects.find(x=>sameId(x.id,id));if(!p)return;
+  State.viewId=id;
+  el('viewTitle').textContent=p.name||'(未命名)';
+  el('viewMeta').innerHTML=badges(p)+' <span class="chip">'+countLabel(p)+'</span> '+dateChip(p);
+  el('viewList').innerHTML=(p.contents||[]).length?p.contents.map((c,i)=>'<div class="vitem"><span class="num">'+(i+1)+'</span><span class="vt">'+escapeHtml(c)+'</span></div>').join(''):emptyHint('未有內容');
+  showModal('modalView');
+}
+function viewStart(oral){
+  const id=State.viewId;
+  closeModal('modalView');
+  openProject(id);
+  if(oral)startOral();else startDictation();
+}
+
+/* ============ 13. 語音＋標點 ============ */
 function refreshVoices(){State.voices.all=('speechSynthesis' in window)?(speechSynthesis.getVoices()||[]):[];}
 function filterVoices(l){
   const v=State.voices.all;
@@ -1164,7 +1212,7 @@ function speakText(text,lang,onDone,rate){
   speechSynthesis.speak(u);return true;
 }
 
-/* ============ 13. Google Sheets ============ */
+/* ============ 14. Google Sheets ============ */
 function getTabName(l){return Store.raw('dict_tab_'+l)||TAB_CONFIG[l].defaultName;}
 function getSheetUrl(l){return 'https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(getTabName(l));}
 function saveTabNames(){
@@ -1281,7 +1329,7 @@ async function syncSingle(lang){
   setBtnLoading(false);
 }
 
-/* ============ 14. 重置 ============ */
+/* ============ 15. 重置 ============ */
 function resetRecords(){
   if(!State.records.length){toast('目前沒有任何成績記錄');return;}
   confirmDialog('重置成績','所有默書記錄（'+State.records.length+' 筆）將會永久刪除，無法復原。',()=>{
@@ -1300,7 +1348,7 @@ function resetProjects(){
   },{danger:true,okLabel:'重置'});
 }
 
-/* ============ 15. 通知 ============ */
+/* ============ 16. 通知 ============ */
 function notifRead(){return Store.read('dict_notif_read',[]);}
 function buildNotifications(){
   const out=[],now=Date.now(),today=new Date();
@@ -1347,7 +1395,7 @@ function toggleNotif(){
 }
 function closeNotif(){el('notifPanel').classList.add('hidden');}
 
-/* ============ 16. 手風琴 ============ */
+/* ============ 17. 手風琴 ============ */
 function toggleAcc(card){
   const was=card.classList.contains('open');
   document.querySelectorAll('#page-settings .acc-card').forEach(c=>c.classList.remove('open'));
@@ -1360,7 +1408,7 @@ function toggleAcc(card){
   else if(sec==='share')renderShare();
 }
 
-/* ============ 17. 分享 QR ============ */
+/* ============ 18. 分享 QR ============ */
 function renderShare(){
   const url=location.href;
   el('shareUrl').textContent=url;
@@ -1381,7 +1429,7 @@ function drawQR(box,url){
 }
 function copyShareUrl(){copyToClipboard(location.href).then(()=>flash('shareCopyOk'));}
 
-/* ============ 18. 渲染 ============ */
+/* ============ 19. 渲染 ============ */
 function badges(p){
   const tl={words:'詞語',sentences:'句子',passage:'文章'};
   let s='<span class="chip blue">'+(tl[p.type]||'詞語')+'</span>';
@@ -1393,13 +1441,15 @@ function homeCardHTML(p){
   return '<div class="row"><div class="rbody"><div class="rtitle">'+escapeHtml(p.name||'(未命名)')+' '+badges(p)+' '+dateChip(p)+'</div>'+
     '<div class="rmeta">'+countLabel(p)+' · '+fmtDate(p.updatedTs)+'</div></div>'+
     '<div class="racts"><button class="ib go" data-act="start" data-id="'+p.id+'" title="開始默書（系統朗讀）">'+ic('play')+'</button>'+
-    '<button class="ib edit" data-act="oral" data-id="'+p.id+'" title="檢視內容・家長口述默書">'+ic('user')+'</button></div></div>';
+    '<button class="ib oral" data-act="oral" data-id="'+p.id+'" title="家長口述默書">'+ic('user')+'</button></div></div>';
 }
 function libraryCardHTML(p){
   return '<div class="row"><div class="rbody"><div class="rtitle">'+escapeHtml(p.name||'(未命名)')+' '+badges(p)+' '+dateChip(p)+'</div>'+
-    '<div class="rmeta">'+countLabel(p)+' · 建立 '+fmtDate(p.createdTs)+' · 更新 '+fmtDate(p.updatedTs)+'</div></div>'+
-    '<div class="racts"><button class="ib edit" data-act="open" data-id="'+p.id+'" title="編輯">'+ic('edit')+'</button>'+
-    '<button class="ib go" data-act="start" data-id="'+p.id+'" title="默書">'+ic('play')+'</button>'+
+    '<div class="rmeta">'+countLabel(p)+' · 更新 '+fmtDate(p.updatedTs)+
+    '<button class="mlink" data-act="view" data-id="'+p.id+'" title="檢視全部內容">'+ic('eye')+'檢視內容</button></div></div>'+
+    '<div class="racts"><button class="ib go" data-act="start" data-id="'+p.id+'" title="開始默書（系統朗讀）">'+ic('play')+'</button>'+
+    '<button class="ib oral" data-act="oral" data-id="'+p.id+'" title="家長口述默書">'+ic('user')+'</button>'+
+    '<button class="ib edit" data-act="open" data-id="'+p.id+'" title="編輯">'+ic('edit')+'</button>'+
     '<button class="ib del" data-act="del" data-id="'+p.id+'" title="刪除">'+ic('trash')+'</button></div></div>';
 }
 function scheduleSort(list){
@@ -1426,9 +1476,10 @@ function renderUpcoming(){
     .sort((a,b)=>a.dictTs===b.dictTs?a.name.localeCompare(b.name,'zh'):a.dictTs-b.dictTs).slice(0,5);
   el('upcomingList').innerHTML=list.length?list.map(p=>
     '<div class="row"><div class="rbody"><div class="rtitle">'+escapeHtml(p.name||'(未命名)')+' '+dateChip(p)+'</div>'+
-    '<div class="rmeta">'+(p.lang==='en'?'英文':'中文')+' · '+countLabel(p)+'</div></div>'+
+    '<div class="rmeta">'+(p.lang==='en'?'英文':'中文')+' · '+countLabel(p)+
+    '<button class="mlink" data-act="view" data-id="'+p.id+'" title="檢視全部內容">'+ic('eye')+'檢視內容</button></div></div>'+
     '<div class="racts"><button class="ib go" data-act="start" data-id="'+p.id+'" title="開始默書（系統朗讀）">'+ic('play')+'</button>'+
-    '<button class="ib edit" data-act="oral" data-id="'+p.id+'" title="檢視內容・家長口述默書">'+ic('user')+'</button></div></div>'
+    '<button class="ib oral" data-act="oral" data-id="'+p.id+'" title="家長口述默書">'+ic('user')+'</button></div></div>'
   ).join(''):emptyHint('暫無臨近默書日程');
 }
 function renderHome(){
@@ -1444,7 +1495,7 @@ function renderProjects(){
   renderLangList('projListEn','en',0,libraryCardHTML,true);
 }
 
-/* ============ 19. 項目管理 ============ */
+/* ============ 20. 項目管理 ============ */
 function createProject(){
   const n=el('newProjectName').value.trim();
   if(!n){toast('請輸入名稱','err');return;}
@@ -1521,16 +1572,50 @@ function addContent(){
   el('newContentText').value='';closeModal('modalAddContent');renderContentList();
 }
 
-/* ============ 20. OCR ============ */
+/* ============ 21. OCR／剪貼簿匯入 ============ */
 function loadOpenCC(){return new Promise(res=>{if(window.OpenCC){init();res(true);return;}const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/opencc.js';s.onload=()=>{init();res(true);};s.onerror=()=>res(false);document.head.appendChild(s);function init(){try{s2tConvert=OpenCC.Converter({from:'cn',to:'hk'});s2tReady=true;}catch(e){}}});}
 function toTraditional(t){if(s2tReady&&s2tConvert){try{return s2tConvert(t);}catch(e){}}return t;}
 function openScanModal(){showModal('modalScan');resetScanModal();}
+function showSplitResult(text,title){
+  if(!State.current){toast('請先開啟默書表','err');return;}
+  el('scanModalTitle').textContent=title||'掃描輸入（OCR）';
+  el('scanArea').classList.add('hidden');
+  el('scanAltWrap').classList.add('hidden');
+  el('scanPreview').classList.add('hidden');
+  el('scanEditArea').classList.add('hidden');
+  el('ocrProgress').style.display='none';
+  State.ocr.items=intelligentSplit(text,State.current.type);
+  State.ocr.editIndex=-1;
+  renderOcrItems();
+  el('scanResult').classList.remove('hidden');
+  showModal('modalScan');
+}
+async function ingestClipboard(){
+  let text='';
+  try{
+    if(navigator.clipboard&&navigator.clipboard.readText)text=await navigator.clipboard.readText();
+  }catch(e){debugLog('剪貼簿讀取失敗：'+e.message);}
+  if(!text||!text.trim()){
+    toast('讀取唔到剪貼簿，請改用手動貼上','err');
+    el('scanModalTitle').textContent='貼上文字';
+    el('scanArea').classList.add('hidden');
+    el('scanAltWrap').classList.add('hidden');
+    el('scanPreview').classList.add('hidden');
+    el('scanResult').classList.add('hidden');
+    el('scanEditArea').classList.remove('hidden');
+    el('ocrEditText').value='';
+    setTimeout(()=>el('ocrEditText').focus(),120);
+    return;
+  }
+  showSplitResult(text,'剪貼簿文字匯入');
+}
 function handleScanImage(input){
   const f=input.files[0];if(!f)return;
   const r=new FileReader();
   r.onload=e=>{
     el('previewImg').src=e.target.result;
     el('scanPreview').classList.remove('hidden');el('scanArea').classList.add('hidden');
+    el('scanAltWrap').classList.add('hidden');
     el('scanResult').classList.add('hidden');el('scanEditArea').classList.add('hidden');
     el('ocrProgress').style.display='block';
     Tesseract.recognize(e.target.result,'chi_tra+chi_sim+eng',{logger:m=>{if(m.status==='recognizing text')el('ocrFill').style.width=Math.round(m.progress*100)+'%';}})
@@ -1600,11 +1685,13 @@ function cancelScan(){closeModal('modalScan');resetScanModal();}
 function resetScanModal(){
   el('scanInput').value='';
   el('scanPreview').classList.add('hidden');el('scanResult').classList.add('hidden');el('scanEditArea').classList.add('hidden');
-  el('scanArea').classList.remove('hidden');el('ocrProgress').style.display='none';
+  el('scanArea').classList.remove('hidden');el('scanAltWrap').classList.remove('hidden');
+  el('ocrProgress').style.display='none';
+  el('scanModalTitle').textContent='掃描輸入（OCR）';
   State.ocr.items=[];State.ocr.editIndex=-1;
 }
 
-/* ============ 21. 默書流程（含家長口述模式） ============ */
+/* ============ 22. 默書流程（含家長口述） ============ */
 function setPill(phase){
   const p=el('stagePill');
   const map={speak:['speak','vol','朗讀中'],count:['count','clock','倒數中'],write:['write','edit','書寫中'],review:['review','reset','溫習模式'],oral:['oral','user','家長口述']};
@@ -1632,13 +1719,13 @@ function updateTimerModules(){
   el('manualMod').classList.toggle('hidden',!timed);
   el('countMod').classList.toggle('hidden',!((m==='auto'||rev)&&m!=='oral'));
 }
-function speakAndSchedule(text){
+function speakAndSchedule(text,force){
   const D=State.dict;D.token++;
   const my=D.token,lang=State.current?State.current.lang||'zh':'zh';
   const payload=speakItemText(text);
-  /* 家長口述模式：系統不發聲、不倒數，由家長自行節奏 */
   if(State.session.mode==='oral'){
     setPill(D.review?'review':'oral');
+    if(force)speakText(payload,lang,null,State.session.rate);
     return;
   }
   if(State.session.mode==='auto'||D.review){
@@ -1682,7 +1769,7 @@ function showDictItem(){
   t.innerText=D.items[cur];
   if(oral){t.classList.remove('hidden-text');el('eyeBtn').classList.add('on');}
   else{t.classList.add('hidden-text');el('eyeBtn').classList.remove('on');}
-  el('stageHint').innerText=oral?'家長口述：念出上方內容俾孩子書寫，完成後撳「下一題」':'撳右上角眼睛或 H 鍵顯示／隱藏答案';
+  el('stageHint').innerText=oral?(D.review?'溫習模式：家長再念一次，孩子核對與補寫':'家長口述：念出上方內容俾孩子書寫，完成後撳「下一題」'):'撳右上角眼睛或 H 鍵顯示／隱藏答案';
   el('btnNext').innerHTML=cur===total-1?(D.review?ic('check')+'完成溫習':ic('check')+'完成'):ic('next')+'下一題';
   updateProgress();
   updateTimerModules();
@@ -1701,7 +1788,7 @@ function toggleText(){
   const hidden=el('dictText').classList.toggle('hidden-text');
   el('eyeBtn').classList.toggle('on',!hidden);
 }
-function speakCurrentManual(){stopCountdown();const D=State.dict;if(D.index<D.items.length)speakAndSchedule(D.items[D.index]);}
+function speakCurrentManual(){stopCountdown();const D=State.dict;if(D.index<D.items.length)speakAndSchedule(D.items[D.index],true);}
 function nextDictItem(){
   stopCountdown();
   const D=State.dict,T=State.timers;
@@ -1766,7 +1853,7 @@ function paintCountdown(){
   if(pct<=25)f.classList.add('danger');else if(pct<=50)f.classList.add('warning');
 }
 
-/* ============ 22. 校對／結果 ============ */
+/* ============ 23. 校對／結果 ============ */
 function renderCheckList(){
   const D=State.dict;
   el('checkList').innerHTML=D.items.map((it,i)=>{
@@ -1831,7 +1918,7 @@ function retryWrong(){
   showPage('dictation');updateReviewUI();showDictItem();
 }
 
-/* ============ 23. 記錄 ============ */
+/* ============ 24. 記錄 ============ */
 function renderRecords(){
   const R=State.records,n=R.length;
   el('rcTests').innerText=n;
@@ -1858,7 +1945,7 @@ function renderRecords(){
     '</tbody></table></div>';
 }
 
-/* ============ 24. 匯出 ============ */
+/* ============ 25. 匯出 ============ */
 function typeLabelForExport(p){return p.lang==='en'?{words:'words',sentences:'sentences',passage:'paragraphs'}[p.type]||'words':{words:'詞語',sentences:'句子',passage:'文章'}[p.type]||'詞語';}
 function buildProjectsTsv(l){return['Project\tType\tDetails\tDate'].concat(State.projects.filter(p=>p.lang===l).map(p=>[escapeTsv(p.name),typeLabelForExport(p),escapeTsv((p.contents||[]).join(';')),p.dictTs?isoDate(p.dictTs):''].join('\t'))).join('\n');}
 function buildRecordsTsv(){return['日期\t默書表\t答對\t總數\t得分(%)\t用時'].concat(State.records.slice().reverse().map(r=>[fmtDateTime(r.ts),escapeTsv(r.project),r.correct,r.total,r.percent,r.totalTime!=null?fmtTime(r.totalTime):''].join('\t'))).join('\n');}
@@ -1898,7 +1985,7 @@ function downloadTsv(){
   a.click();URL.revokeObjectURL(u);toast('已下載 TSV','ok');
 }
 
-/* ============ 25. 初始化 ============ */
+/* ============ 26. 初始化 ============ */
 window.onload=()=>{
   el('appVersion').textContent=APP_VERSION;
   el('verChip').textContent='v'+APP_VERSION;
