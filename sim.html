@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>人生屋企 · 深度 AI 版</title>
+<title>人生屋企 · Deep AI · Debug 版</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body {
@@ -42,7 +42,6 @@
     padding: 3px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;
   }
   .speed-btn.active, .mode-btn.active { background: #ffd369; color: #1a1a2e; font-weight: 700; }
-  /* 左側 */
   #left { grid-area: left; font-size: 11px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
   .char-card {
     background: rgba(255,255,255,0.04);
@@ -86,7 +85,6 @@
   }
   .value-bar .bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s; }
   .value-bar .val { width: 22px; text-align: right; color: #ffd369; font-size: 8px; }
-  /* 中央屋家 */
   #center {
     grid-area: center;
     position: relative;
@@ -152,7 +150,6 @@
     0%, 100% { transform: translate(-50%, 0); }
     50% { transform: translate(-50%, -3px); }
   }
-  /* 右側思考日誌 */
   #right {
     grid-area: right; font-size: 11px;
     display: flex; flex-direction: column;
@@ -184,22 +181,13 @@
   }
   .thought.bias { border-left-color: #fbbf24; background: rgba(251, 191, 36, 0.06); font-size: 9px; }
   .thought.reflection { border-left-color: #60a5fa; background: rgba(96, 165, 250, 0.06); font-style: italic; }
+  .thought.error { border-left-color: #ff0000; background: rgba(255, 0, 0, 0.15); color: #ff6b6b; }
   .thought .time { color: #888; font-size: 8px; }
   .thought .tag {
     display: inline-block; padding: 0 3px;
     background: #2a2a4a; border-radius: 3px;
     font-size: 8px; margin-right: 2px; color: #aaa;
   }
-  .thought .voice {
-    display: inline-block; padding: 0 4px;
-    border-radius: 3px; font-size: 8px;
-    margin-right: 3px; font-weight: 700;
-  }
-  .voice.instinct { background: #7f1d1d; color: #fca5a5; }
-  .voice.emotion { background: #831843; color: #f9a8d4; }
-  .voice.reason { background: #1e3a8a; color: #93c5fd; }
-  .voice.moral { background: #14532d; color: #86efac; }
-  .voice.social { background: #78350f; color: #fcd34d; }
   .thought .quote {
     margin-top: 3px; padding: 3px 5px;
     background: rgba(255, 211, 105, 0.1);
@@ -216,7 +204,6 @@
     from { opacity: 0; transform: translateX(10px); }
     to { opacity: 1; transform: translateX(0); }
   }
-  /* 底部 */
   #bottom {
     grid-area: bottom;
     display: flex; gap: 5px; align-items: center;
@@ -227,11 +214,11 @@
     background: rgba(255, 255, 255, 0.04);
     padding: 4px 6px; border-radius: 5px;
     border: 1px solid #3a3a5e;
+    min-width: 0;
   }
   .stat-box .label { font-size: 8px; color: #888; text-transform: uppercase; }
-  .stat-box .value { font-size: 12px; color: #ffd369; font-weight: 700; margin-top: 1px; }
+  .stat-box .value { font-size: 12px; color: #ffd369; font-weight: 700; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .stat-box .sub { font-size: 9px; color: #aaa; }
-  /* 事件彈窗 */
   #event-modal {
     position: fixed; inset: 0;
     background: rgba(0, 0, 0, 0.85);
@@ -340,7 +327,7 @@
       <button class="speed-btn" data-speed="3">▶▶</button>
       <button class="speed-btn" data-speed="10">▶▶▶</button>
       <button class="speed-btn" data-speed="30">⏩</button>
-      <button class="mode-btn" id="detail-btn" title="思考細節">🔬</button>
+      <button class="mode-btn active" id="detail-btn" title="思考細節">🔬</button>
     </div>
   </div>
 
@@ -376,12 +363,8 @@
 
   <div id="bottom" class="panel">
     <div class="stat-box">
-      <div class="label">當前目標</div>
-      <div class="value" id="current-goal" style="font-size:10px">—</div>
-    </div>
-    <div class="stat-box">
-      <div class="label">認知負荷</div>
-      <div class="value" id="cognitive-load">低</div>
+      <div class="label">當前行動</div>
+      <div class="value" id="today-action">—</div>
     </div>
     <div class="stat-box">
       <div class="label">人生進度</div>
@@ -391,6 +374,10 @@
     <div class="stat-box">
       <div class="label">💰 財務</div>
       <div class="value" id="money">$15,000</div>
+    </div>
+    <div class="stat-box">
+      <div class="label">認知負荷</div>
+      <div class="value" id="cognitive-load">低</div>
     </div>
     <div class="stat-box">
       <div class="label">決策</div>
@@ -412,11 +399,48 @@
 </div>
 
 <script>
-// ============================================================
-// 《人生屋企》深度 AI 引擎
-// 多層次心理模擬：內在議會 × 認知偏差 × 價值觀 × 目標層次 × 依附風格
-// ============================================================
+'use strict';
 
+// ============================================================
+// 安全 DOM 輔助函數（防止 null reference 崩潰）
+// ============================================================
+function $(id) { return document.getElementById(id); }
+function safeSetText(id, text) {
+  const el = $(id);
+  if (el) el.textContent = text;
+}
+function safeSetHTML(id, html) {
+  const el = $(id);
+  if (el) el.innerHTML = html;
+}
+
+// ============================================================
+// 全域錯誤處理（防止 setInterval 崩潰）
+// ============================================================
+const ErrorLog = [];
+window.addEventListener('error', (e) => {
+  const msg = `[ERROR] ${e.message} @ ${e.filename}:${e.lineno}`;
+  ErrorLog.push(msg);
+  console.error(msg, e.error);
+  try {
+    const log = $('thought-log');
+    if (log) {
+      const div = document.createElement('div');
+      div.className = 'thought error';
+      div.innerHTML = `<div class="time">🐛 錯誤</div>${msg}`;
+      log.insertBefore(div, log.firstChild);
+    }
+  } catch (err) { /* 忽略 */ }
+});
+window.addEventListener('unhandledrejection', (e) => {
+  const msg = `[PROMISE ERROR] ${e.reason}`;
+  ErrorLog.push(msg);
+  console.error(msg);
+});
+
+// ============================================================
+// 遊戲狀態
+// ============================================================
 const Game = {
   day: 0, hour: 8, minute: 0,
   speed: 1, paused: false,
@@ -424,35 +448,29 @@ const Game = {
   selectedCharId: 'protagonist',
   characters: {},
   relationships: {},
-  detailMode: true, // 顯示詳細思考過程
+  detailMode: true,
+  tickCount: 0,
+  lastRenderFrame: 0,
 };
 
 // ============================================================
-// 1. 人格子維度系統 (NEO-PI-R 簡化版)
-// 每項大人格有 3 個子維度，更細緻
+// 人格子維度
 // ============================================================
 const PERSONALITY_FACETS = {
-  openness: ['fantasy', 'aesthetics', 'ideas'],         // 幻想/美學/思想
-  conscientiousness: ['order', 'discipline', 'duty'],   // 秩序/自律/責任
-  extraversion: ['warmth', 'gregariousness', 'assertiveness'], // 熱情/社交/自信
-  agreeableness: ['trust', 'altruism', 'compliance'],   // 信任/利他/順從
-  neuroticism: ['anxiety', 'anger', 'vulnerability'],   // 焦慮/憤怒/脆弱
+  openness: ['fantasy', 'aesthetics', 'ideas'],
+  conscientiousness: ['order', 'discipline', 'duty'],
+  extraversion: ['warmth', 'gregariousness', 'assertiveness'],
+  agreeableness: ['trust', 'altruism', 'compliance'],
+  neuroticism: ['anxiety', 'anger', 'vulnerability'],
 };
 
-// ============================================================
-// 2. 依附風格 (Attachment Styles)
-// 影響親密關係行為
-// ============================================================
 const ATTACHMENT_STYLES = {
-  secure:    { name: '安全型', trust: 1.2, clinginess: 0.3, avoidance: 0.2 },
-  anxious:   { name: '焦慮型', trust: 0.7, clinginess: 1.5, avoidance: 0.4 },
-  avoidant:  { name: '逃避型', trust: 0.6, clinginess: 0.2, avoidance: 1.5 },
-  disorganized: { name: '混亂型', trust: 0.4, clinginess: 1.2, avoidance: 1.2 },
+  secure:    { name: '安全型' },
+  anxious:   { name: '焦慮型' },
+  avoidant:  { name: '逃避型' },
+  disorganized: { name: '混亂型' },
 };
 
-// ============================================================
-// 3. 價值觀羅盤 (Schwartz 價值觀簡化)
-// ============================================================
 const VALUES_DEF = [
   { key: 'achievement', name: '成就', icon: '🏆' },
   { key: 'security', name: '安全', icon: '🛡' },
@@ -466,117 +484,46 @@ const VALUES_DEF = [
   { key: 'wealth', name: '財富', icon: '💰' },
 ];
 
-// ============================================================
-// 4. 內在議會 (5 個內在聲音)
-// ============================================================
 const INNER_VOICES = {
   instinct: { name: '本能', color: '#fca5a5', class: 'instinct',
-    focus: ['hunger', 'sleep', 'safety', 'sex'],
     tone: ['想要...', '好想要...', '身體話我知...', '本能叫我...'] },
   emotion: { name: '情感', color: '#f9a8d4', class: 'emotion',
-    focus: ['love', 'social', 'fun'],
     tone: ['我覺得...', '我心入面...', '情緒上...', '我好...'] },
   reason: { name: '理智', color: '#93c5fd', class: 'reason',
-    focus: ['safety', 'achievement', 'wealth'],
     tone: ['理性嚟講...', '從長遠睇...', '邏輯上...', '數據顯示...'] },
   moral: { name: '道德', color: '#86efac', class: 'moral',
-    focus: ['benevolence', 'universalism', 'family'],
     tone: ['應該...', '正確嘅做法係...', '對得住良心...', '道德上...'] },
   social: { name: '社會', color: '#fcd34d', class: 'social',
-    focus: ['achievement', 'tradition', 'security'],
     tone: ['人哋會點睇...', '社會期望...', '別人會...', '面子問題...'] },
 };
 
-// ============================================================
-// 5. 認知偏差引擎
-// ============================================================
 const COGNITIVE_BIASES = [
   { id: 'loss_aversion', name: '損失厭惡',
     trigger: (c, ctx) => ctx.hasLoss,
-    effect: '傾向避免損失多於獲得同等收益',
-    modifier: (scores) => {
-      // 風險選項評分降低
-      scores.forEach(s => { if (s.risk > 0.5) s.score -= 15; });
-    }},
+    effect: '傾向避免損失',
+    modifier: (scores) => { scores.forEach(s => { if (s.risk > 0.5) s.score -= 15; }); }},
   { id: 'status_quo', name: '現狀偏差',
-    trigger: (c, ctx) => c.personality.conscientiousness < 5 || c.personality.neuroticism > 6,
-    effect: '傾向維持現狀，抗拒改變',
-    modifier: (scores) => {
-      scores.forEach(s => { if (s.changeLevel > 0.5) s.score -= 10; });
-    }},
+    trigger: (c) => c.personality.conscientiousness < 5 || c.personality.neuroticism > 6,
+    effect: '傾向維持現狀',
+    modifier: (scores) => { scores.forEach(s => { if (s.changeLevel > 0.5) s.score -= 10; }); }},
   { id: 'confirmation', name: '確認偏差',
-    trigger: (c, ctx) => c.emotionalState.intensity > 50,
-    effect: '傾向尋找支持自己現有信念嘅資訊',
-    modifier: (scores, c, ctx) => {
-      // 符合當前情緒嘅選項加分
-      scores.forEach(s => {
-        if (s.emotionalAlignment > 0.5) s.score += 8;
-      });
-    }},
-  { id: 'anchoring', name: '錨定效應',
-    trigger: (c, ctx) => ctx.hasReferenceValue,
-    effect: '過度依賴最初接收嘅資訊',
-    modifier: (scores, c, ctx) => {
-      if (ctx.referenceValue) {
-        scores.forEach(s => {
-          const dist = Math.abs((s.value || 0) - ctx.referenceValue);
-          s.score -= dist * 0.01;
-        });
-      }
-    }},
+    trigger: (c) => c.emotionalState.intensity > 50,
+    effect: '尋找支持自己信念嘅資訊',
+    modifier: (scores) => { scores.forEach(s => { if (s.emotionalAlignment > 0.5) s.score += 8; }); }},
   { id: 'optimism', name: '樂觀偏差',
-    trigger: (c, ctx) => c.personality.openness > 6 && c.mood.happy > 20,
-    effect: '過度樂觀估計成功機率',
-    modifier: (scores) => {
-      scores.forEach(s => { if (s.upside > 0.5) s.score += 8; });
-    }},
+    trigger: (c) => c.personality.openness > 6 && c.mood.happy > 20,
+    effect: '過度樂觀',
+    modifier: (scores) => { scores.forEach(s => { if (s.upside > 0.5) s.score += 8; }); }},
   { id: 'sunk_cost', name: '沉沒成本',
     trigger: (c, ctx) => ctx.hasInvestment,
-    effect: '因為已投入而唔肯放棄',
-    modifier: (scores, c, ctx) => {
-      scores.forEach(s => {
-        if (s.continuesExisting) s.score += 10;
-      });
-    }},
-  { id: 'recency', name: '近因效應',
-    trigger: (c, ctx) => c.memories.length > 0,
-    effect: '過度重視最近嘅經驗',
-    modifier: (scores, c) => {
-      const recentMood = c.moodHistory ? c.moodHistory.slice(-5).reduce((a,b)=>a+b,0)/5 : 0;
-      if (recentMood < -20) {
-        scores.forEach(s => { if (s.risk > 0.3) s.score -= 5; });
-      }
-    }},
-  { id: 'availability', name: '可得性偏差',
-    trigger: (c, ctx) => true,
-    effect: '容易想起嘅事件被認為更常見',
-    modifier: (scores, c) => {
-      // 如果最近有相關記憶，該選項評分變化
-    }},
-  { id: 'halo', name: '光環效應',
-    trigger: (c, ctx) => ctx.targetPerson,
-    effect: '對某人整體印象影響具體判斷',
-    modifier: (scores, c, ctx) => {
-      if (ctx.targetPerson && ctx.targetImpression) {
-        scores.forEach(s => s.score += ctx.targetImpression * 0.1);
-      }
-    }},
+    effect: '唔肯放棄已投入',
+    modifier: (scores) => { scores.forEach(s => { if (s.continuesExisting) s.score += 10; }); }},
   { id: 'framing', name: '框架效應',
-    trigger: (c, ctx) => true,
+    trigger: (c) => c.personality.neuroticism > 6,
     effect: '表述方式影響選擇',
-    modifier: (scores, c, ctx) => {
-      if (c.personality.neuroticism > 6) {
-        scores.forEach(s => {
-          if (s.frame === 'loss') s.score -= 10;
-          if (s.frame === 'gain') s.score += 5;
-        });
-      }
-    }},
+    modifier: (scores) => { scores.forEach(s => { if (s.frame === 'loss') s.score -= 10; if (s.frame === 'gain') s.score += 5; }); }},
 ];
 
-// ============================================================
-// 6. Erikson 生命階段任務
-// ============================================================
 const LIFE_STAGES = [
   { minAge: 20, maxAge: 25, name: '青年探索期', task: '親密 vs 孤獨', focus: ['love', 'social', 'selfDirection'] },
   { minAge: 26, maxAge: 35, name: '成年建立期', task: '生育 vs 停滯', focus: ['achievement', 'family', 'wealth'] },
@@ -588,7 +535,7 @@ function getLifeStage(age) {
 }
 
 // ============================================================
-// 7. 角色工廠（深度心理屬性）
+// 角色工廠
 // ============================================================
 function createCharacter(cfg) {
   const p = {
@@ -598,7 +545,6 @@ function createCharacter(cfg) {
     agreeableness: cfg.agreeableness ?? 5,
     neuroticism: cfg.neuroticism ?? 5,
   };
-  // 生成子維度（基於大人格 ± 隨機）
   const facets = {};
   for (const [trait, sub] of Object.entries(PERSONALITY_FACETS)) {
     facets[trait] = {};
@@ -606,13 +552,11 @@ function createCharacter(cfg) {
       facets[trait][s] = Math.max(1, Math.min(10, p[trait] + (Math.random() * 4 - 2)));
     });
   }
-  // 依附風格（基於性格）
   let attachStyle = 'secure';
   if (p.neuroticism > 6 && p.agreeableness > 5) attachStyle = 'anxious';
   else if (p.openness < 4 && p.neuroticism > 5) attachStyle = 'avoidant';
   else if (p.neuroticism > 7) attachStyle = Math.random() < 0.5 ? 'anxious' : 'disorganized';
 
-  // 價值觀（隨機生成，受性格影響）
   const values = {};
   VALUES_DEF.forEach(v => {
     let base = 3 + Math.random() * 5;
@@ -625,7 +569,6 @@ function createCharacter(cfg) {
     values[v.key] = Math.max(1, Math.min(10, base));
   });
 
-  // 內在聲音權重（受性格影響）
   const voiceWeights = {
     instinct: 3 + p.neuroticism * 0.3 + (10 - p.conscientiousness) * 0.3,
     emotion: 3 + p.neuroticism * 0.5 + p.openness * 0.2,
@@ -642,32 +585,20 @@ function createCharacter(cfg) {
     age: cfg.age,
     gender: cfg.gender || 'M',
     isProtagonist: cfg.isProtagonist || false,
-    // 深度心理
     personality: p,
     facets,
     attachmentStyle: attachStyle,
     values,
     voiceWeights,
-    // 自我概念
     selfConcept: {
       selfEsteem: 50 + (p.conscientiousness - 5) * 5 + (Math.random() * 20 - 10),
-      selfEfficacy: 50, // 對自己能力的信心
-      identity: cfg.isProtagonist ? '尋找自我' : '穩定',
+      selfEfficacy: 50,
     },
-    // 目標層次
-    goals: {
-      ultimate: cfg.isProtagonist ? '尋找人生意義' : '穩定生活',
-      life: [],
-      yearly: [],
-      current: null,
-    },
-    // 認知狀態
-    cognitiveLoad: 0, // 0-100
+    goals: { ultimate: '尋找人生意義', current: null },
+    cognitiveLoad: 0,
     emotionalState: { intensity: 0, valence: 0 },
     moodHistory: [],
-    // 習慣系統
-    habits: {}, // action_key -> strength (0-100)
-    // 基礎屬性
+    habits: {},
     needs: {
       hunger: cfg.hunger ?? 60, sleep: cfg.sleep ?? 70, hygiene: cfg.hygiene ?? 75,
       social: cfg.social ?? 40, fun: cfg.fun ?? 50, safety: cfg.safety ?? 55, love: cfg.love ?? 30,
@@ -679,18 +610,16 @@ function createCharacter(cfg) {
     relationship: cfg.relationship ?? '單身',
     health: { physical: cfg.physical ?? 90, mental: cfg.mental ?? 85, disease: null, diseaseDuration: 0 },
     memories: [],
-    skills: { cooking: cfg.cooking ?? 2, fitness: cfg.fitness ?? 3, social: cfg.social ?? 4, career: cfg.career ?? 2 },
+    skills: { cooking: 2, fitness: 3, social: 4, career: 2 },
     currentAction: null, currentRoom: cfg.currentRoom ?? 'bedroom', actionTimer: 0,
     spriteEl: null,
     children: [], parentId: cfg.parentId || null,
     loveStage: cfg.loveStage || null, loveTargetId: cfg.loveTargetId || null,
     birthDay: cfg.birthDay ?? 0,
-    // 決策歷史（用於學習）
     decisionHistory: [],
   };
 }
 
-// 主角
 Game.characters.protagonist = createCharacter({
   id: 'protagonist', name: '陳志明', avatar: '👨', color: '#4a6fa5',
   age: 20, gender: 'M', isProtagonist: true,
@@ -755,7 +684,7 @@ const ACTIONS = {
     thought: '靜靜哋睇下書',
     voice: 'reason', needFocus: ['fun'], valueAlignment: ['selfDirection'] },
   chill: { name: '發呆', icon: '💭', room: 'living', duration: 0.5,
-    effects: { fun: 3 }, condition: (c) => true,
+    effects: { fun: 3 }, condition: () => true,
     thought: '...', voice: 'emotion', needFocus: [], valueAlignment: [] },
   see_doctor: { name: '睇醫生', icon: '🏥', room: 'outside', duration: 3,
     effects: { fun: -10 }, cost: 300, cureDisease: true,
@@ -803,488 +732,434 @@ const ACTIONS = {
 };
 
 // ============================================================
-// 8. 內在議會決策引擎
+// 內在議會
 // ============================================================
-function innerCouncil(c, actionKey, act, context) {
+function innerCouncil(c, actionKey, act) {
   const voices = {};
   const stage = getLifeStage(c.age);
-
   for (const [vKey, vDef] of Object.entries(INNER_VOICES)) {
     let score = 0;
-    let statement = '';
-
-    // 1. 需求匹配
     const needMatch = (act.needFocus || []).reduce((sum, n) => {
       const needVal = c.needs[n];
       return sum + (needVal < 40 ? (40 - needVal) * 0.5 : 0);
     }, 0);
     score += needMatch;
-
-    // 2. 價值觀對齊
-    const valueAlign = (act.valueAlignment || []).reduce((sum, v) => {
-      return sum + (c.values[v] || 0) * 0.5;
-    }, 0);
+    const valueAlign = (act.valueAlignment || []).reduce((sum, v) => sum + (c.values[v] || 0) * 0.5, 0);
     score += valueAlign;
-
-    // 3. 生命階段對齊
     const stageAlign = (stage.focus || []).reduce((sum, v) => {
       if ((act.valueAlignment || []).includes(v)) return sum + 5;
       return sum;
     }, 0);
     score += stageAlign;
-
-    // 4. 性格權重
     score *= (c.voiceWeights[vKey] / 5);
-
-    // 5. 情緒狀態影響
     if (vKey === 'emotion') score *= (1 + c.emotionalState.intensity / 100);
     if (vKey === 'reason') score *= (1 - c.cognitiveLoad / 200);
     if (vKey === 'instinct' && c.health.physical < 50) score *= 1.3;
-
-    // 6. 習慣加成
     const habitStrength = c.habits[actionKey] || 0;
     if (vKey === 'instinct') score += habitStrength * 0.3;
-
-    // 生成語句
     const tone = vDef.tone[Math.floor(Math.random() * vDef.tone.length)];
-    if (score > 30) {
-      if (vKey === 'instinct') statement = `${tone} ${act.name}可以滿足基本需要`;
-      else if (vKey === 'emotion') statement = `${tone} 想做${act.name}，會開心啲`;
-      else if (vKey === 'reason') statement = `${tone}，${act.name}係合理選擇`;
-      else if (vKey === 'moral') statement = `${tone}，${act.name}係正確嘅`;
-      else if (vKey === 'social') statement = `${tone}，${act.name}比較得體`;
-    } else if (score < 10) {
-      statement = `${tone} 唔太想${act.name}`;
-    } else {
-      statement = `${tone} ${act.name}有少少吸引力`;
-    }
-
+    let statement = '';
+    if (score > 30) statement = `${tone} ${act.name}係好選擇`;
+    else if (score < 10) statement = `${tone} 唔太想${act.name}`;
+    else statement = `${tone} ${act.name}有少少吸引力`;
     voices[vKey] = { score: Math.max(0, Math.round(score)), statement };
   }
-
   return voices;
 }
 
-// ============================================================
-// 9. 認知偏差應用
-// ============================================================
 function applyCognitiveBiases(c, scores, context) {
   const activeBiases = [];
   COGNITIVE_BIASES.forEach(bias => {
-    if (bias.trigger(c, context)) {
-      bias.modifier(scores, c, context);
-      activeBiases.push(bias);
-    }
+    try {
+      if (bias.trigger(c, context)) {
+        bias.modifier(scores, c, context);
+        activeBiases.push(bias);
+      }
+    } catch (e) { console.error('Bias error:', bias.id, e); }
   });
   return activeBiases;
 }
 
 // ============================================================
-// 10. 雙系統思考 (System 1 vs System 2)
-// ============================================================
-function dualProcessDecision(c, candidates, context) {
-  // System 1: 快速直覺（基於習慣＋情緒＋本能）
-  const system1Scores = candidates.map(cand => {
-    let s = 0;
-    s += (c.habits[cand.key] || 0) * 0.5; // 習慣強度
-    s += c.emotionalState.intensity > 50 ? (Math.random() * 30) : 0; // 情緒驅動
-    s += c.cognitiveLoad > 60 ? (Math.random() * 20) : 0; // 認知負荷高時傾向簡單選擇
-    return { ...cand, s1Score: s };
-  });
-
-  // System 2: 慢速理性（基於價值觀＋目標＋反思）
-  const system2Scores = candidates.map(cand => {
-    let s = cand.score; // 基礎效用分
-    // 目標對齊
-    if (c.goals.current && cand.act.valueAlignment) {
-      // 簡化：價值觀對齊即目標對齊
-      s += cand.act.valueAlignment.length * 3;
-    }
-    // 自我反思加成（高開放性）
-    if (c.personality.openness > 6) s += 5;
-    return { ...cand, s2Score: s };
-  });
-
-  // 決定使用哪個系統
-  const useSystem1 = c.cognitiveLoad > 60 || c.emotionalState.intensity > 70 || Math.random() < 0.4;
-
-  return { system1Scores, system2Scores, useSystem1 };
-}
-
-// ============================================================
-// 11. 完整 AI 思考循環
+// AI 思考循環（包 try-catch）
 // ============================================================
 function aiThink(c) {
-  const needs = c.needs;
-  const lowestNeed = NEEDS_DEF.reduce((a, b) => needs[a.key] < needs[b.key] ? a : b);
-
-  // 更新情緒狀態
-  const avgNeed = Object.values(needs).reduce((a,b)=>a+b,0) / Object.keys(needs).length;
-  c.emotionalState.intensity = Math.abs(avgNeed - 50) * 2;
-  c.emotionalState.valence = avgNeed - 50;
-
-  // 更新認知負荷（基於多重壓力）
-  let load = 0;
-  if (c.health.disease) load += 20;
-  if (c.needs.sleep < 30) load += 15;
-  if (c.needs.hunger < 30) load += 10;
-  if (c.money < 5000) load += 15;
-  if (c.loveStage === 'cold_war') load += 20;
-  if (c.job && c.jobSatisfaction < 40) load += 10;
-  c.cognitiveLoad = Math.max(0, Math.min(100, load));
-
-  if (c.id === Game.selectedCharId || c.isProtagonist) {
-    addThought(c.id, '感知', `最迫切：${lowestNeed.icon}${lowestNeed.name}(${Math.round(needs[lowestNeed.key])}) · 認知負荷 ${Math.round(c.cognitiveLoad)}`);
-  }
-
-  // 評估可行行動
-  const candidates = [];
-  for (const [key, act] of Object.entries(ACTIONS)) {
-    if (!act.condition(c)) continue;
-    let score = 50;
-    for (const [nk, nv] of Object.entries(act.effects)) {
-      if (nv > 0 && needs[nk] < 50) score += (50 - needs[nk]) * 0.5;
-      if (nv < 0 && needs[nk] < 30) score -= 30;
+  try {
+    const needs = c.needs;
+    const lowestNeed = NEEDS_DEF.reduce((a, b) => needs[a.key] < needs[b.key] ? a : b);
+    const avgNeed = Object.values(needs).reduce((a,b)=>a+b,0) / Object.keys(needs).length;
+    c.emotionalState.intensity = Math.abs(avgNeed - 50) * 2;
+    c.emotionalState.valence = avgNeed - 50;
+    let load = 0;
+    if (c.health.disease) load += 20;
+    if (c.needs.sleep < 30) load += 15;
+    if (c.needs.hunger < 30) load += 10;
+    if (c.money < 5000) load += 15;
+    if (c.loveStage === 'cold_war') load += 20;
+    if (c.job && c.jobSatisfaction < 40) load += 10;
+    c.cognitiveLoad = Math.max(0, Math.min(100, load));
+    if (c.id === Game.selectedCharId || c.isProtagonist) {
+      addThought(c.id, '感知', `最迫切：${lowestNeed.icon}${lowestNeed.name}(${Math.round(needs[lowestNeed.key])}) · 認知負荷 ${Math.round(c.cognitiveLoad)}`);
     }
-    if (act.cost && c.money < act.cost * 3) score -= 20;
-    score += (Math.random() - 0.5) * 15;
-    candidates.push({
-      key, act, score,
-      risk: act.cost ? Math.min(1, act.cost / c.money) : 0,
-      changeLevel: ['work', 'eat_out', 'socialize', 'date'].includes(key) ? 0.7 : 0.3,
-      upside: ['work', 'exercise', 'read'].includes(key) ? 0.7 : 0.4,
-      emotionalAlignment: act.voice === 'emotion' ? 0.8 : 0.3,
-      continuesExisting: ['work', 'chat_partner'].includes(key),
-      frame: act.cost ? 'loss' : 'gain',
-    });
-  }
-
-  if (candidates.length === 0) {
+    const candidates = [];
+    for (const [key, act] of Object.entries(ACTIONS)) {
+      if (!act.condition(c)) continue;
+      let score = 50;
+      for (const [nk, nv] of Object.entries(act.effects)) {
+        if (nv > 0 && needs[nk] < 50) score += (50 - needs[nk]) * 0.5;
+        if (nv < 0 && needs[nk] < 30) score -= 30;
+      }
+      if (act.cost && c.money < act.cost * 3) score -= 20;
+      score += (Math.random() - 0.5) * 15;
+      candidates.push({
+        key, act, score,
+        risk: act.cost ? Math.min(1, act.cost / Math.max(c.money, 1)) : 0,
+        changeLevel: ['work', 'eat_out', 'socialize', 'date'].includes(key) ? 0.7 : 0.3,
+        upside: ['work', 'exercise', 'read'].includes(key) ? 0.7 : 0.4,
+        emotionalAlignment: act.voice === 'emotion' ? 0.8 : 0.3,
+        continuesExisting: ['work', 'chat_partner'].includes(key),
+        frame: act.cost ? 'loss' : 'gain',
+      });
+    }
+    if (candidates.length === 0) {
+      c.currentAction = ACTIONS.chill;
+      c.actionTimer = 0.5;
+      return;
+    }
+    const context = { hasLoss: c.money < 10000 || c.health.disease, hasInvestment: c.job || c.loveStage };
+    const activeBiases = applyCognitiveBiases(c, candidates, context);
+    candidates.sort((a, b) => b.score - a.score);
+    const chosen = candidates[0];
+    const council = innerCouncil(c, chosen.key, chosen.act);
+    if (c.id === Game.selectedCharId || c.isProtagonist) {
+      if (Game.detailMode) {
+        const councilText = Object.entries(council)
+          .filter(([, v]) => v.statement)
+          .map(([k, v]) => {
+            const vDef = INNER_VOICES[k];
+            return `<span style="color:${vDef.color};font-weight:700">${vDef.name}</span> ${v.statement} <span style="color:#888;font-size:8px">(${v.score})</span>`;
+          }).join('<br>');
+        addThought(c.id, '🏛 內在議會', councilText, false, false, 'council');
+        if (activeBiases.length > 0) {
+          const biasText = activeBiases.map(b => `<span class="bias-tag">${b.name}</span>`).join(' ');
+          addThought(c.id, '⚠️ 偏差', biasText, false, false, 'bias');
+        }
+      }
+      addThought(c.id, '決定', `${chosen.act.icon}${chosen.act.name}(分${Math.round(chosen.score)})`, true);
+      addQuote(c.id, chosen.act.thought);
+      if (chosen.act.triggersReflection || (c.personality.openness > 7 && Math.random() < 0.1)) {
+        const reflections = ['我最近係咪太勞累？', '人生應該有更大目標', '我嘅選擇符合價值觀嗎？', '時間過得好快...'];
+        addThought(c.id, '🪞 反思', reflections[Math.floor(Math.random() * reflections.length)], false, false, 'reflection');
+      }
+    }
+    c.currentAction = chosen.act;
+    c.actionTimer = chosen.act.duration;
+    c.habits[chosen.key] = Math.min(100, (c.habits[chosen.key] || 0) + 5);
+    for (const k in c.habits) {
+      if (k !== chosen.key) c.habits[k] = Math.max(0, c.habits[k] - 1);
+    }
+  } catch (e) {
+    console.error('aiThink error:', e);
+    ErrorLog.push(`aiThink: ${e.message}`);
     c.currentAction = ACTIONS.chill;
     c.actionTimer = 0.5;
-    return;
   }
-
-  // 應用認知偏差
-  const context = {
-    hasLoss: c.money < 10000 || c.health.disease,
-    hasInvestment: c.job || c.loveStage,
-    hasReferenceValue: false,
-  };
-  const activeBiases = applyCognitiveBiases(c, candidates, context);
-
-  // 雙系統決策
-  const { useSystem1 } = dualProcessDecision(c, candidates, context);
-
-  candidates.sort((a, b) => b.score - a.score);
-  const chosen = candidates[0];
-
-  // 內在議會（只為最終選擇）
-  const council = innerCouncil(c, chosen.key, chosen.act, context);
-
-  if (c.id === Game.selectedCharId || c.isProtagonist) {
-    // 顯示內在議會
-    if (Game.detailMode) {
-      const councilText = Object.entries(council)
-        .filter(([k, v]) => v.statement)
-        .map(([k, v]) => {
-          const vDef = INNER_VOICES[k];
-          return `<span class="voice ${vDef.class}">${vDef.name}</span> ${v.statement} <span style="color:#888;font-size:8px">(${v.score})</span>`;
-        }).join('<br>');
-      addThought(c.id, '🏛 內在議會', councilText, false, false, 'council');
-
-      // 顯示認知偏差
-      if (activeBiases.length > 0) {
-        const biasText = activeBiases.map(b => `<span class="bias-tag">${b.name}</span> ${b.effect}`).join(' · ');
-        addThought(c.id, '⚠️ 認知偏差', biasText, false, false, 'bias');
-      }
-
-      // 顯示使用哪個系統
-      const sysText = useSystem1 ? '⚡ System 1（直覺）主導' : '🧠 System 2（理性）主導';
-      addThought(c.id, '🔀 決策模式', sysText, false, false, 'reflection');
-    }
-
-    addThought(c.id, '決定', `${chosen.act.icon}${chosen.act.name}(分${Math.round(chosen.score)})`, true);
-    addQuote(c.id, chosen.act.thought);
-
-    // 自我反思（高開放性角色偶爾反思）
-    if (chosen.act.triggersReflection || (c.personality.openness > 7 && Math.random() < 0.1)) {
-      const reflections = [
-        `我最近係咪太${lowestNeed.name}？要調整下...`,
-        `人生係咪應該有更大嘅目標？`,
-        `我嘅選擇係咪真係符合自己價值觀？`,
-        `時間過得好快...我要珍惜當下`,
-      ];
-      addThought(c.id, '🪞 自我反思', reflections[Math.floor(Math.random() * reflections.length)], false, false, 'reflection');
-    }
-  }
-
-  c.currentAction = chosen.act;
-  c.actionTimer = chosen.act.duration;
-
-  // 更新習慣
-  c.habits[chosen.key] = Math.min(100, (c.habits[chosen.key] || 0) + 5);
-  // 其他習慣衰減
-  for (const k in c.habits) {
-    if (k !== chosen.key) c.habits[k] = Math.max(0, c.habits[k] - 1);
-  }
-
-  // 記錄決策
-  c.decisionHistory.push({
-    day: Game.day, action: chosen.key, score: chosen.score,
-    system: useSystem1 ? 'S1' : 'S2',
-    biases: activeBiases.map(b => b.id),
-  });
 }
 
 // ============================================================
-// UI 渲染
+// UI
 // ============================================================
 function addThought(charId, tag, text, isDecision = false, isEvent = false, type = '') {
-  if (charId !== Game.selectedCharId && charId !== 'protagonist') return;
-  const c = Game.characters[charId];
-  const log = document.getElementById('thought-log');
-  const div = document.createElement('div');
-  let cls = 'thought';
-  if (isDecision) cls += ' decision';
-  if (isEvent) cls += ' event';
-  if (type === 'love') cls += ' love';
-  if (type === 'family') cls += ' family';
-  if (type === 'council') cls += ' council';
-  if (type === 'bias') cls += ' bias';
-  if (type === 'reflection') cls += ' reflection';
-  div.className = cls;
-  div.innerHTML = `
-    <div class="time">🕐 ${String(Game.hour).padStart(2,'0')}:${String(Game.minute).padStart(2,'0')} · ${c.name}</div>
-    <span class="tag">${tag}</span> ${text}
-  `;
-  log.insertBefore(div, log.firstChild);
-  while (log.children.length > 80) log.removeChild(log.lastChild);
+  try {
+    if (charId !== Game.selectedCharId && charId !== 'protagonist') return;
+    const c = Game.characters[charId];
+    if (!c) return;
+    const log = $('thought-log');
+    if (!log) return;
+    const div = document.createElement('div');
+    let cls = 'thought';
+    if (isDecision) cls += ' decision';
+    if (isEvent) cls += ' event';
+    if (type) cls += ' ' + type;
+    div.className = cls;
+    div.innerHTML = `<div class="time">🕐 ${String(Game.hour).padStart(2,'0')}:${String(Game.minute).padStart(2,'0')} · ${c.name}</div><span class="tag">${tag}</span> ${text}`;
+    log.insertBefore(div, log.firstChild);
+    while (log.children.length > 80) log.removeChild(log.lastChild);
+  } catch (e) { console.error('addThought error:', e); }
 }
 
 function addQuote(charId, text) {
-  if (charId !== Game.selectedCharId && charId !== 'protagonist') return;
-  const c = Game.characters[charId];
-  const log = document.getElementById('thought-log');
-  const div = document.createElement('div');
-  div.className = 'thought decision';
-  div.innerHTML = `<div class="time">💬 ${c.name}</div><div class="quote">「${text}」</div>`;
-  log.insertBefore(div, log.firstChild);
+  try {
+    if (charId !== Game.selectedCharId && charId !== 'protagonist') return;
+    const c = Game.characters[charId];
+    if (!c) return;
+    const log = $('thought-log');
+    if (!log) return;
+    const div = document.createElement('div');
+    div.className = 'thought decision';
+    div.innerHTML = `<div class="time">💬 ${c.name}</div><div class="quote">「${text}」</div>`;
+    log.insertBefore(div, log.firstChild);
+  } catch (e) { console.error('addQuote error:', e); }
 }
 
+// 優化：只在需要時重建角色列表
+let lastCharListHash = '';
 function renderCharList() {
-  const list = document.getElementById('char-list');
-  list.innerHTML = '';
-  Object.values(Game.characters).forEach(c => {
-    const card = document.createElement('div');
-    card.className = 'char-card' + (c.id === Game.selectedCharId ? ' selected' : '');
-    card.onclick = () => selectCharacter(c.id);
-    const attachName = ATTACHMENT_STYLES[c.attachmentStyle].name;
-    const stateLine = c.currentAction ? `${c.currentAction.icon} ${c.currentAction.name}` : '思考中...';
-    card.innerHTML = `
-      <div class="header">
-        <div class="avatar" style="background:${c.color}">${c.avatar}</div>
-        <div class="info">
-          <div class="name">${c.name}</div>
-          <div class="sub">${c.age}歲 · ${attachName}</div>
+  try {
+    // 建立 hash 判斷是否需要重建
+    const hash = Object.values(Game.characters).map(c =>
+      `${c.id}:${c.age}:${c.currentAction?.name || 'null'}:${Math.round(c.needs.hunger)}`
+    ).join('|');
+    if (hash === lastCharListHash) return;
+    lastCharListHash = hash;
+    const list = $('char-list');
+    if (!list) return;
+    list.innerHTML = '';
+    Object.values(Game.characters).forEach(c => {
+      const card = document.createElement('div');
+      card.className = 'char-card' + (c.id === Game.selectedCharId ? ' selected' : '');
+      card.onclick = () => selectCharacter(c.id);
+      const attachName = ATTACHMENT_STYLES[c.attachmentStyle].name;
+      const stateLine = c.currentAction ? `${c.currentAction.icon} ${c.currentAction.name}` : '思考中...';
+      card.innerHTML = `
+        <div class="header">
+          <div class="avatar" style="background:${c.color}">${c.avatar}</div>
+          <div class="info">
+            <div class="name">${c.name}</div>
+            <div class="sub">${c.age}歲 · ${attachName}</div>
+          </div>
         </div>
-      </div>
-      <div class="state-line">${stateLine}</div>
-    `;
-    list.appendChild(card);
-  });
-  renderDetail();
+        <div class="state-line">${stateLine}</div>
+      `;
+      list.appendChild(card);
+    });
+    renderDetail();
+  } catch (e) { console.error('renderCharList error:', e); }
 }
 
 function renderDetail() {
-  const c = Game.characters[Game.selectedCharId];
-  if (!c) return;
-  const area = document.getElementById('detail-area');
-  document.getElementById('log-char-name').textContent = c.name;
-  const stage = getLifeStage(c.age);
-  const attachName = ATTACHMENT_STYLES[c.attachmentStyle].name;
-  // 找出最高價值觀
-  const topValues = Object.entries(c.values).sort((a,b) => b[1]-a[1]).slice(0,3);
-  const topValueNames = topValues.map(([k,v]) => {
-    const def = VALUES_DEF.find(d => d.key === k);
-    return `${def.icon}${def.name}`;
-  }).join(' ');
-
-  area.innerHTML = `
-    <div class="detail-panel">
-      <div class="section-title">🧬 人格子維度</div>
-      <div class="value-bar"><span class="lbl">開放·思想</span><div class="bar"><div class="bar-fill" style="width:${c.facets.openness.ideas*10}%;background:#c084fc"></div></div><span class="val">${c.facets.openness.ideas.toFixed(0)}</span></div>
-      <div class="value-bar"><span class="lbl">盡責·自律</span><div class="bar"><div class="bar-fill" style="width:${c.facets.conscientiousness.discipline*10}%;background:#60a5fa"></div></div><span class="val">${c.facets.conscientiousness.discipline.toFixed(0)}</span></div>
-      <div class="value-bar"><span class="lbl">外向·自信</span><div class="bar"><div class="bar-fill" style="width:${c.facets.extraversion.assertiveness*10}%;background:#fbbf24"></div></div><span class="val">${c.facets.extraversion.assertiveness.toFixed(0)}</span></div>
-      <div class="value-bar"><span class="lbl">神經·焦慮</span><div class="bar"><div class="bar-fill" style="width:${c.facets.neuroticism.anxiety*10}%;background:#ff6b6b"></div></div><span class="val">${c.facets.neuroticism.anxiety.toFixed(0)}</span></div>
-      <div class="section-title" style="margin-top:6px">💝 依附風格</div>
-      <div style="font-size:10px;color:#ff69b4">❤️ ${attachName}</div>
-      <div class="section-title" style="margin-top:6px">🧭 核心價值觀</div>
-      <div style="font-size:10px">${topValueNames}</div>
-      <div class="section-title" style="margin-top:6px">🎯 生命階段</div>
-      <div style="font-size:10px;color:#ffd369">${stage.name}</div>
-      <div style="font-size:9px;color:#aaa">${stage.task}</div>
-      <div class="section-title" style="margin-top:6px">🧠 自我概念</div>
-      <div class="value-bar"><span class="lbl">自尊</span><div class="bar"><div class="bar-fill" style="width:${c.selfConcept.selfEsteem}%;background:#fbbf24"></div></div><span class="val">${Math.round(c.selfConcept.selfEsteem)}</span></div>
-      <div class="value-bar"><span class="lbl">效能</span><div class="bar"><div class="bar-fill" style="width:${c.selfConcept.selfEfficacy}%;background:#6bcf7f"></div></div><span class="val">${Math.round(c.selfConcept.selfEfficacy)}</span></div>
-    </div>
-  `;
+  try {
+    const c = Game.characters[Game.selectedCharId];
+    if (!c) return;
+    const area = $('detail-area');
+    if (!area) return;
+    safeSetText('log-char-name', c.name);
+    const stage = getLifeStage(c.age);
+    const attachName = ATTACHMENT_STYLES[c.attachmentStyle].name;
+    const topValues = Object.entries(c.values).sort((a,b) => b[1]-a[1]).slice(0,3);
+    const topValueNames = topValues.map(([k]) => {
+      const def = VALUES_DEF.find(d => d.key === k);
+      return def ? `${def.icon}${def.name}` : '';
+    }).join(' ');
+    area.innerHTML = `
+      <div class="detail-panel">
+        <div class="section-title">🧬 人格子維度</div>
+        <div class="value-bar"><span class="lbl">開放·思想</span><div class="bar"><div class="bar-fill" style="width:${c.facets.openness.ideas*10}%;background:#c084fc"></div></div><span class="val">${c.facets.openness.ideas.toFixed(0)}</span></div>
+        <div class="value-bar"><span class="lbl">盡責·自律</span><div class="bar"><div class="bar-fill" style="width:${c.facets.conscientiousness.discipline*10}%;background:#60a5fa"></div></div><span class="val">${c.facets.conscientiousness.discipline.toFixed(0)}</span></div>
+        <div class="value-bar"><span class="lbl">外向·自信</span><div class="bar"><div class="bar-fill" style="width:${c.facets.extraversion.assertiveness*10}%;background:#fbbf24"></div></div><span class="val">${c.facets.extraversion.assertiveness.toFixed(0)}</span></div>
+        <div class="value-bar"><span class="lbl">神經·焦慮</span><div class="bar"><div class="bar-fill" style="width:${c.facets.neuroticism.anxiety*10}%;background:#ff6b6b"></div></div><span class="val">${c.facets.neuroticism.anxiety.toFixed(0)}</span></div>
+        <div class="section-title" style="margin-top:6px">💝 依附風格</div>
+        <div style="font-size:10px;color:#ff69b4">❤️ ${attachName}</div>
+        <div class="section-title" style="margin-top:6px">🧭 核心價值觀</div>
+        <div style="font-size:10px">${topValueNames}</div>
+        <div class="section-title" style="margin-top:6px">🎯 生命階段</div>
+        <div style="font-size:10px;color:#ffd369">${stage.name}</div>
+        <div style="font-size:9px;color:#aaa">${stage.task}</div>
+        <div class="section-title" style="margin-top:6px">🧠 自我概念</div>
+        <div class="value-bar"><span class="lbl">自尊</span><div class="bar"><div class="bar-fill" style="width:${c.selfConcept.selfEsteem}%;background:#fbbf24"></div></div><span class="val">${Math.round(c.selfConcept.selfEsteem)}</span></div>
+      </div>
+    `;
+  } catch (e) { console.error('renderDetail error:', e); }
 }
 
 function selectCharacter(id) {
   Game.selectedCharId = id;
+  lastCharListHash = '';
   renderCharList();
-  document.getElementById('thought-log').innerHTML = '';
+  const log = $('thought-log');
+  if (log) log.innerHTML = '';
   addThought(id, '📍', `${Game.characters[id].name} 嘅視角`, false, true);
 }
 
 function renderSprites() {
-  Object.values(Game.characters).forEach(c => {
-    if (!c.spriteEl) {
-      const el = document.createElement('div');
-      el.className = 'char-sprite';
-      el.innerHTML = `
-        <div class="name-tag">${c.name}</div>
-        <div class="action"></div>
-        <div class="head"></div>
-        <div class="body" style="background:${c.color}"></div>
-      `;
-      document.getElementById('center').appendChild(el);
-      c.spriteEl = el;
-    }
-    const roomEl = document.querySelector(`[data-room="${c.currentRoom}"]`);
-    if (roomEl) {
-      const centerRect = document.getElementById('center').getBoundingClientRect();
-      const roomRect = roomEl.getBoundingClientRect();
-      const offset = Object.values(Game.characters).filter(o => o.currentRoom === c.currentRoom).indexOf(c);
-      const x = roomRect.left - centerRect.left + roomRect.width/2 - 11 + (offset-0.5)*14;
-      const y = roomRect.top - centerRect.top + roomRect.height/2 - 16;
-      c.spriteEl.style.left = x + 'px';
-      c.spriteEl.style.bottom = (centerRect.height - y - 32) + 'px';
-      c.spriteEl.querySelector('.action').textContent = c.currentAction ? c.currentAction.icon : '';
-    }
-  });
+  try {
+    Object.values(Game.characters).forEach(c => {
+      if (!c.spriteEl) {
+        const el = document.createElement('div');
+        el.className = 'char-sprite';
+        el.innerHTML = `
+          <div class="name-tag">${c.name}</div>
+          <div class="action"></div>
+          <div class="head"></div>
+          <div class="body" style="background:${c.color}"></div>
+        `;
+        const center = $('center');
+        if (center) center.appendChild(el);
+        c.spriteEl = el;
+      }
+      const roomEl = document.querySelector(`[data-room="${c.currentRoom}"]`);
+      if (roomEl && c.spriteEl) {
+        const centerRect = $('center').getBoundingClientRect();
+        const roomRect = roomEl.getBoundingClientRect();
+        const offset = Object.values(Game.characters).filter(o => o.currentRoom === c.currentRoom).indexOf(c);
+        const x = roomRect.left - centerRect.left + roomRect.width/2 - 11 + (offset-0.5)*14;
+        const y = roomRect.top - centerRect.top + roomRect.height/2 - 16;
+        c.spriteEl.style.left = x + 'px';
+        c.spriteEl.style.bottom = (centerRect.height - y - 32) + 'px';
+        const actionEl = c.spriteEl.querySelector('.action');
+        if (actionEl) actionEl.textContent = c.currentAction ? c.currentAction.icon : '';
+      }
+    });
+  } catch (e) { console.error('renderSprites error:', e); }
 }
 
 function renderSky() {
-  const sky = document.getElementById('sky');
-  const sun = document.getElementById('sun');
-  const h = Game.hour + Game.minute / 60;
-  let skyColor, sunOpacity;
-  if (h < 6) { skyColor = '#0a0a2e'; sunOpacity = 0; }
-  else if (h < 8) { skyColor = 'linear-gradient(to bottom, #ff9a8b, #ffc3a0)'; sunOpacity = (h-6)/2; }
-  else if (h < 17) { skyColor = 'linear-gradient(to bottom, #87ceeb, #b0e0e6)'; sunOpacity = 1; }
-  else if (h < 19) { skyColor = 'linear-gradient(to bottom, #ff6b6b, #ffa500)'; sunOpacity = 1-(h-17)/2; }
-  else { skyColor = '#0a0a2e'; sunOpacity = 0; }
-  sky.style.background = skyColor;
-  const progress = (h - 6) / 12;
-  sun.style.left = (10 + progress * 80) + '%';
-  sun.style.top = (40 - Math.sin(progress * Math.PI) * 35) + '%';
-  sun.style.opacity = sunOpacity;
+  try {
+    const sky = $('sky');
+    const sun = $('sun');
+    if (!sky || !sun) return;
+    const h = Game.hour + Game.minute / 60;
+    let skyColor, sunOpacity;
+    if (h < 6) { skyColor = '#0a0a2e'; sunOpacity = 0; }
+    else if (h < 8) { skyColor = 'linear-gradient(to bottom, #ff9a8b, #ffc3a0)'; sunOpacity = (h-6)/2; }
+    else if (h < 17) { skyColor = 'linear-gradient(to bottom, #87ceeb, #b0e0e6)'; sunOpacity = 1; }
+    else if (h < 19) { skyColor = 'linear-gradient(to bottom, #ff6b6b, #ffa500)'; sunOpacity = 1-(h-17)/2; }
+    else { skyColor = '#0a0a2e'; sunOpacity = 0; }
+    sky.style.background = skyColor;
+    const progress = (h - 6) / 12;
+    sun.style.left = (10 + progress * 80) + '%';
+    sun.style.top = (40 - Math.sin(progress * Math.PI) * 35) + '%';
+    sun.style.opacity = sunOpacity;
+  } catch (e) { console.error('renderSky error:', e); }
 }
 
 function executeAction(c, deltaHours) {
-  const act = c.currentAction;
-  if (!act) return;
-  const ratio = deltaHours / Math.max(act.duration, 0.1);
-  for (const [k, v] of Object.entries(act.effects)) {
-    if (c.needs[k] !== undefined) c.needs[k] = Math.max(0, Math.min(100, c.needs[k] + v * ratio));
-  }
-  if (act.cost) c.money -= act.cost * ratio;
-  if (act.income) c.money += act.income * ratio;
-  if (act.healthBonus) {
-    for (const [k, v] of Object.entries(act.healthBonus)) c.health[k] = Math.min(100, c.health[k] + v * ratio);
-  }
-  if (act.cureDisease && c.health.disease && Math.random() < 0.3 * ratio) {
-    c.health.disease = null;
-    if (c.id === Game.selectedCharId || c.isProtagonist) addThought(c.id, '💊', '病好返啦！', false, true);
-  }
-  if (act.affectionGain && c.loveTargetId) {
-    const rel = getRelation(c.id, c.loveTargetId);
-    rel.affection = Math.min(100, rel.affection + act.affectionGain * ratio);
-  }
-  c.actionTimer -= deltaHours;
-  if (c.actionTimer <= 0) {
-    if (c.id === Game.selectedCharId || c.isProtagonist) {
-      document.getElementById('today-action').textContent = act.icon + ' ' + act.name;
+  try {
+    const act = c.currentAction;
+    if (!act) return;
+    const ratio = deltaHours / Math.max(act.duration, 0.1);
+    for (const [k, v] of Object.entries(act.effects)) {
+      if (c.needs[k] !== undefined) c.needs[k] = Math.max(0, Math.min(100, c.needs[k] + v * ratio));
     }
+    if (act.cost) c.money -= act.cost * ratio;
+    if (act.income) c.money += act.income * ratio;
+    if (act.healthBonus) {
+      for (const [k, v] of Object.entries(act.healthBonus)) c.health[k] = Math.min(100, c.health[k] + v * ratio);
+    }
+    if (act.cureDisease && c.health.disease && Math.random() < 0.3 * ratio) {
+      c.health.disease = null;
+      if (c.id === Game.selectedCharId || c.isProtagonist) addThought(c.id, '💊', '病好返啦！', false, true);
+    }
+    if (act.affectionGain && c.loveTargetId) {
+      const rel = getRelation(c.id, c.loveTargetId);
+      rel.affection = Math.min(100, rel.affection + act.affectionGain * ratio);
+    }
+    c.actionTimer -= deltaHours;
+    if (c.actionTimer <= 0) {
+      if (c.id === Game.selectedCharId || c.isProtagonist) {
+        safeSetText('today-action', act.icon + ' ' + act.name);
+      }
+      c.currentAction = null;
+    }
+  } catch (e) {
+    console.error('executeAction error:', e);
     c.currentAction = null;
   }
 }
 
+// ============================================================
+// 主 tick（包 try-catch 防止崩潰）
+// ============================================================
 function tick() {
-  if (Game.paused || Game.speed === 0) return;
-  const baseDelta = 0.04 * Game.speed;
-  Game.hour += baseDelta;
-  Game.minute = Math.floor((Game.hour % 1) * 60);
-  if (Game.hour >= 24) {
-    Game.hour -= 24;
-    Game.day++;
+  try {
+    if (Game.paused || Game.speed === 0) return;
+    const baseDelta = 0.04 * Game.speed;
+    Game.hour += baseDelta;
+    Game.minute = Math.floor((Game.hour % 1) * 60);
+    if (Game.hour >= 24) {
+      Game.hour -= 24;
+      Game.day++;
+      Object.values(Game.characters).forEach(c => {
+        c.age = Math.floor((Game.day - c.birthDay) / 365);
+      });
+      dailySettlement();
+    }
     Object.values(Game.characters).forEach(c => {
-      c.age = Math.floor((Game.day - c.birthDay) / 365);
+      try {
+        if (c.currentAction) executeAction(c, baseDelta);
+        else aiThink(c);
+        NEEDS_DEF.forEach(n => {
+          c.needs[n.key] = Math.max(0, c.needs[n.key] - n.decay * baseDelta / 24);
+        });
+        updateHealth(c, baseDelta);
+        const avgNeed = Object.values(c.needs).reduce((a,b)=>a+b,0) / Object.keys(c.needs).length;
+        c.mood.happy += (avgNeed - 50) * 0.01 * baseDelta;
+        c.mood.calm += (c.needs.sleep/100 - 0.5) * 0.01 * baseDelta;
+        for (const k in c.mood) c.mood[k] = Math.max(-100, Math.min(100, c.mood[k]));
+        c.moodHistory = c.moodHistory || [];
+        c.moodHistory.push(c.mood.happy);
+        if (c.moodHistory.length > 20) c.moodHistory.shift();
+        if (avgNeed > 70) c.selfConcept.selfEsteem = Math.min(100, c.selfConcept.selfEsteem + 0.05 * baseDelta);
+        if (avgNeed < 30) c.selfConcept.selfEsteem = Math.max(0, c.selfConcept.selfEsteem - 0.1 * baseDelta);
+      } catch (e) {
+        console.error(`Character ${c.id} tick error:`, e);
+        ErrorLog.push(`char ${c.id}: ${e.message}`);
+      }
     });
-    dailySettlement();
+    checkLoveEvents();
+    checkMajorEvents();
+    // 渲染降幀（每 3 tick 渲染一次，提升效能）
+    Game.tickCount++;
+    if (Game.tickCount % 3 === 0) {
+      renderCharList();
+      renderSprites();
+      renderSky();
+      renderStatus();
+      renderDateTime();
+    }
+  } catch (e) {
+    console.error('TICK FATAL ERROR:', e);
+    ErrorLog.push(`TICK: ${e.message}`);
+    // 不停止遊戲，只記錄錯誤
   }
-  Object.values(Game.characters).forEach(c => {
-    if (c.currentAction) executeAction(c, baseDelta);
-    else aiThink(c);
-    NEEDS_DEF.forEach(n => {
-      c.needs[n.key] = Math.max(0, c.needs[n.key] - n.decay * baseDelta / 24);
-    });
-    updateHealth(c, baseDelta);
-    const avgNeed = Object.values(c.needs).reduce((a,b)=>a+b,0) / Object.keys(c.needs).length;
-    c.mood.happy += (avgNeed - 50) * 0.01 * baseDelta;
-    c.mood.calm += (c.needs.sleep/100 - 0.5) * 0.01 * baseDelta;
-    for (const k in c.mood) c.mood[k] = Math.max(-100, Math.min(100, c.mood[k]));
-    // 記錄情緒歷史
-    c.moodHistory = c.moodHistory || [];
-    c.moodHistory.push(c.mood.happy);
-    if (c.moodHistory.length > 20) c.moodHistory.shift();
-    // 自尊變化
-    if (avgNeed > 70) c.selfConcept.selfEsteem = Math.min(100, c.selfConcept.selfEsteem + 0.05 * baseDelta);
-    if (avgNeed < 30) c.selfConcept.selfEsteem = Math.max(0, c.selfConcept.selfEsteem - 0.1 * baseDelta);
-  });
-  checkLoveEvents();
-  checkMajorEvents();
-  renderCharList();
-  renderSprites();
-  renderSky();
-  renderStatus();
-  renderDateTime();
 }
 
 function updateHealth(c, delta) {
-  const h = c.health;
-  if (c.needs.sleep < 30) h.physical -= 0.5 * delta / 24;
-  if (c.needs.hunger < 30) h.physical -= 0.3 * delta / 24;
-  if (c.needs.sleep > 70 && c.needs.hunger > 60) h.physical = Math.min(100, h.physical + 0.1 * delta / 24);
-  if (c.needs.social < 30) h.mental -= 0.3 * delta / 24;
-  if (c.needs.fun > 60) h.mental = Math.min(100, h.mental + 0.1 * delta / 24);
-  if (h.disease) {
-    h.diseaseDuration += delta / 24;
-    h.physical -= 0.5 * delta / 24;
-    if (h.disease === 'depression') h.mental -= 0.8 * delta / 24;
-  }
-  if (!h.disease && Math.random() < 0.001 * delta) {
-    const diseases = ['cold', 'flu'];
-    if (h.mental < 40) diseases.push('depression');
-    if (c.age > 35) diseases.push('chronic');
-    h.disease = diseases[Math.floor(Math.random() * diseases.length)];
-    h.diseaseDuration = 0;
-    if (c.id === Game.selectedCharId || c.isProtagonist) addThought(c.id, '🤒', `病咗：${h.disease}`, false, true);
-  }
-  h.physical = Math.max(0, Math.min(100, h.physical));
-  h.mental = Math.max(0, Math.min(100, h.mental));
+  try {
+    const h = c.health;
+    if (c.needs.sleep < 30) h.physical -= 0.5 * delta / 24;
+    if (c.needs.hunger < 30) h.physical -= 0.3 * delta / 24;
+    if (c.needs.sleep > 70 && c.needs.hunger > 60) h.physical = Math.min(100, h.physical + 0.1 * delta / 24);
+    if (c.needs.social < 30) h.mental -= 0.3 * delta / 24;
+    if (c.needs.fun > 60) h.mental = Math.min(100, h.mental + 0.1 * delta / 24);
+    if (h.disease) {
+      h.diseaseDuration += delta / 24;
+      h.physical -= 0.5 * delta / 24;
+      if (h.disease === 'depression') h.mental -= 0.8 * delta / 24;
+    }
+    if (!h.disease && Math.random() < 0.001 * delta) {
+      const diseases = ['cold', 'flu'];
+      if (h.mental < 40) diseases.push('depression');
+      if (c.age > 35) diseases.push('chronic');
+      h.disease = diseases[Math.floor(Math.random() * diseases.length)];
+      h.diseaseDuration = 0;
+      if (c.id === Game.selectedCharId || c.isProtagonist) addThought(c.id, '🤒', `病咗：${h.disease}`, false, true);
+    }
+    h.physical = Math.max(0, Math.min(100, h.physical));
+    h.mental = Math.max(0, Math.min(100, h.mental));
+  } catch (e) { console.error('updateHealth error:', e); }
 }
 
 function dailySettlement() {
-  Object.values(Game.characters).forEach(c => {
-    let dailyCost = 80;
-    if (c.debt > 0) dailyCost += c.debt * 0.0001;
-    c.money -= dailyCost;
-    if (c.job && Game.day % 30 === 0) c.money += c.job.salary;
-  });
-  if (Game.characters.protagonist.age >= 40) endGame();
+  try {
+    Object.values(Game.characters).forEach(c => {
+      let dailyCost = 80;
+      if (c.debt > 0) dailyCost += c.debt * 0.0001;
+      c.money -= dailyCost;
+      if (c.job && Game.day % 30 === 0) c.money += c.job.salary;
+    });
+    if (Game.characters.protagonist.age >= 40) endGame();
+  } catch (e) { console.error('dailySettlement error:', e); }
 }
 
 function getRelationKey(id1, id2) { return [id1, id2].sort().join(':'); }
@@ -1295,7 +1170,7 @@ function getRelation(id1, id2) {
 }
 
 // ============================================================
-// 重大事件（使用內在議會顯示）
+// 重大事件
 // ============================================================
 const MAJOR_EVENTS = [
   {
@@ -1362,206 +1237,221 @@ const MAJOR_EVENTS = [
 ];
 
 function triggerEvent(evt) {
-  if (!evt || document.getElementById('event-modal').classList.contains('show')) return;
-  Game.paused = true;
-  Game.decisionsCount++;
-  const p = Game.characters.protagonist;
-  document.getElementById('event-icon').textContent = evt.icon;
-  document.getElementById('event-title').textContent = evt.title;
-  document.getElementById('event-context').textContent = evt.context;
-
-  // 內在議會辯論（顯示所有選項的內在聲音）
-  const councilEl = document.getElementById('council-display');
-  let councilHTML = '<div style="font-size:9px;color:#c084fc;margin-bottom:4px">🏛 內在議會辯論：</div>';
-  evt.choices.slice(0, 2).forEach((ch, idx) => {
-    councilHTML += `<div style="margin:4px 0;padding:4px;background:rgba(0,0,0,0.2);border-radius:3px">`;
-    councilHTML += `<div style="color:#ffd369;font-size:10px;margin-bottom:2px">選項 ${idx+1}：${ch.text}</div>`;
-    // 簡化：顯示 3 個主要聲音
-    const voices = ['instinct', 'reason', 'emotion'];
-    voices.forEach(vKey => {
-      const vDef = INNER_VOICES[vKey];
-      let score = 30 + Math.random() * 40;
-      score *= (p.voiceWeights[vKey] / 5);
-      if (ch.risk > 0.7 && vKey === 'reason') score *= 0.8;
-      if (ch.upside > 0.7 && vKey === 'emotion') score *= 1.2;
-      let statement = '';
-      if (score > 40) statement = `支持 · ${Math.round(score)}分`;
-      else if (score > 20) statement = `中立 · ${Math.round(score)}分`;
-      else statement = `反對 · ${Math.round(score)}分`;
-      councilHTML += `<div class="voice-line"><span class="voice-tag" style="background:${vDef.color};color:#000">${vDef.name}</span><span>${statement}</span></div>`;
+  try {
+    if (!evt || $('event-modal').classList.contains('show')) return;
+    Game.paused = true;
+    Game.decisionsCount++;
+    const p = Game.characters.protagonist;
+    safeSetText('event-icon', evt.icon);
+    safeSetText('event-title', evt.title);
+    safeSetText('event-context', evt.context);
+    const councilEl = $('council-display');
+    let councilHTML = '<div style="font-size:9px;color:#c084fc;margin-bottom:4px">🏛 內在議會辯論：</div>';
+    evt.choices.slice(0, 2).forEach((ch, idx) => {
+      councilHTML += `<div style="margin:4px 0;padding:4px;background:rgba(0,0,0,0.2);border-radius:3px">`;
+      councilHTML += `<div style="color:#ffd369;font-size:10px;margin-bottom:2px">選項 ${idx+1}：${ch.text}</div>`;
+      ['instinct', 'reason', 'emotion'].forEach(vKey => {
+        const vDef = INNER_VOICES[vKey];
+        let score = 30 + Math.random() * 40;
+        score *= (p.voiceWeights[vKey] / 5);
+        if (ch.risk > 0.7 && vKey === 'reason') score *= 0.8;
+        if (ch.upside > 0.7 && vKey === 'emotion') score *= 1.2;
+        let statement = score > 40 ? `支持 · ${Math.round(score)}分` : score > 20 ? `中立 · ${Math.round(score)}分` : `反對 · ${Math.round(score)}分`;
+        councilHTML += `<div class="voice-line"><span class="voice-tag" style="background:${vDef.color};color:#000">${vDef.name}</span><span>${statement}</span></div>`;
+      });
+      councilHTML += `</div>`;
     });
-    councilHTML += `</div>`;
-  });
-  councilEl.innerHTML = councilHTML;
-
-  // 認知偏差
-  const context = { hasLoss: p.money < 10000, hasInvestment: !!p.job };
-  const activeBiases = COGNITIVE_BIASES.filter(b => b.trigger(p, context));
-  const biasEl = document.getElementById('bias-display');
-  if (activeBiases.length > 0) {
-    biasEl.innerHTML = '⚠️ 活躍認知偏差：' + activeBiases.slice(0,3).map(b => `<b>${b.name}</b>`).join(' · ');
-    biasEl.style.display = 'block';
-  } else {
-    biasEl.style.display = 'none';
+    if (councilEl) councilEl.innerHTML = councilHTML;
+    const context = { hasLoss: p.money < 10000, hasInvestment: !!p.job };
+    const activeBiases = COGNITIVE_BIASES.filter(b => { try { return b.trigger(p, context); } catch { return false; } });
+    const biasEl = $('bias-display');
+    if (biasEl) {
+      if (activeBiases.length > 0) {
+        biasEl.innerHTML = '⚠️ 活躍認知偏差：' + activeBiases.slice(0,3).map(b => `<b>${b.name}</b>`).join(' · ');
+        biasEl.style.display = 'block';
+      } else {
+        biasEl.style.display = 'none';
+      }
+    }
+    const choicesEl = $('event-choices');
+    if (choicesEl) {
+      choicesEl.innerHTML = '';
+      evt.choices.forEach((ch, i) => {
+        let aiScore = 50;
+        aiScore += (ch.upside - 0.5) * 30;
+        aiScore -= (ch.risk - 0.5) * p.facets.neuroticism.anxiety * 2;
+        aiScore += (p.values.achievement / 10) * (ch.upside * 10);
+        aiScore += (p.values.security / 10) * ((1-ch.risk) * 10);
+        aiScore += (p.values.selfDirection / 10) * (ch.changeLevel * 10);
+        aiScore += (Math.random() - 0.5) * 20;
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.innerHTML = `
+          <span class="icon">${ch.icon}</span><b>${ch.text}</b>
+          <div class="desc">${ch.desc}</div>
+          <div class="ai-score">AI 傾向度：${Math.round(aiScore)}/100</div>
+        `;
+        btn.onclick = () => handleChoice(evt, ch, i, aiScore);
+        choicesEl.appendChild(btn);
+      });
+    }
+    $('event-modal').classList.add('show');
+    addThought(p.id, '⚡ 事件', `${evt.icon} ${evt.title}`, false, true);
+  } catch (e) {
+    console.error('triggerEvent error:', e);
+    Game.paused = false;
   }
-
-  // 選項（顯示 AI 評分）
-  const choicesEl = document.getElementById('event-choices');
-  choicesEl.innerHTML = '';
-  evt.choices.forEach((ch, i) => {
-    // 計算 AI 評分
-    let aiScore = 50;
-    aiScore += (ch.upside - 0.5) * 30;
-    aiScore -= (ch.risk - 0.5) * p.facets.neuroticism.anxiety * 2;
-    aiScore += (p.values.achievement / 10) * (ch.upside * 10);
-    aiScore += (p.values.security / 10) * ((1-ch.risk) * 10);
-    aiScore += (p.values.selfDirection / 10) * (ch.changeLevel * 10);
-    aiScore += (Math.random() - 0.5) * 20;
-    const btn = document.createElement('button');
-    btn.className = 'choice-btn';
-    btn.innerHTML = `
-      <span class="icon">${ch.icon}</span><b>${ch.text}</b>
-      <div class="desc">${ch.desc}</div>
-      <div class="ai-score">AI 傾向度：${Math.round(aiScore)}/100</div>
-    `;
-    btn.onclick = () => handleChoice(evt, ch, i, aiScore);
-    choicesEl.appendChild(btn);
-  });
-  document.getElementById('event-modal').classList.add('show');
-  addThought(p.id, '⚡ 事件', `${evt.icon} ${evt.title}`, false, true);
 }
 
 function checkMajorEvents() {
-  if (document.getElementById('event-modal').classList.contains('show')) return;
-  const p = Game.characters.protagonist;
-  for (const evt of MAJOR_EVENTS) {
-    if (evt.trigger(p)) { triggerEvent(evt); return; }
-  }
+  try {
+    if ($('event-modal').classList.contains('show')) return;
+    const p = Game.characters.protagonist;
+    for (const evt of MAJOR_EVENTS) {
+      if (evt.trigger(p)) { triggerEvent(evt); return; }
+    }
+  } catch (e) { console.error('checkMajorEvents error:', e); }
 }
 
 function handleChoice(evt, choice, idx, aiScore) {
-  const p = Game.characters.protagonist;
-  // 採納機率基於 AI 評分 + 性格
-  let acceptProb = aiScore / 100;
-  acceptProb += (p.personality.agreeableness - 5) * 0.04;
-  acceptProb -= (p.personality.neuroticism - 5) * 0.03;
-  const isAIPreference = idx === 0;
-  if (isAIPreference) acceptProb += 0.2;
-  else acceptProb -= 0.15;
-  acceptProb += (Math.random() - 0.5) * 0.2;
-  acceptProb = Math.max(0.05, Math.min(0.95, acceptProb));
-  const accepted = Math.random() < acceptProb;
-  const finalChoice = accepted ? choice : evt.choices[0];
-  finalChoice.action(p);
-
-  const resultDiv = document.createElement('div');
-  resultDiv.style.cssText = 'margin-top:10px;padding:8px;background:rgba(255,211,105,0.1);border-radius:5px;font-size:11px;';
-  if (accepted) {
-    Game.acceptedCount++;
-    resultDiv.innerHTML = `✅ <b>志明聽從咗你</b>：「${choice.text}」<br><span style="color:#aaa;font-size:10px">內在議會達成共識</span>`;
-  } else {
-    resultDiv.innerHTML = `❌ <b>志明冇聽你</b>，佢揀咗：「${evt.choices[0].text}」<br><i style="color:#c084fc;font-size:10px">「內在議會辯論後，理智/情感佔上風...」</i>`;
-  }
-  document.getElementById('event-modal').querySelector('.event-card').appendChild(resultDiv);
-  addThought(p.id, '決定', `${accepted?'✅':'❌'} ${finalChoice.text}`, true, true);
-
-  setTimeout(() => {
-    document.getElementById('event-modal').classList.remove('show');
-    resultDiv.remove();
+  try {
+    const p = Game.characters.protagonist;
+    let acceptProb = aiScore / 100;
+    acceptProb += (p.personality.agreeableness - 5) * 0.04;
+    acceptProb -= (p.personality.neuroticism - 5) * 0.03;
+    const isAIPreference = idx === 0;
+    if (isAIPreference) acceptProb += 0.2;
+    else acceptProb -= 0.15;
+    acceptProb += (Math.random() - 0.5) * 0.2;
+    acceptProb = Math.max(0.05, Math.min(0.95, acceptProb));
+    const accepted = Math.random() < acceptProb;
+    const finalChoice = accepted ? choice : evt.choices[0];
+    finalChoice.action(p);
+    const modal = $('event-modal');
+    if (modal) {
+      const resultDiv = document.createElement('div');
+      resultDiv.style.cssText = 'margin-top:10px;padding:8px;background:rgba(255,211,105,0.1);border-radius:5px;font-size:11px;';
+      if (accepted) {
+        Game.acceptedCount++;
+        resultDiv.innerHTML = `✅ <b>志明聽從咗你</b>：「${choice.text}」`;
+      } else {
+        resultDiv.innerHTML = `❌ <b>志明冇聽你</b>，佢揀咗：「${evt.choices[0].text}」`;
+      }
+      const card = modal.querySelector('.event-card');
+      if (card) card.appendChild(resultDiv);
+      setTimeout(() => {
+        modal.classList.remove('show');
+        resultDiv.remove();
+        Game.paused = false;
+        renderStatus();
+      }, 2200);
+    }
+    addThought(p.id, '決定', `${accepted?'✅':'❌'} ${finalChoice.text}`, true, true);
+  } catch (e) {
+    console.error('handleChoice error:', e);
     Game.paused = false;
-    renderStatus();
-  }, 2500);
+  }
 }
 
-// 戀愛事件（簡化）
 function checkLoveEvents() {
-  const p = Game.characters.protagonist;
-  if (!p.loveStage && p.age >= 23 && p.age < 40 && Math.random() < 0.0003 * Game.speed) {
-    const id = 'lover_' + Date.now();
-    const names = ['阿May', '阿詩', '阿琪', '阿玲'];
-    const name = names[Math.floor(Math.random() * names.length)];
-    const lover = createCharacter({
-      id, name, avatar: '👩', color: '#ff69b4',
-      age: p.age + Math.floor(Math.random() * 4 - 2), gender: 'F',
-      openness: 4 + Math.floor(Math.random() * 5),
-      conscientiousness: 4 + Math.floor(Math.random() * 5),
-      extraversion: 4 + Math.floor(Math.random() * 5),
-      agreeableness: 4 + Math.floor(Math.random() * 5),
-      neuroticism: 4 + Math.floor(Math.random() * 5),
-      money: 20000, job: { title: '文職', salary: 18000 },
-      home: '自己單位', currentRoom: 'outside',
-    });
-    lover.birthDay = Game.day - (lover.age * 365);
-    Game.characters[id] = lover;
-    p.loveStage = 'crush';
-    p.loveTargetId = id;
-    const rel = getRelation(p.id, id);
-    rel.affection = 50;
-    addThought(p.id, '💘', `認識咗${name}！`, false, true, 'love');
-  }
-  if (p.loveStage && p.loveTargetId) {
-    const rel = getRelation(p.id, p.loveTargetId);
-    rel.affection = Math.max(0, rel.affection - 0.05);
-    if (p.loveStage === 'crush' && rel.affection > 65 && Math.random() < 0.005) {
-      p.loveStage = 'dating'; p.relationship = '拍拖中';
-      addThought(p.id, '💕', '正式拍拖！', false, true, 'love');
+  try {
+    const p = Game.characters.protagonist;
+    if (!p.loveStage && p.age >= 23 && p.age < 40 && Math.random() < 0.0003 * Game.speed) {
+      const id = 'lover_' + Date.now();
+      const names = ['阿May', '阿詩', '阿琪', '阿玲'];
+      const name = names[Math.floor(Math.random() * names.length)];
+      const lover = createCharacter({
+        id, name, avatar: '👩', color: '#ff69b4',
+        age: p.age + Math.floor(Math.random() * 4 - 2), gender: 'F',
+        openness: 4 + Math.floor(Math.random() * 5),
+        conscientiousness: 4 + Math.floor(Math.random() * 5),
+        extraversion: 4 + Math.floor(Math.random() * 5),
+        agreeableness: 4 + Math.floor(Math.random() * 5),
+        neuroticism: 4 + Math.floor(Math.random() * 5),
+        money: 20000, job: { title: '文職', salary: 18000 },
+        home: '自己單位', currentRoom: 'outside',
+      });
+      lover.birthDay = Game.day - (lover.age * 365);
+      Game.characters[id] = lover;
+      p.loveStage = 'crush';
+      p.loveTargetId = id;
+      const rel = getRelation(p.id, id);
+      rel.affection = 50;
+      addThought(p.id, '💘', `認識咗${name}！`, false, true, 'love');
     }
-  }
+    if (p.loveStage && p.loveTargetId) {
+      const rel = getRelation(p.id, p.loveTargetId);
+      rel.affection = Math.max(0, rel.affection - 0.05);
+      if (p.loveStage === 'crush' && rel.affection > 65 && Math.random() < 0.005) {
+        p.loveStage = 'dating'; p.relationship = '拍拖中';
+        addThought(p.id, '💕', '正式拍拖！', false, true, 'love');
+      }
+    }
+  } catch (e) { console.error('checkLoveEvents error:', e); }
 }
 
 function renderStatus() {
-  const p = Game.characters.protagonist;
-  const stage = getLifeStage(p.age);
-  document.getElementById('money').textContent = '$' + Math.round(p.money).toLocaleString();
-  document.getElementById('life-progress').textContent = `${p.age} / 40 歲`;
-  document.getElementById('life-stage').textContent = stage.name;
-  document.getElementById('decisions-count').textContent = Game.decisionsCount;
-  document.getElementById('accepted-count').textContent = Game.acceptedCount;
-  document.getElementById('cognitive-load').textContent =
-    p.cognitiveLoad < 30 ? '低' : p.cognitiveLoad < 60 ? '中' : '高';
-  document.getElementById('current-goal').textContent = stage.task;
+  try {
+    const p = Game.characters.protagonist;
+    const stage = getLifeStage(p.age);
+    safeSetText('money', '$' + Math.round(p.money).toLocaleString());
+    safeSetText('life-progress', `${p.age} / 40 歲`);
+    safeSetText('life-stage', stage.name);
+    safeSetText('decisions-count', Game.decisionsCount);
+    safeSetText('accepted-count', Game.acceptedCount);
+    safeSetText('cognitive-load', p.cognitiveLoad < 30 ? '低' : p.cognitiveLoad < 60 ? '中' : '高');
+  } catch (e) { console.error('renderStatus error:', e); }
 }
 
 function renderDateTime() {
-  const year = 2026 + Math.floor(Game.day / 365);
-  const dayOfYear = Game.day % 365;
-  const month = Math.floor(dayOfYear / 30) + 1;
-  const day = (dayOfYear % 30) + 1;
-  document.getElementById('date-display').textContent = `${year}/${String(month).padStart(2,'0')}/${String(day).padStart(2,'0')}`;
-  document.getElementById('time-display').textContent = `${String(Game.hour).padStart(2,'0')}:${String(Game.minute).padStart(2,'0')}`;
+  try {
+    const year = 2026 + Math.floor(Game.day / 365);
+    const dayOfYear = Game.day % 365;
+    const month = Math.floor(dayOfYear / 30) + 1;
+    const day = (dayOfYear % 30) + 1;
+    safeSetText('date-display', `${year}/${String(month).padStart(2,'0')}/${String(day).padStart(2,'0')}`);
+    safeSetText('time-display', `${String(Game.hour).padStart(2,'0')}:${String(Game.minute).padStart(2,'0')}`);
+  } catch (e) { console.error('renderDateTime error:', e); }
 }
 
 function endGame() {
   Game.paused = true;
   const p = Game.characters.protagonist;
-  alert(`🎬 40 歲人生總結\n\n職業：${p.job ? p.job.title : '無業'}\n財務：$${Math.round(p.money).toLocaleString()}\n關係：${p.relationship}\n決策：${Game.decisionsCount} 次（接納 ${Game.acceptedCount}）\n依附風格：${ATTACHMENT_STYLES[p.attachmentStyle].name}`);
+  alert(`🎬 40 歲人生總結\n\n職業：${p.job ? p.job.title : '無業'}\n財務：$${Math.round(p.money).toLocaleString()}\n關係：${p.relationship}\n決策：${Game.decisionsCount} 次（接納 ${Game.acceptedCount}）\n依附風格：${ATTACHMENT_STYLES[p.attachmentStyle].name}\n\n錯誤記錄：${ErrorLog.length} 個`);
 }
 
-document.querySelectorAll('.speed-btn[data-speed]').forEach(btn => {
-  btn.onclick = () => {
-    document.querySelectorAll('.speed-btn[data-speed]').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    Game.speed = parseInt(btn.dataset.speed);
-    Game.paused = Game.speed === 0;
-  };
-});
-
-document.getElementById('detail-btn').onclick = () => {
-  Game.detailMode = !Game.detailMode;
-  document.getElementById('detail-btn').classList.toggle('active', Game.detailMode);
-};
-
+// ============================================================
+// 初始化
+// ============================================================
 function init() {
-  Game.characters.protagonist.birthDay = 0;
-  renderCharList();
-  renderSprites();
-  renderSky();
-  renderStatus();
-  renderDateTime();
-  document.getElementById('detail-btn').classList.add('active');
-  setInterval(tick, 100);
-  addThought('protagonist', '🌟', '陳志明，20 歲，深度 AI 引擎啟動', false, true);
-  addThought('protagonist', '🧠', '內在議會 × 認知偏差 × 價值觀 × 目標層次 就緒', false, false, 'reflection');
+  try {
+    Game.characters.protagonist.birthDay = 0;
+    document.querySelectorAll('.speed-btn[data-speed]').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.speed-btn[data-speed]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        Game.speed = parseInt(btn.dataset.speed);
+        Game.paused = Game.speed === 0;
+      };
+    });
+    $('detail-btn').onclick = () => {
+      Game.detailMode = !Game.detailMode;
+      $('detail-btn').classList.toggle('active', Game.detailMode);
+    };
+    renderCharList();
+    renderSprites();
+    renderSky();
+    renderStatus();
+    renderDateTime();
+    setInterval(tick, 100);
+    addThought('protagonist', '🌟', '陳志明，20 歲，深度 AI 引擎啟動（Debug 版）', false, true);
+    addThought('protagonist', '🛡', '錯誤防護已啟用 · 所有函數已包 try-catch', false, false, 'reflection');
+    console.log('%c《人生屋企》Debug 版已啟動', 'color:#ffd369;font-size:16px;font-weight:bold');
+    console.log('如遇到問題，請打開 Console 查看錯誤記錄');
+  } catch (e) {
+    console.error('Init error:', e);
+    alert('初始化錯誤：' + e.message);
+  }
 }
 
 init();
