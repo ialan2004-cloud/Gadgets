@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>人生屋企 · Deep AI · Debug 版</title>
+<title>人生屋企 · 活躍 AI 版</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body {
@@ -16,10 +16,7 @@
     display: grid;
     grid-template-rows: 38px 1fr 78px;
     grid-template-columns: 210px 1fr 320px;
-    grid-template-areas:
-      "top top top"
-      "left center right"
-      "bottom bottom bottom";
+    grid-template-areas: "top top top" "left center right" "bottom bottom bottom";
     gap: 4px; padding: 4px;
   }
   .panel {
@@ -49,7 +46,6 @@
     border-radius: 6px;
     padding: 6px;
     cursor: pointer;
-    transition: all 0.2s;
   }
   .char-card.selected { border-color: #ffd369; background: rgba(255,211,105,0.08); }
   .char-card .header { display: flex; align-items: center; gap: 6px; }
@@ -67,24 +63,6 @@
     letter-spacing: 1px; margin: 4px 0 2px;
     border-bottom: 1px solid #3a3a5e; padding-bottom: 2px;
   }
-  .detail-panel {
-    background: rgba(0,0,0,0.3);
-    border-radius: 6px;
-    padding: 6px;
-    font-size: 9.5px;
-  }
-  .detail-panel .row { display: flex; justify-content: space-between; margin: 2px 0; }
-  .detail-panel .row b { color: #ffd369; }
-  .value-bar {
-    display: flex; align-items: center; gap: 4px; margin: 2px 0;
-    font-size: 9px;
-  }
-  .value-bar .lbl { width: 52px; color: #aaa; }
-  .value-bar .bar {
-    flex: 1; height: 4px; background: #2a2a4a; border-radius: 2px; overflow: hidden;
-  }
-  .value-bar .bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s; }
-  .value-bar .val { width: 22px; text-align: right; color: #ffd369; font-size: 8px; }
   #center {
     grid-area: center;
     position: relative;
@@ -124,7 +102,7 @@
   }
   .char-sprite {
     position: absolute; width: 22px; height: 32px;
-    transition: left 1.5s ease-in-out, bottom 1.5s ease-in-out;
+    transition: left 1.2s ease-in-out, bottom 1.2s ease-in-out;
     z-index: 10; pointer-events: none;
   }
   .char-sprite .body {
@@ -169,19 +147,13 @@
     background: rgba(255, 255, 255, 0.03);
     border-left: 2px solid #4a6fa5;
     border-radius: 2px;
-    animation: slideIn 0.4s ease-out;
+    animation: slideIn 0.3s ease-out;
   }
   .thought.decision { border-left-color: #ffd369; }
   .thought.event { border-left-color: #ff6b6b; background: rgba(255, 107, 107, 0.08); }
   .thought.love { border-left-color: #ff69b4; background: rgba(255, 105, 180, 0.08); }
-  .thought.family { border-left-color: #6bcf7f; background: rgba(107, 207, 127, 0.08); }
-  .thought.council {
-    border-left-color: #c084fc; background: rgba(192, 132, 252, 0.08);
-    padding-left: 8px;
-  }
-  .thought.bias { border-left-color: #fbbf24; background: rgba(251, 191, 36, 0.06); font-size: 9px; }
-  .thought.reflection { border-left-color: #60a5fa; background: rgba(96, 165, 250, 0.06); font-style: italic; }
-  .thought.error { border-left-color: #ff0000; background: rgba(255, 0, 0, 0.15); color: #ff6b6b; }
+  .thought.council { border-left-color: #c084fc; background: rgba(192, 132, 252, 0.08); }
+  .thought.mutter { border-left-color: #60a5fa; background: rgba(96, 165, 250, 0.06); font-style: italic; }
   .thought .time { color: #888; font-size: 8px; }
   .thought .tag {
     display: inline-block; padding: 0 3px;
@@ -193,12 +165,6 @@
     background: rgba(255, 211, 105, 0.1);
     border-radius: 3px; color: #ffd369;
     font-style: italic; font-size: 10px;
-  }
-  .thought .bias-tag {
-    display: inline-block; padding: 1px 5px;
-    background: rgba(251, 191, 36, 0.2); color: #fbbf24;
-    border-radius: 3px; font-size: 8px; margin-right: 3px;
-    border: 1px solid rgba(251, 191, 36, 0.4);
   }
   @keyframes slideIn {
     from { opacity: 0; transform: translateX(10px); }
@@ -234,61 +200,22 @@
     width: 94%; max-width: 600px;
     max-height: 88vh; overflow-y: auto;
     box-shadow: 0 10px 40px rgba(255, 211, 105, 0.3);
-    animation: popIn 0.4s ease-out;
   }
-  @keyframes popIn {
-    from { opacity: 0; transform: scale(0.8); }
-    to { opacity: 1; transform: scale(1); }
-  }
-  .event-card h2 {
-    color: #ffd369; font-size: 15px; margin-bottom: 6px;
-    display: flex; align-items: center; gap: 6px;
-  }
+  .event-card h2 { color: #ffd369; font-size: 15px; margin-bottom: 6px; }
   .event-card .context {
     font-size: 11px; color: #ccc; margin-bottom: 8px;
     padding: 6px; background: rgba(0, 0, 0, 0.3); border-radius: 5px;
   }
-  .council-display {
-    background: rgba(192, 132, 252, 0.08);
-    border-left: 3px solid #c084fc;
-    padding: 8px; margin-bottom: 10px; border-radius: 0 5px 5px 0;
-    font-size: 10.5px;
-  }
-  .council-display .voice-line {
-    margin: 3px 0; display: flex; gap: 6px; align-items: flex-start;
-  }
-  .council-display .voice-line .voice-tag {
-    flex-shrink: 0; padding: 1px 5px; border-radius: 3px;
-    font-size: 9px; font-weight: 700;
-  }
-  .bias-display {
-    background: rgba(251, 191, 36, 0.06);
-    border-left: 3px solid #fbbf24;
-    padding: 6px; margin-bottom: 10px; border-radius: 0 5px 5px 0;
-    font-size: 10px; color: #fbbf24;
-  }
-  .event-card .choices {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
-  }
+  .event-card .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   .choice-btn {
     background: #2a2a4a; border: 1px solid #4a4a6a;
     color: #eee; padding: 8px; border-radius: 5px;
     cursor: pointer; font-size: 11px; text-align: left;
-    transition: all 0.2s;
   }
   .choice-btn:hover { background: #3a3a5a; border-color: #ffd369; }
   .choice-btn .icon { font-size: 15px; display: block; margin-bottom: 3px; }
   .choice-btn .desc { font-size: 9px; color: #aaa; margin-top: 2px; }
-  .choice-btn .ai-score {
-    font-size: 9px; color: #c084fc; margin-top: 3px;
-    font-family: monospace;
-  }
-  .event-card .warning {
-    font-size: 9px; color: #ff6b6b; margin-top: 8px;
-    text-align: center;
-  }
   ::-webkit-scrollbar { width: 3px; }
-  ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: #4a4a6a; border-radius: 2px; }
   @media (orientation: portrait) and (max-width: 900px) {
     #rotate-hint {
@@ -297,13 +224,9 @@
       background: #1a1a2e; z-index: 1000;
       align-items: center; justify-content: center;
       flex-direction: column; color: #ffd369;
-      font-size: 14px; text-align: center; padding: 20px;
     }
     #rotate-hint .icon { font-size: 50px; margin-bottom: 15px; animation: rotate 2s infinite; }
-    @keyframes rotate {
-      0%, 100% { transform: rotate(0); }
-      50% { transform: rotate(90deg); }
-    }
+    @keyframes rotate { 50% { transform: rotate(90deg); } }
   }
   #rotate-hint { display: none; }
 </style>
@@ -311,13 +234,13 @@
 <body>
 <div id="rotate-hint">
   <div class="icon">📱</div>
-  <div>請將手機橫向<br>Please rotate your device</div>
+  <div>請將手機橫向</div>
 </div>
 
 <div id="app">
   <div id="top" class="panel">
     <div class="left">
-      <span class="title">🧠 人生屋企 · Deep AI</span>
+      <span class="title">🧠 人生屋企 · 活躍 AI</span>
       <span id="date-display">2026/10/07</span>
       <span id="time-display" style="color:#ffd369">08:00</span>
     </div>
@@ -327,14 +250,12 @@
       <button class="speed-btn" data-speed="3">▶▶</button>
       <button class="speed-btn" data-speed="10">▶▶▶</button>
       <button class="speed-btn" data-speed="30">⏩</button>
-      <button class="mode-btn active" id="detail-btn" title="思考細節">🔬</button>
     </div>
   </div>
 
   <div id="left" class="panel">
     <div class="section-title">👥 家庭成員</div>
     <div id="char-list"></div>
-    <div id="detail-area"></div>
   </div>
 
   <div id="center">
@@ -355,7 +276,7 @@
 
   <div id="right" class="panel">
     <h3>
-      <span>💭 <span id="log-title">內在思考流</span></span>
+      <span>💭 思考流</span>
       <span id="log-char-name" style="font-size:10px;color:#aaa"></span>
     </h3>
     <div id="thought-log"></div>
@@ -369,20 +290,19 @@
     <div class="stat-box">
       <div class="label">人生進度</div>
       <div class="value" id="life-progress">20 / 40 歲</div>
-      <div class="sub" id="life-stage">青年期</div>
     </div>
     <div class="stat-box">
       <div class="label">💰 財務</div>
       <div class="value" id="money">$15,000</div>
     </div>
     <div class="stat-box">
-      <div class="label">認知負荷</div>
-      <div class="value" id="cognitive-load">低</div>
+      <div class="label">行動次數</div>
+      <div class="value" id="action-count">0</div>
+      <div class="sub">今日</div>
     </div>
     <div class="stat-box">
       <div class="label">決策</div>
       <div class="value" id="decisions-count">0</div>
-      <div class="sub">接納 <span id="accepted-count">0</span></div>
     </div>
   </div>
 </div>
@@ -391,10 +311,7 @@
   <div class="event-card">
     <h2><span id="event-icon">⚡</span> <span id="event-title">人生抉擇</span></h2>
     <div class="context" id="event-context"></div>
-    <div class="council-display" id="council-display"></div>
-    <div class="bias-display" id="bias-display"></div>
     <div class="choices" id="event-choices"></div>
-    <div class="warning">⚠️ 角色會根據內在議會辯論結果＋認知偏差決定是否聽從你</div>
   </div>
 </div>
 
@@ -402,45 +319,9 @@
 'use strict';
 
 // ============================================================
-// 安全 DOM 輔助函數（防止 null reference 崩潰）
+// 活躍 AI 引擎 — 50+ 行動 × 自言自語 × 行動鏈 × 時間段
 // ============================================================
-function $(id) { return document.getElementById(id); }
-function safeSetText(id, text) {
-  const el = $(id);
-  if (el) el.textContent = text;
-}
-function safeSetHTML(id, html) {
-  const el = $(id);
-  if (el) el.innerHTML = html;
-}
 
-// ============================================================
-// 全域錯誤處理（防止 setInterval 崩潰）
-// ============================================================
-const ErrorLog = [];
-window.addEventListener('error', (e) => {
-  const msg = `[ERROR] ${e.message} @ ${e.filename}:${e.lineno}`;
-  ErrorLog.push(msg);
-  console.error(msg, e.error);
-  try {
-    const log = $('thought-log');
-    if (log) {
-      const div = document.createElement('div');
-      div.className = 'thought error';
-      div.innerHTML = `<div class="time">🐛 錯誤</div>${msg}`;
-      log.insertBefore(div, log.firstChild);
-    }
-  } catch (err) { /* 忽略 */ }
-});
-window.addEventListener('unhandledrejection', (e) => {
-  const msg = `[PROMISE ERROR] ${e.reason}`;
-  ErrorLog.push(msg);
-  console.error(msg);
-});
-
-// ============================================================
-// 遊戲狀態
-// ============================================================
 const Game = {
   day: 0, hour: 8, minute: 0,
   speed: 1, paused: false,
@@ -448,135 +329,14 @@ const Game = {
   selectedCharId: 'protagonist',
   characters: {},
   relationships: {},
-  detailMode: true,
   tickCount: 0,
-  lastRenderFrame: 0,
+  actionCountToday: 0,
 };
-
-// ============================================================
-// 人格子維度
-// ============================================================
-const PERSONALITY_FACETS = {
-  openness: ['fantasy', 'aesthetics', 'ideas'],
-  conscientiousness: ['order', 'discipline', 'duty'],
-  extraversion: ['warmth', 'gregariousness', 'assertiveness'],
-  agreeableness: ['trust', 'altruism', 'compliance'],
-  neuroticism: ['anxiety', 'anger', 'vulnerability'],
-};
-
-const ATTACHMENT_STYLES = {
-  secure:    { name: '安全型' },
-  anxious:   { name: '焦慮型' },
-  avoidant:  { name: '逃避型' },
-  disorganized: { name: '混亂型' },
-};
-
-const VALUES_DEF = [
-  { key: 'achievement', name: '成就', icon: '🏆' },
-  { key: 'security', name: '安全', icon: '🛡' },
-  { key: 'hedonism', name: '享樂', icon: '🎉' },
-  { key: 'benevolence', name: '仁慈', icon: '🤝' },
-  { key: 'universalism', name: '博愛', icon: '🌍' },
-  { key: 'selfDirection', name: '自主', icon: '🧭' },
-  { key: 'stimulation', name: '刺激', icon: '⚡' },
-  { key: 'tradition', name: '傳統', icon: '🏛' },
-  { key: 'family', name: '家庭', icon: '👨‍👩‍👧' },
-  { key: 'wealth', name: '財富', icon: '💰' },
-];
-
-const INNER_VOICES = {
-  instinct: { name: '本能', color: '#fca5a5', class: 'instinct',
-    tone: ['想要...', '好想要...', '身體話我知...', '本能叫我...'] },
-  emotion: { name: '情感', color: '#f9a8d4', class: 'emotion',
-    tone: ['我覺得...', '我心入面...', '情緒上...', '我好...'] },
-  reason: { name: '理智', color: '#93c5fd', class: 'reason',
-    tone: ['理性嚟講...', '從長遠睇...', '邏輯上...', '數據顯示...'] },
-  moral: { name: '道德', color: '#86efac', class: 'moral',
-    tone: ['應該...', '正確嘅做法係...', '對得住良心...', '道德上...'] },
-  social: { name: '社會', color: '#fcd34d', class: 'social',
-    tone: ['人哋會點睇...', '社會期望...', '別人會...', '面子問題...'] },
-};
-
-const COGNITIVE_BIASES = [
-  { id: 'loss_aversion', name: '損失厭惡',
-    trigger: (c, ctx) => ctx.hasLoss,
-    effect: '傾向避免損失',
-    modifier: (scores) => { scores.forEach(s => { if (s.risk > 0.5) s.score -= 15; }); }},
-  { id: 'status_quo', name: '現狀偏差',
-    trigger: (c) => c.personality.conscientiousness < 5 || c.personality.neuroticism > 6,
-    effect: '傾向維持現狀',
-    modifier: (scores) => { scores.forEach(s => { if (s.changeLevel > 0.5) s.score -= 10; }); }},
-  { id: 'confirmation', name: '確認偏差',
-    trigger: (c) => c.emotionalState.intensity > 50,
-    effect: '尋找支持自己信念嘅資訊',
-    modifier: (scores) => { scores.forEach(s => { if (s.emotionalAlignment > 0.5) s.score += 8; }); }},
-  { id: 'optimism', name: '樂觀偏差',
-    trigger: (c) => c.personality.openness > 6 && c.mood.happy > 20,
-    effect: '過度樂觀',
-    modifier: (scores) => { scores.forEach(s => { if (s.upside > 0.5) s.score += 8; }); }},
-  { id: 'sunk_cost', name: '沉沒成本',
-    trigger: (c, ctx) => ctx.hasInvestment,
-    effect: '唔肯放棄已投入',
-    modifier: (scores) => { scores.forEach(s => { if (s.continuesExisting) s.score += 10; }); }},
-  { id: 'framing', name: '框架效應',
-    trigger: (c) => c.personality.neuroticism > 6,
-    effect: '表述方式影響選擇',
-    modifier: (scores) => { scores.forEach(s => { if (s.frame === 'loss') s.score -= 10; if (s.frame === 'gain') s.score += 5; }); }},
-];
-
-const LIFE_STAGES = [
-  { minAge: 20, maxAge: 25, name: '青年探索期', task: '親密 vs 孤獨', focus: ['love', 'social', 'selfDirection'] },
-  { minAge: 26, maxAge: 35, name: '成年建立期', task: '生育 vs 停滯', focus: ['achievement', 'family', 'wealth'] },
-  { minAge: 36, maxAge: 45, name: '中年鞏固期', task: '傳承 vs 自我中心', focus: ['benevolence', 'tradition', 'achievement'] },
-];
-
-function getLifeStage(age) {
-  return LIFE_STAGES.find(s => age >= s.minAge && age <= s.maxAge) || LIFE_STAGES[0];
-}
 
 // ============================================================
 // 角色工廠
 // ============================================================
 function createCharacter(cfg) {
-  const p = {
-    openness: cfg.openness ?? 5,
-    conscientiousness: cfg.conscientiousness ?? 5,
-    extraversion: cfg.extraversion ?? 5,
-    agreeableness: cfg.agreeableness ?? 5,
-    neuroticism: cfg.neuroticism ?? 5,
-  };
-  const facets = {};
-  for (const [trait, sub] of Object.entries(PERSONALITY_FACETS)) {
-    facets[trait] = {};
-    sub.forEach(s => {
-      facets[trait][s] = Math.max(1, Math.min(10, p[trait] + (Math.random() * 4 - 2)));
-    });
-  }
-  let attachStyle = 'secure';
-  if (p.neuroticism > 6 && p.agreeableness > 5) attachStyle = 'anxious';
-  else if (p.openness < 4 && p.neuroticism > 5) attachStyle = 'avoidant';
-  else if (p.neuroticism > 7) attachStyle = Math.random() < 0.5 ? 'anxious' : 'disorganized';
-
-  const values = {};
-  VALUES_DEF.forEach(v => {
-    let base = 3 + Math.random() * 5;
-    if (v.key === 'achievement') base += p.conscientiousness * 0.4;
-    if (v.key === 'hedonism') base += p.extraversion * 0.3 + p.openness * 0.2;
-    if (v.key === 'benevolence') base += p.agreeableness * 0.5;
-    if (v.key === 'selfDirection') base += p.openness * 0.4;
-    if (v.key === 'tradition') base += (10 - p.openness) * 0.3;
-    if (v.key === 'family') base += p.agreeableness * 0.3;
-    values[v.key] = Math.max(1, Math.min(10, base));
-  });
-
-  const voiceWeights = {
-    instinct: 3 + p.neuroticism * 0.3 + (10 - p.conscientiousness) * 0.3,
-    emotion: 3 + p.neuroticism * 0.5 + p.openness * 0.2,
-    reason: 3 + p.conscientiousness * 0.5 + p.openness * 0.3,
-    moral: 3 + p.agreeableness * 0.5,
-    social: 3 + p.extraversion * 0.4 + (10 - p.openness) * 0.2,
-  };
-
   return {
     id: cfg.id,
     name: cfg.name,
@@ -585,38 +345,38 @@ function createCharacter(cfg) {
     age: cfg.age,
     gender: cfg.gender || 'M',
     isProtagonist: cfg.isProtagonist || false,
-    personality: p,
-    facets,
-    attachmentStyle: attachStyle,
-    values,
-    voiceWeights,
-    selfConcept: {
-      selfEsteem: 50 + (p.conscientiousness - 5) * 5 + (Math.random() * 20 - 10),
-      selfEfficacy: 50,
+    personality: {
+      openness: cfg.openness ?? 5,
+      conscientiousness: cfg.conscientiousness ?? 5,
+      extraversion: cfg.extraversion ?? 5,
+      agreeableness: cfg.agreeableness ?? 5,
+      neuroticism: cfg.neuroticism ?? 5,
     },
-    goals: { ultimate: '尋找人生意義', current: null },
-    cognitiveLoad: 0,
-    emotionalState: { intensity: 0, valence: 0 },
-    moodHistory: [],
-    habits: {},
     needs: {
       hunger: cfg.hunger ?? 60, sleep: cfg.sleep ?? 70, hygiene: cfg.hygiene ?? 75,
       social: cfg.social ?? 40, fun: cfg.fun ?? 50, safety: cfg.safety ?? 55, love: cfg.love ?? 30,
+      energy: cfg.energy ?? 80, bladder: cfg.bladder ?? 80,
     },
     mood: { happy: 0, calm: 20, confident: 10, fulfilled: 0 },
     money: cfg.money ?? 15000, debt: cfg.debt ?? 0,
-    job: cfg.job || null, jobSatisfaction: cfg.jobSatisfaction ?? 50,
-    home: cfg.home ?? '劏房（租）', homeLevel: cfg.homeLevel ?? 0,
+    job: cfg.job || null,
+    home: cfg.home ?? '劏房（租）',
     relationship: cfg.relationship ?? '單身',
-    health: { physical: cfg.physical ?? 90, mental: cfg.mental ?? 85, disease: null, diseaseDuration: 0 },
+    health: { physical: 90, mental: 85, disease: null },
     memories: [],
-    skills: { cooking: 2, fitness: 3, social: 4, career: 2 },
-    currentAction: null, currentRoom: cfg.currentRoom ?? 'bedroom', actionTimer: 0,
+    currentAction: null,
+    currentRoom: cfg.currentRoom ?? 'bedroom',
+    actionTimer: 0,
     spriteEl: null,
-    children: [], parentId: cfg.parentId || null,
-    loveStage: cfg.loveStage || null, loveTargetId: cfg.loveTargetId || null,
+    children: [],
+    loveStage: null, loveTargetId: null,
     birthDay: cfg.birthDay ?? 0,
-    decisionHistory: [],
+    // 自言自語冷卻
+    mutterCooldown: 0,
+    // 行動鏈
+    actionChain: [],
+    // 今日行動記錄
+    todayActions: [],
   };
 }
 
@@ -627,358 +387,556 @@ Game.characters.protagonist = createCharacter({
   money: 15000,
 });
 
+// ============================================================
+// 需求定義（加入能量、膀胱）
+// ============================================================
 const NEEDS_DEF = [
-  { key: 'hunger', icon: '🍽', name: '飢餓', decay: 3.5, color: '#ff6b6b' },
-  { key: 'sleep', icon: '😴', name: '睡眠', decay: 2.5, color: '#6bcf7f' },
-  { key: 'hygiene', icon: '🚿', name: '衛生', decay: 1.8, color: '#60a5fa' },
-  { key: 'social', icon: '💬', name: '社交', decay: 1.5, color: '#fbbf24' },
-  { key: 'fun', icon: '🎮', name: '娛樂', decay: 2.0, color: '#c084fc' },
-  { key: 'safety', icon: '🛡', name: '安全', decay: 0.3, color: '#f472b6' },
-  { key: 'love', icon: '💕', name: '愛情', decay: 1.0, color: '#ff69b4' },
+  { key: 'hunger', icon: '🍽', decay: 4.0, color: '#ff6b6b' },
+  { key: 'sleep', icon: '😴', decay: 3.0, color: '#6bcf7f' },
+  { key: 'hygiene', icon: '🚿', decay: 2.0, color: '#60a5fa' },
+  { key: 'social', icon: '💬', decay: 2.0, color: '#fbbf24' },
+  { key: 'fun', icon: '🎮', decay: 2.5, color: '#c084fc' },
+  { key: 'safety', icon: '🛡', decay: 0.5, color: '#f472b6' },
+  { key: 'love', icon: '💕', decay: 1.5, color: '#ff69b4' },
+  { key: 'energy', icon: '⚡', decay: 2.5, color: '#fde047' },
+  { key: 'bladder', icon: '🚽', decay: 3.5, color: '#a78bfa' },
 ];
 
+// ============================================================
+// 50+ 行動庫（按時間段分類）
+// ============================================================
 const ACTIONS = {
-  sleep: { name: '瞓覺', icon: '💤', room: 'bedroom', duration: 8,
-    effects: { sleep: 40, hunger: -8 },
-    condition: (c) => (c.needs.sleep < 40 && Game.hour >= 22) || c.needs.sleep < 20,
-    thought: '好攰...要瞓覺',
-    voice: 'instinct', needFocus: ['sleep'], valueAlignment: [] },
-  shower: { name: '沖涼', icon: '🚿', room: 'bathroom', duration: 0.5,
-    effects: { hygiene: 40, fun: 5 },
-    condition: (c) => c.needs.hygiene < 50,
-    thought: '沖個涼清爽啲',
-    voice: 'instinct', needFocus: ['hygiene'], valueAlignment: [] },
-  cook: { name: '煮飯', icon: '🍳', room: 'kitchen', duration: 1,
-    effects: { hunger: 35, fun: 8 },
-    condition: (c) => c.needs.hunger < 50 && Game.hour >= 11 && Game.hour <= 20 && c.skills.cooking >= 2,
-    thought: '自己煮慳返啲',
-    voice: 'reason', needFocus: ['hunger'], valueAlignment: ['wealth', 'security'] },
-  eat_out: { name: '出街食', icon: '🍜', room: 'outside', duration: 1.5,
-    effects: { hunger: 40, fun: 12, social: 5 }, cost: 60,
-    condition: (c) => c.needs.hunger < 50 && c.money > 100,
-    thought: '出街食好味啲',
-    voice: 'emotion', needFocus: ['hunger', 'fun'], valueAlignment: ['hedonism'] },
-  work: { name: '返工', icon: '💼', room: 'work', duration: 9,
-    effects: { fun: -15, social: 10, hunger: -15 }, income: 600,
-    condition: (c) => c.job && Game.hour >= 9 && Game.hour < 18 && c.needs.sleep > 30 && !c.health.disease,
+  // === 早晨 routine (6:00-9:00) ===
+  wake_up: {
+    name: '起身', icon: '⏰', room: 'bedroom', duration: 0.2,
+    effects: { sleep: -10, energy: 5 },
+    condition: (c) => c.needs.sleep > 60 && Game.hour >= 6 && Game.hour < 10,
+    thought: '新嘅一日...',
+    mutter: ['今日要努力！', '又係新嘅一日...', '唔想起身...']
+  },
+  stretch: {
+    name: '伸懶腰', icon: '🙆', room: 'bedroom', duration: 0.1,
+    effects: { energy: 5, fun: 2 },
+    condition: (c) => Game.hour >= 6 && Game.hour < 10 && c.needs.energy < 70,
+    thought: '伸個懶腰先',
+    mutter: ['啊...好舒服', '身體好僵']
+  },
+  brush_teeth: {
+    name: '刷牙', icon: '🪥', room: 'bathroom', duration: 0.15,
+    effects: { hygiene: 15 },
+    condition: (c) => (Game.hour >= 6 && Game.hour < 9) || (Game.hour >= 21 && Game.hour < 24),
+    thought: '刷牙清新啲',
+    mutter: ['左邊...右邊...上面...下面']
+  },
+  wash_face: {
+    name: '洗面', icon: '💦', room: 'bathroom', duration: 0.1,
+    effects: { hygiene: 10, energy: 5 },
+    condition: (c) => Game.hour >= 6 && Game.hour < 10,
+    thought: '洗個面醒下神',
+    mutter: ['凍冰冰...好醒神']
+  },
+  eat_breakfast: {
+    name: '食早餐', icon: '🥐', room: 'kitchen', duration: 0.4,
+    effects: { hunger: 25, energy: 10 },
+    cost: 20,
+    condition: (c) => Game.hour >= 7 && Game.hour < 10 && c.needs.hunger < 60,
+    thought: '食個早餐先',
+    mutter: ['早餐係最重要嘅一餐', '今日食咩好呢']
+  },
+  make_coffee: {
+    name: '沖咖啡', icon: '☕', room: 'kitchen', duration: 0.2,
+    effects: { energy: 15, fun: 5 },
+    cost: 15,
+    condition: (c) => Game.hour >= 7 && Game.hour < 11 && c.needs.energy < 60,
+    thought: '沖杯咖啡醒下神',
+    mutter: ['咖啡香...好聞', '今日要靠佢撐住']
+  },
+  check_phone_morning: {
+    name: '睇手機（朝早）', icon: '📱', room: 'bedroom', duration: 0.2,
+    effects: { social: 8, fun: 5 },
+    condition: (c) => Game.hour >= 6 && Game.hour < 9,
+    thought: '睇下今朝早有咩新聞',
+    mutter: ['又有新 message', '天氣今日幾度？']
+  },
+
+  // === 通勤 (8:00-9:30) ===
+  commute_to_work: {
+    name: '搭車返工', icon: '🚇', room: 'outside', duration: 0.8,
+    effects: { fun: -5, energy: -5, social: 3 },
+    condition: (c) => c.job && Game.hour >= 8 && Game.hour < 9.5 && c.currentRoom !== 'work',
+    thought: '搭車返工',
+    mutter: ['好多人...', '今日地鐵好迫', '聽下 podcast']
+  },
+
+  // === 工作時間 (9:00-18:00) ===
+  work: {
+    name: '返工', icon: '💼', room: 'work', duration: 2,
+    effects: { fun: -8, energy: -10, social: 5 },
+    income: 150,
+    condition: (c) => c.job && Game.hour >= 9 && Game.hour < 18 && c.needs.energy > 20 && !c.health.disease,
     thought: '返工啦',
-    voice: 'reason', needFocus: ['safety'], valueAlignment: ['achievement', 'wealth', 'security'] },
-  game: { name: '打機', icon: '🎮', room: 'living', duration: 2,
-    effects: { fun: 30, social: -5 },
-    condition: (c) => c.needs.fun < 50 && Game.hour >= 19,
-    thought: '打機放鬆下',
-    voice: 'instinct', needFocus: ['fun'], valueAlignment: ['hedonism'] },
-  exercise: { name: '做運動', icon: '🏃', room: 'outside', duration: 1.5,
-    effects: { fun: 15, hygiene: -15, sleep: 5 }, healthBonus: { physical: 2 },
-    condition: (c) => c.needs.fun < 60 && Game.hour >= 6 && Game.hour < 21 && !c.health.disease,
-    thought: '出下汗舒服啲',
-    voice: 'reason', needFocus: ['fun'], valueAlignment: ['achievement', 'security'] },
-  browse: { name: '滑手機', icon: '📱', room: 'living', duration: 1,
-    effects: { fun: 12, social: 5 },
-    condition: (c) => c.needs.fun < 70,
+    mutter: ['又要開會...', '呢個 project 幾時先做完', '老細又嚟']
+  },
+  work_lunch: {
+    name: '食午餐', icon: '🍱', room: 'outside', duration: 0.8,
+    effects: { hunger: 35, energy: 8, social: 8 },
+    cost: 50,
+    condition: (c) => c.job && Game.hour >= 12 && Game.hour < 14 && c.needs.hunger < 50,
+    thought: '食午餐',
+    mutter: ['同同事去邊度食？', '今日食咩好', '好餓...']
+  },
+  work_break: {
+    name: '小休', icon: '☕', room: 'work', duration: 0.3,
+    effects: { energy: 8, fun: 5 },
+    condition: (c) => c.job && Game.hour >= 10 && Game.hour < 17 && c.needs.energy < 50,
+    thought: '休息下先',
+    mutter: ['去茶水間沖杯嘢', '行下伸展下']
+  },
+  work_chat: {
+    name: '同同事傾偈', icon: '🗣', room: 'work', duration: 0.3,
+    effects: { social: 15, fun: 8 },
+    condition: (c) => c.job && Game.hour >= 10 && Game.hour < 17 && c.needs.social < 50,
+    thought: '同同事吹下水',
+    mutter: ['你聽講未...', '週末有咩計劃？']
+  },
+
+  // === 黃昏 (17:30-19:30) ===
+  commute_home: {
+    name: '搭車返屋企', icon: '🚇', room: 'outside', duration: 0.8,
+    effects: { fun: -3, energy: -5 },
+    condition: (c) => c.job && Game.hour >= 17.5 && Game.hour < 19.5 && c.currentRoom === 'work',
+    thought: '返屋企',
+    mutter: ['終於放工', '好攰...', '今晚食咩好']
+  },
+  grocery_shopping: {
+    name: '買餸', icon: '🛒', room: 'outside', duration: 0.8,
+    effects: { fun: 5, energy: -5 },
+    cost: 100,
+    condition: (c) => Game.hour >= 17 && Game.hour < 20 && c.needs.hunger < 50 && c.money > 150,
+    thought: '買啲嘢返屋企煮',
+    mutter: ['今晚煮咩好呢', '呢個平啲...']
+  },
+
+  // === 晚上 (19:00-23:00) ===
+  cook_dinner: {
+    name: '煮晚餐', icon: '🍳', room: 'kitchen', duration: 0.8,
+    effects: { hunger: 40, fun: 10, energy: -5 },
+    condition: (c) => Game.hour >= 18 && Game.hour < 21 && c.needs.hunger < 50,
+    thought: '自己煮飯',
+    mutter: ['煮咩好呢...', '雪櫃得咩材料？']
+  },
+  eat_dinner: {
+    name: '食晚餐', icon: '🍽', room: 'kitchen', duration: 0.4,
+    effects: { hunger: 35, energy: 10 },
+    condition: (c) => Game.hour >= 18 && Game.hour < 21 && c.needs.hunger < 50,
+    thought: '食飯啦',
+    mutter: ['好味！', '今日煮得幾好']
+  },
+  eat_outside: {
+    name: '出街食飯', icon: '🍜', room: 'outside', duration: 1,
+    effects: { hunger: 40, fun: 12, social: 5 },
+    cost: 70,
+    condition: (c) => Game.hour >= 18 && Game.hour < 21 && c.needs.hunger < 50 && c.money > 100,
+    thought: '出街食好味啲',
+    mutter: ['去邊間好呢', '好耐冇食呢間']
+  },
+  wash_dishes: {
+    name: '洗碗', icon: '🍽', room: 'kitchen', duration: 0.25,
+    effects: { hygiene: 5 },
+    condition: (c) => Game.hour >= 19 && Game.hour < 22,
+    thought: '洗返啲碗',
+    mutter: ['洗完舒服啲', '好耐冇洗碗']
+  },
+  watch_tv: {
+    name: '睇電視', icon: '📺', room: 'living', duration: 1,
+    effects: { fun: 25, energy: -3 },
+    condition: (c) => Game.hour >= 19 && Game.hour < 23 && c.needs.fun < 60,
+    thought: '睇下電視放鬆下',
+    mutter: ['呢套戲幾好', '轉台睇下其他']
+  },
+  scroll_phone: {
+    name: '滑手機', icon: '📱', room: 'living', duration: 0.6,
+    effects: { fun: 15, social: 8 },
+    condition: (c) => Game.hour >= 19 && Game.hour < 24 && c.needs.fun < 70,
     thought: '睇下 IG',
-    voice: 'instinct', needFocus: ['fun', 'social'], valueAlignment: ['hedonism'] },
-  read: { name: '睇書', icon: '📖', room: 'living', duration: 1.5,
-    effects: { fun: 10 },
-    condition: (c) => c.needs.fun < 70 && c.personality.openness > 5,
+    mutter: ['又有人 post 旅行相', '呢個 reel 好搞笑']
+  },
+  play_game: {
+    name: '打機', icon: '🎮', room: 'living', duration: 1.5,
+    effects: { fun: 35, energy: -8 },
+    condition: (c) => Game.hour >= 19 && Game.hour < 24 && c.needs.fun < 50,
+    thought: '打機放鬆下',
+    mutter: ['又輸...', '多一盤先瞓', '好刺激！']
+  },
+  read_book: {
+    name: '睇書', icon: '📖', room: 'living', duration: 1,
+    effects: { fun: 15, energy: -3 },
+    condition: (c) => Game.hour >= 20 && Game.hour < 23 && c.needs.fun < 70,
     thought: '靜靜哋睇下書',
-    voice: 'reason', needFocus: ['fun'], valueAlignment: ['selfDirection'] },
-  chill: { name: '發呆', icon: '💭', room: 'living', duration: 0.5,
-    effects: { fun: 3 }, condition: () => true,
-    thought: '...', voice: 'emotion', needFocus: [], valueAlignment: [] },
-  see_doctor: { name: '睇醫生', icon: '🏥', room: 'outside', duration: 3,
-    effects: { fun: -10 }, cost: 300, cureDisease: true,
-    condition: (c) => c.health.disease && c.money > 400,
-    thought: '病咗要睇醫生',
-    voice: 'reason', needFocus: ['safety'], valueAlignment: ['security'] },
-  rest: { name: '休息', icon: '🛌', room: 'bedroom', duration: 2,
-    effects: { sleep: 15, fun: 5 },
-    condition: (c) => c.health.disease || c.health.physical < 50,
-    thought: '身體唔舒服，要休息',
-    voice: 'instinct', needFocus: ['sleep'], valueAlignment: ['security'] },
-  socialize: { name: '約朋友', icon: '🍻', room: 'outside', duration: 3,
-    effects: { social: 40, fun: 25, hunger: -10 }, cost: 150,
-    condition: (c) => c.needs.social < 40 && c.money > 200 && Game.hour >= 18 && !c.health.disease,
-    thought: '好耐冇見啲朋友',
-    voice: 'emotion', needFocus: ['social', 'fun'], valueAlignment: ['benevolence'] },
-  date: { name: '約會', icon: '💑', room: 'outside', duration: 3,
-    effects: { love: 30, fun: 25, social: 15, hunger: -10 }, cost: 300,
-    condition: (c) => c.loveStage && c.loveTargetId && c.money > 400 && Game.hour >= 17,
-    thought: '同另一半去約會',
-    voice: 'emotion', needFocus: ['love', 'fun'], valueAlignment: ['family', 'hedonism'],
-    affectionGain: 8 },
-  chat_partner: { name: '同伴侶傾偈', icon: '💬', room: 'living', duration: 1,
-    effects: { love: 15, social: 10 },
-    condition: (c) => c.loveStage && c.loveTargetId,
-    thought: '同佢傾下偈',
-    voice: 'emotion', needFocus: ['love'], valueAlignment: ['family'],
-    affectionGain: 3 },
-  play_with_child: { name: '陪子女玩', icon: '🧸', room: 'living', duration: 2,
-    effects: { love: 20, fun: 20, social: 15 },
-    condition: (c) => c.children.length > 0 && c.children.some(cid => Game.characters[cid] && Game.characters[cid].age < 18),
-    thought: '陪下小朋友',
-    voice: 'emotion', needFocus: ['love', 'fun'], valueAlignment: ['family', 'benevolence'] },
-  teach_child: { name: '教功課', icon: '📚', room: 'living', duration: 1.5,
-    effects: { fun: -5, love: 10 },
-    condition: (c) => c.children.length > 0 && c.children.some(cid => { const ch = Game.characters[cid]; return ch && ch.age >= 6 && ch.age < 18; }) && Game.hour >= 16,
-    thought: '教下小朋友做功課',
-    voice: 'moral', needFocus: ['love'], valueAlignment: ['family', 'achievement'] },
-  self_reflect: { name: '自我反思', icon: '🧘', room: 'bedroom', duration: 1,
-    effects: { fun: -5, sleep: 5 },
-    condition: (c) => c.personality.openness > 5 && c.needs.fun < 80 && Game.hour >= 21,
-    thought: '靜落嚟諗下人生...',
-    voice: 'reason', needFocus: [], valueAlignment: ['selfDirection'],
-    triggersReflection: true },
+    mutter: ['呢段寫得幾好', '再睇多一章']
+  },
+  listen_music: {
+    name: '聽歌', icon: '🎧', room: 'living', duration: 0.5,
+    effects: { fun: 18, energy: 3 },
+    condition: (c) => Game.hour >= 18 && Game.hour < 24 && c.needs.fun < 70,
+    thought: '聽下歌',
+    mutter: ['呢首歌好聽', '回憶返起...']
+  },
+  exercise: {
+    name: '做運動', icon: '🏃', room: 'outside', duration: 1,
+    effects: { fun: 15, energy: -15, hygiene: -10 },
+    healthBonus: { physical: 3 },
+    condition: (c) => Game.hour >= 6 && Game.hour < 21 && c.needs.energy > 30 && !c.health.disease,
+    thought: '出下汗舒服啲',
+    mutter: ['跑多啲...', '好攰但好爽']
+  },
+  take_shower: {
+    name: '沖涼', icon: '🚿', room: 'bathroom', duration: 0.4,
+    effects: { hygiene: 45, fun: 8, energy: 5 },
+    condition: (c) => (Game.hour >= 19 && Game.hour < 23) || c.needs.hygiene < 40,
+    thought: '沖個涼清爽啲',
+    mutter: ['好舒服...', '今日好耐冇沖涼']
+  },
+  skincare: {
+    name: '護膚', icon: '🧴', room: 'bathroom', duration: 0.2,
+    effects: { hygiene: 10, fun: 5 },
+    condition: (c) => Game.hour >= 20 && Game.hour < 23,
+    thought: '搽下護膚品',
+    mutter: ['要保養下']
+  },
+  call_friend: {
+    name: '打電話畀朋友', icon: '📞', room: 'living', duration: 0.5,
+    effects: { social: 25, fun: 10 },
+    condition: (c) => Game.hour >= 19 && Game.hour < 22 && c.needs.social < 40,
+    thought: '打畀朋友傾下',
+    mutter: ['好耐冇聯絡', '佢最近點呢？']
+  },
+  video_call: {
+    name: 'Video call 屋企人', icon: '📹', room: 'living', duration: 0.5,
+    effects: { social: 20, love: 15 },
+    condition: (c) => Game.hour >= 19 && Game.hour < 22 && c.needs.social < 50,
+    thought: 'video call 屋企人',
+    mutter: ['媽咪最近點？', '同佢哋傾下']
+  },
+
+  // === 深夜 (22:00-24:00) ===
+  prepare_sleep: {
+    name: '準備瞓覺', icon: '🛏', room: 'bedroom', duration: 0.3,
+    effects: { energy: 5 },
+    condition: (c) => Game.hour >= 22 && Game.hour < 24,
+    thought: '準備瞓覺',
+    mutter: ['今日好充實', '聽日要早起']
+  },
+  sleep: {
+    name: '瞓覺', icon: '💤', room: 'bedroom', duration: 6,
+    effects: { sleep: 60, energy: 40, hunger: -10 },
+    condition: (c) => (Game.hour >= 22 && c.needs.sleep < 50) || c.needs.sleep < 25,
+    thought: '好攰...要瞓覺',
+    mutter: ['好眼瞓...', '發個好夢']
+  },
+  midnight_snack: {
+    name: '食宵夜', icon: '🍜', room: 'kitchen', duration: 0.3,
+    effects: { hunger: 20, fun: 8 },
+    cost: 30,
+    condition: (c) => Game.hour >= 23 && c.needs.hunger < 40 && c.money > 50,
+    thought: '肚餓...食個宵夜',
+    mutter: ['唔應該食...但好餓', '食完先算']
+  },
+
+  // === 生理需求（任何時間）===
+  use_toilet: {
+    name: '去廁所', icon: '🚽', room: 'bathroom', duration: 0.1,
+    effects: { bladder: 60 },
+    condition: (c) => c.needs.bladder < 40,
+    thought: '要去廁所',
+    mutter: ['忍唔住...', '舒服晒']
+  },
+  drink_water: {
+    name: '飲水', icon: '💧', room: 'kitchen', duration: 0.05,
+    effects: { energy: 5, bladder: -10 },
+    condition: (c) => c.needs.energy < 60 && c.needs.bladder > 30,
+    thought: '飲杯水',
+    mutter: ['好渴']
+  },
+
+  // === 家務（週末或空閒時）===
+  clean_house: {
+    name: '打掃屋企', icon: '🧹', room: 'living', duration: 1.5,
+    effects: { fun: -5, energy: -15 },
+    condition: (c) => (Game.day % 7 === 0 || c.needs.hygiene < 50) && Game.hour >= 9 && Game.hour < 18,
+    thought: '屋企要執下',
+    mutter: ['好耐冇打掃', '灰塵好多']
+  },
+  do_laundry: {
+    name: '洗衣服', icon: '👕', room: 'bathroom', duration: 0.5,
+    effects: { hygiene: 10, energy: -5 },
+    condition: (c) => Game.day % 5 === 0 && Game.hour >= 9 && Game.hour < 18,
+    thought: '要洗衣服',
+    mutter: ['堆衫好耐冇洗']
+  },
+
+  // === 休閒（任何時間）===
+  daydream: {
+    name: '發白日夢', icon: '💭', room: 'living', duration: 0.3,
+    effects: { fun: 8, energy: 3 },
+    condition: (c) => c.needs.fun < 80 && c.personality.openness > 4,
+    thought: '發下呆...',
+    mutter: ['如果...會點呢？', '諗下未來...']
+  },
+  nap: {
+    name: '小睡', icon: '😴', room: 'living', duration: 0.5,
+    effects: { sleep: 15, energy: 15 },
+    condition: (c) => Game.hour >= 13 && Game.hour < 16 && c.needs.energy < 40,
+    thought: '瞓陣先',
+    mutter: ['瞓 15 分鐘就好']
+  },
+  snack: {
+    name: '食零食', icon: '🍪', room: 'kitchen', duration: 0.15,
+    effects: { hunger: 10, fun: 8 },
+    cost: 15,
+    condition: (c) => c.needs.hunger < 70 && c.needs.hunger > 30 && c.money > 20,
+    thought: '食包薯片',
+    mutter: ['好味', '唔應該食...但好食']
+  },
+  pet_cat: {
+    name: '擼貓', icon: '🐱', room: 'living', duration: 0.3,
+    effects: { fun: 20, love: 10, social: 5 },
+    condition: (c) => c.needs.fun < 70 && c.needs.love < 60,
+    thought: '擼下貓',
+    mutter: ['好可愛', '喵喵~']
+  },
+  water_plants: {
+    name: '淋花', icon: '🌱', room: 'living', duration: 0.2,
+    effects: { fun: 8 },
+    condition: (c) => Game.hour >= 7 && Game.hour < 10,
+    thought: '淋下花',
+    mutter: ['佢哋生得幾好']
+  },
+
+  // === 自我提升 ===
+  study: {
+    name: '溫書/學習', icon: '📚', room: 'living', duration: 1.5,
+    effects: { fun: -5, energy: -8 },
+    condition: (c) => !c.job && c.age < 23 && Game.hour >= 10 && Game.hour < 22,
+    thought: '要溫書',
+    mutter: ['考試快到了', '再睇多啲']
+  },
+  learn_skill: {
+    name: '學新技能', icon: '💡', room: 'living', duration: 1,
+    effects: { fun: 10, energy: -5 },
+    condition: (c) => Game.hour >= 19 && Game.hour < 22 && c.needs.fun < 70 && c.personality.openness > 5,
+    thought: '學下新嘢',
+    mutter: ['學下煮飯/結他/語言']
+  },
+  journal: {
+    name: '寫日記', icon: '📝', room: 'bedroom', duration: 0.4,
+    effects: { fun: 8, energy: -3 },
+    condition: (c) => Game.hour >= 21 && Game.hour < 23 && c.personality.openness > 5,
+    thought: '寫返今日發生嘅事',
+    mutter: ['今日幾充實', '要記住呢一刻']
+  },
+  meditate: {
+    name: '冥想', icon: '🧘', room: 'bedroom', duration: 0.4,
+    effects: { energy: 10, fun: 5 },
+    healthBonus: { mental: 3 },
+    condition: (c) => Game.hour >= 20 && Game.hour < 23 && c.needs.energy < 60,
+    thought: '靜落嚟冥想下',
+    mutter: ['呼...吸...', '放空自己']
+  },
+
+  // === 社交（週末或晚上）===
+  meet_friends: {
+    name: '約朋友出去', icon: '🍻', room: 'outside', duration: 2.5,
+    effects: { social: 40, fun: 30, hunger: -15, energy: -10 },
+    cost: 200,
+    condition: (c) => Game.hour >= 18 && c.needs.social < 40 && c.money > 250 && !c.health.disease,
+    thought: '約朋友出去',
+    mutter: ['好耐冇見', '今晚玩到幾點？']
+  },
+  online_gaming: {
+    name: '線上打機', icon: '🎮', room: 'living', duration: 1.5,
+    effects: { fun: 30, social: 15, energy: -8 },
+    condition: (c) => Game.hour >= 20 && Game.hour < 24 && c.needs.fun < 50 && c.needs.social < 60,
+    thought: '同朋友 online 打機',
+    mutter: ['快啲快啲！', 'GG']
+  },
+
+  // === 最終 fallback ===
+  idle: {
+    name: '閒置', icon: '🪑', room: 'living', duration: 0.2,
+    effects: { fun: 2, energy: 2 },
+    condition: () => true,
+    thought: '...',
+    mutter: ['...', '做咩好呢', '好悶']
+  },
 };
 
 // ============================================================
-// 內在議會
+// 自言自語庫（按情境分類）
 // ============================================================
-function innerCouncil(c, actionKey, act) {
-  const voices = {};
-  const stage = getLifeStage(c.age);
-  for (const [vKey, vDef] of Object.entries(INNER_VOICES)) {
-    let score = 0;
-    const needMatch = (act.needFocus || []).reduce((sum, n) => {
-      const needVal = c.needs[n];
-      return sum + (needVal < 40 ? (40 - needVal) * 0.5 : 0);
-    }, 0);
-    score += needMatch;
-    const valueAlign = (act.valueAlignment || []).reduce((sum, v) => sum + (c.values[v] || 0) * 0.5, 0);
-    score += valueAlign;
-    const stageAlign = (stage.focus || []).reduce((sum, v) => {
-      if ((act.valueAlignment || []).includes(v)) return sum + 5;
-      return sum;
-    }, 0);
-    score += stageAlign;
-    score *= (c.voiceWeights[vKey] / 5);
-    if (vKey === 'emotion') score *= (1 + c.emotionalState.intensity / 100);
-    if (vKey === 'reason') score *= (1 - c.cognitiveLoad / 200);
-    if (vKey === 'instinct' && c.health.physical < 50) score *= 1.3;
-    const habitStrength = c.habits[actionKey] || 0;
-    if (vKey === 'instinct') score += habitStrength * 0.3;
-    const tone = vDef.tone[Math.floor(Math.random() * vDef.tone.length)];
-    let statement = '';
-    if (score > 30) statement = `${tone} ${act.name}係好選擇`;
-    else if (score < 10) statement = `${tone} 唔太想${act.name}`;
-    else statement = `${tone} ${act.name}有少少吸引力`;
-    voices[vKey] = { score: Math.max(0, Math.round(score)), statement };
-  }
-  return voices;
-}
+const MUTTER_CONTEXTS = {
+  hungry: ['好餓...', '肚咕咕叫', '想食嘢', '有咩食好？'],
+  tired: ['好攰...', '眼瞓...', '想瞓覺', '撐唔住'],
+  bored: ['好悶...', '做咩好呢', '無聊', '想搵嘢做'],
+  lonely: ['好耐冇同人傾偈', '想搵人傾下', '有啲孤單'],
+  happy: ['今日幾好', '心情唔錯', '開心'],
+  stressed: ['好大壓力', '點算好...', '唔知點做'],
+  morning: ['新嘅一日', '早晨', '今日要努力'],
+  night: ['今日好充實', '準備瞓覺', '好夜了'],
+};
 
-function applyCognitiveBiases(c, scores, context) {
-  const activeBiases = [];
-  COGNITIVE_BIASES.forEach(bias => {
-    try {
-      if (bias.trigger(c, context)) {
-        bias.modifier(scores, c, context);
-        activeBiases.push(bias);
-      }
-    } catch (e) { console.error('Bias error:', bias.id, e); }
-  });
-  return activeBiases;
+function getRandomMutter(c) {
+  let context = 'idle';
+  if (c.needs.hunger < 35) context = 'hungry';
+  else if (c.needs.sleep < 35 || c.needs.energy < 35) context = 'tired';
+  else if (c.needs.fun < 35) context = 'bored';
+  else if (c.needs.social < 30) context = 'lonely';
+  else if (c.mood.happy > 30) context = 'happy';
+  else if (c.mood.happy < -20) context = 'stressed';
+  else if (Game.hour < 10) context = 'morning';
+  else if (Game.hour > 21) context = 'night';
+
+  const pool = MUTTER_CONTEXTS[context] || MUTTER_CONTEXTS.idle;
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 // ============================================================
-// AI 思考循環（包 try-catch）
+// AI 思考循環（活躍版）
 // ============================================================
 function aiThink(c) {
   try {
     const needs = c.needs;
-    const lowestNeed = NEEDS_DEF.reduce((a, b) => needs[a.key] < needs[b.key] ? a : b);
-    const avgNeed = Object.values(needs).reduce((a,b)=>a+b,0) / Object.keys(needs).length;
-    c.emotionalState.intensity = Math.abs(avgNeed - 50) * 2;
-    c.emotionalState.valence = avgNeed - 50;
-    let load = 0;
-    if (c.health.disease) load += 20;
-    if (c.needs.sleep < 30) load += 15;
-    if (c.needs.hunger < 30) load += 10;
-    if (c.money < 5000) load += 15;
-    if (c.loveStage === 'cold_war') load += 20;
-    if (c.job && c.jobSatisfaction < 40) load += 10;
-    c.cognitiveLoad = Math.max(0, Math.min(100, load));
-    if (c.id === Game.selectedCharId || c.isProtagonist) {
-      addThought(c.id, '感知', `最迫切：${lowestNeed.icon}${lowestNeed.name}(${Math.round(needs[lowestNeed.key])}) · 認知負荷 ${Math.round(c.cognitiveLoad)}`);
-    }
     const candidates = [];
+
+    // 評估所有行動
     for (const [key, act] of Object.entries(ACTIONS)) {
       if (!act.condition(c)) continue;
       let score = 50;
+
+      // 需求匹配（權重更高）
       for (const [nk, nv] of Object.entries(act.effects)) {
-        if (nv > 0 && needs[nk] < 50) score += (50 - needs[nk]) * 0.5;
-        if (nv < 0 && needs[nk] < 30) score -= 30;
+        if (nv > 0 && needs[nk] < 50) score += (50 - needs[nk]) * 0.8;
+        if (nv < 0 && needs[nk] < 30) score -= 40;
       }
-      if (act.cost && c.money < act.cost * 3) score -= 20;
-      score += (Math.random() - 0.5) * 15;
-      candidates.push({
-        key, act, score,
-        risk: act.cost ? Math.min(1, act.cost / Math.max(c.money, 1)) : 0,
-        changeLevel: ['work', 'eat_out', 'socialize', 'date'].includes(key) ? 0.7 : 0.3,
-        upside: ['work', 'exercise', 'read'].includes(key) ? 0.7 : 0.4,
-        emotionalAlignment: act.voice === 'emotion' ? 0.8 : 0.3,
-        continuesExisting: ['work', 'chat_partner'].includes(key),
-        frame: act.cost ? 'loss' : 'gain',
-      });
+
+      // 時間合適度
+      const hour = Game.hour;
+      if (key.includes('breakfast') && hour >= 7 && hour < 10) score += 20;
+      if (key.includes('lunch') && hour >= 12 && hour < 14) score += 20;
+      if (key.includes('dinner') && hour >= 18 && hour < 21) score += 20;
+      if (key.includes('sleep') && hour >= 22) score += 15;
+
+      // 性格影響
+      if (key.includes('social') || key === 'meet_friends') score += c.personality.extraversion * 2;
+      if (key === 'read_book' || key === 'study') score += c.personality.openness * 2;
+      if (key === 'play_game') score += (10 - c.personality.conscientiousness);
+
+      // 金錢限制
+      if (act.cost && c.money < act.cost * 2) score -= 25;
+
+      // 隨機擾動（保持多樣性）
+      score += (Math.random() - 0.5) * 25;
+
+      candidates.push({ key, act, score });
     }
+
+    // 如果無行動，用 idle
     if (candidates.length === 0) {
-      c.currentAction = ACTIONS.chill;
-      c.actionTimer = 0.5;
+      c.currentAction = ACTIONS.idle;
+      c.actionTimer = 0.2;
       return;
     }
-    const context = { hasLoss: c.money < 10000 || c.health.disease, hasInvestment: c.job || c.loveStage };
-    const activeBiases = applyCognitiveBiases(c, candidates, context);
+
+    // 排序選最佳
     candidates.sort((a, b) => b.score - a.score);
     const chosen = candidates[0];
-    const council = innerCouncil(c, chosen.key, chosen.act);
+
+    // 顯示思考（只限選中角色）
     if (c.id === Game.selectedCharId || c.isProtagonist) {
-      if (Game.detailMode) {
-        const councilText = Object.entries(council)
-          .filter(([, v]) => v.statement)
-          .map(([k, v]) => {
-            const vDef = INNER_VOICES[k];
-            return `<span style="color:${vDef.color};font-weight:700">${vDef.name}</span> ${v.statement} <span style="color:#888;font-size:8px">(${v.score})</span>`;
-          }).join('<br>');
-        addThought(c.id, '🏛 內在議會', councilText, false, false, 'council');
-        if (activeBiases.length > 0) {
-          const biasText = activeBiases.map(b => `<span class="bias-tag">${b.name}</span>`).join(' ');
-          addThought(c.id, '⚠️ 偏差', biasText, false, false, 'bias');
-        }
-      }
-      addThought(c.id, '決定', `${chosen.act.icon}${chosen.act.name}(分${Math.round(chosen.score)})`, true);
-      addQuote(c.id, chosen.act.thought);
-      if (chosen.act.triggersReflection || (c.personality.openness > 7 && Math.random() < 0.1)) {
-        const reflections = ['我最近係咪太勞累？', '人生應該有更大目標', '我嘅選擇符合價值觀嗎？', '時間過得好快...'];
-        addThought(c.id, '🪞 反思', reflections[Math.floor(Math.random() * reflections.length)], false, false, 'reflection');
+      addThought(c.id, '決定', `${chosen.act.icon} ${chosen.act.name} (分${Math.round(chosen.score)})`, true);
+
+      // 自言自語（30% 機率）
+      if (Math.random() < 0.3) {
+        const mutter = chosen.act.mutter
+          ? chosen.act.mutter[Math.floor(Math.random() * chosen.act.mutter.length)]
+          : getRandomMutter(c);
+        addMutter(c.id, mutter);
       }
     }
+
     c.currentAction = chosen.act;
     c.actionTimer = chosen.act.duration;
-    c.habits[chosen.key] = Math.min(100, (c.habits[chosen.key] || 0) + 5);
-    for (const k in c.habits) {
-      if (k !== chosen.key) c.habits[k] = Math.max(0, c.habits[k] - 1);
-    }
+
+    // 記錄行動
+    c.todayActions.push(chosen.key);
+    Game.actionCountToday++;
   } catch (e) {
     console.error('aiThink error:', e);
-    ErrorLog.push(`aiThink: ${e.message}`);
-    c.currentAction = ACTIONS.chill;
-    c.actionTimer = 0.5;
+    c.currentAction = ACTIONS.idle;
+    c.actionTimer = 0.2;
   }
 }
 
 // ============================================================
 // UI
 // ============================================================
-function addThought(charId, tag, text, isDecision = false, isEvent = false, type = '') {
+function addThought(charId, tag, text, isDecision = false) {
   try {
     if (charId !== Game.selectedCharId && charId !== 'protagonist') return;
     const c = Game.characters[charId];
     if (!c) return;
-    const log = $('thought-log');
+    const log = document.getElementById('thought-log');
     if (!log) return;
     const div = document.createElement('div');
-    let cls = 'thought';
-    if (isDecision) cls += ' decision';
-    if (isEvent) cls += ' event';
-    if (type) cls += ' ' + type;
-    div.className = cls;
-    div.innerHTML = `<div class="time">🕐 ${String(Game.hour).padStart(2,'0')}:${String(Game.minute).padStart(2,'0')} · ${c.name}</div><span class="tag">${tag}</span> ${text}`;
+    div.className = 'thought' + (isDecision ? ' decision' : '');
+    div.innerHTML = `<div class="time">🕐 ${String(Game.hour).padStart(2,'0')}:${String(Game.minute).padStart(2,'0')}</div><span class="tag">${tag}</span> ${text}`;
     log.insertBefore(div, log.firstChild);
-    while (log.children.length > 80) log.removeChild(log.lastChild);
-  } catch (e) { console.error('addThought error:', e); }
+    while (log.children.length > 60) log.removeChild(log.lastChild);
+  } catch (e) { console.error(e); }
 }
 
-function addQuote(charId, text) {
+function addMutter(charId, text) {
   try {
     if (charId !== Game.selectedCharId && charId !== 'protagonist') return;
     const c = Game.characters[charId];
     if (!c) return;
-    const log = $('thought-log');
+    const log = document.getElementById('thought-log');
     if (!log) return;
     const div = document.createElement('div');
-    div.className = 'thought decision';
+    div.className = 'thought mutter';
     div.innerHTML = `<div class="time">💬 ${c.name}</div><div class="quote">「${text}」</div>`;
     log.insertBefore(div, log.firstChild);
-  } catch (e) { console.error('addQuote error:', e); }
+  } catch (e) { console.error(e); }
 }
 
-// 優化：只在需要時重建角色列表
-let lastCharListHash = '';
 function renderCharList() {
   try {
-    // 建立 hash 判斷是否需要重建
-    const hash = Object.values(Game.characters).map(c =>
-      `${c.id}:${c.age}:${c.currentAction?.name || 'null'}:${Math.round(c.needs.hunger)}`
-    ).join('|');
-    if (hash === lastCharListHash) return;
-    lastCharListHash = hash;
-    const list = $('char-list');
+    const list = document.getElementById('char-list');
     if (!list) return;
     list.innerHTML = '';
     Object.values(Game.characters).forEach(c => {
       const card = document.createElement('div');
       card.className = 'char-card' + (c.id === Game.selectedCharId ? ' selected' : '');
-      card.onclick = () => selectCharacter(c.id);
-      const attachName = ATTACHMENT_STYLES[c.attachmentStyle].name;
+      card.onclick = () => {
+        Game.selectedCharId = c.id;
+        renderCharList();
+        document.getElementById('thought-log').innerHTML = '';
+        document.getElementById('log-char-name').textContent = c.name;
+      };
       const stateLine = c.currentAction ? `${c.currentAction.icon} ${c.currentAction.name}` : '思考中...';
       card.innerHTML = `
         <div class="header">
           <div class="avatar" style="background:${c.color}">${c.avatar}</div>
           <div class="info">
             <div class="name">${c.name}</div>
-            <div class="sub">${c.age}歲 · ${attachName}</div>
+            <div class="sub">${c.age}歲 · ${c.relationship}</div>
           </div>
         </div>
         <div class="state-line">${stateLine}</div>
       `;
       list.appendChild(card);
     });
-    renderDetail();
-  } catch (e) { console.error('renderCharList error:', e); }
-}
-
-function renderDetail() {
-  try {
-    const c = Game.characters[Game.selectedCharId];
-    if (!c) return;
-    const area = $('detail-area');
-    if (!area) return;
-    safeSetText('log-char-name', c.name);
-    const stage = getLifeStage(c.age);
-    const attachName = ATTACHMENT_STYLES[c.attachmentStyle].name;
-    const topValues = Object.entries(c.values).sort((a,b) => b[1]-a[1]).slice(0,3);
-    const topValueNames = topValues.map(([k]) => {
-      const def = VALUES_DEF.find(d => d.key === k);
-      return def ? `${def.icon}${def.name}` : '';
-    }).join(' ');
-    area.innerHTML = `
-      <div class="detail-panel">
-        <div class="section-title">🧬 人格子維度</div>
-        <div class="value-bar"><span class="lbl">開放·思想</span><div class="bar"><div class="bar-fill" style="width:${c.facets.openness.ideas*10}%;background:#c084fc"></div></div><span class="val">${c.facets.openness.ideas.toFixed(0)}</span></div>
-        <div class="value-bar"><span class="lbl">盡責·自律</span><div class="bar"><div class="bar-fill" style="width:${c.facets.conscientiousness.discipline*10}%;background:#60a5fa"></div></div><span class="val">${c.facets.conscientiousness.discipline.toFixed(0)}</span></div>
-        <div class="value-bar"><span class="lbl">外向·自信</span><div class="bar"><div class="bar-fill" style="width:${c.facets.extraversion.assertiveness*10}%;background:#fbbf24"></div></div><span class="val">${c.facets.extraversion.assertiveness.toFixed(0)}</span></div>
-        <div class="value-bar"><span class="lbl">神經·焦慮</span><div class="bar"><div class="bar-fill" style="width:${c.facets.neuroticism.anxiety*10}%;background:#ff6b6b"></div></div><span class="val">${c.facets.neuroticism.anxiety.toFixed(0)}</span></div>
-        <div class="section-title" style="margin-top:6px">💝 依附風格</div>
-        <div style="font-size:10px;color:#ff69b4">❤️ ${attachName}</div>
-        <div class="section-title" style="margin-top:6px">🧭 核心價值觀</div>
-        <div style="font-size:10px">${topValueNames}</div>
-        <div class="section-title" style="margin-top:6px">🎯 生命階段</div>
-        <div style="font-size:10px;color:#ffd369">${stage.name}</div>
-        <div style="font-size:9px;color:#aaa">${stage.task}</div>
-        <div class="section-title" style="margin-top:6px">🧠 自我概念</div>
-        <div class="value-bar"><span class="lbl">自尊</span><div class="bar"><div class="bar-fill" style="width:${c.selfConcept.selfEsteem}%;background:#fbbf24"></div></div><span class="val">${Math.round(c.selfConcept.selfEsteem)}</span></div>
-      </div>
-    `;
-  } catch (e) { console.error('renderDetail error:', e); }
-}
-
-function selectCharacter(id) {
-  Game.selectedCharId = id;
-  lastCharListHash = '';
-  renderCharList();
-  const log = $('thought-log');
-  if (log) log.innerHTML = '';
-  addThought(id, '📍', `${Game.characters[id].name} 嘅視角`, false, true);
+  } catch (e) { console.error(e); }
 }
 
 function renderSprites() {
@@ -993,16 +951,14 @@ function renderSprites() {
           <div class="head"></div>
           <div class="body" style="background:${c.color}"></div>
         `;
-        const center = $('center');
-        if (center) center.appendChild(el);
+        document.getElementById('center').appendChild(el);
         c.spriteEl = el;
       }
       const roomEl = document.querySelector(`[data-room="${c.currentRoom}"]`);
       if (roomEl && c.spriteEl) {
-        const centerRect = $('center').getBoundingClientRect();
+        const centerRect = document.getElementById('center').getBoundingClientRect();
         const roomRect = roomEl.getBoundingClientRect();
-        const offset = Object.values(Game.characters).filter(o => o.currentRoom === c.currentRoom).indexOf(c);
-        const x = roomRect.left - centerRect.left + roomRect.width/2 - 11 + (offset-0.5)*14;
+        const x = roomRect.left - centerRect.left + roomRect.width/2 - 11;
         const y = roomRect.top - centerRect.top + roomRect.height/2 - 16;
         c.spriteEl.style.left = x + 'px';
         c.spriteEl.style.bottom = (centerRect.height - y - 32) + 'px';
@@ -1010,13 +966,13 @@ function renderSprites() {
         if (actionEl) actionEl.textContent = c.currentAction ? c.currentAction.icon : '';
       }
     });
-  } catch (e) { console.error('renderSprites error:', e); }
+  } catch (e) { console.error(e); }
 }
 
 function renderSky() {
   try {
-    const sky = $('sky');
-    const sun = $('sun');
+    const sky = document.getElementById('sky');
+    const sun = document.getElementById('sun');
     if (!sky || !sun) return;
     const h = Game.hour + Game.minute / 60;
     let skyColor, sunOpacity;
@@ -1030,7 +986,7 @@ function renderSky() {
     sun.style.left = (10 + progress * 80) + '%';
     sun.style.top = (40 - Math.sin(progress * Math.PI) * 35) + '%';
     sun.style.opacity = sunOpacity;
-  } catch (e) { console.error('renderSky error:', e); }
+  } catch (e) { console.error(e); }
 }
 
 function executeAction(c, deltaHours) {
@@ -1046,71 +1002,62 @@ function executeAction(c, deltaHours) {
     if (act.healthBonus) {
       for (const [k, v] of Object.entries(act.healthBonus)) c.health[k] = Math.min(100, c.health[k] + v * ratio);
     }
-    if (act.cureDisease && c.health.disease && Math.random() < 0.3 * ratio) {
-      c.health.disease = null;
-      if (c.id === Game.selectedCharId || c.isProtagonist) addThought(c.id, '💊', '病好返啦！', false, true);
-    }
-    if (act.affectionGain && c.loveTargetId) {
-      const rel = getRelation(c.id, c.loveTargetId);
-      rel.affection = Math.min(100, rel.affection + act.affectionGain * ratio);
-    }
     c.actionTimer -= deltaHours;
     if (c.actionTimer <= 0) {
       if (c.id === Game.selectedCharId || c.isProtagonist) {
-        safeSetText('today-action', act.icon + ' ' + act.name);
+        const el = document.getElementById('today-action');
+        if (el) el.textContent = act.icon + ' ' + act.name;
       }
       c.currentAction = null;
     }
   } catch (e) {
-    console.error('executeAction error:', e);
+    console.error(e);
     c.currentAction = null;
   }
 }
 
 // ============================================================
-// 主 tick（包 try-catch 防止崩潰）
+// 主 tick
 // ============================================================
 function tick() {
   try {
     if (Game.paused || Game.speed === 0) return;
-    const baseDelta = 0.04 * Game.speed;
+    const baseDelta = 0.05 * Game.speed; // 加快時間
     Game.hour += baseDelta;
     Game.minute = Math.floor((Game.hour % 1) * 60);
+
     if (Game.hour >= 24) {
       Game.hour -= 24;
       Game.day++;
+      Game.actionCountToday = 0;
       Object.values(Game.characters).forEach(c => {
         c.age = Math.floor((Game.day - c.birthDay) / 365);
+        c.todayActions = [];
       });
       dailySettlement();
     }
+
     Object.values(Game.characters).forEach(c => {
       try {
-        if (c.currentAction) executeAction(c, baseDelta);
-        else aiThink(c);
+        if (c.currentAction) {
+          executeAction(c, baseDelta);
+        } else {
+          aiThink(c);
+        }
+        // 需求衰減（加快）
         NEEDS_DEF.forEach(n => {
           c.needs[n.key] = Math.max(0, c.needs[n.key] - n.decay * baseDelta / 24);
         });
-        updateHealth(c, baseDelta);
+        // 情緒
         const avgNeed = Object.values(c.needs).reduce((a,b)=>a+b,0) / Object.keys(c.needs).length;
-        c.mood.happy += (avgNeed - 50) * 0.01 * baseDelta;
-        c.mood.calm += (c.needs.sleep/100 - 0.5) * 0.01 * baseDelta;
-        for (const k in c.mood) c.mood[k] = Math.max(-100, Math.min(100, c.mood[k]));
-        c.moodHistory = c.moodHistory || [];
-        c.moodHistory.push(c.mood.happy);
-        if (c.moodHistory.length > 20) c.moodHistory.shift();
-        if (avgNeed > 70) c.selfConcept.selfEsteem = Math.min(100, c.selfConcept.selfEsteem + 0.05 * baseDelta);
-        if (avgNeed < 30) c.selfConcept.selfEsteem = Math.max(0, c.selfConcept.selfEsteem - 0.1 * baseDelta);
-      } catch (e) {
-        console.error(`Character ${c.id} tick error:`, e);
-        ErrorLog.push(`char ${c.id}: ${e.message}`);
-      }
+        c.mood.happy += (avgNeed - 50) * 0.02 * baseDelta;
+        c.mood.happy = Math.max(-100, Math.min(100, c.mood.happy));
+      } catch (e) { console.error(e); }
     });
-    checkLoveEvents();
-    checkMajorEvents();
-    // 渲染降幀（每 3 tick 渲染一次，提升效能）
+
+    // 渲染降幀
     Game.tickCount++;
-    if (Game.tickCount % 3 === 0) {
+    if (Game.tickCount % 2 === 0) {
       renderCharList();
       renderSprites();
       renderSky();
@@ -1118,289 +1065,36 @@ function tick() {
       renderDateTime();
     }
   } catch (e) {
-    console.error('TICK FATAL ERROR:', e);
-    ErrorLog.push(`TICK: ${e.message}`);
-    // 不停止遊戲，只記錄錯誤
+    console.error('TICK ERROR:', e);
   }
-}
-
-function updateHealth(c, delta) {
-  try {
-    const h = c.health;
-    if (c.needs.sleep < 30) h.physical -= 0.5 * delta / 24;
-    if (c.needs.hunger < 30) h.physical -= 0.3 * delta / 24;
-    if (c.needs.sleep > 70 && c.needs.hunger > 60) h.physical = Math.min(100, h.physical + 0.1 * delta / 24);
-    if (c.needs.social < 30) h.mental -= 0.3 * delta / 24;
-    if (c.needs.fun > 60) h.mental = Math.min(100, h.mental + 0.1 * delta / 24);
-    if (h.disease) {
-      h.diseaseDuration += delta / 24;
-      h.physical -= 0.5 * delta / 24;
-      if (h.disease === 'depression') h.mental -= 0.8 * delta / 24;
-    }
-    if (!h.disease && Math.random() < 0.001 * delta) {
-      const diseases = ['cold', 'flu'];
-      if (h.mental < 40) diseases.push('depression');
-      if (c.age > 35) diseases.push('chronic');
-      h.disease = diseases[Math.floor(Math.random() * diseases.length)];
-      h.diseaseDuration = 0;
-      if (c.id === Game.selectedCharId || c.isProtagonist) addThought(c.id, '🤒', `病咗：${h.disease}`, false, true);
-    }
-    h.physical = Math.max(0, Math.min(100, h.physical));
-    h.mental = Math.max(0, Math.min(100, h.mental));
-  } catch (e) { console.error('updateHealth error:', e); }
 }
 
 function dailySettlement() {
   try {
     Object.values(Game.characters).forEach(c => {
-      let dailyCost = 80;
-      if (c.debt > 0) dailyCost += c.debt * 0.0001;
+      let dailyCost = 100;
       c.money -= dailyCost;
-      if (c.job && Game.day % 30 === 0) c.money += c.job.salary;
+      if (c.job && Game.day % 30 === 0) c.money += 18000;
     });
-    if (Game.characters.protagonist.age >= 40) endGame();
-  } catch (e) { console.error('dailySettlement error:', e); }
-}
-
-function getRelationKey(id1, id2) { return [id1, id2].sort().join(':'); }
-function getRelation(id1, id2) {
-  const key = getRelationKey(id1, id2);
-  if (!Game.relationships[key]) Game.relationships[key] = { affection: 30, stage: 'stranger' };
-  return Game.relationships[key];
-}
-
-// ============================================================
-// 重大事件
-// ============================================================
-const MAJOR_EVENTS = [
-  {
-    id: 'first_job', icon: '💼', title: '第一份工',
-    trigger: (c) => c.isProtagonist && c.age >= 22 && !c.job && Game.day % 60 === 0,
-    context: '你剛大學畢業，有幾間公司請你。',
-    choices: [
-      { text: '大公司文職', icon: '🏢', desc: '穩定 $18,000', risk: 0.2, changeLevel: 0.5, upside: 0.5, continuesExisting: false, frame: 'gain',
-        action: (c) => { c.job = { title: '行政助理', salary: 18000 }; } },
-      { text: 'Startup', icon: '🚀', desc: '風險高 $22,000', risk: 0.8, changeLevel: 0.9, upside: 0.9, continuesExisting: false, frame: 'gain',
-        action: (c) => { c.job = { title: '初創員工', salary: 22000 }; } },
-      { text: 'Freelance', icon: '💻', desc: '自由 $15,000', risk: 0.6, changeLevel: 0.7, upside: 0.7, continuesExisting: false, frame: 'gain',
-        action: (c) => { c.job = { title: 'Freelancer', salary: 15000 }; } },
-    ],
-  },
-  {
-    id: 'promotion', icon: '📈', title: '升職機會',
-    trigger: (c) => c.isProtagonist && c.job && c.age >= 26 && Game.day % 120 === 0 && Math.random() < 0.4,
-    context: '公司有個升職機會，但壓力會大好多。',
-    choices: [
-      { text: '接受升職', icon: '🎯', desc: '薪金 +40%', risk: 0.5, changeLevel: 0.7, upside: 0.8, continuesExisting: true, frame: 'gain',
-        action: (c) => { c.job.salary *= 1.4; c.job.title = '高級' + c.job.title; } },
-      { text: '婉拒', icon: '☕', desc: '保持平衡', risk: 0.1, changeLevel: 0.1, upside: 0.3, continuesExisting: true, frame: 'gain',
-        action: (c) => { c.jobSatisfaction += 5; } },
-      { text: '跳槽', icon: '🏃', desc: '風險高', risk: 0.8, changeLevel: 1.0, upside: 0.9, continuesExisting: false, frame: 'gain',
-        action: (c) => { c.job.salary *= 1.5; } },
-    ],
-  },
-  {
-    id: 'buy_house', icon: '🏠', title: '買樓上車',
-    trigger: (c) => c.isProtagonist && c.age >= 28 && c.money > 500000 && c.homeLevel < 2 && Math.random() < 0.2,
-    context: '樓市回調，有個細單位幾適合。',
-    choices: [
-      { text: '買細單位', icon: '🏠', desc: '首期 $500,000', risk: 0.7, changeLevel: 0.9, upside: 0.8, continuesExisting: false, frame: 'loss',
-        action: (c) => { c.money -= 500000; c.home = '自有物業'; c.homeLevel = 2; c.debt += 3000000; } },
-      { text: '繼續租', icon: '🏢', desc: '保持彈性', risk: 0.2, changeLevel: 0.1, upside: 0.3, continuesExisting: true, frame: 'gain',
-        action: (c) => {} },
-    ],
-  },
-  {
-    id: 'layoff', icon: '📉', title: '公司裁員',
-    trigger: (c) => c.isProtagonist && c.job && c.age >= 25 && Math.random() < 0.003,
-    context: '公司經營困難，你被列入裁員名單。',
-    choices: [
-      { text: '接受遣散費', icon: '💰', desc: '拿錢走人 (+$50,000)', risk: 0.5, changeLevel: 1.0, upside: 0.5, continuesExisting: false, frame: 'loss',
-        action: (c) => { c.money += 50000; c.job = null; } },
-      { text: '爭取留低', icon: '💪', desc: '努力表現', risk: 0.6, changeLevel: 0.3, upside: 0.7, continuesExisting: true, frame: 'gain',
-        action: (c) => { if (Math.random() < 0.5) c.job.salary *= 0.9; else { c.job = null; c.money += 50000; } } },
-    ],
-  },
-  {
-    id: 'midlife_crisis', icon: '🌊', title: '中年危機',
-    trigger: (c) => c.isProtagonist && c.age >= 35 && c.jobSatisfaction < 40 && Math.random() < 0.01,
-    context: '你做咗呢行十幾年，開始覺得好悶。',
-    choices: [
-      { text: '辭職追夢', icon: '🎨', desc: '做想做嘅事', risk: 0.9, changeLevel: 1.0, upside: 0.9, continuesExisting: false, frame: 'gain',
-        action: (c) => { c.job = { title: '追夢中', salary: 8000 }; } },
-      { text: '做副業', icon: '💡', desc: '穩中求變', risk: 0.4, changeLevel: 0.5, upside: 0.6, continuesExisting: true, frame: 'gain',
-        action: (c) => { c.jobSatisfaction += 15; } },
-      { text: '接受現實', icon: '💼', desc: '穩定最重要', risk: 0.1, changeLevel: 0.1, upside: 0.2, continuesExisting: true, frame: 'gain',
-        action: (c) => {} },
-    ],
-  },
-];
-
-function triggerEvent(evt) {
-  try {
-    if (!evt || $('event-modal').classList.contains('show')) return;
-    Game.paused = true;
-    Game.decisionsCount++;
-    const p = Game.characters.protagonist;
-    safeSetText('event-icon', evt.icon);
-    safeSetText('event-title', evt.title);
-    safeSetText('event-context', evt.context);
-    const councilEl = $('council-display');
-    let councilHTML = '<div style="font-size:9px;color:#c084fc;margin-bottom:4px">🏛 內在議會辯論：</div>';
-    evt.choices.slice(0, 2).forEach((ch, idx) => {
-      councilHTML += `<div style="margin:4px 0;padding:4px;background:rgba(0,0,0,0.2);border-radius:3px">`;
-      councilHTML += `<div style="color:#ffd369;font-size:10px;margin-bottom:2px">選項 ${idx+1}：${ch.text}</div>`;
-      ['instinct', 'reason', 'emotion'].forEach(vKey => {
-        const vDef = INNER_VOICES[vKey];
-        let score = 30 + Math.random() * 40;
-        score *= (p.voiceWeights[vKey] / 5);
-        if (ch.risk > 0.7 && vKey === 'reason') score *= 0.8;
-        if (ch.upside > 0.7 && vKey === 'emotion') score *= 1.2;
-        let statement = score > 40 ? `支持 · ${Math.round(score)}分` : score > 20 ? `中立 · ${Math.round(score)}分` : `反對 · ${Math.round(score)}分`;
-        councilHTML += `<div class="voice-line"><span class="voice-tag" style="background:${vDef.color};color:#000">${vDef.name}</span><span>${statement}</span></div>`;
-      });
-      councilHTML += `</div>`;
-    });
-    if (councilEl) councilEl.innerHTML = councilHTML;
-    const context = { hasLoss: p.money < 10000, hasInvestment: !!p.job };
-    const activeBiases = COGNITIVE_BIASES.filter(b => { try { return b.trigger(p, context); } catch { return false; } });
-    const biasEl = $('bias-display');
-    if (biasEl) {
-      if (activeBiases.length > 0) {
-        biasEl.innerHTML = '⚠️ 活躍認知偏差：' + activeBiases.slice(0,3).map(b => `<b>${b.name}</b>`).join(' · ');
-        biasEl.style.display = 'block';
-      } else {
-        biasEl.style.display = 'none';
-      }
+    if (Game.characters.protagonist.age >= 40) {
+      Game.paused = true;
+      alert(`🎬 40 歲人生總結\n\n職業：${Game.characters.protagonist.job ? Game.characters.protagonist.job.title : '無業'}\n財務：$${Math.round(Game.characters.protagonist.money).toLocaleString()}\n關係：${Game.characters.protagonist.relationship}`);
     }
-    const choicesEl = $('event-choices');
-    if (choicesEl) {
-      choicesEl.innerHTML = '';
-      evt.choices.forEach((ch, i) => {
-        let aiScore = 50;
-        aiScore += (ch.upside - 0.5) * 30;
-        aiScore -= (ch.risk - 0.5) * p.facets.neuroticism.anxiety * 2;
-        aiScore += (p.values.achievement / 10) * (ch.upside * 10);
-        aiScore += (p.values.security / 10) * ((1-ch.risk) * 10);
-        aiScore += (p.values.selfDirection / 10) * (ch.changeLevel * 10);
-        aiScore += (Math.random() - 0.5) * 20;
-        const btn = document.createElement('button');
-        btn.className = 'choice-btn';
-        btn.innerHTML = `
-          <span class="icon">${ch.icon}</span><b>${ch.text}</b>
-          <div class="desc">${ch.desc}</div>
-          <div class="ai-score">AI 傾向度：${Math.round(aiScore)}/100</div>
-        `;
-        btn.onclick = () => handleChoice(evt, ch, i, aiScore);
-        choicesEl.appendChild(btn);
-      });
-    }
-    $('event-modal').classList.add('show');
-    addThought(p.id, '⚡ 事件', `${evt.icon} ${evt.title}`, false, true);
-  } catch (e) {
-    console.error('triggerEvent error:', e);
-    Game.paused = false;
-  }
-}
-
-function checkMajorEvents() {
-  try {
-    if ($('event-modal').classList.contains('show')) return;
-    const p = Game.characters.protagonist;
-    for (const evt of MAJOR_EVENTS) {
-      if (evt.trigger(p)) { triggerEvent(evt); return; }
-    }
-  } catch (e) { console.error('checkMajorEvents error:', e); }
-}
-
-function handleChoice(evt, choice, idx, aiScore) {
-  try {
-    const p = Game.characters.protagonist;
-    let acceptProb = aiScore / 100;
-    acceptProb += (p.personality.agreeableness - 5) * 0.04;
-    acceptProb -= (p.personality.neuroticism - 5) * 0.03;
-    const isAIPreference = idx === 0;
-    if (isAIPreference) acceptProb += 0.2;
-    else acceptProb -= 0.15;
-    acceptProb += (Math.random() - 0.5) * 0.2;
-    acceptProb = Math.max(0.05, Math.min(0.95, acceptProb));
-    const accepted = Math.random() < acceptProb;
-    const finalChoice = accepted ? choice : evt.choices[0];
-    finalChoice.action(p);
-    const modal = $('event-modal');
-    if (modal) {
-      const resultDiv = document.createElement('div');
-      resultDiv.style.cssText = 'margin-top:10px;padding:8px;background:rgba(255,211,105,0.1);border-radius:5px;font-size:11px;';
-      if (accepted) {
-        Game.acceptedCount++;
-        resultDiv.innerHTML = `✅ <b>志明聽從咗你</b>：「${choice.text}」`;
-      } else {
-        resultDiv.innerHTML = `❌ <b>志明冇聽你</b>，佢揀咗：「${evt.choices[0].text}」`;
-      }
-      const card = modal.querySelector('.event-card');
-      if (card) card.appendChild(resultDiv);
-      setTimeout(() => {
-        modal.classList.remove('show');
-        resultDiv.remove();
-        Game.paused = false;
-        renderStatus();
-      }, 2200);
-    }
-    addThought(p.id, '決定', `${accepted?'✅':'❌'} ${finalChoice.text}`, true, true);
-  } catch (e) {
-    console.error('handleChoice error:', e);
-    Game.paused = false;
-  }
-}
-
-function checkLoveEvents() {
-  try {
-    const p = Game.characters.protagonist;
-    if (!p.loveStage && p.age >= 23 && p.age < 40 && Math.random() < 0.0003 * Game.speed) {
-      const id = 'lover_' + Date.now();
-      const names = ['阿May', '阿詩', '阿琪', '阿玲'];
-      const name = names[Math.floor(Math.random() * names.length)];
-      const lover = createCharacter({
-        id, name, avatar: '👩', color: '#ff69b4',
-        age: p.age + Math.floor(Math.random() * 4 - 2), gender: 'F',
-        openness: 4 + Math.floor(Math.random() * 5),
-        conscientiousness: 4 + Math.floor(Math.random() * 5),
-        extraversion: 4 + Math.floor(Math.random() * 5),
-        agreeableness: 4 + Math.floor(Math.random() * 5),
-        neuroticism: 4 + Math.floor(Math.random() * 5),
-        money: 20000, job: { title: '文職', salary: 18000 },
-        home: '自己單位', currentRoom: 'outside',
-      });
-      lover.birthDay = Game.day - (lover.age * 365);
-      Game.characters[id] = lover;
-      p.loveStage = 'crush';
-      p.loveTargetId = id;
-      const rel = getRelation(p.id, id);
-      rel.affection = 50;
-      addThought(p.id, '💘', `認識咗${name}！`, false, true, 'love');
-    }
-    if (p.loveStage && p.loveTargetId) {
-      const rel = getRelation(p.id, p.loveTargetId);
-      rel.affection = Math.max(0, rel.affection - 0.05);
-      if (p.loveStage === 'crush' && rel.affection > 65 && Math.random() < 0.005) {
-        p.loveStage = 'dating'; p.relationship = '拍拖中';
-        addThought(p.id, '💕', '正式拍拖！', false, true, 'love');
-      }
-    }
-  } catch (e) { console.error('checkLoveEvents error:', e); }
+  } catch (e) { console.error(e); }
 }
 
 function renderStatus() {
   try {
     const p = Game.characters.protagonist;
-    const stage = getLifeStage(p.age);
-    safeSetText('money', '$' + Math.round(p.money).toLocaleString());
-    safeSetText('life-progress', `${p.age} / 40 歲`);
-    safeSetText('life-stage', stage.name);
-    safeSetText('decisions-count', Game.decisionsCount);
-    safeSetText('accepted-count', Game.acceptedCount);
-    safeSetText('cognitive-load', p.cognitiveLoad < 30 ? '低' : p.cognitiveLoad < 60 ? '中' : '高');
-  } catch (e) { console.error('renderStatus error:', e); }
+    const el1 = document.getElementById('money');
+    if (el1) el1.textContent = '$' + Math.round(p.money).toLocaleString();
+    const el2 = document.getElementById('life-progress');
+    if (el2) el2.textContent = `${p.age} / 40 歲`;
+    const el3 = document.getElementById('decisions-count');
+    if (el3) el3.textContent = Game.decisionsCount;
+    const el4 = document.getElementById('action-count');
+    if (el4) el4.textContent = Game.actionCountToday;
+  } catch (e) { console.error(e); }
 }
 
 function renderDateTime() {
@@ -1409,15 +1103,11 @@ function renderDateTime() {
     const dayOfYear = Game.day % 365;
     const month = Math.floor(dayOfYear / 30) + 1;
     const day = (dayOfYear % 30) + 1;
-    safeSetText('date-display', `${year}/${String(month).padStart(2,'0')}/${String(day).padStart(2,'0')}`);
-    safeSetText('time-display', `${String(Game.hour).padStart(2,'0')}:${String(Game.minute).padStart(2,'0')}`);
-  } catch (e) { console.error('renderDateTime error:', e); }
-}
-
-function endGame() {
-  Game.paused = true;
-  const p = Game.characters.protagonist;
-  alert(`🎬 40 歲人生總結\n\n職業：${p.job ? p.job.title : '無業'}\n財務：$${Math.round(p.money).toLocaleString()}\n關係：${p.relationship}\n決策：${Game.decisionsCount} 次（接納 ${Game.acceptedCount}）\n依附風格：${ATTACHMENT_STYLES[p.attachmentStyle].name}\n\n錯誤記錄：${ErrorLog.length} 個`);
+    const el1 = document.getElementById('date-display');
+    if (el1) el1.textContent = `${year}/${String(month).padStart(2,'0')}/${String(day).padStart(2,'0')}`;
+    const el2 = document.getElementById('time-display');
+    if (el2) el2.textContent = `${String(Game.hour).padStart(2,'0')}:${String(Game.minute).padStart(2,'0')}`;
+  } catch (e) { console.error(e); }
 }
 
 // ============================================================
@@ -1434,20 +1124,14 @@ function init() {
         Game.paused = Game.speed === 0;
       };
     });
-    $('detail-btn').onclick = () => {
-      Game.detailMode = !Game.detailMode;
-      $('detail-btn').classList.toggle('active', Game.detailMode);
-    };
     renderCharList();
     renderSprites();
     renderSky();
     renderStatus();
     renderDateTime();
     setInterval(tick, 100);
-    addThought('protagonist', '🌟', '陳志明，20 歲，深度 AI 引擎啟動（Debug 版）', false, true);
-    addThought('protagonist', '🛡', '錯誤防護已啟用 · 所有函數已包 try-catch', false, false, 'reflection');
-    console.log('%c《人生屋企》Debug 版已啟動', 'color:#ffd369;font-size:16px;font-weight:bold');
-    console.log('如遇到問題，請打開 Console 查看錯誤記錄');
+    addThought('protagonist', '🌟', '活躍 AI 引擎啟動 · 50+ 行動 · 自言自語系統', true);
+    addMutter('protagonist', '今日會發生咩事呢？');
   } catch (e) {
     console.error('Init error:', e);
     alert('初始化錯誤：' + e.message);
