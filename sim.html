@@ -64,14 +64,10 @@
     letter-spacing: 1px; margin: 4px 0 2px;
     border-bottom: 1px solid #3a3a5e; padding-bottom: 2px;
   }
-  /* 人格優缺點 */
   .trait-row { display: flex; gap: 4px; flex-wrap: wrap; margin: 3px 0; }
-  .trait-tag {
-    padding: 2px 5px; border-radius: 3px; font-size: 8.5px;
-  }
+  .trait-tag { padding: 2px 5px; border-radius: 3px; font-size: 8.5px; }
   .trait-good { background: rgba(107, 207, 127, 0.2); color: #6bcf7f; border: 1px solid rgba(107, 207, 127, 0.4); }
   .trait-bad { background: rgba(255, 107, 107, 0.2); color: #ff6b6b; border: 1px solid rgba(255, 107, 107, 0.4); }
-  /* 中央場景 */
   #center {
     grid-area: center;
     position: relative;
@@ -80,8 +76,7 @@
   }
   #scene-bg { position: absolute; inset: 0; transition: all 2s; }
   #scene-info {
-    position: absolute;
-    top: 8px; left: 8px;
+    position: absolute; top: 8px; left: 8px;
     background: rgba(0,0,0,0.6);
     padding: 4px 8px; border-radius: 4px;
     font-size: 10px; z-index: 5;
@@ -94,8 +89,7 @@
     font-size: 90px; opacity: 0.25; pointer-events: none;
   }
   #location-map {
-    position: absolute;
-    bottom: 8px; left: 8px; right: 8px;
+    position: absolute; bottom: 8px; left: 8px; right: 8px;
     display: flex; gap: 4px; flex-wrap: wrap; z-index: 5;
   }
   .loc-btn {
@@ -134,7 +128,6 @@
     0%, 100% { transform: translate(-50%, 0); }
     50% { transform: translate(-50%, -4px); }
   }
-  /* 右側思考日誌 */
   #right {
     grid-area: right; font-size: 11px;
     display: flex; flex-direction: column;
@@ -175,17 +168,10 @@
     border-radius: 3px; color: #ffd369;
     font-style: italic; font-size: 10px;
   }
-  .thought .dialogue {
-    margin-top: 3px; padding: 3px 5px;
-    background: rgba(251, 191, 36, 0.1);
-    border-radius: 3px; color: #fbbf24;
-    font-size: 10px;
-  }
   @keyframes slideIn {
     from { opacity: 0; transform: translateX(10px); }
     to { opacity: 1; transform: translateX(0); }
   }
-  /* 底部 */
   #bottom {
     grid-area: bottom;
     display: flex; gap: 5px; align-items: center;
@@ -235,11 +221,19 @@
     background: #2a2a4a; border: 1px solid #4a4a6a;
     color: #eee; padding: 10px; border-radius: 5px;
     cursor: pointer; font-size: 11px; text-align: left;
+    transition: all 0.2s;
   }
   .choice-btn:hover { background: #3a3a5a; border-color: #ffd369; }
   .choice-btn .icon { font-size: 16px; display: block; margin-bottom: 3px; }
   .choice-btn .desc { font-size: 9px; color: #aaa; margin-top: 2px; }
-  /* 半年報告 */
+  .close-modal-btn {
+    display: block; margin: 12px auto 0;
+    background: #ffd369; color: #1a1a2e;
+    border: none; padding: 8px 20px;
+    border-radius: 6px; cursor: pointer;
+    font-size: 12px; font-weight: 700;
+  }
+  .close-modal-btn:hover { background: #ffe38a; }
   .report-section {
     background: rgba(0,0,0,0.25);
     border-radius: 6px;
@@ -296,7 +290,6 @@
       <button class="btn active" data-speed="1">▶</button>
       <button class="btn" data-speed="3">▶▶</button>
       <button class="btn" data-speed="10">▶▶▶</button>
-      <button class="btn" id="save-btn">💾</button>
     </div>
   </div>
 
@@ -362,6 +355,7 @@
     <h2><span id="event-icon">⚡</span> <span id="event-title">人生抉擇</span></h2>
     <div class="context" id="event-context"></div>
     <div class="choices" id="event-choices"></div>
+    <button class="close-modal-btn" id="event-close-btn">繼續人生 →</button>
   </div>
 </div>
 
@@ -370,9 +364,7 @@
   <div class="modal-card">
     <h2>📊 <span id="report-title">人生階段報告</span></h2>
     <div id="report-content"></div>
-    <div style="text-align:center;margin-top:10px;">
-      <button class="btn" onclick="document.getElementById('report-modal').classList.remove('show')">繼續人生 →</button>
-    </div>
+    <button class="close-modal-btn" id="report-close-btn">繼續人生 →</button>
   </div>
 </div>
 
@@ -380,8 +372,8 @@
 'use strict';
 
 // ============================================================
-// 《少年人生》真實青春版
-// 社交圈 × 兩性生活 × 人格優缺點 × 人生高低 × 半年報告
+// 《少年人生》真實青春版 — Debug 修復版
+// 修復：彈窗關閉按鈕、事件處理、暫停邏輯
 // ============================================================
 
 const Game = {
@@ -390,71 +382,73 @@ const Game = {
   selectedCharId: 'protagonist',
   characters: {},
   tickCount: 0,
-  // 人生曲線（記錄高低起跌）
   lifeCurve: [],
-  // 報告追蹤
   lastReportDay: 0,
-  halfYearReports: [],
-  // 事件冷卻
   eventCooldown: 0,
 };
+
+// ============================================================
+// 安全 DOM 輔助
+// ============================================================
+function $(id) { return document.getElementById(id); }
+function safeSetText(id, text) { const el = $(id); if (el) el.textContent = text; }
+function safeSetHTML(id, html) { const el = $(id); if (el) el.innerHTML = html; }
+
+// ============================================================
+// 彈窗控制（統一管理）
+// ============================================================
+function openModal(id) {
+  const modal = $(id);
+  if (modal) modal.classList.add('show');
+  Game.paused = true;
+}
+
+function closeModal(id) {
+  const modal = $(id);
+  if (modal) modal.classList.remove('show');
+  Game.paused = false;
+}
+
+function isModalOpen() {
+  return $('event-modal')?.classList.contains('show') ||
+         $('report-modal')?.classList.contains('show');
+}
 
 // ============================================================
 // 人格優缺點系統
 // ============================================================
 const GOOD_TRAITS = [
-  { id: 'kind', name: '善良', desc: '容易交到朋友，人緣好', socialBonus: 10, loveBonus: 5 },
-  { id: 'smart', name: '聰明', desc: '學業/工作表現好', careerBonus: 15 },
-  { id: 'humorous', name: '幽默', desc: '社交場合受歡迎', socialBonus: 15, loveBonus: 8 },
-  { id: 'diligent', name: '勤奮', desc: '努力不懈，容易成功', careerBonus: 10, moneyBonus: 10 },
-  { id: 'caring', name: '體貼', desc: '伴侶/朋友覺得被重視', loveBonus: 12, socialBonus: 5 },
-  { id: 'brave', name: '勇敢', desc: '敢於嘗試，敢表白', loveBonus: 10, careerBonus: 5 },
-  { id: 'creative', name: '有創意', desc: '有獨特想法', funBonus: 10, careerBonus: 8 },
-  { id: 'resilient', name: '堅韌', desc: '面對挫折容易恢復', mentalBonus: 15 },
+  { id: 'kind', name: '善良', desc: '容易交到朋友，人緣好' },
+  { id: 'smart', name: '聰明', desc: '學業/工作表現好' },
+  { id: 'humorous', name: '幽默', desc: '社交場合受歡迎' },
+  { id: 'diligent', name: '勤奮', desc: '努力不懈，容易成功' },
+  { id: 'caring', name: '體貼', desc: '伴侶/朋友覺得被重視' },
+  { id: 'brave', name: '勇敢', desc: '敢於嘗試，敢表白' },
+  { id: 'creative', name: '有創意', desc: '有獨特想法' },
+  { id: 'resilient', name: '堅韌', desc: '面對挫折容易恢復' },
 ];
 
 const BAD_TRAITS = [
-  { id: 'lazy', name: '懶惰', desc: '容易拖延，錯過機會', careerPenalty: 10, energyPenalty: 5 },
-  { id: 'impulsive', name: '衝動', desc: '容易做出後悔的決定', decisionRisk: 15, lovePenalty: 8 },
-  { id: 'insecure', name: '自卑', desc: '不敢表達自己，錯過機會', lovePenalty: 12, socialPenalty: 8 },
-  { id: 'jealous', name: '嫉妒', desc: '見不得人好，影響關係', socialPenalty: 10, lovePenalty: 8 },
-  { id: 'avoidant', name: '逃避', desc: '遇到問題傾向逃避', problemPenalty: 15, lovePenalty: 10 },
-  { id: 'stubborn', name: '固執', desc: '聽不進人勸，容易吵架', socialPenalty: 8, lovePenalty: 10 },
-  { id: 'selfish', name: '自私', desc: '只顧自己，朋友會離開', socialPenalty: 15, lovePenalty: 12 },
-  { id: 'emotional', name: '情緒化', desc: '情緒波動大，影響判斷', mentalPenalty: 10, lovePenalty: 8 },
-  { id: 'procrastinator', name: '拖延', desc: '總是要到最後才做', careerPenalty: 12 },
-  { id: 'overspender', name: '揮霍', desc: '花錢大手大腳', moneyPenalty: 15 },
+  { id: 'lazy', name: '懶惰', desc: '容易拖延，錯過機會' },
+  { id: 'impulsive', name: '衝動', desc: '容易做出後悔的決定' },
+  { id: 'insecure', name: '自卑', desc: '不敢表達自己，錯過機會' },
+  { id: 'jealous', name: '嫉妒', desc: '見不得人好，影響關係' },
+  { id: 'avoidant', name: '逃避', desc: '遇到問題傾向逃避' },
+  { id: 'stubborn', name: '固執', desc: '聽不進人勸，容易吵架' },
+  { id: 'selfish', name: '自私', desc: '只顧自己，朋友會離開' },
+  { id: 'emotional', name: '情緒化', desc: '情緒波動大，影響判斷' },
+  { id: 'procrastinator', name: '拖延', desc: '總是要到最後才做' },
+  { id: 'overspender', name: '揮霍', desc: '花錢大手大腳' },
 ];
 
 function generatePersonality() {
-  // 隨機 2-3 個優點 + 2-3 個缺點
   const goods = [...GOOD_TRAITS].sort(() => Math.random() - 0.5).slice(0, 2 + Math.floor(Math.random() * 2));
   const bads = [...BAD_TRAITS].sort(() => Math.random() - 0.5).slice(0, 2 + Math.floor(Math.random() * 2));
   return { good: goods.map(g => g.id), bad: bads.map(b => b.id) };
 }
 
-function hasTrait(c, traitId) {
-  return c.personality.good.includes(traitId) || c.personality.bad.includes(traitId);
-}
-
-function getTraitBonus(c, bonusKey) {
-  let total = 0;
-  for (const t of GOOD_TRAITS) {
-    if (c.personality.good.includes(t.id) && t[bonusKey]) total += t[bonusKey];
-  }
-  return total;
-}
-
-function getTraitPenalty(c, penaltyKey) {
-  let total = 0;
-  for (const t of BAD_TRAITS) {
-    if (c.personality.bad.includes(t.id) && t[penaltyKey]) total += t[penaltyKey];
-  }
-  return total;
-}
-
 // ============================================================
-// 地點系統（社交導向）
+// 地點系統
 // ============================================================
 const LOCATIONS = {
   home_bedroom: { name: '睡房', icon: '🛏', type: 'home', visual: '🛏', bg: 'linear-gradient(to bottom, #4a3a5e, #3a2a4e)' },
@@ -472,7 +466,6 @@ const LOCATIONS = {
   beach: { name: '海灘', icon: '🏖', type: 'social', visual: '🏖', bg: 'linear-gradient(to bottom, #87ceeb, #40e0d0)' },
   library: { name: '圖書館', icon: '📚', type: 'solo', visual: '📚', bg: 'linear-gradient(to bottom, #8b6f47, #6b4f27)' },
   work_office: { name: '辦公室', icon: '💼', type: 'work', visual: '💼', bg: 'linear-gradient(to bottom, #e8e8e8, #c8c8c8)' },
-  mtr: { name: '地鐵', icon: '🚇', type: 'transit', visual: '🚇', bg: 'linear-gradient(to bottom, #4a4a6a, #2a2a4a)' },
 };
 
 // ============================================================
@@ -487,9 +480,7 @@ function createCharacter(cfg) {
     age: cfg.age,
     gender: cfg.gender || 'M',
     isProtagonist: cfg.isProtagonist || false,
-    // 人格優缺點
     personality: generatePersonality(),
-    // 基礎屬性
     needs: {
       hunger: 60, sleep: 70, hygiene: 75,
       social: 40, fun: 50, love: 30,
@@ -499,9 +490,8 @@ function createCharacter(cfg) {
     money: cfg.money ?? 15000,
     job: cfg.job || null,
     home: cfg.home ?? '劏房（租）',
-    // 感情狀態
     love: {
-      status: 'single', // single, crush, dating, in_relationship, heartbroken
+      status: 'single',
       partnerName: null,
       affection: 0,
       daysTogether: 0,
@@ -509,13 +499,9 @@ function createCharacter(cfg) {
       crushCount: 0,
       heartbreakCount: 0,
     },
-    // 社交圈
     social: {
       friends: [],
-      closeFriends: [],
       popularity: 30,
-      socialEvents: 0,
-      conflicts: [],
     },
     health: { physical: 90, mental: 85, disease: null },
     currentAction: null,
@@ -523,10 +509,7 @@ function createCharacter(cfg) {
     actionTimer: 0,
     spriteEl: null,
     birthDay: cfg.birthDay ?? 0,
-    // 人生高低
     lifeEvents: [],
-    currentPhase: 'rising', // rising, falling, stable, peak, rock_bottom
-    phaseIntensity: 0,
   };
 }
 
@@ -536,7 +519,6 @@ Game.characters.protagonist = createCharacter({
   money: 15000,
 });
 
-// 朋友生成
 function generateFriendName() {
   const names = ['阿強', '阿May', '阿詩', '阿俊', '阿玲', '阿Cat', '阿Fin', '阿傑', '阿欣', '阿Wing', '阿Kelvin', '阿Yan'];
   return names[Math.floor(Math.random() * names.length)];
@@ -556,10 +538,9 @@ const NEEDS_DEF = [
 ];
 
 // ============================================================
-// 行動庫（社交導向 + 兩性生活）
+// 行動庫
 // ============================================================
 const ACTIONS = {
-  // === 社交活動（大量）===
   hang_friends_cafe: {
     name: '同朋友去 Cafe', icon: '☕', location: 'cafe', duration: 1.5,
     effects: { social: 30, fun: 20, love: 5, energy: -5 },
@@ -632,7 +613,6 @@ const ACTIONS = {
     mutter: ['你出千！', '我贏啦', '好緊張'],
     socialGain: 10,
   },
-  // === 兩性生活 ===
   dating_app: {
     name: '滑 Tinder', icon: '📱', location: 'home_bedroom', duration: 0.5,
     effects: { love: 10, fun: 10, social: 5 },
@@ -685,11 +665,9 @@ const ACTIONS = {
     mutter: ['好掛住你', '聽日見', '早啲瞓'],
     loveGain: 5,
   },
-  // === 個人生活 ===
   solo_walk: {
     name: '獨自散步', icon: '🚶', location: 'park', duration: 1,
     effects: { fun: 15, energy: 5 },
-    healthBonus: { mental: 3 },
     condition: (c) => Game.hour >= 7 && Game.hour < 21,
     mutter: ['好寧靜', '諗下人生', '放鬆下'],
   },
@@ -697,7 +675,6 @@ const ACTIONS = {
     name: '自己去 Gym', icon: '💪', location: 'gym', duration: 1.5,
     effects: { fun: 15, energy: -15, hygiene: -10 },
     cost: 50,
-    healthBonus: { physical: 4 },
     condition: (c) => c.money > 60 && c.needs.energy > 30 && Game.hour >= 7 && Game.hour < 22,
     mutter: ['再 push 多啲', '今日練邊組'],
   },
@@ -758,63 +735,77 @@ const ACTIONS = {
 // ============================================================
 const LIFE_EVENTS = {
   high: [
-    { id: 'promotion', title: '升職加薪！', icon: '📈', trigger: (c) => c.job && Math.random() < 0.008,
+    { id: 'promotion', title: '升職加薪！', icon: '📈',
+      trigger: (c) => c.job && Math.random() < 0.008,
       context: '你嘅表現出色，公司決定升你職！',
-      effect: (c) => { if (c.job) { c.job.salary *= 1.3; c.money += 20000; } c.mood.happy += 30; },
+      effect: (c) => { if (c.job) { c.job.salary = (c.job.salary || 18000) * 1.3; c.money += 20000; } c.mood.happy += 30; },
       lifeImpact: 20 },
-    { id: 'lottery', title: '中獎啦！', icon: '🎰', trigger: (c) => Math.random() < 0.002,
+    { id: 'lottery', title: '中獎啦！', icon: '🎰',
+      trigger: (c) => Math.random() < 0.002,
       context: '你買六合彩竟然中咗！',
       effect: (c) => { c.money += 100000; c.mood.happy += 40; },
       lifeImpact: 25 },
-    { id: 'love_confession', title: '有人同你表白！', icon: '💌', trigger: (c) => c.love.status === 'single' && c.age >= 20 && Math.random() < 0.01,
+    { id: 'love_confession', title: '有人同你表白！', icon: '💌',
+      trigger: (c) => c.love.status === 'single' && c.age >= 20 && Math.random() < 0.01,
       context: '有人暗戀你多時，終於鼓起勇氣向你表白。',
       effect: (c) => { c.love.status = 'dating'; c.love.partnerName = generateFriendName(); c.love.affection = 50; c.mood.happy += 35; },
       lifeImpact: 20 },
-    { id: 'trip', title: '同朋友去旅行', icon: '✈️', trigger: (c) => c.social.friends.length > 1 && c.money > 5000 && Math.random() < 0.005,
+    { id: 'trip', title: '同朋友去旅行', icon: '✈️',
+      trigger: (c) => c.social.friends.length > 1 && c.money > 5000 && Math.random() < 0.005,
       context: '一班朋友約你一起去旅行！',
       effect: (c) => { c.money -= 3000; c.mood.happy += 30; c.social.popularity += 10; },
       lifeImpact: 15 },
-    { id: 'achievement', title: '達成目標', icon: '🏆', trigger: (c) => Math.random() < 0.006,
+    { id: 'achievement', title: '達成目標', icon: '🏆',
+      trigger: (c) => Math.random() < 0.006,
       context: '你一直努力的事情終於有成果！',
       effect: (c) => { c.mood.confident += 20; c.mood.happy += 25; },
       lifeImpact: 15 },
   ],
   low: [
-    { id: 'layoff', title: '被裁員', icon: '📉', trigger: (c) => c.job && Math.random() < 0.005,
+    { id: 'layoff', title: '被裁員', icon: '📉',
+      trigger: (c) => c.job && Math.random() < 0.005,
       context: '公司經營困難，你被列入裁員名單。',
       effect: (c) => { c.job = null; c.mood.happy -= 30; c.mood.confident -= 15; },
       lifeImpact: -25 },
-    { id: 'breakup', title: '分手', icon: '💔', trigger: (c) => c.love.status === 'in_relationship' && c.love.affection < 40 && Math.random() < 0.02,
+    { id: 'breakup', title: '分手', icon: '💔',
+      trigger: (c) => c.love.status === 'in_relationship' && c.love.affection < 40 && Math.random() < 0.02,
       context: '你們的感情出現問題，最終分手了。',
       effect: (c) => { c.love.status = 'heartbroken'; c.love.exes.push(c.love.partnerName); c.love.partnerName = null; c.love.affection = 0; c.love.heartbreakCount++; c.mood.happy -= 40; },
       lifeImpact: -30 },
-    { id: 'friend_betrayal', title: '朋友背叛', icon: '🗡', trigger: (c) => c.social.friends.length > 2 && Math.random() < 0.004,
+    { id: 'friend_betrayal', title: '朋友背叛', icon: '🗡',
+      trigger: (c) => c.social.friends.length > 2 && Math.random() < 0.004,
       context: '你發現好友在背後講你壞話。',
       effect: (c) => { c.social.friends.pop(); c.mood.happy -= 25; c.mood.confident -= 10; },
       lifeImpact: -15 },
-    { id: 'money_loss', title: '金錢損失', icon: '💸', trigger: (c) => c.money > 10000 && Math.random() < 0.005,
+    { id: 'money_loss', title: '金錢損失', icon: '💸',
+      trigger: (c) => c.money > 10000 && Math.random() < 0.005,
       context: '你投資失敗/被騙，損失了一大筆錢。',
       effect: (c) => { c.money -= Math.min(c.money * 0.3, 30000); c.mood.happy -= 20; },
       lifeImpact: -20 },
-    { id: 'health_issue', title: '健康問題', icon: '🤒', trigger: (c) => Math.random() < 0.004,
+    { id: 'health_issue', title: '健康問題', icon: '🤒',
+      trigger: (c) => Math.random() < 0.004,
       context: '你感覺身體不適，需要休息。',
       effect: (c) => { c.health.physical -= 20; c.health.disease = 'cold'; c.mood.happy -= 15; },
       lifeImpact: -10 },
-    { id: 'family_issue', title: '家庭問題', icon: '🏚', trigger: (c) => Math.random() < 0.003,
+    { id: 'family_issue', title: '家庭問題', icon: '🏚',
+      trigger: (c) => Math.random() < 0.003,
       context: '家裡出了些問題，讓你擔心。',
       effect: (c) => { c.mood.happy -= 20; c.needs.safety -= 10; },
       lifeImpact: -15 },
   ],
   romantic: [
-    { id: 'crush_appear', title: '遇到心儀對象', icon: '💘', trigger: (c) => c.love.status === 'single' && c.age >= 20 && Math.random() < 0.015,
+    { id: 'crush_appear', title: '遇到心儀對象', icon: '💘',
+      trigger: (c) => c.love.status === 'single' && c.age >= 20 && Math.random() < 0.015,
       context: '你在一次聚會上遇到了一個讓你心動的人。',
       effect: (c) => { c.love.status = 'crush'; c.love.partnerName = generateFriendName(); c.love.crushCount++; c.mood.happy += 15; },
       lifeImpact: 10 },
-    { id: 'first_kiss', title: '初吻', icon: '😘', trigger: (c) => c.love.status === 'dating' && c.love.affection > 60 && Math.random() < 0.02,
+    { id: 'first_kiss', title: '初吻', icon: '😘',
+      trigger: (c) => c.love.status === 'dating' && c.love.affection > 60 && Math.random() < 0.02,
       context: '一個浪漫的夜晚，你們接吻了。',
       effect: (c) => { c.love.affection += 20; c.mood.happy += 30; },
       lifeImpact: 15 },
-    { id: 'make_up', title: '復合', icon: '🕊', trigger: (c) => c.love.status === 'heartbroken' && c.love.heartbreakCount > 0 && Math.random() < 0.01,
+    { id: 'make_up', title: '復合', icon: '🕊',
+      trigger: (c) => c.love.status === 'heartbroken' && c.love.heartbreakCount > 0 && Math.random() < 0.01,
       context: '你的前任聯絡你，想復合。',
       effect: (c) => { c.love.status = 'in_relationship'; c.love.partnerName = c.love.exes[c.love.exes.length - 1]; c.love.affection = 40; c.mood.happy += 20; },
       lifeImpact: 10 },
@@ -830,22 +821,16 @@ function aiThink(c) {
     for (const [key, act] of Object.entries(ACTIONS)) {
       if (!act.condition(c)) continue;
       let score = 50;
-      // 需求匹配
       for (const [nk, nv] of Object.entries(act.effects)) {
         if (nv > 0 && c.needs[nk] < 50) score += (50 - c.needs[nk]) * 0.8;
         if (nv < 0 && c.needs[nk] < 30) score -= 40;
       }
-      // 社交加成（如果有朋友）
       if (act.socialGain && c.social.friends.length > 0) score += act.socialGain * 2;
-      // 愛情加成
       if (act.loveGain && c.love.status !== 'single') score += act.loveGain * 2;
-      // 性格影響
       if (act.location === 'bar' || act.location === 'karaoke') score += c.personality.good.includes('humorous') ? 10 : 0;
       if (act.location === 'library') score += c.personality.good.includes('diligent') ? 10 : 0;
       if (act.name.includes('獨自')) score += c.personality.bad.includes('insecure') ? 8 : -5;
-      // 金錢
       if (act.cost && c.money < act.cost * 2) score -= 30;
-      // 隨機
       score += (Math.random() - 0.5) * 25;
       candidates.push({ key, act, score });
     }
@@ -885,7 +870,7 @@ function aiThink(c) {
     // 愛情效果
     if (chosen.act.loveGain && c.love.status === 'dating') {
       c.love.affection = Math.min(100, c.love.affection + chosen.act.loveGain);
-      if (c.love.affection > 70 && c.love.status === 'dating') {
+      if (c.love.affection > 70) {
         c.love.status = 'in_relationship';
         c.love.daysTogether = 1;
         if (c.id === Game.selectedCharId || c.isProtagonist) {
@@ -901,15 +886,17 @@ function aiThink(c) {
 }
 
 // ============================================================
-// 人生高低起跌檢查
+// 人生事件檢查
 // ============================================================
 function checkLifeEvents(c) {
   try {
     if (Game.eventCooldown > 0) return;
+    if (isModalOpen()) return; // 已有彈窗開著，跳過
+
     const allEvents = [...LIFE_EVENTS.high, ...LIFE_EVENTS.low, ...LIFE_EVENTS.romantic];
     for (const evt of allEvents) {
       if (evt.trigger(c)) {
-        Game.eventCooldown = 30; // 30 tick 冷卻
+        Game.eventCooldown = 30;
         triggerLifeEvent(evt, c);
         return;
       }
@@ -919,46 +906,45 @@ function checkLifeEvents(c) {
 
 function triggerLifeEvent(evt, c) {
   try {
-    const isHigh = LIFE_EVENTS.high.includes(evt);
-    const isLow = LIFE_EVENTS.low.includes(evt);
-    const isRomantic = LIFE_EVENTS.romantic.includes(evt);
-
     evt.effect(c);
     c.lifeEvents.push({ day: Game.day, title: evt.title, icon: evt.icon, impact: evt.lifeImpact });
     Game.lifeCurve.push(evt.lifeImpact);
 
     if (c.id === Game.selectedCharId || c.isProtagonist) {
+      const isHigh = LIFE_EVENTS.high.includes(evt);
+      const isLow = LIFE_EVENTS.low.includes(evt);
       const type = isHigh ? 'high' : isLow ? 'low' : 'love';
       addThought(c.id, `${evt.icon} ${evt.title}`, evt.context, false, false, type);
     }
 
-    // 顯示彈窗（只有重大事件）
+    // 顯示彈窗
     if (Math.abs(evt.lifeImpact) >= 15) {
-      showLifeEventModal(evt, c);
+      showLifeEventModal(evt);
     }
   } catch (e) { console.error(e); }
 }
 
-function showLifeEventModal(evt, c) {
+function showLifeEventModal(evt) {
   try {
-    const modal = document.getElementById('event-modal');
-    if (!modal || modal.classList.contains('show')) return;
-    Game.paused = true;
-    document.getElementById('event-icon').textContent = evt.icon;
-    document.getElementById('event-title').textContent = evt.title;
-    document.getElementById('event-context').textContent = evt.context;
-    const choicesEl = document.getElementById('event-choices');
+    if (isModalOpen()) return;
+
+    safeSetText('event-icon', evt.icon);
+    safeSetText('event-title', evt.title);
+    safeSetText('event-context', evt.context);
+
+    const choicesEl = $('event-choices');
     if (choicesEl) {
       choicesEl.innerHTML = `
-        <button class="choice-btn" onclick="this.parentElement.innerHTML='<div style=&quot;text-align:center;padding:20px&quot;>✓ 經歷過咗，人生繼續...</div>';setTimeout(()=>document.getElementById('event-modal').classList.remove('show');Game.paused=false;,1500)">
+        <button class="choice-btn" id="event-accept-btn">
           <span class="icon">✨</span><b>接受呢個經歷</b>
           <div class="desc">人生總有高低，繼續前行</div>
         </button>
       `;
     }
-    modal.classList.add('show');
+
+    openModal('event-modal');
   } catch (e) {
-    console.error(e);
+    console.error('showLifeEventModal error:', e);
     Game.paused = false;
   }
 }
@@ -969,25 +955,20 @@ function showLifeEventModal(evt, c) {
 function generateHalfYearReport(c) {
   try {
     const daysSinceReport = Game.day - Game.lastReportDay;
-    if (daysSinceReport < 180) return; // 每 180 日一次
+    if (daysSinceReport < 180) return;
+    if (isModalOpen()) return; // 已有彈窗，跳過
+
     Game.lastReportDay = Game.day;
 
-    Game.paused = true;
-    const modal = document.getElementById('report-modal');
-    const titleEl = document.getElementById('report-title');
-    const contentEl = document.getElementById('report-content');
-    if (!modal || !titleEl || !contentEl) { Game.paused = false; return; }
-
     const halfYearNum = Math.floor(Game.day / 180) + 1;
-    titleEl.textContent = `${c.age}歲 · 第 ${halfYearNum} 個半年報告`;
+    const titleEl = $('report-title');
+    if (titleEl) titleEl.textContent = `${c.age}歲 · 第 ${halfYearNum} 個半年報告`;
 
-    // 計算數據
     const recentEvents = c.lifeEvents.filter(e => e.day >= Game.day - 180);
     const highCount = recentEvents.filter(e => e.impact > 0).length;
     const lowCount = recentEvents.filter(e => e.impact < 0).length;
     const avgImpact = recentEvents.length > 0 ? recentEvents.reduce((s, e) => s + e.impact, 0) / recentEvents.length : 0;
 
-    // 人生曲線圖
     const curveData = Game.lifeCurve.slice(-20);
     const maxImpact = Math.max(...curveData.map(Math.abs), 1);
 
@@ -1042,8 +1023,8 @@ function generateHalfYearReport(c) {
         </div>
       </div>
     `;
-    contentEl.innerHTML = html;
-    modal.classList.add('show');
+    safeSetHTML('report-content', html);
+    openModal('report-modal');
   } catch (e) {
     console.error('Report error:', e);
     Game.paused = false;
@@ -1076,7 +1057,7 @@ function addThought(charId, tag, text, isDecision = false, isEvent = false, type
     if (charId !== Game.selectedCharId && charId !== 'protagonist') return;
     const c = Game.characters[charId];
     if (!c) return;
-    const log = document.getElementById('thought-log');
+    const log = $('thought-log');
     if (!log) return;
     const div = document.createElement('div');
     div.className = 'thought' + (isDecision ? ' decision' : '') + (type ? ' ' + type : '');
@@ -1091,7 +1072,7 @@ function addMutter(charId, text) {
     if (charId !== Game.selectedCharId && charId !== 'protagonist') return;
     const c = Game.characters[charId];
     if (!c) return;
-    const log = document.getElementById('thought-log');
+    const log = $('thought-log');
     if (!log) return;
     const div = document.createElement('div');
     div.className = 'thought mutter';
@@ -1103,7 +1084,7 @@ function addMutter(charId, text) {
 function renderPersonality() {
   try {
     const c = Game.characters.protagonist;
-    const el = document.getElementById('personality-display');
+    const el = $('personality-display');
     if (!el) return;
     el.innerHTML = `
       <div class="trait-row">
@@ -1125,7 +1106,7 @@ function renderPersonality() {
 function renderLoveDisplay() {
   try {
     const c = Game.characters.protagonist;
-    const el = document.getElementById('love-display');
+    const el = $('love-display');
     if (!el) return;
     let html = `<div>狀態：${getLoveStatusText(c.love.status)}</div>`;
     if (c.love.partnerName) {
@@ -1140,7 +1121,7 @@ function renderLoveDisplay() {
 function renderSocialDisplay() {
   try {
     const c = Game.characters.protagonist;
-    const el = document.getElementById('social-display');
+    const el = $('social-display');
     if (!el) return;
     let html = `<div>朋友：${c.social.friends.length} 人</div>`;
     html += `<div>受歡迎：${c.social.popularity}/100</div>`;
@@ -1155,10 +1136,10 @@ function renderScene() {
   try {
     const c = Game.characters.protagonist;
     const loc = LOCATIONS[c.currentRoom] || LOCATIONS.home_living;
-    const sceneBg = document.getElementById('scene-bg');
-    const sceneVisual = document.getElementById('scene-visual');
-    const sceneLoc = document.getElementById('scene-loc');
-    const moodEl = document.getElementById('mood-indicator');
+    const sceneBg = $('scene-bg');
+    const sceneVisual = $('scene-visual');
+    const sceneLoc = $('scene-loc');
+    const moodEl = $('mood-indicator');
     if (sceneBg) sceneBg.style.background = loc.bg;
     if (sceneVisual) sceneVisual.textContent = loc.visual;
     if (sceneLoc) sceneLoc.textContent = `${loc.icon} ${loc.name}`;
@@ -1170,12 +1151,10 @@ function renderScene() {
       else if (h > -40) moodEl.textContent = '😟 低落';
       else moodEl.textContent = '😢 難過';
     }
-    // 地點按鈕
-    const map = document.getElementById('location-map');
+    const map = $('location-map');
     if (map) {
       map.innerHTML = '';
       Object.entries(LOCATIONS).forEach(([key, loc]) => {
-        if (loc.type === 'transit') return;
         const btn = document.createElement('div');
         btn.className = 'loc-btn' + (key === c.currentRoom ? ' current' : '');
         btn.textContent = `${loc.icon} ${loc.name}`;
@@ -1188,7 +1167,7 @@ function renderScene() {
 
 function renderCharList() {
   try {
-    const list = document.getElementById('char-list');
+    const list = $('char-list');
     if (!list) return;
     list.innerHTML = '';
     Object.values(Game.characters).forEach(c => {
@@ -1197,9 +1176,9 @@ function renderCharList() {
       card.onclick = () => {
         Game.selectedCharId = c.id;
         renderCharList();
-        const log = document.getElementById('thought-log');
+        const log = $('thought-log');
         if (log) log.innerHTML = '';
-        const nameEl = document.getElementById('log-char-name');
+        const nameEl = $('log-char-name');
         if (nameEl) nameEl.textContent = c.name;
       };
       const stateLine = c.currentAction ? `${c.currentAction.icon} ${c.currentAction.name}` : '思考中...';
@@ -1233,7 +1212,7 @@ function renderSprites() {
       document.getElementById('center').appendChild(el);
       c.spriteEl = el;
     }
-    const centerRect = document.getElementById('center').getBoundingClientRect();
+    const centerRect = $('center').getBoundingClientRect();
     const x = centerRect.width / 2 - 14;
     const y = centerRect.height / 2 - 20;
     c.spriteEl.style.left = x + 'px';
@@ -1253,14 +1232,10 @@ function executeAction(c, deltaHours) {
     }
     if (act.cost) c.money -= act.cost * ratio;
     if (act.income) c.money += act.income * ratio;
-    if (act.healthBonus) {
-      for (const [k, v] of Object.entries(act.healthBonus)) c.health[k] = Math.min(100, c.health[k] + v * ratio);
-    }
     c.actionTimer -= deltaHours;
     if (c.actionTimer <= 0) {
       if (c.id === Game.selectedCharId || c.isProtagonist) {
-        const el = document.getElementById('today-action');
-        if (el) el.textContent = act.icon + ' ' + act.name;
+        safeSetText('today-action', act.icon + ' ' + act.name);
       }
       c.currentAction = null;
     }
@@ -1271,12 +1246,12 @@ function executeAction(c, deltaHours) {
 }
 
 // ============================================================
-// 主 tick（加快進度）
+// 主 tick
 // ============================================================
 function tick() {
   try {
     if (Game.paused || Game.speed === 0) return;
-    const baseDelta = 0.15 * Game.speed; // 加快 3 倍
+    const baseDelta = 0.15 * Game.speed;
     Game.hour += baseDelta;
     Game.minute = Math.floor((Game.hour % 1) * 60);
     if (Game.eventCooldown > 0) Game.eventCooldown--;
@@ -1286,10 +1261,8 @@ function tick() {
       Game.day++;
       Object.values(Game.characters).forEach(c => {
         c.age = Math.floor((Game.day - c.birthDay) / 365);
-        // 感情日數
-        if (c.love.status === 'in_relationship') c.love.daysTogether++;
-        // 感情自然衰減
         if (c.love.status === 'in_relationship') {
+          c.love.daysTogether++;
           c.love.affection = Math.max(0, c.love.affection - 0.5);
         }
       });
@@ -1303,17 +1276,14 @@ function tick() {
         NEEDS_DEF.forEach(n => {
           c.needs[n.key] = Math.max(0, c.needs[n.key] - n.decay * baseDelta / 24);
         });
-        // 情緒
         const avgNeed = Object.values(c.needs).reduce((a,b)=>a+b,0) / Object.keys(c.needs).length;
         c.mood.happy += (avgNeed - 50) * 0.02 * baseDelta;
         c.mood.happy = Math.max(-100, Math.min(100, c.mood.happy));
       } catch (e) { console.error(e); }
     });
 
-    // 檢查人生事件
     const p = Game.characters.protagonist;
     checkLifeEvents(p);
-    // 半年報告
     generateHalfYearReport(p);
 
     Game.tickCount++;
@@ -1337,17 +1307,12 @@ function dailySettlement() {
     Object.values(Game.characters).forEach(c => {
       c.money -= 100;
       if (c.job && Game.day % 30 === 0) c.money += 18000;
-      // 健康
       if (c.health.disease) {
         c.health.physical = Math.max(0, c.health.physical - 1);
         if (Math.random() < 0.2) c.health.disease = null;
       }
-      // 人格缺點觸發
       if (c.personality.bad.includes('overspender') && Math.random() < 0.1) {
         c.money -= 200;
-      }
-      if (c.personality.bad.includes('lazy') && Math.random() < 0.1) {
-        c.needs.fun = Math.min(100, c.needs.fun + 10);
       }
     });
     if (Game.characters.protagonist.age >= 40) {
@@ -1361,17 +1326,12 @@ function dailySettlement() {
 function renderStatus() {
   try {
     const p = Game.characters.protagonist;
-    const el1 = document.getElementById('money');
-    if (el1) el1.textContent = '$' + Math.round(p.money).toLocaleString();
-    const el2 = document.getElementById('life-progress');
-    if (el2) el2.textContent = `${p.age} / 40 歲`;
-    const el3 = document.getElementById('life-days');
-    if (el3) el3.textContent = `第 ${Game.day} 日`;
-    const el4 = document.getElementById('social-count');
-    if (el4) el4.textContent = p.social.friends.length;
-    // 人生曲線
-    const curveEl = document.getElementById('life-curve');
-    const trendEl = document.getElementById('life-trend');
+    safeSetText('money', '$' + Math.round(p.money).toLocaleString());
+    safeSetText('life-progress', `${p.age} / 40 歲`);
+    safeSetText('life-days', `第 ${Game.day} 日`);
+    safeSetText('social-count', p.social.friends.length);
+    const curveEl = $('life-curve');
+    const trendEl = $('life-trend');
     if (curveEl && trendEl) {
       const recent = Game.lifeCurve.slice(-10);
       const avg = recent.length > 0 ? recent.reduce((a,b)=>a+b,0) / recent.length : 0;
@@ -1380,8 +1340,7 @@ function renderStatus() {
       curveEl.style.background = avg > 5 ? '#10b981' : avg < -5 ? '#ff6b6b' : '#ffd369';
       trendEl.textContent = avg > 5 ? '📈 上升' : avg < -5 ? '📉 下降' : '→ 平穩';
     }
-    // 人生階段
-    const stageEl = document.getElementById('life-stage-tag');
+    const stageEl = $('life-stage-tag');
     if (stageEl) {
       if (p.age < 25) stageEl.textContent = '🌱 少年期';
       else if (p.age < 30) stageEl.textContent = '🌿 青年期';
@@ -1397,10 +1356,8 @@ function renderDateTime() {
     const dayOfYear = Game.day % 365;
     const month = Math.floor(dayOfYear / 30) + 1;
     const day = (dayOfYear % 30) + 1;
-    const el1 = document.getElementById('date-display');
-    if (el1) el1.textContent = `${year}/${String(month).padStart(2,'0')}/${String(day).padStart(2,'0')}`;
-    const el2 = document.getElementById('time-display');
-    if (el2) el2.textContent = `${String(Game.hour).padStart(2,'0')}:${String(Game.minute).padStart(2,'0')}`;
+    safeSetText('date-display', `${year}/${String(month).padStart(2,'0')}/${String(day).padStart(2,'0')}`);
+    safeSetText('time-display', `${String(Game.hour).padStart(2,'0')}:${String(Game.minute).padStart(2,'0')}`);
   } catch (e) { console.error(e); }
 }
 
@@ -1410,10 +1367,10 @@ function renderDateTime() {
 function init() {
   try {
     Game.characters.protagonist.birthDay = 0;
-    // 初始朋友
     Game.characters.protagonist.social.friends.push('阿強', '阿May');
     Game.characters.protagonist.social.popularity = 35;
 
+    // 速度按鈕
     document.querySelectorAll('.btn[data-speed]').forEach(btn => {
       btn.onclick = () => {
         document.querySelectorAll('.btn[data-speed]').forEach(b => b.classList.remove('active'));
@@ -1421,6 +1378,29 @@ function init() {
         Game.speed = parseInt(btn.dataset.speed);
         Game.paused = Game.speed === 0;
       };
+    });
+
+    // === 修復：事件彈窗關閉按鈕 ===
+    const eventCloseBtn = $('event-close-btn');
+    if (eventCloseBtn) {
+      eventCloseBtn.onclick = () => {
+        closeModal('event-modal');
+      };
+    }
+
+    // === 修復：半年報告關閉按鈕 ===
+    const reportCloseBtn = $('report-close-btn');
+    if (reportCloseBtn) {
+      reportCloseBtn.onclick = () => {
+        closeModal('report-modal');
+      };
+    }
+
+    // 事件接受按鈕（動態綁定）
+    document.addEventListener('click', (e) => {
+      if (e.target && e.target.id === 'event-accept-btn') {
+        closeModal('event-modal');
+      }
     });
 
     renderCharList();
@@ -1435,7 +1415,9 @@ function init() {
 
     const c = Game.characters.protagonist;
     addThought('protagonist', '🌟', `${c.name}，${c.age} 歲，少年人生開始`, true);
-    addThought('protagonist', '🎭', `優點：${c.personality.good.map(id => GOOD_TRAITS.find(g=>g.id===id)?.name).filter(Boolean).join('、')} · 缺點：${c.personality.bad.map(id => BAD_TRAITS.find(b=>b.id===id)?.name).filter(Boolean).join('、')}`, false);
+    const goodNames = c.personality.good.map(id => GOOD_TRAITS.find(g=>g.id===id)?.name).filter(Boolean).join('、');
+    const badNames = c.personality.bad.map(id => BAD_TRAITS.find(b=>b.id===id)?.name).filter(Boolean).join('、');
+    addThought('protagonist', '🎭', `優點：${goodNames} · 缺點：${badNames}`, false);
     addMutter('protagonist', '今日會發生咩事呢？期待！');
   } catch (e) {
     console.error('Init error:', e);
