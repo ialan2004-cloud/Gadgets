@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>人生屋企 · 真實生活版</title>
+<title>少年人生 · 真實青春版</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body {
@@ -15,7 +15,7 @@
     width: 100vw; height: 100vh;
     display: grid;
     grid-template-rows: 38px 1fr 78px;
-    grid-template-columns: 210px 1fr 320px;
+    grid-template-columns: 230px 1fr 340px;
     grid-template-areas: "top top top" "left center right" "bottom bottom bottom";
     gap: 4px; padding: 4px;
   }
@@ -64,6 +64,13 @@
     letter-spacing: 1px; margin: 4px 0 2px;
     border-bottom: 1px solid #3a3a5e; padding-bottom: 2px;
   }
+  /* 人格優缺點 */
+  .trait-row { display: flex; gap: 4px; flex-wrap: wrap; margin: 3px 0; }
+  .trait-tag {
+    padding: 2px 5px; border-radius: 3px; font-size: 8.5px;
+  }
+  .trait-good { background: rgba(107, 207, 127, 0.2); color: #6bcf7f; border: 1px solid rgba(107, 207, 127, 0.4); }
+  .trait-bad { background: rgba(255, 107, 107, 0.2); color: #ff6b6b; border: 1px solid rgba(255, 107, 107, 0.4); }
   /* 中央場景 */
   #center {
     grid-area: center;
@@ -71,25 +78,7 @@
     overflow: hidden;
     transition: background 2s;
   }
-  #scene-bg {
-    position: absolute; inset: 0;
-    transition: all 2s;
-  }
-  #weather-overlay {
-    position: absolute; inset: 0;
-    pointer-events: none;
-    transition: opacity 2s;
-  }
-  .rain-drop {
-    position: absolute;
-    width: 2px; height: 15px;
-    background: linear-gradient(to bottom, transparent, rgba(150,200,255,0.6));
-    animation: rain 0.8s linear infinite;
-  }
-  @keyframes rain {
-    from { transform: translateY(-20px); }
-    to { transform: translateY(100vh); }
-  }
+  #scene-bg { position: absolute; inset: 0; transition: all 2s; }
   #scene-info {
     position: absolute;
     top: 8px; left: 8px;
@@ -98,42 +87,29 @@
     font-size: 10px; z-index: 5;
   }
   #scene-info .loc { color: #ffd369; font-weight: 700; }
-  #scene-info .weather { color: #93c5fd; }
-  #scene-info .sense { color: #fbbf24; font-style: italic; font-size: 9px; }
+  #scene-info .mood-indicator { color: #ff69b4; font-size: 9px; }
   #scene-visual {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 80px;
-    opacity: 0.3;
-    pointer-events: none;
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 90px; opacity: 0.25; pointer-events: none;
   }
   #location-map {
     position: absolute;
     bottom: 8px; left: 8px; right: 8px;
-    display: flex; gap: 4px;
-    flex-wrap: wrap;
-    z-index: 5;
+    display: flex; gap: 4px; flex-wrap: wrap; z-index: 5;
   }
   .loc-btn {
     background: rgba(0,0,0,0.5);
     border: 1px solid #4a4a6a;
     color: #eee;
-    padding: 3px 6px;
-    border-radius: 4px;
-    font-size: 9px;
-    cursor: pointer;
-    transition: all 0.2s;
+    padding: 3px 6px; border-radius: 4px;
+    font-size: 9px; cursor: pointer;
   }
   .loc-btn:hover { background: rgba(255,211,105,0.2); border-color: #ffd369; }
   .loc-btn.current { background: #ffd369; color: #1a1a2e; font-weight: 700; }
-  .loc-btn.unavailable { opacity: 0.3; cursor: not-allowed; }
   .char-sprite {
-    position: absolute;
-    width: 28px; height: 40px;
-    transition: left 1.2s ease-in-out, bottom 1.2s ease-in-out;
+    position: absolute; width: 28px; height: 40px;
+    transition: left 1.2s, bottom 1.2s;
     z-index: 10; pointer-events: none;
   }
   .char-sprite .body {
@@ -146,8 +122,7 @@
   }
   .char-sprite .action {
     position: absolute; bottom: 44px; left: 50%; transform: translateX(-50%);
-    font-size: 16px; animation: float 1.5s ease-in-out infinite;
-    white-space: nowrap;
+    font-size: 16px; animation: float 1.5s infinite;
   }
   .char-sprite .name-tag {
     position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
@@ -158,32 +133,6 @@
   @keyframes float {
     0%, 100% { transform: translate(-50%, 0); }
     50% { transform: translate(-50%, -4px); }
-  }
-  /* NPC */
-  .npc-sprite {
-    position: absolute;
-    width: 24px; height: 34px;
-    z-index: 8; pointer-events: none;
-    opacity: 0.85;
-  }
-  .npc-sprite .body {
-    position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
-    width: 18px; height: 22px; border-radius: 4px;
-  }
-  .npc-sprite .head {
-    position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-    width: 12px; height: 12px; background: #f5d4a8; border-radius: 50%;
-  }
-  .npc-sprite .bubble {
-    position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
-    background: rgba(255,255,255,0.95); color: #333;
-    padding: 3px 6px; border-radius: 8px;
-    font-size: 9px; white-space: nowrap;
-    animation: bubbleIn 0.3s ease-out;
-  }
-  @keyframes bubbleIn {
-    from { opacity: 0; transform: translate(-50%, 5px); }
-    to { opacity: 1; transform: translate(-50%, 0); }
   }
   /* 右側思考日誌 */
   #right {
@@ -210,8 +159,9 @@
   .thought.decision { border-left-color: #ffd369; }
   .thought.event { border-left-color: #ff6b6b; background: rgba(255, 107, 107, 0.08); }
   .thought.love { border-left-color: #ff69b4; background: rgba(255, 105, 180, 0.08); }
-  .thought.sense { border-left-color: #60a5fa; background: rgba(96, 165, 250, 0.06); font-style: italic; }
   .thought.social { border-left-color: #fbbf24; background: rgba(251, 191, 36, 0.06); }
+  .thought.low { border-left-color: #8b5cf6; background: rgba(139, 92, 246, 0.08); }
+  .thought.high { border-left-color: #10b981; background: rgba(16, 185, 129, 0.08); }
   .thought.mutter { border-left-color: #c084fc; background: rgba(192, 132, 252, 0.06); }
   .thought .time { color: #888; font-size: 8px; }
   .thought .tag {
@@ -251,6 +201,12 @@
   .stat-box .label { font-size: 8px; color: #888; text-transform: uppercase; }
   .stat-box .value { font-size: 12px; color: #ffd369; font-weight: 700; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .stat-box .sub { font-size: 9px; color: #aaa; }
+  .life-meter {
+    height: 4px; background: #2a2a4a; border-radius: 2px; overflow: hidden; margin-top: 2px;
+  }
+  .life-meter .fill {
+    height: 100%; border-radius: 2px; transition: width 0.5s;
+  }
   /* 彈窗 */
   .modal {
     position: fixed; inset: 0;
@@ -264,45 +220,47 @@
     border: 2px solid #ffd369;
     border-radius: 12px;
     padding: 16px;
-    width: 94%; max-width: 560px;
+    width: 94%; max-width: 600px;
     max-height: 88vh; overflow-y: auto;
   }
-  .modal-card h2 { color: #ffd369; font-size: 15px; margin-bottom: 8px; }
+  .modal-card h2 { color: #ffd369; font-size: 16px; margin-bottom: 10px; }
+  .modal-card h3 { color: #c084fc; font-size: 13px; margin: 8px 0 4px; }
   .modal-card .context {
     font-size: 11px; color: #ccc; margin-bottom: 10px;
     padding: 8px; background: rgba(0, 0, 0, 0.3); border-radius: 5px;
+    line-height: 1.5;
   }
   .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   .choice-btn {
     background: #2a2a4a; border: 1px solid #4a4a6a;
-    color: #eee; padding: 8px; border-radius: 5px;
+    color: #eee; padding: 10px; border-radius: 5px;
     cursor: pointer; font-size: 11px; text-align: left;
   }
   .choice-btn:hover { background: #3a3a5a; border-color: #ffd369; }
-  .choice-btn .icon { font-size: 15px; display: block; margin-bottom: 3px; }
+  .choice-btn .icon { font-size: 16px; display: block; margin-bottom: 3px; }
   .choice-btn .desc { font-size: 9px; color: #aaa; margin-top: 2px; }
-  /* 儲存面板 */
-  .save-slot {
-    background: rgba(0,0,0,0.3);
-    border: 1px solid #3a3a5e;
+  /* 半年報告 */
+  .report-section {
+    background: rgba(0,0,0,0.25);
     border-radius: 6px;
     padding: 8px;
-    margin-bottom: 6px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
+    margin-bottom: 8px;
   }
-  .save-slot .info { flex: 1; font-size: 10px; }
-  .save-slot .info b { color: #ffd369; }
-  .save-slot .actions { display: flex; gap: 4px; }
-  .save-slot .actions button {
-    background: #2a2a4a; border: 1px solid #4a4a6a;
-    color: #eee; padding: 4px 8px; border-radius: 4px;
-    cursor: pointer; font-size: 10px;
+  .report-section .title { font-size: 11px; color: #ffd369; font-weight: 700; margin-bottom: 4px; }
+  .report-row { display: flex; justify-content: space-between; font-size: 10px; padding: 2px 0; }
+  .report-row .up { color: #10b981; }
+  .report-row .down { color: #ff6b6b; }
+  .life-graph {
+    display: flex; gap: 1px; height: 30px; align-items: flex-end;
+    background: rgba(0,0,0,0.3); padding: 2px; border-radius: 3px;
   }
-  .save-slot .actions button:hover { background: #ffd369; color: #1a1a2e; }
-  .save-slot.empty { opacity: 0.5; }
+  .life-graph .bar {
+    flex: 1; background: linear-gradient(to top, #c084fc, #ffd369);
+    border-radius: 1px 1px 0 0;
+    min-width: 2px;
+  }
+  .life-graph .bar.low { background: linear-gradient(to top, #8b5cf6, #c084fc); }
+  .life-graph .bar.high { background: linear-gradient(to top, #10b981, #34d399); }
   ::-webkit-scrollbar { width: 3px; }
   ::-webkit-scrollbar-thumb { background: #4a4a6a; border-radius: 2px; }
   @media (orientation: portrait) and (max-width: 900px) {
@@ -328,37 +286,36 @@
 <div id="app">
   <div id="top" class="panel">
     <div class="left">
-      <span class="title">🌆 人生屋企 · 真實生活</span>
+      <span class="title">🌊 少年人生</span>
       <span id="date-display">2026/10/07</span>
       <span id="time-display" style="color:#ffd369">08:00</span>
-      <span id="weather-display" style="color:#93c5fd">☀️</span>
+      <span id="life-stage-tag" style="color:#c084fc">🌱 少年期</span>
     </div>
     <div class="right">
       <button class="btn" data-speed="0">⏸</button>
       <button class="btn active" data-speed="1">▶</button>
       <button class="btn" data-speed="3">▶▶</button>
       <button class="btn" data-speed="10">▶▶▶</button>
-      <button class="btn" data-speed="30">⏩</button>
-      <button class="btn" id="save-btn" title="儲存/載入">💾</button>
+      <button class="btn" id="save-btn">💾</button>
     </div>
   </div>
 
   <div id="left" class="panel">
-    <div class="section-title">👥 人物</div>
+    <div class="section-title">👤 主角</div>
     <div id="char-list"></div>
-    <div class="section-title">📍 當前地點</div>
-    <div id="location-info" style="font-size:10px;padding:4px;color:#ccc;"></div>
-    <div class="section-title">👥 在場人物</div>
-    <div id="nearby-npcs" style="font-size:10px;padding:4px;color:#ccc;"></div>
+    <div class="section-title">🎭 人格</div>
+    <div id="personality-display"></div>
+    <div class="section-title">💕 感情狀態</div>
+    <div id="love-display" style="font-size:10px;padding:4px;"></div>
+    <div class="section-title">👥 社交圈</div>
+    <div id="social-display" style="font-size:10px;padding:4px;"></div>
   </div>
 
   <div id="center">
     <div id="scene-bg"></div>
-    <div id="weather-overlay"></div>
     <div id="scene-info">
       <div class="loc" id="scene-loc">🏠 屋企</div>
-      <div class="weather" id="scene-weather">☀️ 晴天 · 26°C</div>
-      <div class="sense" id="scene-sense">聞到咖啡香...</div>
+      <div class="mood-indicator" id="mood-indicator">😐 平靜</div>
     </div>
     <div id="scene-visual">🏠</div>
     <div id="location-map"></div>
@@ -366,7 +323,7 @@
 
   <div id="right" class="panel">
     <h3>
-      <span>💭 思考流</span>
+      <span>💭 生活流</span>
       <span id="log-char-name" style="font-size:10px;color:#aaa"></span>
     </h3>
     <div id="thought-log"></div>
@@ -378,22 +335,23 @@
       <div class="value" id="today-action">—</div>
     </div>
     <div class="stat-box">
-      <div class="label">人生進度</div>
+      <div class="label">人生階段</div>
       <div class="value" id="life-progress">20 / 40 歲</div>
+      <div class="sub" id="life-days">第 0 日</div>
+    </div>
+    <div class="stat-box">
+      <div class="label">人生曲線</div>
+      <div class="life-meter"><div class="fill" id="life-curve" style="width:50%;background:#ffd369"></div></div>
+      <div class="sub" id="life-trend">平穩</div>
     </div>
     <div class="stat-box">
       <div class="label">💰 財務</div>
       <div class="value" id="money">$15,000</div>
     </div>
     <div class="stat-box">
-      <div class="label">📱 社交</div>
+      <div class="label">💕 社交</div>
       <div class="value" id="social-count">0</div>
       <div class="sub">朋友</div>
-    </div>
-    <div class="stat-box">
-      <div class="label">行動</div>
-      <div class="value" id="action-count">0</div>
-      <div class="sub">今日</div>
     </div>
   </div>
 </div>
@@ -407,16 +365,13 @@
   </div>
 </div>
 
-<!-- 儲存彈窗 -->
-<div id="save-modal" class="modal">
+<!-- 半年報告彈窗 -->
+<div id="report-modal" class="modal">
   <div class="modal-card">
-    <h2>💾 儲存 / 載入</h2>
-    <div id="save-slots"></div>
-    <div style="display:flex;gap:6px;margin-top:10px;">
-      <button class="btn" id="export-btn">📤 匯出檔案</button>
-      <button class="btn" id="import-btn">📥 匯入檔案</button>
-      <input type="file" id="import-file" accept=".json" style="display:none">
-      <button class="btn" onclick="document.getElementById('save-modal').classList.remove('show')">關閉</button>
+    <h2>📊 <span id="report-title">人生階段報告</span></h2>
+    <div id="report-content"></div>
+    <div style="text-align:center;margin-top:10px;">
+      <button class="btn" onclick="document.getElementById('report-modal').classList.remove('show')">繼續人生 →</button>
     </div>
   </div>
 </div>
@@ -425,197 +380,100 @@
 'use strict';
 
 // ============================================================
-// 《人生屋企》真實生活版
-// 多地點 × NPC × 天氣感官 × 年輕人生活 × 儲存系統
+// 《少年人生》真實青春版
+// 社交圈 × 兩性生活 × 人格優缺點 × 人生高低 × 半年報告
 // ============================================================
 
 const Game = {
   day: 0, hour: 8, minute: 0,
   speed: 1, paused: false,
-  decisionsCount: 0, acceptedCount: 0,
   selectedCharId: 'protagonist',
   characters: {},
-  relationships: {},
-  npcs: {}, // 場景中的 NPC
   tickCount: 0,
-  actionCountToday: 0,
-  // 天氣系統
-  weather: { type: 'sunny', temp: 26, wind: 2 },
-  // 地點系統
-  currentLocation: 'home_bedroom',
-  locationHistory: [],
+  // 人生曲線（記錄高低起跌）
+  lifeCurve: [],
+  // 報告追蹤
+  lastReportDay: 0,
+  halfYearReports: [],
+  // 事件冷卻
+  eventCooldown: 0,
 };
 
 // ============================================================
-// 地點系統 — 15+ 真實地點
+// 人格優缺點系統
+// ============================================================
+const GOOD_TRAITS = [
+  { id: 'kind', name: '善良', desc: '容易交到朋友，人緣好', socialBonus: 10, loveBonus: 5 },
+  { id: 'smart', name: '聰明', desc: '學業/工作表現好', careerBonus: 15 },
+  { id: 'humorous', name: '幽默', desc: '社交場合受歡迎', socialBonus: 15, loveBonus: 8 },
+  { id: 'diligent', name: '勤奮', desc: '努力不懈，容易成功', careerBonus: 10, moneyBonus: 10 },
+  { id: 'caring', name: '體貼', desc: '伴侶/朋友覺得被重視', loveBonus: 12, socialBonus: 5 },
+  { id: 'brave', name: '勇敢', desc: '敢於嘗試，敢表白', loveBonus: 10, careerBonus: 5 },
+  { id: 'creative', name: '有創意', desc: '有獨特想法', funBonus: 10, careerBonus: 8 },
+  { id: 'resilient', name: '堅韌', desc: '面對挫折容易恢復', mentalBonus: 15 },
+];
+
+const BAD_TRAITS = [
+  { id: 'lazy', name: '懶惰', desc: '容易拖延，錯過機會', careerPenalty: 10, energyPenalty: 5 },
+  { id: 'impulsive', name: '衝動', desc: '容易做出後悔的決定', decisionRisk: 15, lovePenalty: 8 },
+  { id: 'insecure', name: '自卑', desc: '不敢表達自己，錯過機會', lovePenalty: 12, socialPenalty: 8 },
+  { id: 'jealous', name: '嫉妒', desc: '見不得人好，影響關係', socialPenalty: 10, lovePenalty: 8 },
+  { id: 'avoidant', name: '逃避', desc: '遇到問題傾向逃避', problemPenalty: 15, lovePenalty: 10 },
+  { id: 'stubborn', name: '固執', desc: '聽不進人勸，容易吵架', socialPenalty: 8, lovePenalty: 10 },
+  { id: 'selfish', name: '自私', desc: '只顧自己，朋友會離開', socialPenalty: 15, lovePenalty: 12 },
+  { id: 'emotional', name: '情緒化', desc: '情緒波動大，影響判斷', mentalPenalty: 10, lovePenalty: 8 },
+  { id: 'procrastinator', name: '拖延', desc: '總是要到最後才做', careerPenalty: 12 },
+  { id: 'overspender', name: '揮霍', desc: '花錢大手大腳', moneyPenalty: 15 },
+];
+
+function generatePersonality() {
+  // 隨機 2-3 個優點 + 2-3 個缺點
+  const goods = [...GOOD_TRAITS].sort(() => Math.random() - 0.5).slice(0, 2 + Math.floor(Math.random() * 2));
+  const bads = [...BAD_TRAITS].sort(() => Math.random() - 0.5).slice(0, 2 + Math.floor(Math.random() * 2));
+  return { good: goods.map(g => g.id), bad: bads.map(b => b.id) };
+}
+
+function hasTrait(c, traitId) {
+  return c.personality.good.includes(traitId) || c.personality.bad.includes(traitId);
+}
+
+function getTraitBonus(c, bonusKey) {
+  let total = 0;
+  for (const t of GOOD_TRAITS) {
+    if (c.personality.good.includes(t.id) && t[bonusKey]) total += t[bonusKey];
+  }
+  return total;
+}
+
+function getTraitPenalty(c, penaltyKey) {
+  let total = 0;
+  for (const t of BAD_TRAITS) {
+    if (c.personality.bad.includes(t.id) && t[penaltyKey]) total += t[penaltyKey];
+  }
+  return total;
+}
+
+// ============================================================
+// 地點系統（社交導向）
 // ============================================================
 const LOCATIONS = {
-  // 屋企
-  home_bedroom: {
-    name: '睡房', icon: '🛏', type: 'home',
-    visual: '🛏', bg: 'linear-gradient(to bottom, #4a3a5e 0%, #3a2a4e 100%)',
-    sense: ['聞到枕頭嘅味道', '窗簾透出少少光', '整潔嘅房間'],
-    available: () => true,
-  },
-  home_bathroom: {
-    name: '浴室', icon: '🚿', type: 'home',
-    visual: '🚿', bg: 'linear-gradient(to bottom, #6ba5d8 0%, #4a85b8 100%)',
-    sense: ['水蒸氣', '洗頭水味', '鏡蒙咗'],
-    available: () => true,
-  },
-  home_kitchen: {
-    name: '廚房', icon: '🍳', type: 'home',
-    visual: '🍳', bg: 'linear-gradient(to bottom, #d4a574 0%, #b48554 100%)',
-    sense: ['煮食嘅香味', '雪櫃嗡嗡聲', '整潔嘅流理台'],
-    available: () => true,
-  },
-  home_living: {
-    name: '客廳', icon: '🛋', type: 'home',
-    visual: '🛋', bg: 'linear-gradient(to bottom, #a89070 0%, #887050 100%)',
-    sense: ['電視聲', '梳化好軟', '陽光灑入嚟'],
-    available: () => true,
-  },
-  // 外出地點
-  university: {
-    name: '大學', icon: '🎓', type: 'outside',
-    visual: '🎓', bg: 'linear-gradient(to bottom, #87ceeb 0%, #6ba5d8 60%, #8b7355 60%)',
-    sense: ['學生嘈雜聲', '書本味', '青春氣息'],
-    available: (c) => c.age < 23 || c.job?.type === 'academic',
-    npcs: ['classmate', 'professor'],
-  },
-  cafe: {
-    name: 'Cafe', icon: '☕', type: 'outside',
-    visual: '☕', bg: 'linear-gradient(to bottom, #8b6f47 0%, #6b4f27 100%)',
-    sense: ['咖啡香', '爵士音樂', '暖色燈光'],
-    available: (c) => c.money > 30,
-    npcs: ['barista', 'stranger'],
-  },
-  mall: {
-    name: '商場', icon: '🏬', type: 'outside',
-    visual: '🏬', bg: 'linear-gradient(to bottom, #e8e8e8 0%, #c8c8c8 100%)',
-    sense: ['冷氣涼風', '人聲鼎沸', '商店音樂'],
-    available: () => Game.hour >= 10 && Game.hour < 22,
-    npcs: ['shopper', 'friend'],
-  },
-  park: {
-    name: '公園', icon: '🌳', type: 'outside',
-    visual: '🌳', bg: 'linear-gradient(to bottom, #87ceeb 0%, #87ceeb 50%, #6bcf7f 50%, #4aaf5f 100%)',
-    sense: ['清新空氣', '鳥叫聲', '微風'],
-    available: () => Game.hour >= 6 && Game.hour < 22 && Game.weather.type !== 'storm',
-    npcs: ['jogger', 'elderly'],
-  },
-  gym: {
-    name: 'Gym', icon: '🏋️', type: 'outside',
-    visual: '🏋️', bg: 'linear-gradient(to bottom, #3a3a5e 0%, #2a2a4e 100%)',
-    sense: ['汗水味', '重金屬音樂', '啞鈴撞擊聲'],
-    available: (c) => c.money > 300 && Game.hour >= 6 && Game.hour < 23,
-    npcs: ['trainer', 'gymbro'],
-  },
-  bar: {
-    name: 'Bar', icon: '🍺', type: 'outside',
-    visual: '🍺', bg: 'linear-gradient(to bottom, #2a1a3e 0%, #1a0a2e 100%)',
-    sense: ['酒精味', '喧鬧音樂', '霓虹燈光'],
-    available: (c) => c.age >= 18 && c.money > 100 && Game.hour >= 19,
-    npcs: ['bartender', 'partygoer'],
-  },
-  restaurant: {
-    name: '餐廳', icon: '🍽', type: 'outside',
-    visual: '🍽', bg: 'linear-gradient(to bottom, #d4a574 0%, #b48554 100%)',
-    sense: ['食物香氣', '刀叉聲', '談笑聲'],
-    available: (c) => c.money > 80 && Game.hour >= 11 && Game.hour < 22,
-    npcs: ['waiter', 'couple'],
-  },
-  cinema: {
-    name: '戲院', icon: '🎬', type: 'outside',
-    visual: '🎬', bg: 'linear-gradient(to bottom, #1a1a2e 0%, #0a0a1e 100%)',
-    sense: ['爆谷味', '大銀幕光', '環迴音效'],
-    available: (c) => c.money > 100 && Game.hour >= 10,
-    npcs: ['friend'],
-  },
-  convenience: {
-    name: '便利店', icon: '🏪', type: 'outside',
-    visual: '🏪', bg: 'linear-gradient(to bottom, #ffd369 0%, #fbbf24 100%)',
-    sense: ['叮一聲開門', '冷氣', '即食食品味'],
-    available: () => true,
-    npcs: ['cashier'],
-  },
-  work_office: {
-    name: '辦公室', icon: '💼', type: 'outside',
-    visual: '💼', bg: 'linear-gradient(to bottom, #e8e8e8 0%, #c8c8c8 100%)',
-    sense: ['鍵盤聲', '冷氣', '咖啡味'],
-    available: (c) => c.job && Game.hour >= 9 && Game.hour < 18,
-    npcs: ['colleague', 'boss'],
-  },
-  library: {
-    name: '圖書館', icon: '📚', type: 'outside',
-    visual: '📚', bg: 'linear-gradient(to bottom, #8b6f47 0%, #6b4f27 100%)',
-    sense: ['書本味', '寂靜', '翻書聲'],
-    available: () => Game.hour >= 9 && Game.hour < 21,
-    npcs: ['student'],
-  },
-  mtr: {
-    name: '地鐵', icon: '🚇', type: 'transit',
-    visual: '🚇', bg: 'linear-gradient(to bottom, #4a4a6a 0%, #2a2a4a 100%)',
-    sense: ['轟隆聲', '人擠人', '廣告燈'],
-    available: () => true,
-  },
-  home: {
-    name: '屋企附近', icon: '🏠', type: 'outside',
-    visual: '🏠', bg: 'linear-gradient(to bottom, #87ceeb 0%, #87ceeb 55%, #8b7355 55%)',
-    sense: ['街市聲', '街坊打招呼', '小食店香味'],
-    available: () => true,
-    npcs: ['neighbor'],
-  },
+  home_bedroom: { name: '睡房', icon: '🛏', type: 'home', visual: '🛏', bg: 'linear-gradient(to bottom, #4a3a5e, #3a2a4e)' },
+  home_living: { name: '客廳', icon: '🛋', type: 'home', visual: '🛋', bg: 'linear-gradient(to bottom, #a89070, #887050)' },
+  home_kitchen: { name: '廚房', icon: '🍳', type: 'home', visual: '🍳', bg: 'linear-gradient(to bottom, #d4a574, #b48554)' },
+  university: { name: '大學', icon: '🎓', type: 'social', visual: '🎓', bg: 'linear-gradient(to bottom, #87ceeb, #6ba5d8)' },
+  cafe: { name: 'Cafe', icon: '☕', type: 'social', visual: '☕', bg: 'linear-gradient(to bottom, #8b6f47, #6b4f27)' },
+  mall: { name: '商場', icon: '🏬', type: 'social', visual: '🏬', bg: 'linear-gradient(to bottom, #e8e8e8, #c8c8c8)' },
+  park: { name: '公園', icon: '🌳', type: 'social', visual: '🌳', bg: 'linear-gradient(to bottom, #87ceeb, #6bcf7f)' },
+  bar: { name: 'Bar/Club', icon: '🍸', type: 'social', visual: '🍸', bg: 'linear-gradient(to bottom, #2a1a3e, #1a0a2e)' },
+  restaurant: { name: '餐廳', icon: '🍽', type: 'social', visual: '🍽', bg: 'linear-gradient(to bottom, #d4a574, #b48554)' },
+  cinema: { name: '戲院', icon: '🎬', type: 'social', visual: '🎬', bg: 'linear-gradient(to bottom, #1a1a2e, #0a0a1e)' },
+  gym: { name: 'Gym', icon: '🏋️', type: 'social', visual: '🏋️', bg: 'linear-gradient(to bottom, #3a3a5e, #2a2a4e)' },
+  karaoke: { name: 'K房', icon: '🎤', type: 'social', visual: '🎤', bg: 'linear-gradient(to bottom, #4a2a6e, #3a1a5e)' },
+  beach: { name: '海灘', icon: '🏖', type: 'social', visual: '🏖', bg: 'linear-gradient(to bottom, #87ceeb, #40e0d0)' },
+  library: { name: '圖書館', icon: '📚', type: 'solo', visual: '📚', bg: 'linear-gradient(to bottom, #8b6f47, #6b4f27)' },
+  work_office: { name: '辦公室', icon: '💼', type: 'work', visual: '💼', bg: 'linear-gradient(to bottom, #e8e8e8, #c8c8c8)' },
+  mtr: { name: '地鐵', icon: '🚇', type: 'transit', visual: '🚇', bg: 'linear-gradient(to bottom, #4a4a6a, #2a2a4a)' },
 };
-
-// ============================================================
-// NPC 系統
-// ============================================================
-const NPC_TEMPLATES = {
-  classmate: { name: '同學', avatar: '🧑', lines: ['喂！今日有堂未？','借下筆記','今晚去邊玩？','功課做咗未？'] },
-  professor: { name: '教授', avatar: '👨‍🏫', lines: ['記得交功課','呢個理論好重要','有問題隨時問'] },
-  barista: { name: '店員', avatar: '🧑‍🍳', lines: ['今日想飲咩？','新出嘅特調試下？','慢用'] },
-  stranger: { name: '陌生人', avatar: '🧑', lines: ['...','(望咗一眼)','(低頭滑手機)'] },
-  shopper: { name: '行街客', avatar: '🛍', lines: ['呢件平咗喎','有冇睇過嗰間？','行到腳痛'] },
-  friend: { name: '朋友', avatar: '🧑', lines: ['好耐冇見！','最近點？','一齊食飯啦','你聽講未...'] },
-  jogger: { name: '跑步友', avatar: '🏃', lines: ['(跑過)','加油！','今日跑幾多K？'] },
-  elderly: { name: '婆婆', avatar: '👵', lines: ['後生仔早啲瞓','天氣凍著多件','慢慢行'] },
-  trainer: { name: '教練', avatar: '💪', lines: ['再嚟多幾個！','姿勢要正確','好嘢！'] },
-  gymbro: { name: 'Gym 友', avatar: '🏋️', lines: ['今日練咩？','一齊練？','好大隻喎'] },
-  bartender: { name: '調酒師', avatar: '🍸', lines: ['想飲咩？','今日特飲試下？','慢慢歎'] },
-  partygoer: { name: '派對友', avatar: '🕺', lines: ['乾杯！','你識唔識...','今晚好 High'] },
-  waiter: { name: '侍應', avatar: '🤵', lines: ['歡迎光臨','想食咩？','慢用'] },
-  couple: { name: '情侶', avatar: '💑', lines: ['(細聲傾偈)','(笑)','(拖手)'] },
-  cashier: { name: '收銀', avatar: '🧑', lines: ['共 $XX','要袋嗎？','謝謝光臨'] },
-  colleague: { name: '同事', avatar: '🧑‍💼', lines: ['早！','個 meeting 幾點？','OT 呀？','午飯一齊？'] },
-  boss: { name: '老細', avatar: '👔', lines: ['入嚟我辦公室','個 report 點解未交？','做得好'] },
-  student: { name: '學生', avatar: '📖', lines: ['(專心睇書)','(寫筆記)','(打哈欠)'] },
-  neighbor: { name: '街坊', avatar: '🧓', lines: ['返嚟啦？','今日天氣好','慢慢行'] },
-};
-
-// ============================================================
-// 天氣系統
-// ============================================================
-const WEATHER_TYPES = {
-  sunny: { icon: '☀️', name: '晴天', tempMod: 2, moodMod: 5, color: '#87ceeb' },
-  cloudy: { icon: '⛅', name: '多雲', tempMod: 0, moodMod: 0, color: '#b0b0c0' },
-  rainy: { icon: '🌧', name: '落雨', tempMod: -3, moodMod: -5, color: '#6a7a8a' },
-  storm: { icon: '⛈', name: '雷暴', tempMod: -5, moodMod: -10, color: '#3a4a5a' },
-  hot: { icon: '🔥', name: '酷熱', tempMod: 5, moodMod: -3, color: '#ffa500' },
-  cool: { icon: '🍃', name: '涼爽', tempMod: -2, moodMod: 3, color: '#93c5fd' },
-};
-
-function generateWeather() {
-  const types = ['sunny', 'sunny', 'cloudy', 'cloudy', 'rainy', 'hot', 'cool'];
-  const type = types[Math.floor(Math.random() * types.length)];
-  const baseTemp = 24 + Math.sin(Game.day / 30) * 5;
-  const w = WEATHER_TYPES[type];
-  Game.weather = {
-    type,
-    temp: Math.round(baseTemp + w.tempMod + (Math.random() * 4 - 2)),
-    wind: Math.floor(Math.random() * 5),
-  };
-}
 
 // ============================================================
 // 角色工廠
@@ -629,43 +487,60 @@ function createCharacter(cfg) {
     age: cfg.age,
     gender: cfg.gender || 'M',
     isProtagonist: cfg.isProtagonist || false,
-    personality: {
-      openness: cfg.openness ?? 5,
-      conscientiousness: cfg.conscientiousness ?? 5,
-      extraversion: cfg.extraversion ?? 5,
-      agreeableness: cfg.agreeableness ?? 5,
-      neuroticism: cfg.neuroticism ?? 5,
-    },
+    // 人格優缺點
+    personality: generatePersonality(),
+    // 基礎屬性
     needs: {
       hunger: 60, sleep: 70, hygiene: 75,
-      social: 40, fun: 50, safety: 55, love: 30,
-      energy: 80, bladder: 80,
+      social: 40, fun: 50, love: 30,
+      energy: 80, safety: 55,
     },
-    mood: { happy: 0, calm: 20, confident: 10 },
+    mood: { happy: 10, calm: 20, confident: 15 },
     money: cfg.money ?? 15000,
     job: cfg.job || null,
     home: cfg.home ?? '劏房（租）',
-    relationship: cfg.relationship ?? '單身',
+    // 感情狀態
+    love: {
+      status: 'single', // single, crush, dating, in_relationship, heartbroken
+      partnerName: null,
+      affection: 0,
+      daysTogether: 0,
+      exes: [],
+      crushCount: 0,
+      heartbreakCount: 0,
+    },
+    // 社交圈
+    social: {
+      friends: [],
+      closeFriends: [],
+      popularity: 30,
+      socialEvents: 0,
+      conflicts: [],
+    },
     health: { physical: 90, mental: 85, disease: null },
     currentAction: null,
     currentRoom: cfg.currentRoom ?? 'home_bedroom',
     actionTimer: 0,
     spriteEl: null,
-    children: [],
-    loveStage: null, loveTargetId: null,
     birthDay: cfg.birthDay ?? 0,
-    todayActions: [],
-    friends: cfg.friends ?? [],
-    phone: { notifications: 0, lastChecked: 0 },
+    // 人生高低
+    lifeEvents: [],
+    currentPhase: 'rising', // rising, falling, stable, peak, rock_bottom
+    phaseIntensity: 0,
   };
 }
 
 Game.characters.protagonist = createCharacter({
   id: 'protagonist', name: '陳志明', avatar: '👨', color: '#4a6fa5',
   age: 20, gender: 'M', isProtagonist: true,
-  openness: 6, conscientiousness: 5, extraversion: 4, agreeableness: 6, neuroticism: 5,
   money: 15000,
 });
+
+// 朋友生成
+function generateFriendName() {
+  const names = ['阿強', '阿May', '阿詩', '阿俊', '阿玲', '阿Cat', '阿Fin', '阿傑', '阿欣', '阿Wing', '阿Kelvin', '阿Yan'];
+  return names[Math.floor(Math.random() * names.length)];
+}
 
 // ============================================================
 // 需求定義
@@ -674,649 +549,529 @@ const NEEDS_DEF = [
   { key: 'hunger', icon: '🍽', decay: 4.0, color: '#ff6b6b' },
   { key: 'sleep', icon: '😴', decay: 3.0, color: '#6bcf7f' },
   { key: 'hygiene', icon: '🚿', decay: 2.0, color: '#60a5fa' },
-  { key: 'social', icon: '💬', decay: 2.0, color: '#fbbf24' },
+  { key: 'social', icon: '💬', decay: 2.5, color: '#fbbf24' },
   { key: 'fun', icon: '🎮', decay: 2.5, color: '#c084fc' },
+  { key: 'love', icon: '💕', decay: 2.0, color: '#ff69b4' },
   { key: 'energy', icon: '⚡', decay: 2.5, color: '#fde047' },
-  { key: 'bladder', icon: '🚽', decay: 3.5, color: '#a78bfa' },
 ];
 
 // ============================================================
-// 50+ 行動庫（年輕人視角）
+// 行動庫（社交導向 + 兩性生活）
 // ============================================================
 const ACTIONS = {
-  // 早晨
-  wake_up: {
-    name: '起身', icon: '⏰', location: 'home_bedroom', duration: 0.2,
-    effects: { sleep: -10, energy: 5 },
-    condition: (c) => c.needs.sleep > 60 && Game.hour >= 6 && Game.hour < 10,
-    thought: '新嘅一日...',
-    mutter: ['今日要努力！','唔想起...再瞓 5 分鐘','又係返學/返工日'],
-    sense: ['陽光透入窗簾','鬧鐘響','隔籬房有聲'],
-  },
-  snooze: {
-    name: '撳貪睡', icon: '😴', location: 'home_bedroom', duration: 0.3,
-    effects: { sleep: 5, energy: -2 },
-    condition: (c) => Game.hour >= 6 && Game.hour < 9 && c.needs.sleep > 40,
-    thought: '再瞓陣先...',
-    mutter: ['5 分鐘...','就快遲到...','唔理先'],
-  },
-  brush_teeth: {
-    name: '刷牙洗面', icon: '🪥', location: 'home_bathroom', duration: 0.2,
-    effects: { hygiene: 20, energy: 5 },
-    condition: (c) => (Game.hour >= 6 && Game.hour < 10) || (Game.hour >= 21),
-    thought: '刷牙清新啲',
-    mutter: ['左左右右','凍冰冰好醒神'],
-    sense: ['牙膏薄荷味','水聲嘩嘩'],
-  },
-  shower: {
-    name: '沖涼', icon: '🚿', location: 'home_bathroom', duration: 0.4,
-    effects: { hygiene: 45, fun: 8, energy: 5 },
-    condition: (c) => (Game.hour >= 19 && Game.hour < 23) || c.needs.hygiene < 40,
-    thought: '沖個涼清爽啲',
-    mutter: ['唱下歌','好舒服','今日洗頭未？'],
-    sense: ['熱水淋落身','沐浴露香味','水蒸氣'],
-  },
-  make_coffee: {
-    name: '沖咖啡', icon: '☕', location: 'home_kitchen', duration: 0.2,
-    effects: { energy: 15, fun: 5 },
-    cost: 10,
-    condition: (c) => Game.hour >= 7 && Game.hour < 11 && c.needs.energy < 70,
-    thought: '沖杯咖啡',
-    mutter: ['咖啡香...','今日要靠佢','加定唔加糖？'],
-    sense: ['咖啡香飄滿屋'],
-  },
-  eat_breakfast: {
-    name: '食早餐', icon: '🥐', location: 'home_kitchen', duration: 0.3,
-    effects: { hunger: 25, energy: 10 },
-    cost: 20,
-    condition: (c) => Game.hour >= 7 && Game.hour < 10 && c.needs.hunger < 60,
-    thought: '食個早餐',
-    mutter: ['食咩好呢','麵包定麥皮','要快啲'],
-    sense: ['麵包香味','牛奶冰涼'],
-  },
-  check_phone: {
-    name: '滑手機', icon: '📱', location: 'home_bedroom', duration: 0.3,
-    effects: { social: 10, fun: 8 },
-    condition: (c) => c.needs.social < 70 && c.needs.fun < 70,
-    thought: '睇下 IG / WhatsApp',
-    mutter: ['又有人 like','呢個 reel 好搞笑','朋友 post 咗旅行相'],
-    sense: ['手機震動','螢幕光'],
-  },
-  scroll_tiktok: {
-    name: '刷 TikTok', icon: '📱', location: 'home_bedroom', duration: 0.5,
-    effects: { fun: 20, energy: -3 },
-    condition: (c) => Game.hour >= 20 && c.needs.fun < 60,
-    thought: '刷下 TikTok',
-    mutter: ['又一個...再刷一個','好上癮','時間過得好快'],
-  },
-  order_delivery: {
-    name: '叫外賣', icon: '🛵', location: 'home_living', duration: 0.3,
-    effects: { hunger: 35, fun: 5 },
+  // === 社交活動（大量）===
+  hang_friends_cafe: {
+    name: '同朋友去 Cafe', icon: '☕', location: 'cafe', duration: 1.5,
+    effects: { social: 30, fun: 20, love: 5, energy: -5 },
     cost: 60,
-    condition: (c) => c.needs.hunger < 50 && c.money > 80 && Game.hour >= 11,
-    thought: '叫個外賣',
-    mutter: ['食咩好呢','睇下優惠','30 分鐘到'],
-    sense: ['手機叮一聲','外賣香氣'],
+    condition: (c) => c.social.friends.length > 0 && Game.hour >= 12 && c.money > 80,
+    mutter: ['好耐冇見', '你聽講未...', '笑死我'],
+    socialGain: 5,
   },
-  online_shop: {
-    name: '網購', icon: '🛒', location: 'home_living', duration: 0.4,
-    effects: { fun: 15 },
-    cost: 150,
-    condition: (c) => c.money > 200 && c.needs.fun < 60 && Game.hour >= 20,
-    thought: '淘寶/Shopee 睇下',
-    mutter: ['呢個平喎','加咗先','又買咗...'],
-  },
-  // 通勤
-  commute_mtr: {
-    name: '搭地鐵', icon: '🚇', location: 'mtr', duration: 0.6,
-    effects: { fun: -5, energy: -5, social: 3 },
-    condition: (c) => (c.job || c.age < 23) && Game.hour >= 7.5 && Game.hour < 9.5 && !isHome(Game.currentLocation),
-    thought: '搭地鐵返學/返工',
-    mutter: ['好迫...','有人讓座就好了','聽下 podcast'],
-    sense: ['轟隆聲','人擠人','廣告燈閃'],
-  },
-  // 大學
-  attend_class: {
-    name: '上堂', icon: '📚', location: 'university', duration: 1.5,
-    effects: { fun: -5, energy: -8 },
-    condition: (c) => c.age < 23 && Game.hour >= 9 && Game.hour < 17,
-    thought: '上堂啦',
-    mutter: ['呢科好悶','教授講咩？','記下筆記'],
-    sense: ['講課聲','粉筆味','同學低頭'],
-  },
-  study_library: {
-    name: '圖書館溫書', icon: '📚', location: 'library', duration: 2,
-    effects: { fun: -8, energy: -10 },
-    condition: (c) => c.age < 23 && Game.hour >= 10 && Game.hour < 21,
-    thought: '去圖書館溫書',
-    mutter: ['要專心','考試快到了','再睇多一章'],
-    sense: ['寂靜','書本味','翻書聲'],
-  },
-  campus_hangout: {
-    name: '校園hea', icon: '🎓', location: 'university', duration: 1,
-    effects: { social: 15, fun: 15 },
-    condition: (c) => c.age < 23 && Game.hour >= 11 && Game.hour < 17,
-    thought: '同同學 hea 下',
-    mutter: ['等陣去邊食？','你聽講未...','好無聊'],
-    sense: ['學生嘈雜','陽光普照'],
-  },
-  // Cafe
-  cafe_work: {
-    name: 'Cafe 做嘢/溫書', icon: '💻', location: 'cafe', duration: 2,
-    effects: { fun: 5, energy: -8 },
-    cost: 45,
-    condition: (c) => c.money > 60 && Game.hour >= 10 && Game.hour < 21,
-    thought: '去 cafe 做嘢',
-    mutter: ['環境好','飲杯 latte','focus!'],
-    sense: ['咖啡香','爵士音樂','鍵盤聲'],
-  },
-  cafe_chill: {
-    name: 'Cafe 歎咖啡', icon: '☕', location: 'cafe', duration: 1,
-    effects: { fun: 20, energy: 5 },
-    cost: 40,
-    condition: (c) => c.money > 50 && Game.hour >= 10 && Game.hour < 21,
-    thought: '歎杯咖啡',
-    mutter: ['好味','放空下','觀察下其他人'],
-    sense: ['咖啡香','暖色燈光'],
-  },
-  // 商場
-  shopping: {
-    name: '行街', icon: '🛍', location: 'mall', duration: 2,
-    effects: { fun: 25, energy: -10 },
+  hang_friends_mall: {
+    name: '同朋友行街', icon: '🛍', location: 'mall', duration: 2.5,
+    effects: { social: 35, fun: 30, energy: -10 },
     cost: 200,
-    condition: (c) => c.money > 250 && Game.hour >= 11 && Game.hour < 21,
-    thought: '去商場行下',
-    mutter: ['呢件幾靚','平咗喎','唔買住先'],
-    sense: ['冷氣涼','人聲','商店音樂'],
+    condition: (c) => c.social.friends.length > 0 && Game.hour >= 12 && Game.hour < 21 && c.money > 250,
+    mutter: ['呢件靚喎', '試下試下', '買咗！'],
+    socialGain: 8,
   },
-  window_shop: {
-    name: 'Window shopping', icon: '👀', location: 'mall', duration: 1.5,
-    effects: { fun: 15, energy: -5 },
-    condition: (c) => Game.hour >= 11 && Game.hour < 21,
-    thought: '淨係睇唔買',
-    mutter: ['好貴...','有日會買','影張相先'],
+  group_dinner: {
+    name: '班 friend 食飯', icon: '🍽', location: 'restaurant', duration: 2,
+    effects: { social: 40, fun: 25, hunger: 30, energy: -8 },
+    cost: 150,
+    condition: (c) => c.social.friends.length > 1 && Game.hour >= 18 && c.money > 200,
+    mutter: ['乾杯！', '你食咗未？', '好熱鬧'],
+    socialGain: 10,
   },
-  // 公園
-  jog: {
-    name: '跑步', icon: '🏃', location: 'park', duration: 1,
-    effects: { fun: 15, energy: -15, hygiene: -10 },
-    healthBonus: { physical: 3 },
-    condition: (c) => Game.hour >= 6 && Game.hour < 21 && c.needs.energy > 30 && !c.health.disease && Game.weather.type !== 'storm',
-    thought: '去跑步',
-    mutter: ['跑多啲','好攰但爽','聽下 podcast'],
-    sense: ['清新空氣','鳥叫','汗水'],
+  karaoke_night: {
+    name: '唱 K', icon: '🎤', location: 'karaoke', duration: 3,
+    effects: { social: 45, fun: 50, energy: -15, love: 5 },
+    cost: 200,
+    condition: (c) => c.social.friends.length > 0 && Game.hour >= 19 && c.money > 250,
+    mutter: ['你唱！', '好高音', '合唱啦'],
+    socialGain: 12,
   },
-  park_chill: {
-    name: '公園放空', icon: '🌳', location: 'park', duration: 1,
+  bar_night: {
+    name: '去 Bar 飲酒', icon: '🍸', location: 'bar', duration: 3,
+    effects: { social: 40, fun: 45, energy: -15, love: 10 },
+    cost: 250,
+    condition: (c) => c.age >= 18 && c.social.friends.length > 0 && Game.hour >= 20 && c.money > 300,
+    mutter: ['乾杯！', '今晚唔醉無歸', '你聽我講...'],
+    socialGain: 10,
+  },
+  beach_trip: {
+    name: '海灘玩', icon: '🏖', location: 'beach', duration: 4,
+    effects: { social: 40, fun: 50, energy: -20, love: 8 },
+    cost: 100,
+    condition: (c) => c.social.friends.length > 1 && Game.hour >= 10 && Game.hour < 17 && c.money > 150,
+    mutter: ['游水！', '曬太陽', '影張相'],
+    socialGain: 15,
+  },
+  movie_night: {
+    name: '睇戲', icon: '🎬', location: 'cinema', duration: 2.5,
+    effects: { social: 25, fun: 35, energy: -5, love: 5 },
+    cost: 110,
+    condition: (c) => c.social.friends.length > 0 && Game.hour >= 12 && c.money > 130,
+    mutter: ['爆谷要嗎？', '套戲好正', '唔好劇透'],
+    socialGain: 5,
+  },
+  gym_together: {
+    name: '約朋友 Gym', icon: '🏋️', location: 'gym', duration: 1.5,
+    effects: { social: 20, fun: 15, energy: -15, hygiene: -10 },
+    cost: 50,
+    condition: (c) => c.social.friends.length > 0 && c.needs.energy > 30 && c.money > 60,
+    mutter: ['再嚟！', '你好勁', '互相激勵'],
+    socialGain: 6,
+  },
+  board_game: {
+    name: 'Board Game 之夜', icon: '🎲', location: 'cafe', duration: 2.5,
+    effects: { social: 35, fun: 40, energy: -10 },
+    cost: 100,
+    condition: (c) => c.social.friends.length > 1 && Game.hour >= 15 && c.money > 120,
+    mutter: ['你出千！', '我贏啦', '好緊張'],
+    socialGain: 10,
+  },
+  // === 兩性生活 ===
+  dating_app: {
+    name: '滑 Tinder', icon: '📱', location: 'home_bedroom', duration: 0.5,
+    effects: { love: 10, fun: 10, social: 5 },
+    condition: (c) => c.love.status === 'single' && Game.hour >= 20,
+    mutter: ['這個唔錯', '下一個', 'Match 到啦！'],
+    loveGain: 3,
+  },
+  crush_talk: {
+    name: '同暗戀對象傾偈', icon: '💬', location: 'cafe', duration: 1,
+    effects: { love: 20, fun: 15, social: 10, energy: -5 },
+    cost: 40,
+    condition: (c) => c.love.status === 'crush' && c.money > 50 && Game.hour >= 12,
+    mutter: ['好緊張', '佢笑咗', '傾到咩好？'],
+    loveGain: 8,
+  },
+  date_night: {
+    name: '約會', icon: '💑', location: 'restaurant', duration: 2.5,
+    effects: { love: 30, fun: 30, social: 15, hunger: 20, energy: -8 },
+    cost: 200,
+    condition: (c) => (c.love.status === 'dating' || c.love.status === 'in_relationship') && Game.hour >= 18 && c.money > 250,
+    mutter: ['今晚好開心', '你鍾意食咩？', '拖手手'],
+    loveGain: 12,
+  },
+  romantic_walk: {
+    name: '浪漫散步', icon: '🌅', location: 'beach', duration: 2,
+    effects: { love: 25, fun: 20, energy: -5 },
+    condition: (c) => (c.love.status === 'dating' || c.love.status === 'in_relationship') && Game.hour >= 17,
+    mutter: ['夕陽好靚', '同你一齊好幸福', '想時間停住'],
+    loveGain: 10,
+  },
+  intimate_moment: {
+    name: '親密時刻', icon: '💕', location: 'home_bedroom', duration: 1.5,
+    effects: { love: 40, fun: 35, energy: -15 },
+    condition: (c) => c.love.status === 'in_relationship' && Game.hour >= 21 && c.love.affection > 60,
+    mutter: ['...', '好幸福', '愛你'],
+    loveGain: 15,
+  },
+  couple_cooking: {
+    name: '一齊煮飯', icon: '🍳', location: 'home_kitchen', duration: 1.5,
+    effects: { love: 20, fun: 15, hunger: 25 },
+    cost: 50,
+    condition: (c) => c.love.status === 'in_relationship' && Game.hour >= 18 && c.money > 60,
+    mutter: ['你切菜我煮', '好美味', '合作無間'],
+    loveGain: 8,
+  },
+  video_call_love: {
+    name: 'Video Call 另一半', icon: '📹', location: 'home_living', duration: 0.5,
+    effects: { love: 15, social: 10 },
+    condition: (c) => c.love.status === 'in_relationship' && Game.hour >= 20,
+    mutter: ['好掛住你', '聽日見', '早啲瞓'],
+    loveGain: 5,
+  },
+  // === 個人生活 ===
+  solo_walk: {
+    name: '獨自散步', icon: '🚶', location: 'park', duration: 1,
     effects: { fun: 15, energy: 5 },
-    healthBonus: { mental: 2 },
-    condition: (c) => Game.hour >= 7 && Game.hour < 21 && Game.weather.type !== 'storm',
-    thought: '去公園坐陣',
-    mutter: ['好寧靜','睇下天空','放空下'],
-    sense: ['微風','草味','陽光'],
+    healthBonus: { mental: 3 },
+    condition: (c) => Game.hour >= 7 && Game.hour < 21,
+    mutter: ['好寧靜', '諗下人生', '放鬆下'],
   },
-  // Gym
-  gym_workout: {
-    name: 'Gym', icon: '🏋️', location: 'gym', duration: 1.5,
-    effects: { fun: 20, energy: -20, hygiene: -15 },
+  gym_solo: {
+    name: '自己去 Gym', icon: '💪', location: 'gym', duration: 1.5,
+    effects: { fun: 15, energy: -15, hygiene: -10 },
     cost: 50,
     healthBonus: { physical: 4 },
     condition: (c) => c.money > 60 && c.needs.energy > 30 && Game.hour >= 7 && Game.hour < 22,
-    thought: '去 gym',
-    mutter: ['再 push 多啲','今日練邊組','影張相先'],
-    sense: ['汗水味','重金屬','啞鈴聲'],
+    mutter: ['再 push 多啲', '今日練邊組'],
   },
-  // Bar
-  drink_with_friends: {
-    name: '同朋友飲酒', icon: '🍻', location: 'bar', duration: 2.5,
-    effects: { social: 40, fun: 35, energy: -15, hunger: -10 },
-    cost: 250,
-    condition: (c) => c.money > 300 && Game.hour >= 20 && c.friends.length > 0,
-    thought: '同朋友去 bar',
-    mutter: ['乾杯！','你聽我講...','今晚唔醉無歸'],
-    sense: ['酒精味','音樂','笑聲'],
+  study: {
+    name: '溫書/進修', icon: '📚', location: 'library', duration: 2,
+    effects: { fun: -5, energy: -10 },
+    condition: (c) => Game.hour >= 10 && Game.hour < 21,
+    mutter: ['考試快到了', '再睇多一章'],
   },
-  solo_drink: {
-    name: '自己飲杯', icon: '🍺', location: 'bar', duration: 1.5,
-    effects: { fun: 20, energy: -8 },
-    cost: 100,
-    condition: (c) => c.money > 120 && Game.hour >= 20,
-    thought: '自己飲杯',
-    mutter: ['靜靜哋飲','諗下嘢','好彩今日嚟'],
-    sense: ['酒精味','爵士樂'],
-  },
-  // 餐廳
-  eat_restaurant: {
-    name: '去餐廳食飯', icon: '🍽', location: 'restaurant', duration: 1.2,
-    effects: { hunger: 45, fun: 15, social: 10 },
-    cost: 120,
-    condition: (c) => c.money > 150 && Game.hour >= 12 && Game.hour < 22 && c.needs.hunger < 50,
-    thought: '去餐廳食好啲',
-    mutter: ['食咩好呢','睇下 menu','好味！'],
-    sense: ['食物香','刀叉聲','談笑聲'],
-  },
-  // 戲院
-  watch_movie: {
-    name: '睇戲', icon: '🎬', location: 'cinema', duration: 2.5,
-    effects: { fun: 35, energy: -5 },
-    cost: 110,
-    condition: (c) => c.money > 130 && Game.hour >= 11,
-    thought: '去睇套戲',
-    mutter: ['套戲好正','爆谷好食','唔好劇透'],
-    sense: ['爆谷味','大銀幕','環迴音效'],
-  },
-  // 便利店
-  convenience_stop: {
-    name: '去便利店', icon: '🏪', location: 'convenience', duration: 0.2,
-    effects: { hunger: 10, fun: 5 },
-    cost: 25,
-    condition: (c) => c.money > 30 && c.needs.hunger < 70,
-    thought: '去便利店買嘢',
-    mutter: ['買包薯片','有冇新嘢？','叮一聲'],
-    sense: ['開門聲','冷氣','即食味'],
-  },
-  // 工作
   work: {
     name: '返工', icon: '💼', location: 'work_office', duration: 2,
     effects: { fun: -8, energy: -10, social: 5 },
     income: 150,
-    condition: (c) => c.job && Game.hour >= 9 && Game.hour < 18 && c.needs.energy > 20 && !c.health.disease,
-    thought: '返工',
-    mutter: ['又要開會','個 project 幾時完','老細又嚟'],
-    sense: ['鍵盤聲','冷氣','咖啡味'],
+    condition: (c) => c.job && Game.hour >= 9 && Game.hour < 18 && c.needs.energy > 20,
+    mutter: ['又要開會', '個 project 幾時完'],
   },
-  work_lunch: {
-    name: '同同事食 lunch', icon: '🍱', location: 'restaurant', duration: 0.8,
-    effects: { hunger: 35, social: 15, energy: 5 },
-    cost: 60,
-    condition: (c) => c.job && Game.hour >= 12 && Game.hour < 14 && c.needs.hunger < 50,
-    thought: '同同事食 lunch',
-    mutter: ['去邊度食？','你聽講未...','下午繼續捱'],
-    sense: ['食物香','談笑聲'],
+  scroll_phone: {
+    name: '滑手機', icon: '📱', location: 'home_bedroom', duration: 0.5,
+    effects: { fun: 12, social: 5 },
+    condition: (c) => true,
+    mutter: ['又有人 like', '呢個 reel 好搞笑'],
   },
-  // 社交
-  meet_friends: {
-    name: '約朋友出來', icon: '👥', location: 'cafe', duration: 2,
-    effects: { social: 40, fun: 30, energy: -8 },
-    cost: 100,
-    condition: (c) => c.money > 120 && c.friends.length > 0 && Game.hour >= 14 && c.needs.social < 50,
-    thought: '約朋友出來',
-    mutter: ['好耐冇見','最近點？','一齊去邊好？'],
-    sense: ['笑聲','咖啡香'],
-  },
-  call_mom: {
-    name: '打電話畀媽咪', icon: '📞', location: 'home_living', duration: 0.4,
-    effects: { love: 20, social: 15 },
-    condition: (c) => Game.hour >= 19 && Game.hour < 22 && c.needs.love < 60,
-    thought: '打畀媽咪',
-    mutter: ['媽咪最近點？','食咗飯未？','佢又嘮叨'],
-    sense: ['電話聲','媽咪把聲'],
-  },
-  // 家務
-  cook: {
-    name: '煮飯', icon: '🍳', location: 'home_kitchen', duration: 0.8,
-    effects: { hunger: 40, fun: 10, energy: -5 },
-    condition: (c) => Game.hour >= 18 && Game.hour < 21 && c.needs.hunger < 50,
-    thought: '自己煮飯',
-    mutter: ['煮咩好呢','雪櫃有咩材料','跟住個 recipe'],
-    sense: ['煮食香','油煙'],
-  },
-  clean: {
-    name: '打掃', icon: '🧹', location: 'home_living', duration: 1,
-    effects: { fun: -5, energy: -15 },
-    condition: (c) => Game.day % 5 === 0 && Game.hour >= 10 && Game.hour < 18,
-    thought: '屋企要執下',
-    mutter: ['好耐冇打掃','灰塵好多','做完舒服啲'],
-    sense: ['灰塵','清潔劑味'],
-  },
-  do_laundry: {
-    name: '洗衣服', icon: '👕', location: 'home_bathroom', duration: 0.4,
-    effects: { hygiene: 10, energy: -5 },
-    condition: (c) => Game.day % 4 === 0 && Game.hour >= 10 && Game.hour < 18,
-    thought: '要洗衣服',
-    mutter: ['堆衫好耐冇洗'],
-  },
-  // 休閒
-  watch_tv: {
+  watch_netflix: {
     name: '睇 Netflix', icon: '📺', location: 'home_living', duration: 1.5,
-    effects: { fun: 30, energy: -5 },
-    condition: (c) => Game.hour >= 19 && Game.hour < 24 && c.needs.fun < 60,
-    thought: '睇下 Netflix',
-    mutter: ['睇邊套好呢','再睇多一集','好上癮'],
-    sense: ['電視聲','梳化軟'],
-  },
-  play_game: {
-    name: '打機', icon: '🎮', location: 'home_living', duration: 1.5,
-    effects: { fun: 35, energy: -8 },
-    condition: (c) => Game.hour >= 19 && Game.hour < 24 && c.needs.fun < 50,
-    thought: '打機',
-    mutter: ['又輸...','多一盤先','好刺激'],
-    sense: ['遊戲音效','手柄震動'],
-  },
-  online_game: {
-    name: 'Online 打機', icon: '🎮', location: 'home_living', duration: 2,
-    effects: { fun: 35, social: 15, energy: -10 },
-    condition: (c) => Game.hour >= 20 && Game.hour < 24 && c.needs.fun < 50,
-    thought: '同朋友 online',
-    mutter: ['快啲快啲！','GG','carry 你'],
-    sense: ['Discord 聲','鍵盤聲'],
-  },
-  read: {
-    name: '睇書', icon: '📖', location: 'home_living', duration: 1,
-    effects: { fun: 15, energy: -3 },
-    condition: (c) => Game.hour >= 20 && Game.hour < 23 && c.needs.fun < 70,
-    thought: '睇下書',
-    mutter: ['呢段寫得幾好','再睇多一章'],
-    sense: ['紙張味','寧靜'],
-  },
-  listen_music: {
-    name: '聽歌', icon: '🎧', location: 'home_bedroom', duration: 0.5,
-    effects: { fun: 18, energy: 3 },
-    condition: (c) => c.needs.fun < 70,
-    thought: '聽下歌',
-    mutter: ['呢首歌好聽','回憶返起...'],
-    sense: ['音樂','耳機'],
-  },
-  // 生理
-  use_toilet: {
-    name: '去廁所', icon: '🚽', location: 'home_bathroom', duration: 0.1,
-    effects: { bladder: 60 },
-    condition: (c) => c.needs.bladder < 40,
-    thought: '要去廁所',
-    mutter: ['忍唔住','舒服晒'],
-  },
-  drink_water: {
-    name: '飲水', icon: '💧', location: 'home_kitchen', duration: 0.05,
-    effects: { energy: 5, bladder: -10 },
-    condition: (c) => c.needs.energy < 60,
-    thought: '飲杯水',
-    mutter: ['好渴'],
+    effects: { fun: 25, energy: -3 },
+    condition: (c) => Game.hour >= 19 && c.needs.fun < 60,
+    mutter: ['再睇多一集', '好上癮'],
   },
   sleep: {
     name: '瞓覺', icon: '💤', location: 'home_bedroom', duration: 6,
     effects: { sleep: 60, energy: 40, hunger: -10 },
     condition: (c) => (Game.hour >= 22 && c.needs.sleep < 50) || c.needs.sleep < 25,
-    thought: '好攰...要瞓覺',
-    mutter: ['好眼瞓','發個好夢','聽日再算'],
-    sense: ['枕頭軟','被窩暖'],
+    mutter: ['好眼瞓', '發個好夢'],
   },
-  midnight_snack: {
-    name: '食宵夜', icon: '🍜', location: 'home_kitchen', duration: 0.3,
-    effects: { hunger: 20, fun: 8 },
+  eat_meal: {
+    name: '食飯', icon: '🍽', location: 'home_kitchen', duration: 0.5,
+    effects: { hunger: 35, energy: 10 },
     cost: 30,
-    condition: (c) => Game.hour >= 23 && c.needs.hunger < 40 && c.money > 50,
-    thought: '食個宵夜',
-    mutter: ['唔應該食...但好餓','食個杯麵'],
+    condition: (c) => c.needs.hunger < 50 && Game.hour >= 11 && c.money > 40,
+    mutter: ['食咩好呢', '好味'],
   },
-  // 自我提升
-  learn_skill: {
-    name: '學新技能', icon: '💡', location: 'home_living', duration: 1,
-    effects: { fun: 10, energy: -5 },
-    condition: (c) => Game.hour >= 19 && Game.hour < 22 && c.needs.fun < 70,
-    thought: '學下新嘢',
-    mutter: ['學結他/語言/煮飯','YouTube 教學'],
+  shower: {
+    name: '沖涼', icon: '🚿', location: 'home_living', duration: 0.3,
+    effects: { hygiene: 45, energy: 5 },
+    condition: (c) => Game.hour >= 19 || c.needs.hygiene < 40,
+    mutter: ['好舒服'],
   },
-  journal: {
-    name: '寫日記', icon: '📝', location: 'home_bedroom', duration: 0.3,
-    effects: { fun: 8, energy: -3 },
-    healthBonus: { mental: 2 },
-    condition: (c) => Game.hour >= 21 && Game.hour < 23,
-    thought: '寫返今日',
-    mutter: ['今日幾充實','要記住呢一刻'],
-  },
-  meditate: {
-    name: '冥想', icon: '🧘', location: 'home_bedroom', duration: 0.3,
-    effects: { energy: 10, fun: 5 },
-    healthBonus: { mental: 3 },
-    condition: (c) => Game.hour >= 21 && c.needs.energy < 60,
-    thought: '冥想下',
-    mutter: ['呼...吸...','放空自己'],
-  },
-  // 社交活動
-  karaoke: {
-    name: '唱 K', icon: '🎤', location: 'mall', duration: 2.5,
-    effects: { social: 35, fun: 40, energy: -15 },
-    cost: 200,
-    condition: (c) => c.money > 250 && c.friends.length > 0 && Game.hour >= 19,
-    thought: '同朋友唱 K',
-    mutter: ['唱首...','你聽我唱','好高音！'],
-    sense: ['音樂','笑聲','咪高峰'],
-  },
-  boardgame: {
-    name: 'Board game cafe', icon: '🎲', location: 'cafe', duration: 2.5,
-    effects: { social: 35, fun: 35, energy: -10 },
-    cost: 120,
-    condition: (c) => c.money > 150 && c.friends.length > 0 && Game.hour >= 14,
-    thought: '玩 board game',
-    mutter: ['玩邊隻好？','你出千！','好開心'],
-    sense: ['卡牌聲','笑聲'],
-  },
-  // Fallback
   idle: {
-    name: '閒置', icon: '🪑', location: 'home_living', duration: 0.2,
+    name: '閒置', icon: '🪑', location: 'home_living', duration: 0.3,
     effects: { fun: 2, energy: 2 },
     condition: () => true,
-    thought: '...',
-    mutter: ['做咩好呢','好悶'],
+    mutter: ['做咩好呢'],
   },
 };
 
-function isHome(loc) {
-  return LOCATIONS[loc]?.type === 'home';
-}
-
 // ============================================================
-// 感官描述庫
+// 人生高低起跌事件
 // ============================================================
-const SENSE_BY_TIME = {
-  morning: ['陽光透入','鳥叫聲','清晨涼風','街市聲'],
-  afternoon: ['陽光猛烈','人聲','車聲','熱氣'],
-  evening: ['夕陽','街燈亮','煮飯香','返家人潮'],
-  night: ['寧靜','霓虹燈','蟲叫','涼風'],
-  lateNight: ['寂靜','遠處車聲','孤單感'],
+const LIFE_EVENTS = {
+  high: [
+    { id: 'promotion', title: '升職加薪！', icon: '📈', trigger: (c) => c.job && Math.random() < 0.008,
+      context: '你嘅表現出色，公司決定升你職！',
+      effect: (c) => { if (c.job) { c.job.salary *= 1.3; c.money += 20000; } c.mood.happy += 30; },
+      lifeImpact: 20 },
+    { id: 'lottery', title: '中獎啦！', icon: '🎰', trigger: (c) => Math.random() < 0.002,
+      context: '你買六合彩竟然中咗！',
+      effect: (c) => { c.money += 100000; c.mood.happy += 40; },
+      lifeImpact: 25 },
+    { id: 'love_confession', title: '有人同你表白！', icon: '💌', trigger: (c) => c.love.status === 'single' && c.age >= 20 && Math.random() < 0.01,
+      context: '有人暗戀你多時，終於鼓起勇氣向你表白。',
+      effect: (c) => { c.love.status = 'dating'; c.love.partnerName = generateFriendName(); c.love.affection = 50; c.mood.happy += 35; },
+      lifeImpact: 20 },
+    { id: 'trip', title: '同朋友去旅行', icon: '✈️', trigger: (c) => c.social.friends.length > 1 && c.money > 5000 && Math.random() < 0.005,
+      context: '一班朋友約你一起去旅行！',
+      effect: (c) => { c.money -= 3000; c.mood.happy += 30; c.social.popularity += 10; },
+      lifeImpact: 15 },
+    { id: 'achievement', title: '達成目標', icon: '🏆', trigger: (c) => Math.random() < 0.006,
+      context: '你一直努力的事情終於有成果！',
+      effect: (c) => { c.mood.confident += 20; c.mood.happy += 25; },
+      lifeImpact: 15 },
+  ],
+  low: [
+    { id: 'layoff', title: '被裁員', icon: '📉', trigger: (c) => c.job && Math.random() < 0.005,
+      context: '公司經營困難，你被列入裁員名單。',
+      effect: (c) => { c.job = null; c.mood.happy -= 30; c.mood.confident -= 15; },
+      lifeImpact: -25 },
+    { id: 'breakup', title: '分手', icon: '💔', trigger: (c) => c.love.status === 'in_relationship' && c.love.affection < 40 && Math.random() < 0.02,
+      context: '你們的感情出現問題，最終分手了。',
+      effect: (c) => { c.love.status = 'heartbroken'; c.love.exes.push(c.love.partnerName); c.love.partnerName = null; c.love.affection = 0; c.love.heartbreakCount++; c.mood.happy -= 40; },
+      lifeImpact: -30 },
+    { id: 'friend_betrayal', title: '朋友背叛', icon: '🗡', trigger: (c) => c.social.friends.length > 2 && Math.random() < 0.004,
+      context: '你發現好友在背後講你壞話。',
+      effect: (c) => { c.social.friends.pop(); c.mood.happy -= 25; c.mood.confident -= 10; },
+      lifeImpact: -15 },
+    { id: 'money_loss', title: '金錢損失', icon: '💸', trigger: (c) => c.money > 10000 && Math.random() < 0.005,
+      context: '你投資失敗/被騙，損失了一大筆錢。',
+      effect: (c) => { c.money -= Math.min(c.money * 0.3, 30000); c.mood.happy -= 20; },
+      lifeImpact: -20 },
+    { id: 'health_issue', title: '健康問題', icon: '🤒', trigger: (c) => Math.random() < 0.004,
+      context: '你感覺身體不適，需要休息。',
+      effect: (c) => { c.health.physical -= 20; c.health.disease = 'cold'; c.mood.happy -= 15; },
+      lifeImpact: -10 },
+    { id: 'family_issue', title: '家庭問題', icon: '🏚', trigger: (c) => Math.random() < 0.003,
+      context: '家裡出了些問題，讓你擔心。',
+      effect: (c) => { c.mood.happy -= 20; c.needs.safety -= 10; },
+      lifeImpact: -15 },
+  ],
+  romantic: [
+    { id: 'crush_appear', title: '遇到心儀對象', icon: '💘', trigger: (c) => c.love.status === 'single' && c.age >= 20 && Math.random() < 0.015,
+      context: '你在一次聚會上遇到了一個讓你心動的人。',
+      effect: (c) => { c.love.status = 'crush'; c.love.partnerName = generateFriendName(); c.love.crushCount++; c.mood.happy += 15; },
+      lifeImpact: 10 },
+    { id: 'first_kiss', title: '初吻', icon: '😘', trigger: (c) => c.love.status === 'dating' && c.love.affection > 60 && Math.random() < 0.02,
+      context: '一個浪漫的夜晚，你們接吻了。',
+      effect: (c) => { c.love.affection += 20; c.mood.happy += 30; },
+      lifeImpact: 15 },
+    { id: 'make_up', title: '復合', icon: '🕊', trigger: (c) => c.love.status === 'heartbroken' && c.love.heartbreakCount > 0 && Math.random() < 0.01,
+      context: '你的前任聯絡你，想復合。',
+      effect: (c) => { c.love.status = 'in_relationship'; c.love.partnerName = c.love.exes[c.love.exes.length - 1]; c.love.affection = 40; c.mood.happy += 20; },
+      lifeImpact: 10 },
+  ],
 };
 
-function getTimeSense() {
-  const h = Game.hour;
-  if (h < 7) return SENSE_BY_TIME.lateNight;
-  if (h < 11) return SENSE_BY_TIME.morning;
-  if (h < 17) return SENSE_BY_TIME.afternoon;
-  if (h < 20) return SENSE_BY_TIME.evening;
-  return SENSE_BY_TIME.night;
-}
-
-function getRandomSense(c) {
-  const loc = LOCATIONS[Game.currentLocation];
-  const pool = [...(loc?.sense || []), ...getTimeSense()];
-  return pool[Math.floor(Math.random() * pool.length)];
-}
-
 // ============================================================
-// AI 思考循環（地點感知版）
+// AI 思考循環
 // ============================================================
 function aiThink(c) {
   try {
     const candidates = [];
-    const currentLoc = Game.currentLocation;
-
     for (const [key, act] of Object.entries(ACTIONS)) {
       if (!act.condition(c)) continue;
-
-      // 地點檢查
-      const actLoc = act.location;
-      let travelNeeded = false;
-      let travelCost = 0;
-      if (actLoc !== currentLoc) {
-        // 計算移動成本
-        if (isHome(currentLoc) && !isHome(actLoc)) travelCost = 0.5; // 出門
-        else if (!isHome(currentLoc) && isHome(actLoc)) travelCost = 0.5; // 返屋企
-        else if (!isHome(currentLoc) && !isHome(actLoc)) travelCost = 0.3; // 地點間
-        travelNeeded = true;
-      }
-
       let score = 50;
       // 需求匹配
       for (const [nk, nv] of Object.entries(act.effects)) {
         if (nv > 0 && c.needs[nk] < 50) score += (50 - c.needs[nk]) * 0.8;
         if (nv < 0 && c.needs[nk] < 30) score -= 40;
       }
-
-      // 地點便利性（當前地點的行動加分）
-      if (!travelNeeded) score += 15;
-      else score -= travelCost * 20;
-
-      // 時間合適度
-      const hour = Game.hour;
-      if (key.includes('breakfast') && hour >= 7 && hour < 10) score += 20;
-      if (key.includes('lunch') && hour >= 12 && hour < 14) score += 20;
-      if ((key.includes('dinner') || key === 'cook' || key === 'eat_restaurant') && hour >= 18 && hour < 21) score += 20;
-      if (key === 'sleep' && hour >= 22) score += 20;
-
-      // 性格
-      if (['meet_friends','drink_with_friends','karaoke','boardgame','campus_hangout'].includes(key))
-        score += c.personality.extraversion * 2;
-      if (['read','study_library','journal','learn_skill'].includes(key))
-        score += c.personality.openness * 2;
-      if (['play_game','online_game','watch_tv','scroll_tiktok'].includes(key))
-        score += (10 - c.personality.conscientiousness);
-
+      // 社交加成（如果有朋友）
+      if (act.socialGain && c.social.friends.length > 0) score += act.socialGain * 2;
+      // 愛情加成
+      if (act.loveGain && c.love.status !== 'single') score += act.loveGain * 2;
+      // 性格影響
+      if (act.location === 'bar' || act.location === 'karaoke') score += c.personality.good.includes('humorous') ? 10 : 0;
+      if (act.location === 'library') score += c.personality.good.includes('diligent') ? 10 : 0;
+      if (act.name.includes('獨自')) score += c.personality.bad.includes('insecure') ? 8 : -5;
       // 金錢
       if (act.cost && c.money < act.cost * 2) score -= 30;
-
-      // 天氣影響
-      if (Game.weather.type === 'rainy' || Game.weather.type === 'storm') {
-        if (!isHome(actLoc) && actLoc !== 'mall' && actLoc !== 'cinema') score -= 15;
-      }
-      if (Game.weather.type === 'hot' && actLoc === 'park') score -= 10;
-
       // 隨機
       score += (Math.random() - 0.5) * 25;
-
-      candidates.push({ key, act, score, travelNeeded });
+      candidates.push({ key, act, score });
     }
 
     if (candidates.length === 0) {
       c.currentAction = ACTIONS.idle;
-      c.actionTimer = 0.2;
+      c.actionTimer = 0.3;
       return;
     }
 
     candidates.sort((a, b) => b.score - a.score);
     const chosen = candidates[0];
 
-    // 如果需要移動，先移動
-    if (chosen.travelNeeded) {
-      Game.currentLocation = chosen.act.location;
-      Game.locationHistory.push(chosen.act.location);
-      if (c.id === Game.selectedCharId || c.isProtagonist) {
-        const loc = LOCATIONS[chosen.act.location];
-        addThought(c.id, '🚶', `去 ${loc.icon} ${loc.name}`, false);
-        // 感官描述
-        const sense = getRandomSense(c);
-        addSense(c.id, sense);
-      }
-      c.actionTimer = 0.3; // 移動時間
-      c.currentAction = null;
-      return;
-    }
-
     if (c.id === Game.selectedCharId || c.isProtagonist) {
       addThought(c.id, '決定', `${chosen.act.icon} ${chosen.act.name} (${Math.round(chosen.score)})`, true);
-      // 感官
-      if (chosen.act.sense && Math.random() < 0.5) {
-        const s = chosen.act.sense[Math.floor(Math.random() * chosen.act.sense.length)];
-        addSense(c.id, s);
-      }
-      // 自言自語
-      if (Math.random() < 0.35) {
-        const m = chosen.act.mutter ? chosen.act.mutter[Math.floor(Math.random() * chosen.act.mutter.length)] : '...';
+      if (chosen.act.mutter && Math.random() < 0.4) {
+        const m = chosen.act.mutter[Math.floor(Math.random() * chosen.act.mutter.length)];
         addMutter(c.id, m);
       }
     }
 
     c.currentAction = chosen.act;
     c.actionTimer = chosen.act.duration;
-    c.todayActions.push(chosen.key);
-    Game.actionCountToday++;
 
-    // 觸發 NPC 互動
-    if (Math.random() < 0.2) triggerNPCInteraction(c);
+    // 社交效果
+    if (chosen.act.socialGain && Math.random() < 0.3) {
+      c.social.popularity = Math.min(100, c.social.popularity + chosen.act.socialGain);
+      if (c.social.friends.length < 10 && Math.random() < 0.2) {
+        const newName = generateFriendName();
+        c.social.friends.push(newName);
+        if (c.id === Game.selectedCharId || c.isProtagonist) {
+          addThought(c.id, '👥', `認識咗新朋友 ${newName}！`, false);
+        }
+      }
+    }
+
+    // 愛情效果
+    if (chosen.act.loveGain && c.love.status === 'dating') {
+      c.love.affection = Math.min(100, c.love.affection + chosen.act.loveGain);
+      if (c.love.affection > 70 && c.love.status === 'dating') {
+        c.love.status = 'in_relationship';
+        c.love.daysTogether = 1;
+        if (c.id === Game.selectedCharId || c.isProtagonist) {
+          addThought(c.id, '💕', `同 ${c.love.partnerName} 正式一起！`, false, false);
+        }
+      }
+    }
   } catch (e) {
     console.error('aiThink error:', e);
     c.currentAction = ACTIONS.idle;
-    c.actionTimer = 0.2;
+    c.actionTimer = 0.3;
   }
 }
 
 // ============================================================
-// NPC 互動系統
+// 人生高低起跌檢查
 // ============================================================
-function triggerNPCInteraction(c) {
+function checkLifeEvents(c) {
   try {
-    const loc = LOCATIONS[Game.currentLocation];
-    if (!loc || !loc.npcs) return;
-
-    const npcType = loc.npcs[Math.floor(Math.random() * loc.npcs.length)];
-    const template = NPC_TEMPLATES[npcType];
-    if (!template) return;
-
-    const line = template.lines[Math.floor(Math.random() * template.lines.length)];
-
-    // 顯示 NPC
-    showNPC(template, line);
-
-    // 記錄互動
-    if (c.id === Game.selectedCharId || c.isProtagonist) {
-      addDialogue(c.id, template.name, line);
-      // 社交需求小幅滿足
-      c.needs.social = Math.min(100, c.needs.social + 3);
-    }
-
-    // 朋友 NPC 有特殊效果
-    if (npcType === 'friend' && c.friends.length === 0) {
-      c.friends.push('朋友_' + Date.now());
-      if (c.id === Game.selectedCharId || c.isProtagonist) {
-        addThought(c.id, '👥', `認識咗新朋友！`, false, false);
+    if (Game.eventCooldown > 0) return;
+    const allEvents = [...LIFE_EVENTS.high, ...LIFE_EVENTS.low, ...LIFE_EVENTS.romantic];
+    for (const evt of allEvents) {
+      if (evt.trigger(c)) {
+        Game.eventCooldown = 30; // 30 tick 冷卻
+        triggerLifeEvent(evt, c);
+        return;
       }
     }
   } catch (e) { console.error(e); }
 }
 
-let currentNPCEl = null;
-function showNPC(template, line) {
+function triggerLifeEvent(evt, c) {
   try {
-    // 移除舊 NPC
-    if (currentNPCEl) {
-      currentNPCEl.remove();
-      currentNPCEl = null;
+    const isHigh = LIFE_EVENTS.high.includes(evt);
+    const isLow = LIFE_EVENTS.low.includes(evt);
+    const isRomantic = LIFE_EVENTS.romantic.includes(evt);
+
+    evt.effect(c);
+    c.lifeEvents.push({ day: Game.day, title: evt.title, icon: evt.icon, impact: evt.lifeImpact });
+    Game.lifeCurve.push(evt.lifeImpact);
+
+    if (c.id === Game.selectedCharId || c.isProtagonist) {
+      const type = isHigh ? 'high' : isLow ? 'low' : 'love';
+      addThought(c.id, `${evt.icon} ${evt.title}`, evt.context, false, false, type);
     }
-    const center = document.getElementById('center');
-    if (!center) return;
-    const el = document.createElement('div');
-    el.className = 'npc-sprite';
-    el.style.left = (100 + Math.random() * 200) + 'px';
-    el.style.bottom = (80 + Math.random() * 60) + 'px';
-    el.innerHTML = `
-      <div class="bubble">${line}</div>
-      <div class="head"></div>
-      <div class="body" style="background:#6a7a8a"></div>
-    `;
-    center.appendChild(el);
-    currentNPCEl = el;
-    // 5 秒後消失
-    setTimeout(() => {
-      if (currentNPCEl === el) {
-        el.remove();
-        currentNPCEl = null;
-      }
-    }, 5000);
+
+    // 顯示彈窗（只有重大事件）
+    if (Math.abs(evt.lifeImpact) >= 15) {
+      showLifeEventModal(evt, c);
+    }
   } catch (e) { console.error(e); }
+}
+
+function showLifeEventModal(evt, c) {
+  try {
+    const modal = document.getElementById('event-modal');
+    if (!modal || modal.classList.contains('show')) return;
+    Game.paused = true;
+    document.getElementById('event-icon').textContent = evt.icon;
+    document.getElementById('event-title').textContent = evt.title;
+    document.getElementById('event-context').textContent = evt.context;
+    const choicesEl = document.getElementById('event-choices');
+    if (choicesEl) {
+      choicesEl.innerHTML = `
+        <button class="choice-btn" onclick="this.parentElement.innerHTML='<div style=&quot;text-align:center;padding:20px&quot;>✓ 經歷過咗，人生繼續...</div>';setTimeout(()=>document.getElementById('event-modal').classList.remove('show');Game.paused=false;,1500)">
+          <span class="icon">✨</span><b>接受呢個經歷</b>
+          <div class="desc">人生總有高低，繼續前行</div>
+        </button>
+      `;
+    }
+    modal.classList.add('show');
+  } catch (e) {
+    console.error(e);
+    Game.paused = false;
+  }
+}
+
+// ============================================================
+// 半年報告系統
+// ============================================================
+function generateHalfYearReport(c) {
+  try {
+    const daysSinceReport = Game.day - Game.lastReportDay;
+    if (daysSinceReport < 180) return; // 每 180 日一次
+    Game.lastReportDay = Game.day;
+
+    Game.paused = true;
+    const modal = document.getElementById('report-modal');
+    const titleEl = document.getElementById('report-title');
+    const contentEl = document.getElementById('report-content');
+    if (!modal || !titleEl || !contentEl) { Game.paused = false; return; }
+
+    const halfYearNum = Math.floor(Game.day / 180) + 1;
+    titleEl.textContent = `${c.age}歲 · 第 ${halfYearNum} 個半年報告`;
+
+    // 計算數據
+    const recentEvents = c.lifeEvents.filter(e => e.day >= Game.day - 180);
+    const highCount = recentEvents.filter(e => e.impact > 0).length;
+    const lowCount = recentEvents.filter(e => e.impact < 0).length;
+    const avgImpact = recentEvents.length > 0 ? recentEvents.reduce((s, e) => s + e.impact, 0) / recentEvents.length : 0;
+
+    // 人生曲線圖
+    const curveData = Game.lifeCurve.slice(-20);
+    const maxImpact = Math.max(...curveData.map(Math.abs), 1);
+
+    let html = `
+      <div class="report-section">
+        <div class="title">📊 這半年的高低起跌</div>
+        <div class="life-graph">
+          ${curveData.map(v => {
+            const h = Math.abs(v) / maxImpact * 100;
+            const cls = v > 0 ? 'high' : v < 0 ? 'low' : '';
+            return `<div class="bar ${cls}" style="height:${h}%"></div>`;
+          }).join('')}
+        </div>
+        <div class="report-row"><span>高峰事件</span><span class="up">${highCount} 次</span></div>
+        <div class="report-row"><span>低谷事件</span><span class="down">${lowCount} 次</span></div>
+        <div class="report-row"><span>平均趨勢</span><span class="${avgImpact > 0 ? 'up' : 'down'}">${avgImpact > 0 ? '↑ 上升' : avgImpact < 0 ? '↓ 下降' : '→ 平穩'}</span></div>
+      </div>
+      <div class="report-section">
+        <div class="title">💰 財務狀況</div>
+        <div class="report-row"><span>現有資金</span><span>$${Math.round(c.money).toLocaleString()}</span></div>
+        <div class="report-row"><span>職業</span><span>${c.job ? c.job.title : '待業/學生'}</span></div>
+      </div>
+      <div class="report-section">
+        <div class="title">💕 感情生活</div>
+        <div class="report-row"><span>狀態</span><span>${getLoveStatusText(c.love.status)}</span></div>
+        ${c.love.partnerName ? `<div class="report-row"><span>對象</span><span>${c.love.partnerName}</span></div>` : ''}
+        <div class="report-row"><span>暗戀次數</span><span>${c.love.crushCount}</span></div>
+        <div class="report-row"><span>分手次數</span><span>${c.love.heartbreakCount}</span></div>
+      </div>
+      <div class="report-section">
+        <div class="title">👥 社交圈</div>
+        <div class="report-row"><span>朋友數量</span><span>${c.social.friends.length}</span></div>
+        <div class="report-row"><span>受歡迎度</span><span>${c.social.popularity}/100</span></div>
+      </div>
+      <div class="report-section">
+        <div class="title">🎭 人格特質</div>
+        <div class="trait-row">
+          ${c.personality.good.map(id => {
+            const t = GOOD_TRAITS.find(g => g.id === id);
+            return t ? `<span class="trait-tag trait-good">✓ ${t.name}</span>` : '';
+          }).join('')}
+          ${c.personality.bad.map(id => {
+            const t = BAD_TRAITS.find(b => b.id === id);
+            return t ? `<span class="trait-tag trait-bad">✗ ${t.name}</span>` : '';
+          }).join('')}
+        </div>
+      </div>
+      <div class="report-section">
+        <div class="title">🌟 人生感悟</div>
+        <div style="font-size:11px;color:#ccc;font-style:italic;line-height:1.5">
+          ${getLifeWisdom(c, avgImpact)}
+        </div>
+      </div>
+    `;
+    contentEl.innerHTML = html;
+    modal.classList.add('show');
+  } catch (e) {
+    console.error('Report error:', e);
+    Game.paused = false;
+  }
+}
+
+function getLoveStatusText(status) {
+  const map = {
+    single: '單身 🙁',
+    crush: '暗戀中 💭',
+    dating: '曖昧/約會 💕',
+    in_relationship: '拍拖中 ❤️',
+    heartbroken: '失戀 💔',
+  };
+  return map[status] || status;
+}
+
+function getLifeWisdom(c, avgImpact) {
+  if (avgImpact > 10) return '這半年過得不錯，继续保持！人生總會有意想不到的驚喜，珍惜當下。';
+  if (avgImpact > 0) return '雖然有起伏，但整體向好。你的優點在關鍵時刻幫了你，記得也留意自己的缺點。';
+  if (avgImpact > -10) return '人生難免有高低，但你不放棄的精神值得欣賞。繼續努力，黎明前總是最黑暗。';
+  return '這半年比較艱難，但每一個低谷都是成長的機會。你的韌性會幫你渡過難關，記住：沒有永遠的低潮。';
 }
 
 // ============================================================
 // UI 渲染
 // ============================================================
-function addThought(charId, tag, text, isDecision = false) {
+function addThought(charId, tag, text, isDecision = false, isEvent = false, type = '') {
   try {
     if (charId !== Game.selectedCharId && charId !== 'protagonist') return;
     const c = Game.characters[charId];
@@ -1324,7 +1079,7 @@ function addThought(charId, tag, text, isDecision = false) {
     const log = document.getElementById('thought-log');
     if (!log) return;
     const div = document.createElement('div');
-    div.className = 'thought' + (isDecision ? ' decision' : '');
+    div.className = 'thought' + (isDecision ? ' decision' : '') + (type ? ' ' + type : '');
     div.innerHTML = `<div class="time">🕐 ${String(Game.hour).padStart(2,'0')}:${String(Game.minute).padStart(2,'0')}</div><span class="tag">${tag}</span> ${text}`;
     log.insertBefore(div, log.firstChild);
     while (log.children.length > 60) log.removeChild(log.lastChild);
@@ -1345,123 +1100,88 @@ function addMutter(charId, text) {
   } catch (e) { console.error(e); }
 }
 
-function addSense(charId, text) {
+function renderPersonality() {
   try {
-    if (charId !== Game.selectedCharId && charId !== 'protagonist') return;
-    const log = document.getElementById('thought-log');
-    if (!log) return;
-    const div = document.createElement('div');
-    div.className = 'thought sense';
-    div.innerHTML = `<div class="time">🌿 感官</div>${text}`;
-    log.insertBefore(div, log.firstChild);
+    const c = Game.characters.protagonist;
+    const el = document.getElementById('personality-display');
+    if (!el) return;
+    el.innerHTML = `
+      <div class="trait-row">
+        ${c.personality.good.map(id => {
+          const t = GOOD_TRAITS.find(g => g.id === id);
+          return t ? `<span class="trait-tag trait-good" title="${t.desc}">✓ ${t.name}</span>` : '';
+        }).join('')}
+      </div>
+      <div class="trait-row">
+        ${c.personality.bad.map(id => {
+          const t = BAD_TRAITS.find(b => b.id === id);
+          return t ? `<span class="trait-tag trait-bad" title="${t.desc}">✗ ${t.name}</span>` : '';
+        }).join('')}
+      </div>
+    `;
   } catch (e) { console.error(e); }
 }
 
-function addDialogue(charId, speaker, text) {
+function renderLoveDisplay() {
   try {
-    if (charId !== Game.selectedCharId && charId !== 'protagonist') return;
-    const log = document.getElementById('thought-log');
-    if (!log) return;
-    const div = document.createElement('div');
-    div.className = 'thought social';
-    div.innerHTML = `<div class="time">🗣 對話</div><div class="dialogue"><b>${speaker}:</b> ${text}</div>`;
-    log.insertBefore(div, log.firstChild);
+    const c = Game.characters.protagonist;
+    const el = document.getElementById('love-display');
+    if (!el) return;
+    let html = `<div>狀態：${getLoveStatusText(c.love.status)}</div>`;
+    if (c.love.partnerName) {
+      html += `<div>對象：${c.love.partnerName}</div>`;
+      html += `<div>好感度：${Math.round(c.love.affection)}/100</div>`;
+    }
+    html += `<div style="color:#888;font-size:9px">暗戀 ${c.love.crushCount} 次 · 分手 ${c.love.heartbreakCount} 次</div>`;
+    el.innerHTML = html;
+  } catch (e) { console.error(e); }
+}
+
+function renderSocialDisplay() {
+  try {
+    const c = Game.characters.protagonist;
+    const el = document.getElementById('social-display');
+    if (!el) return;
+    let html = `<div>朋友：${c.social.friends.length} 人</div>`;
+    html += `<div>受歡迎：${c.social.popularity}/100</div>`;
+    if (c.social.friends.length > 0) {
+      html += `<div style="color:#888;font-size:9px;margin-top:2px">${c.social.friends.slice(0, 5).join('、')}${c.social.friends.length > 5 ? '...' : ''}</div>`;
+    }
+    el.innerHTML = html;
   } catch (e) { console.error(e); }
 }
 
 function renderScene() {
   try {
-    const loc = LOCATIONS[Game.currentLocation];
-    if (!loc) return;
+    const c = Game.characters.protagonist;
+    const loc = LOCATIONS[c.currentRoom] || LOCATIONS.home_living;
     const sceneBg = document.getElementById('scene-bg');
     const sceneVisual = document.getElementById('scene-visual');
     const sceneLoc = document.getElementById('scene-loc');
-    const sceneWeather = document.getElementById('scene-weather');
-    const sceneSense = document.getElementById('scene-sense');
-
-    // 背景（屋企用固定色，外出用天氣色）
-    if (isHome(Game.currentLocation)) {
-      sceneBg.style.background = loc.bg;
-    } else {
-      const w = WEATHER_TYPES[Game.weather.type];
-      sceneBg.style.background = `linear-gradient(to bottom, ${w.color} 0%, ${w.color} 55%, #8b7355 55%, #6b5345 100%)`;
-    }
+    const moodEl = document.getElementById('mood-indicator');
+    if (sceneBg) sceneBg.style.background = loc.bg;
     if (sceneVisual) sceneVisual.textContent = loc.visual;
     if (sceneLoc) sceneLoc.textContent = `${loc.icon} ${loc.name}`;
-    if (sceneWeather) {
-      const w = WEATHER_TYPES[Game.weather.type];
-      sceneWeather.textContent = `${w.icon} ${w.name} · ${Game.weather.temp}°C`;
+    if (moodEl) {
+      const h = c.mood.happy;
+      if (h > 40) moodEl.textContent = '😄 開心';
+      else if (h > 20) moodEl.textContent = '🙂 不錯';
+      else if (h > -20) moodEl.textContent = '😐 平靜';
+      else if (h > -40) moodEl.textContent = '😟 低落';
+      else moodEl.textContent = '😢 難過';
     }
-    if (sceneSense) sceneSense.textContent = getRandomSense(Game.characters.protagonist);
-
-    // 天氣效果
-    renderWeatherEffect();
     // 地點按鈕
-    renderLocationMap();
-    // 地點資訊
-    renderLocationInfo();
-  } catch (e) { console.error(e); }
-}
-
-function renderWeatherEffect() {
-  try {
-    const overlay = document.getElementById('weather-overlay');
-    if (!overlay) return;
-    overlay.innerHTML = '';
-    if (Game.weather.type === 'rainy' || Game.weather.type === 'storm') {
-      const count = Game.weather.type === 'storm' ? 80 : 40;
-      for (let i = 0; i < count; i++) {
-        const drop = document.createElement('div');
-        drop.className = 'rain-drop';
-        drop.style.left = Math.random() * 100 + '%';
-        drop.style.animationDelay = Math.random() * 0.8 + 's';
-        drop.style.animationDuration = (0.5 + Math.random() * 0.5) + 's';
-        overlay.appendChild(drop);
-      }
-    }
-  } catch (e) { console.error(e); }
-}
-
-function renderLocationMap() {
-  try {
     const map = document.getElementById('location-map');
-    if (!map) return;
-    map.innerHTML = '';
-    const c = Game.characters.protagonist;
-    Object.entries(LOCATIONS).forEach(([key, loc]) => {
-      if (loc.type === 'transit') return;
-      const btn = document.createElement('div');
-      btn.className = 'loc-btn';
-      if (key === Game.currentLocation) btn.classList.add('current');
-      const available = loc.available(c);
-      if (!available) btn.classList.add('unavailable');
-      btn.textContent = `${loc.icon} ${loc.name}`;
-      btn.onclick = () => {
-        if (!available) return;
-        Game.currentLocation = key;
-        renderScene();
-        addThought('protagonist', '🚶', `去 ${loc.icon} ${loc.name}`, false);
-      };
-      map.appendChild(btn);
-    });
-  } catch (e) { console.error(e); }
-}
-
-function renderLocationInfo() {
-  try {
-    const info = document.getElementById('location-info');
-    const nearby = document.getElementById('nearby-npcs');
-    if (!info || !nearby) return;
-    const loc = LOCATIONS[Game.currentLocation];
-    if (!loc) return;
-    info.innerHTML = `${loc.icon} <b>${loc.name}</b><br><span style="color:#888;font-size:9px">${loc.type === 'home' ? '屋企' : '外出'}</span>`;
-    if (loc.npcs) {
-      nearby.innerHTML = loc.npcs.map(n => {
-        const t = NPC_TEMPLATES[n];
-        return t ? `${t.avatar} ${t.name}` : '';
-      }).filter(Boolean).join('<br>');
-    } else {
-      nearby.innerHTML = '<span style="color:#888">冇人</span>';
+    if (map) {
+      map.innerHTML = '';
+      Object.entries(LOCATIONS).forEach(([key, loc]) => {
+        if (loc.type === 'transit') return;
+        const btn = document.createElement('div');
+        btn.className = 'loc-btn' + (key === c.currentRoom ? ' current' : '');
+        btn.textContent = `${loc.icon} ${loc.name}`;
+        btn.onclick = () => { c.currentRoom = key; };
+        map.appendChild(btn);
+      });
     }
   } catch (e) { console.error(e); }
 }
@@ -1488,7 +1208,7 @@ function renderCharList() {
           <div class="avatar" style="background:${c.color}">${c.avatar}</div>
           <div class="info">
             <div class="name">${c.name}</div>
-            <div class="sub">${c.age}歲 · ${c.relationship}</div>
+            <div class="sub">${c.age}歲 · ${c.love.status === 'single' ? '單身' : c.love.partnerName || ''}</div>
           </div>
         </div>
         <div class="state-line">${stateLine}</div>
@@ -1551,27 +1271,29 @@ function executeAction(c, deltaHours) {
 }
 
 // ============================================================
-// 主 tick
+// 主 tick（加快進度）
 // ============================================================
 function tick() {
   try {
     if (Game.paused || Game.speed === 0) return;
-    const baseDelta = 0.05 * Game.speed;
+    const baseDelta = 0.15 * Game.speed; // 加快 3 倍
     Game.hour += baseDelta;
     Game.minute = Math.floor((Game.hour % 1) * 60);
+    if (Game.eventCooldown > 0) Game.eventCooldown--;
 
     if (Game.hour >= 24) {
       Game.hour -= 24;
       Game.day++;
-      Game.actionCountToday = 0;
-      generateWeather();
       Object.values(Game.characters).forEach(c => {
         c.age = Math.floor((Game.day - c.birthDay) / 365);
-        c.todayActions = [];
+        // 感情日數
+        if (c.love.status === 'in_relationship') c.love.daysTogether++;
+        // 感情自然衰減
+        if (c.love.status === 'in_relationship') {
+          c.love.affection = Math.max(0, c.love.affection - 0.5);
+        }
       });
       dailySettlement();
-      // 自動存檔
-      autoSave();
     }
 
     Object.values(Game.characters).forEach(c => {
@@ -1581,20 +1303,27 @@ function tick() {
         NEEDS_DEF.forEach(n => {
           c.needs[n.key] = Math.max(0, c.needs[n.key] - n.decay * baseDelta / 24);
         });
-        // 天氣影響心情
-        const w = WEATHER_TYPES[Game.weather.type];
-        c.mood.happy += w.moodMod * 0.001 * baseDelta;
+        // 情緒
         const avgNeed = Object.values(c.needs).reduce((a,b)=>a+b,0) / Object.keys(c.needs).length;
         c.mood.happy += (avgNeed - 50) * 0.02 * baseDelta;
         c.mood.happy = Math.max(-100, Math.min(100, c.mood.happy));
       } catch (e) { console.error(e); }
     });
 
+    // 檢查人生事件
+    const p = Game.characters.protagonist;
+    checkLifeEvents(p);
+    // 半年報告
+    generateHalfYearReport(p);
+
     Game.tickCount++;
     if (Game.tickCount % 2 === 0) {
       renderCharList();
       renderSprites();
       renderScene();
+      renderPersonality();
+      renderLoveDisplay();
+      renderSocialDisplay();
       renderStatus();
       renderDateTime();
     }
@@ -1608,10 +1337,23 @@ function dailySettlement() {
     Object.values(Game.characters).forEach(c => {
       c.money -= 100;
       if (c.job && Game.day % 30 === 0) c.money += 18000;
+      // 健康
+      if (c.health.disease) {
+        c.health.physical = Math.max(0, c.health.physical - 1);
+        if (Math.random() < 0.2) c.health.disease = null;
+      }
+      // 人格缺點觸發
+      if (c.personality.bad.includes('overspender') && Math.random() < 0.1) {
+        c.money -= 200;
+      }
+      if (c.personality.bad.includes('lazy') && Math.random() < 0.1) {
+        c.needs.fun = Math.min(100, c.needs.fun + 10);
+      }
     });
     if (Game.characters.protagonist.age >= 40) {
       Game.paused = true;
-      alert(`🎬 40 歲人生總結\n\n職業：${Game.characters.protagonist.job ? Game.characters.protagonist.job.title : '無業'}\n財務：$${Math.round(Game.characters.protagonist.money).toLocaleString()}\n關係：${Game.characters.protagonist.relationship}\n朋友：${Game.characters.protagonist.friends.length}`);
+      const p = Game.characters.protagonist;
+      alert(`🎬 40 歲人生總結\n\n${p.name} 的人生告一段落。\n\n💰 財務：$${Math.round(p.money).toLocaleString()}\n💕 感情：${getLoveStatusText(p.love.status)}\n👥 朋友：${p.social.friends.length}\n📊 人生事件：${p.lifeEvents.length} 次\n\n人生有高低，但你走過來了。`);
     }
   } catch (e) { console.error(e); }
 }
@@ -1623,10 +1365,29 @@ function renderStatus() {
     if (el1) el1.textContent = '$' + Math.round(p.money).toLocaleString();
     const el2 = document.getElementById('life-progress');
     if (el2) el2.textContent = `${p.age} / 40 歲`;
-    const el3 = document.getElementById('action-count');
-    if (el3) el3.textContent = Game.actionCountToday;
+    const el3 = document.getElementById('life-days');
+    if (el3) el3.textContent = `第 ${Game.day} 日`;
     const el4 = document.getElementById('social-count');
-    if (el4) el4.textContent = p.friends.length;
+    if (el4) el4.textContent = p.social.friends.length;
+    // 人生曲線
+    const curveEl = document.getElementById('life-curve');
+    const trendEl = document.getElementById('life-trend');
+    if (curveEl && trendEl) {
+      const recent = Game.lifeCurve.slice(-10);
+      const avg = recent.length > 0 ? recent.reduce((a,b)=>a+b,0) / recent.length : 0;
+      const pct = Math.max(0, Math.min(100, 50 + avg));
+      curveEl.style.width = pct + '%';
+      curveEl.style.background = avg > 5 ? '#10b981' : avg < -5 ? '#ff6b6b' : '#ffd369';
+      trendEl.textContent = avg > 5 ? '📈 上升' : avg < -5 ? '📉 下降' : '→ 平穩';
+    }
+    // 人生階段
+    const stageEl = document.getElementById('life-stage-tag');
+    if (stageEl) {
+      if (p.age < 25) stageEl.textContent = '🌱 少年期';
+      else if (p.age < 30) stageEl.textContent = '🌿 青年期';
+      else if (p.age < 35) stageEl.textContent = '🌳 成年期';
+      else stageEl.textContent = '🌲 成熟期';
+    }
   } catch (e) { console.error(e); }
 }
 
@@ -1640,202 +1401,6 @@ function renderDateTime() {
     if (el1) el1.textContent = `${year}/${String(month).padStart(2,'0')}/${String(day).padStart(2,'0')}`;
     const el2 = document.getElementById('time-display');
     if (el2) el2.textContent = `${String(Game.hour).padStart(2,'0')}:${String(Game.minute).padStart(2,'0')}`;
-    const el3 = document.getElementById('weather-display');
-    if (el3) el3.textContent = WEATHER_TYPES[Game.weather.type].icon;
-  } catch (e) { console.error(e); }
-}
-
-// ============================================================
-// 儲存系統
-// ============================================================
-const SAVE_KEY = 'life_at_home_saves';
-const AUTO_SAVE_KEY = 'life_at_home_autosave';
-
-function getSaveData() {
-  return {
-    version: 2,
-    timestamp: Date.now(),
-    dateStr: new Date().toLocaleString('zh-HK'),
-    game: {
-      day: Game.day,
-      hour: Game.hour,
-      minute: Game.minute,
-      speed: Game.speed,
-      decisionsCount: Game.decisionsCount,
-      acceptedCount: Game.acceptedCount,
-      actionCountToday: Game.actionCountToday,
-      currentLocation: Game.currentLocation,
-      weather: Game.weather,
-    },
-    characters: Game.characters,
-    relationships: Game.relationships,
-  };
-}
-
-function loadSaveData(data) {
-  try {
-    if (!data || !data.game) throw new Error('Invalid save data');
-    Game.day = data.game.day;
-    Game.hour = data.game.hour;
-    Game.minute = data.game.minute;
-    Game.speed = data.game.speed || 1;
-    Game.decisionsCount = data.game.decisionsCount;
-    Game.acceptedCount = data.game.acceptedCount;
-    Game.actionCountToday = data.game.actionCountToday;
-    Game.currentLocation = data.game.currentLocation || 'home_bedroom';
-    Game.weather = data.game.weather || { type: 'sunny', temp: 26, wind: 2 };
-    Game.characters = data.characters || {};
-    Game.relationships = data.relationships || {};
-    // 清理 spriteEl（DOM 引用不能序列化）
-    Object.values(Game.characters).forEach(c => { c.spriteEl = null; });
-    return true;
-  } catch (e) {
-    console.error('Load error:', e);
-    return false;
-  }
-}
-
-function getAllSaves() {
-  try {
-    const raw = localStorage.getItem(SAVE_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch (e) { return {}; }
-}
-
-function saveToSlot(slot) {
-  try {
-    const saves = getAllSaves();
-    saves[slot] = getSaveData();
-    localStorage.setItem(SAVE_KEY, JSON.stringify(saves));
-    return true;
-  } catch (e) {
-    console.error('Save error:', e);
-    alert('儲存失敗：' + e.message);
-    return false;
-  }
-}
-
-function loadFromSlot(slot) {
-  try {
-    const saves = getAllSaves();
-    if (!saves[slot]) {
-      alert('此儲存格是空的');
-      return false;
-    }
-    if (loadSaveData(saves[slot])) {
-      alert('載入成功！');
-      // 重新渲染
-      renderCharList();
-      renderScene();
-      renderStatus();
-      renderDateTime();
-      return true;
-    }
-    return false;
-  } catch (e) {
-    console.error('Load error:', e);
-    alert('載入失敗：' + e.message);
-    return false;
-  }
-}
-
-function deleteSlot(slot) {
-  try {
-    const saves = getAllSaves();
-    delete saves[slot];
-    localStorage.setItem(SAVE_KEY, JSON.stringify(saves));
-    return true;
-  } catch (e) { return false; }
-}
-
-function autoSave() {
-  try {
-    localStorage.setItem(AUTO_SAVE_KEY, JSON.stringify(getSaveData()));
-  } catch (e) { console.error('Auto-save error:', e); }
-}
-
-function loadAutoSave() {
-  try {
-    const raw = localStorage.getItem(AUTO_SAVE_KEY);
-    if (!raw) return false;
-    return loadSaveData(JSON.parse(raw));
-  } catch (e) { return false; }
-}
-
-function exportSave() {
-  try {
-    const data = getSaveData();
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `life_save_${Game.day}day.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  } catch (e) {
-    alert('匯出失敗：' + e.message);
-  }
-}
-
-function importSave(file) {
-  try {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const data = JSON.parse(e.target.result);
-        if (loadSaveData(data)) {
-          alert('匯入成功！');
-          renderCharList();
-          renderScene();
-          renderStatus();
-          renderDateTime();
-        }
-      } catch (err) {
-        alert('檔案格式錯誤');
-      }
-    };
-    reader.readAsText(file);
-  } catch (e) {
-    alert('匯入失敗：' + e.message);
-  }
-}
-
-function renderSaveSlots() {
-  try {
-    const container = document.getElementById('save-slots');
-    if (!container) return;
-    container.innerHTML = '';
-    const saves = getAllSaves();
-    for (let i = 1; i <= 5; i++) {
-      const slot = document.createElement('div');
-      slot.className = 'save-slot';
-      const save = saves[i];
-      if (save) {
-        const p = save.characters?.protagonist;
-        slot.innerHTML = `
-          <div class="info">
-            <b>儲存格 ${i}</b><br>
-            ${p?.name || '?'} · ${p?.age || '?'}歲<br>
-            第 ${save.game?.day || 0} 日 · 💰$${Math.round(p?.money || 0).toLocaleString()}<br>
-            <span style="color:#888;font-size:9px">${save.dateStr || ''}</span>
-          </div>
-          <div class="actions">
-            <button onclick="loadFromSlot(${i})">📥 載入</button>
-            <button onclick="saveToSlot(${i});renderSaveSlots()">💾 覆蓋</button>
-            <button onclick="if(confirm('確定刪除？')){deleteSlot(${i});renderSaveSlots()}">🗑</button>
-          </div>
-        `;
-      } else {
-        slot.classList.add('empty');
-        slot.innerHTML = `
-          <div class="info"><b>儲存格 ${i}</b><br><span style="color:#888">（空）</span></div>
-          <div class="actions">
-            <button onclick="saveToSlot(${i});renderSaveSlots()">💾 儲存</button>
-          </div>
-        `;
-      }
-      container.appendChild(slot);
-    }
   } catch (e) { console.error(e); }
 }
 
@@ -1844,14 +1409,11 @@ function renderSaveSlots() {
 // ============================================================
 function init() {
   try {
-    // 嘗試載入自動存檔
-    const hasAutoSave = loadAutoSave();
-    if (!hasAutoSave) {
-      Game.characters.protagonist.birthDay = 0;
-      generateWeather();
-    }
+    Game.characters.protagonist.birthDay = 0;
+    // 初始朋友
+    Game.characters.protagonist.social.friends.push('阿強', '阿May');
+    Game.characters.protagonist.social.popularity = 35;
 
-    // 速度按鈕
     document.querySelectorAll('.btn[data-speed]').forEach(btn => {
       btn.onclick = () => {
         document.querySelectorAll('.btn[data-speed]').forEach(b => b.classList.remove('active'));
@@ -1861,32 +1423,20 @@ function init() {
       };
     });
 
-    // 儲存按鈕
-    document.getElementById('save-btn').onclick = () => {
-      renderSaveSlots();
-      document.getElementById('save-modal').classList.add('show');
-    };
-    document.getElementById('export-btn').onclick = exportSave;
-    document.getElementById('import-btn').onclick = () => {
-      document.getElementById('import-file').click();
-    };
-    document.getElementById('import-file').onchange = (e) => {
-      if (e.target.files[0]) importSave(e.target.files[0]);
-    };
-
     renderCharList();
+    renderSprites();
     renderScene();
+    renderPersonality();
+    renderLoveDisplay();
+    renderSocialDisplay();
     renderStatus();
     renderDateTime();
     setInterval(tick, 100);
 
     const c = Game.characters.protagonist;
-    addThought('protagonist', '🌟', `${c.name}，${c.age} 歲，人生繼續`, true);
-    if (hasAutoSave) {
-      addThought('protagonist', '💾', '自動存檔已載入', false);
-    }
-    addThought('protagonist', '🌍', '15+ 地點 · NPC 互動 · 天氣感官 · 儲存系統', false);
-    addMutter('protagonist', '今日去邊好呢？');
+    addThought('protagonist', '🌟', `${c.name}，${c.age} 歲，少年人生開始`, true);
+    addThought('protagonist', '🎭', `優點：${c.personality.good.map(id => GOOD_TRAITS.find(g=>g.id===id)?.name).filter(Boolean).join('、')} · 缺點：${c.personality.bad.map(id => BAD_TRAITS.find(b=>b.id===id)?.name).filter(Boolean).join('、')}`, false);
+    addMutter('protagonist', '今日會發生咩事呢？期待！');
   } catch (e) {
     console.error('Init error:', e);
     alert('初始化錯誤：' + e.message);
