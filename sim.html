@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>少年人生 · 敘事版</title>
+<title>少年人生 · 修復版</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body { width:100%; height:100%; overflow:hidden; font-family:-apple-system,"PingFang HK","Microsoft JhengHei",sans-serif; background:#0f0f1e; color:#eee; user-select:none; }
@@ -11,7 +11,8 @@
     width:100vw; height:100vh;
     display:grid;
     grid-template-rows:36px 1fr 72px;
-    grid-template-columns:220px 1fr 340px;
+    /* ✅ 修復：中間縮小，左右加寬 */
+    grid-template-columns:240px 140px 1fr;
     grid-template-areas:"top top top" "left center right" "bottom bottom bottom";
     gap:4px; padding:4px;
   }
@@ -39,17 +40,35 @@
   .trait-tag { padding:1px 4px; border-radius:3px; font-size:8px; }
   .trait-good { background:rgba(107,207,127,.2); color:#6bcf7f; border:1px solid rgba(107,207,127,.4); }
   .trait-bad { background:rgba(255,107,107,.2); color:#ff6b6b; border:1px solid rgba(255,107,107,.4); }
-  #center { grid-area:center; position:relative; overflow:hidden; transition:background 2s; }
+  /* ✅ 修復：中間區域簡化 */
+  #center {
+    grid-area:center;
+    position:relative;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    transition:background 2s;
+  }
   #scene-bg { position:absolute; inset:0; transition:all 2s; }
-  #scene-info { position:absolute; top:6px; left:6px; background:rgba(0,0,0,.6); padding:3px 7px; border-radius:4px; font-size:10px; z-index:5; }
-  #scene-info .loc { color:#ffd369; font-weight:700; }
-  #scene-info .mood { color:#ff69b4; font-size:9px; }
-  #scene-visual { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:80px; opacity:.2; pointer-events:none; }
-  .char-sprite { position:absolute; width:28px; height:40px; transition:left 1s,bottom 1s; z-index:10; pointer-events:none; }
+  #scene-icon {
+    position:relative; z-index:2;
+    font-size:40px; margin-bottom:8px;
+  }
+  #scene-name {
+    position:relative; z-index:2;
+    font-size:11px; color:#ffd369; font-weight:700;
+    text-shadow:0 1px 3px rgba(0,0,0,.5);
+  }
+  #scene-mood {
+    position:relative; z-index:2;
+    font-size:10px; color:#ff69b4; margin-top:4px;
+  }
+  .char-sprite { position:relative; z-index:3; width:28px; height:40px; margin-top:10px; }
   .char-sprite .body { position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:18px; height:22px; border-radius:4px 4px 2px 2px; }
   .char-sprite .head { position:absolute; bottom:20px; left:50%; transform:translateX(-50%); width:13px; height:13px; background:#f5d4a8; border-radius:50%; }
   .char-sprite .action { position:absolute; bottom:40px; left:50%; transform:translateX(-50%); font-size:14px; animation:float 1.5s infinite; white-space:nowrap; }
-  .char-sprite .name-tag { position:absolute; top:-13px; left:50%; transform:translateX(-50%); font-size:8px; color:#fff; background:rgba(0,0,0,.7); padding:1px 4px; border-radius:3px; white-space:nowrap; }
   @keyframes float { 0%,100%{transform:translate(-50%,0)} 50%{transform:translate(-50%,-3px)} }
   #right { grid-area:right; font-size:11px; display:flex; flex-direction:column; }
   .tab-bar { display:flex; gap:4px; margin-bottom:4px; }
@@ -109,11 +128,18 @@
   .event-log-item .header .impact { font-size:8px; }
   .event-log-item .impact.positive { color:#10b981; }
   .event-log-item .impact.negative { color:#ff6b6b; }
+  /* ✅ 修復：詳情區域正確顯示多行文本 */
   .event-log-item .detail {
-    display:none; margin-top:6px; font-size:10px; color:#ccc;
-    padding:6px; background:rgba(0,0,0,.25); border-radius:3px;
+    display:none;
+    margin-top:6px;
+    font-size:10px;
+    color:#ccc;
+    padding:8px;
+    background:rgba(0,0,0,.3);
+    border-radius:4px;
     line-height:1.6;
     white-space:pre-wrap;
+    word-break:break-word;
   }
   .event-log-item.expanded .detail { display:block; }
   .event-log-item.type-love { border-left-color:#ff69b4; }
@@ -190,17 +216,19 @@
     <div id="love-display" style="font-size:9px;padding:2px;"></div>
     <div class="section-title">👥 社交</div>
     <div id="social-display" style="font-size:9px;padding:2px;"></div>
-    <div class="section-title">📍 地點</div>
-    <div id="location-display" style="font-size:9px;padding:2px;color:#93c5fd;"></div>
   </div>
 
+  <!-- ✅ 修復：簡化的中間區域 -->
   <div id="center">
     <div id="scene-bg"></div>
-    <div id="scene-info">
-      <div class="loc" id="scene-loc">🛏 睡房</div>
-      <div class="mood" id="mood-indicator">😐 平靜</div>
+    <div id="scene-icon">🛏</div>
+    <div id="scene-name">睡房</div>
+    <div id="scene-mood">😐 平靜</div>
+    <div class="char-sprite" id="main-sprite">
+      <div class="action"></div>
+      <div class="head"></div>
+      <div class="body" style="background:#4a6fa5"></div>
     </div>
-    <div id="scene-visual">🛏</div>
   </div>
 
   <div id="right" class="panel">
@@ -232,7 +260,8 @@
 'use strict';
 
 // ============================================================
-// 《少年人生》敘事版 — 離線敘事生成引擎 + 事件記錄修復
+// 《少年人生》修復版
+// 修復：半年報告文字 + 中間縮小 + 存檔系統
 // ============================================================
 
 function $(id){ return document.getElementById(id); }
@@ -241,7 +270,7 @@ function safeSetHTML(id,h){ const e=$(id); if(e) e.innerHTML=h; }
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 function formatMoney(n){ return '$' + Math.round(n).toLocaleString(); }
 
-const SAVE_KEY = 'lifeGame_narrative_v1';
+const SAVE_KEY = 'lifeGame_fix_v1';
 
 const Game = {
   day: 0, hour: 7, minute: 0,
@@ -260,43 +289,34 @@ const Game = {
 };
 
 // ============================================================
-// 🎭 離線敘事生成引擎
-// 用情境模板組合生成自然、多樣、非罐頭內容
+// 🎭 敘事生成引擎（修復變量定義）
 // ============================================================
-
 const NarrativeEngine = {
-  // 財務敘述
   finance(c){
     const m = c.money;
     const name = c.name;
     if(m > 500000) return pick([
-      `經濟上，${name}算是過得不錯。手頭有${formatMoney(m)}，不用為錢發愁，偶爾還能請朋友食餐好的。`,
+      `經濟上，${name}算是過得不錯。手頭有${formatMoney(m)}，不用為錢發愁。`,
       `${formatMoney(m)}的積蓄讓${name}有了底氣。雖然不是大富大貴，但至少不用看價格牌吃飯。`,
-      `錢包方面，${name}存下了${formatMoney(m)}。這段時間的辛苦，總算換來了些安全感。`,
     ]);
     if(m > 100000) return pick([
-      `財務狀況穩定，${name}有${formatMoney(m)}。不算富裕，但生活過得去，偶爾還能小小放纵一下。`,
+      `財務狀況穩定，${name}有${formatMoney(m)}。不算富裕，但生活過得去。`,
       `${formatMoney(m)}的存款，讓${name}不至於太焦慮。但每次看到心儀的東西，還是要算一算。`,
-      `經濟上中規中矩，${formatMoney(m)}。${name}偶爾會想：如果再多一點就好了。`,
     ]);
     if(m > 30000) return pick([
       `錢，是個要精打細算的東西。${name}剩下${formatMoney(m)}，每次消費都要想一想。`,
-      `${formatMoney(m)}，不多不少。${name}學會了什麼是「性價比」，什麼是「忍一忍就過去了」。`,
-      `財務上有些緊張，${formatMoney(m)}。${name}開始明白，錢不是萬能，但沒錢真的萬萬不能。`,
+      `${formatMoney(m)}，不多不少。${name}學會了什麼是「性價比」。`,
     ]);
     if(m > 10000) return pick([
       `經濟壓力不小。${formatMoney(m)}的餘額，讓${name}有時連飯都要算著吃。`,
-      `${formatMoney(m)}，說多不多說少不少。但對${name}來說，每一筆支出都要三思。`,
-      `錢包見底，只剩${formatMoney(m)}。${name}開始體會到什麼叫「手停口停」。`,
+      `${formatMoney(m)}，說多不說少。但對${name}來說，每一筆支出都要三思。`,
     ]);
     return pick([
-      `經濟上真的很难。${formatMoney(m)}，有時候連下一餐在哪裡都不知道。${name}咬著牙撐著。`,
-      `${formatMoney(m)}。這數字讓${name}夜不能寐。但生活還要繼續，不是嗎？`,
-      `財務狀況亮紅燈，${formatMoney(m)}。${name}學會了在困境中尋找希望。`,
+      `經濟上真的很難。${formatMoney(m)}，有時候連下一餐在哪裡都不知道。`,
+      `${formatMoney(m)}。這數字讓${name}夜不能寐。但生活還要繼續。`,
     ]);
   },
 
-  // 感情敘述
   love(c){
     const name = c.name;
     const l = c.love;
@@ -305,38 +325,32 @@ const NarrativeEngine = {
         return pick([
           `感情方面，${name}還是單身。不是不想，只是緣分這種東西，急不來。`,
           `愛情對${name}來說，還是個遙遠的詞。偶爾看到情侶，心裡也會有一絲羨慕。`,
-          `${name}的感情生活一片空白。但${pick(['也許對的人還在路上','也許一個人也不錯','也許只是時機未到'])}。`,
         ]);
       case 'crush':
         return pick([
-          `${name}心裡住著一個人——${l.partnerName}。每次見到${l.partnerName.includes('阿')?'佢':'對方'}，心跳都會漏一拍。`,
+          `${name}心裡住著一個人——${l.partnerName}。每次見到對方，心跳都會漏一拍。`,
           `暗戀的滋味，${name}算是體會到了。${l.partnerName}的每一個笑容，都能在心裡回放一整天。`,
-          `${name}喜歡上了${l.partnerName}。那種想靠近又怕被發現的感覺，既甜蜜又折磨。`,
         ]);
       case 'dating':
         return pick([
           `${name}和${l.partnerName}正在約會階段。那種曖昧的甜蜜，讓每天都多了點期待。`,
           `和${l.partnerName}的關係在升溫。${name}開始習慣手機裡多一個人的消息提示。`,
-          `約會中的${name}，笑得比以前多了。${l.partnerName}的存在，讓平淡的日子有了色彩。`,
         ]);
       case 'in_relationship':
         return pick([
           `${name}和${l.partnerName}正式在一起了。從「我」變成「我們」，是種奇妙的感覺。`,
           `戀愛中的${name}，學會了分享和妥協。${l.partnerName}既是戀人，也是最好的朋友。`,
-          `和${l.partnerName}一起的日子，${name}體會到什麼叫「有人等你回家」。`,
         ]);
       case 'heartbroken':
         return pick([
           `失戀的痛，${name}正在慢慢消化。${l.partnerName}的離開，留下了一道還沒癒合的傷口。`,
-          `${name}還在療傷。有些夜晚，還是會忍不住想起${l.partnerName}。但時間會治癒一切，對吧？`,
-          `分手後的${name}，學會了一個人吃飯、一個人看戲。痛是真的，但成長也是真的。`,
+          `${name}還在療傷。有些夜晚，還是會忍不住想起${l.partnerName}。`,
         ]);
       default:
         return '';
     }
   },
 
-  // 社交敘述
   social(c){
     const name = c.name;
     const friends = c.social.friends;
@@ -346,88 +360,69 @@ const NarrativeEngine = {
     if(friends.length >= 6){
       text += pick([
         `社交方面，${name}算是個受歡迎的人。身邊有${friends.length}個朋友，週末總有人約。`,
-        `${name}的社交圈不小，${friends.length}個朋友輪流約，有時候反而覺得有點累。`,
-        `朋友多，是${name}的財富。${friends.length}個人，每個都有不同的故事。`,
+        `${name}的社交圈不小，${friends.length}個朋友輪流約。`,
       ]);
     } else if(friends.length >= 3){
       text += pick([
         `${name}有${friends.length}個談得來的朋友。不多，但每個都是真心的。`,
         `社交圈不大，${friends.length}個朋友，但${name}覺得夠了。質量比數量重要。`,
-        `${friends.length}個好友，是${name}生活中的調味劑。有他們在，日子不無聊。`,
       ]);
     } else if(friends.length >= 1){
       text += pick([
-        `${name}的朋友不多，只有${friends.length}個。但${pick(['有一個懂你的人，就夠了','朋友貴精不貴多','偶爾也會覺得有點孤單'])}。`,
-        `社交上比較內向，${name}只有${friends.length}個朋友。但${name}享受這種小而深的關係。`,
+        `${name}的朋友不多，只有${friends.length}個。但有一個懂你的人，就夠了。`,
+        `社交上比較內向，${name}只有${friends.length}個朋友。`,
       ]);
     } else {
       text += pick([
         `${name}目前沒有什麼朋友。有時候一個人吃飯，會覺得有點孤獨。`,
         `社交圈幾乎為零。${name}不是不想交朋友，只是不知道從哪裡開始。`,
-        `孤獨，是${name}這半年的常態。也許是時候走出去了。`,
       ]);
     }
 
     if(pop > 70){
-      text += pick([
-        `在群體中，${name}算是受歡迎的那個，說話有人聽，聚會有人約。`,
-        `${name}的人緣不錯，大家都願意和${name.includes('阿')?'佢':name}聊天。`,
-      ]);
+      text += `在群體中，${name}算是受歡迎的那個，說話有人聽，聚會有人約。`;
     } else if(pop < 30){
-      text += pick([
-        `但在群體中，${name}常常是安靜的那個。不是不想說話，只是不知道怎麼開口。`,
-        `社交場合裡，${name}更習慣做聽眾。也許是時候勇敢一點了。`,
-      ]);
+      text += `但在群體中，${name}常常是安靜的那個。不是不想說話，只是不知道怎麼開口。`;
     }
     return text;
   },
 
-  // 事業敘述
   career(c){
     const name = c.name;
     if(!c.job){
       if(c.age < 23){
         return pick([
           `學業上，${name}還是個大學生。每天的日常就是上堂、溫書、偶爾翹課去cafe。`,
-          `${name}正在讀大學。未來的路還很模糊，但${pick(['年輕就是資本','慢慢來，總會找到方向','有時候也會焦慮未來'])}。`,
-          `大學生活，${name}過得${pick(['充實','平淡','有點迷茫'])}。${pick(['考試是最近的煩惱','社團活動佔了不少時間','圖書館是第二個家'])}。`,
+          `${name}正在讀大學。未來的路還很模糊，但年輕就是資本。`,
         ]);
       }
       return pick([
         `目前${name}處於待業狀態。找工的路不好走，投出的簡歷石沉大海是常事。`,
         `沒有工作的日子，${name}有些焦慮。每天醒來，都會想：今天要做點什麼？`,
-        `失業中的${name}，正在重新思考自己想要什麼。也許這是個機會，也許是段煎熬。`,
       ]);
     }
     const jobTitle = c.job.title;
     if(c.job.type === 'office'){
       return pick([
         `作為${jobTitle}，${name}的生活規律而穩定。朝九晚六，偶爾OT，週末是自己的。`,
-        `${jobTitle}的工作，${name}做得${pick(['中規中矩','還算上手','有些疲憊'])}。${pick(['穩定是好事，但偶爾也會想：就這樣了嗎？','至少不用擔心下個月的租金','同事關係還算和諧'])}。`,
-        `在辦公室裡，${name}是${jobTitle}。${pick(['文件、會議、郵件，日復一日','偶爾的成就感，是支撐下去的動力','有時候會望著窗外發呆'])}。`,
+        `${jobTitle}的工作，${name}做得中規中矩。穩定是好事，但偶爾也會想：就這樣了嗎？`,
       ]);
     }
     if(c.job.type === 'startup'){
       return pick([
         `在Startup做${jobTitle}，${name}的生活充滿變數。今天可能意氣風發，明天可能焦頭爛額。`,
-        `${jobTitle}的工作節奏很快。${name}常常OT到深夜，但${pick(['那種從零到一的成就感，讓人上癮','有時候也會懷疑：值得嗎？','累是真的，但學到的也是真的'])}。`,
-        `Startup的日子，${name}學會了${pick(['一人分飾多角','在混亂中找秩序','用有限資源做無限可能'])}。`,
+        `${jobTitle}的工作節奏很快。${name}常常OT到深夜，但那種從零到一的成就感，讓人上癮。`,
       ]);
     }
     if(c.job.type === 'freelance'){
       return pick([
-        `作為Freelancer，${name}的時間是自己的。但「自由」的代價，是${pick(['不穩定的收入','自律的考驗','偶爾的孤獨感'])}。`,
-        `Freelance的生活，${name}${pick(['樂在其中','有些吃力','正在適應'])}。${pick(['有工作時忙到飛起，沒工作時焦慮到失眠','時間自由，但收入不自由','學會了自己做自己的老闆'])}。`,
-        `${name}選擇了Freelance。${pick(['自由是真的，但焦慮也是真的','至少不用看老闆臉色','偶爾會懷念有固定薪水的日子'])}。`,
+        `作為Freelancer，${name}的時間是自己的。但「自由」的代價，是不穩定的收入。`,
+        `Freelance的生活，${name}樂在其中。有工作時忙到飛起，沒工作時焦慮到失眠。`,
       ]);
     }
-    return pick([
-      `作為${jobTitle}，${name}正在自己的崗位上${pick(['默默耕耘','尋找突破','日復一日'])}。`,
-      `${jobTitle}，是${name}目前的身份。${pick(['工作不算熱愛，但能養活自己','偶爾也會想：這是我想要的人生嗎？','至少，明天還有事可做'])}。`,
-    ]);
+    return `作為${jobTitle}，${name}正在自己的崗位上默默耕耘。`;
   },
 
-  // 人格敘述
   personality(c){
     const name = c.name;
     const parts = [];
@@ -462,8 +457,9 @@ const NarrativeEngine = {
     return parts.join(' ');
   },
 
-  // 半年報告主敘述
+  // ✅ 修復：正確定義變量
   generateHalfYearReport(c, halfYearNum){
+    const name = c.name; // ✅ 先定義 name
     const sections = [];
 
     // 開場
@@ -471,12 +467,10 @@ const NarrativeEngine = {
       `轉眼間，${name}的${c.age}歲過了一半。這半年，有笑有淚，有得有失。`,
       `${c.age}歲的這六個月，${name}經歷了不少。回頭看，有些選擇做對了，有些還在消化。`,
       `時間過得真快。${name}的${c.age}歲上半年，就這樣過去了。`,
-      `半年的時間，說長不長，說短不短。對${name}來說，這是一段${pick(['充實','波折','平淡但真實','刻骨銘心'])}的日子。`,
     ]));
 
     // 角色背景
     sections.push(`【關於${name}】`);
-    const name = c.name;
     const traitText = this.personality(c);
     if(traitText) sections.push(traitText);
 
@@ -505,7 +499,7 @@ const NarrativeEngine = {
       sections.push(`【📌 這半年發生的事】`);
       const importantEvents = recentEvents.slice(0, 5);
       importantEvents.forEach(evt => {
-        sections.push(`${evt.icon} ${evt.title}：${evt.desc.substring(0, 80)}${evt.desc.length > 80 ? '...' : ''}`);
+        sections.push(`${evt.icon} ${evt.title}：${evt.desc.substring(0, 60)}${evt.desc.length > 60 ? '...' : ''}`);
       });
     }
 
@@ -516,25 +510,21 @@ const NarrativeEngine = {
       sections.push(pick([
         `整體來說，這半年${name}過得不錯。希望下半年，能保持這份好心情，繼續前行。`,
         `生活不完美，但${name}學會了在不完美中找快樂。下半年，繼續加油。`,
-        `${name}的狀態不錯。願這份從容和喜悅，能延續到下一個半年。`,
       ]));
     } else if(mood > 0){
       sections.push(pick([
         `這半年，${name}過得有起有伏。但至少，還在往前走。這就夠了。`,
         `不算最好，也不算最壞。${name}在平凡中，慢慢找到自己的節奏。`,
-        `生活還在繼續。${name}偶爾會累，但沒有放棄。這就是一種勇敢。`,
       ]));
     } else if(mood > -30){
       sections.push(pick([
         `這半年，${name}過得有些艱難。但請相信，低谷不是終點，是轉折點。`,
         `${name}正在經歷一段不容易的時光。但每一次跌倒，都是為了更好地站起來。`,
-        `日子有些灰，但${name}還在。只要還在，就有希望。`,
       ]));
     } else {
       sections.push(pick([
         `這半年，${name}真的很不容易。但請記住：再黑的夜，也會迎來天亮。`,
         `${name}正在經歷人生的寒冬。但冬天來了，春天還會遠嗎？`,
-        `很難，真的很难。但${name}撐過來了。這本身就是一種勝利。`,
       ]));
     }
 
@@ -550,31 +540,31 @@ function showToast(msg, isError = false){
   if(!toast) return;
   toast.textContent = msg;
   toast.className = isError ? 'error show' : 'show';
-  setTimeout(() => { toast.classList.remove('show'); }, 2000);
+  setTimeout(() => { toast.classList.remove('show'); }, 2500);
 }
 
 // ============================================================
 // 地點系統
 // ============================================================
 const LOCATIONS = {
-  home_bedroom: { name:'睡房', icon:'🛏', type:'home', visual:'🛏', bg:'linear-gradient(to bottom,#4a3a5e,#3a2a4e)' },
-  home_living: { name:'客廳', icon:'🛋', type:'home', visual:'🛋', bg:'linear-gradient(to bottom,#a89070,#887050)' },
-  home_kitchen: { name:'廚房', icon:'🍳', type:'home', visual:'🍳', bg:'linear-gradient(to bottom,#d4a574,#b48554)' },
-  home_bathroom: { name:'浴室', icon:'🚿', type:'home', visual:'🚿', bg:'linear-gradient(to bottom,#6ba5d8,#4a85b8)' },
-  university: { name:'大學', icon:'🎓', type:'social', visual:'🎓', bg:'linear-gradient(to bottom,#87ceeb,#6ba5d8)' },
-  library: { name:'圖書館', icon:'📚', type:'social', visual:'📚', bg:'linear-gradient(to bottom,#8b6f47,#6b4f27)' },
-  cafe: { name:'Cafe', icon:'☕', type:'social', visual:'☕', bg:'linear-gradient(to bottom,#8b6f47,#6b4f27)' },
-  canteen: { name:'飯堂', icon:'🍽', type:'social', visual:'🍽', bg:'linear-gradient(to bottom,#d4a574,#b48554)' },
-  mall: { name:'商場', icon:'🏬', type:'social', visual:'🏬', bg:'linear-gradient(to bottom,#e8e8e8,#c8c8c8)' },
-  park: { name:'公園', icon:'🌳', type:'social', visual:'🌳', bg:'linear-gradient(to bottom,#87ceeb,#6bcf7f)' },
-  bar: { name:'Bar', icon:'🍸', type:'social', visual:'🍸', bg:'linear-gradient(to bottom,#2a1a3e,#1a0a2e)' },
-  restaurant: { name:'餐廳', icon:'🍽', type:'social', visual:'🍽', bg:'linear-gradient(to bottom,#d4a574,#b48554)' },
-  cinema: { name:'戲院', icon:'🎬', type:'social', visual:'🎬', bg:'linear-gradient(to bottom,#1a1a2e,#0a0a1e)' },
-  gym: { name:'Gym', icon:'🏋️', type:'social', visual:'🏋️', bg:'linear-gradient(to bottom,#3a3a5e,#2a2a4e)' },
-  karaoke: { name:'K房', icon:'🎤', type:'social', visual:'🎤', bg:'linear-gradient(to bottom,#4a2a6e,#3a1a5e)' },
-  beach: { name:'海灘', icon:'🏖', type:'social', visual:'🏖', bg:'linear-gradient(to bottom,#87ceeb,#40e0d0)' },
-  work_office: { name:'辦公室', icon:'💼', type:'work', visual:'💼', bg:'linear-gradient(to bottom,#e8e8e8,#c8c8c8)' },
-  mtr: { name:'地鐵', icon:'🚇', type:'transit', visual:'🚇', bg:'linear-gradient(to bottom,#4a4a6a,#2a2a4a)' },
+  home_bedroom: { name:'睡房', icon:'🛏', type:'home', bg:'linear-gradient(to bottom,#4a3a5e,#3a2a4e)' },
+  home_living: { name:'客廳', icon:'🛋', type:'home', bg:'linear-gradient(to bottom,#a89070,#887050)' },
+  home_kitchen: { name:'廚房', icon:'🍳', type:'home', bg:'linear-gradient(to bottom,#d4a574,#b48554)' },
+  home_bathroom: { name:'浴室', icon:'🚿', type:'home', bg:'linear-gradient(to bottom,#6ba5d8,#4a85b8)' },
+  university: { name:'大學', icon:'🎓', type:'social', bg:'linear-gradient(to bottom,#87ceeb,#6ba5d8)' },
+  library: { name:'圖書館', icon:'📚', type:'social', bg:'linear-gradient(to bottom,#8b6f47,#6b4f27)' },
+  cafe: { name:'Cafe', icon:'☕', type:'social', bg:'linear-gradient(to bottom,#8b6f47,#6b4f27)' },
+  canteen: { name:'飯堂', icon:'🍽', type:'social', bg:'linear-gradient(to bottom,#d4a574,#b48554)' },
+  mall: { name:'商場', icon:'🏬', type:'social', bg:'linear-gradient(to bottom,#e8e8e8,#c8c8c8)' },
+  park: { name:'公園', icon:'🌳', type:'social', bg:'linear-gradient(to bottom,#87ceeb,#6bcf7f)' },
+  bar: { name:'Bar', icon:'🍸', type:'social', bg:'linear-gradient(to bottom,#2a1a3e,#1a0a2e)' },
+  restaurant: { name:'餐廳', icon:'🍽', type:'social', bg:'linear-gradient(to bottom,#d4a574,#b48554)' },
+  cinema: { name:'戲院', icon:'🎬', type:'social', bg:'linear-gradient(to bottom,#1a1a2e,#0a0a1e)' },
+  gym: { name:'Gym', icon:'🏋️', type:'social', bg:'linear-gradient(to bottom,#3a3a5e,#2a2a4e)' },
+  karaoke: { name:'K房', icon:'🎤', type:'social', bg:'linear-gradient(to bottom,#4a2a6e,#3a1a5e)' },
+  beach: { name:'海灘', icon:'🏖', type:'social', bg:'linear-gradient(to bottom,#87ceeb,#40e0d0)' },
+  work_office: { name:'辦公室', icon:'💼', type:'work', bg:'linear-gradient(to bottom,#e8e8e8,#c8c8c8)' },
+  mtr: { name:'地鐵', icon:'🚇', type:'transit', bg:'linear-gradient(to bottom,#4a4a6a,#2a2a4a)' },
 };
 
 // ============================================================
@@ -626,7 +616,7 @@ Game.characters.protagonist = createCharacter({
 });
 
 // ============================================================
-// 事件記錄系統（修復點擊）
+// 事件記錄系統
 // ============================================================
 function logEvent(type, icon, title, desc, impact = 0, choices = null){
   const evt = {
@@ -671,7 +661,6 @@ function renderEventLog(){
       filterEl.innerHTML = filters.map(f =>
         `<div class="filter-btn ${Game.eventFilter === f.id ? 'active' : ''}" data-filter="${f.id}">${f.name}</div>`
       ).join('');
-      // 綁定過濾器點擊
       filterEl.querySelectorAll('.filter-btn').forEach(btn => {
         btn.onclick = () => {
           Game.eventFilter = btn.dataset.filter;
@@ -699,7 +688,6 @@ function renderEventLog(){
             </div>
           </div>
         `).join('');
-        // 綁定選項按鈕
         pendingEl.querySelectorAll('.pending-choice-btn').forEach(btn => {
           btn.onclick = () => handleEventChoice(parseFloat(btn.dataset.eventId), btn.dataset.choice);
         });
@@ -740,7 +728,7 @@ function renderEventLog(){
       `;
     }).join('');
 
-    // ✅ 修復：直接綁定點擊事件（不用事件委託）
+    // ✅ 修復：直接綁定點擊事件
     logEl.querySelectorAll('.event-log-item').forEach(item => {
       item.onclick = () => {
         item.classList.toggle('expanded');
@@ -777,69 +765,152 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 
 // ============================================================
-// 存檔系統
+// ✅ 修復：存檔系統
 // ============================================================
 function saveGame(){
   try {
+    // 準備存檔數據（排除不可序列化的屬性）
+    const charactersData = {};
+    for(const [id, c] of Object.entries(Game.characters)){
+      charactersData[id] = {
+        id: c.id, name: c.name, avatar: c.avatar, color: c.color,
+        age: c.age, startAge: c.startAge, gender: c.gender,
+        isProtagonist: c.isProtagonist,
+        personality: c.personality,
+        needs: { ...c.needs },
+        mood: { ...c.mood },
+        money: c.money, job: c.job, home: c.home,
+        love: { ...c.love },
+        social: { friends: [...c.social.friends], popularity: c.social.popularity },
+        health: { ...c.health },
+        currentLocation: c.currentLocation,
+        actionTimer: 0,
+        lifeEvents: c.lifeEvents || [],
+        recentActions: c.recentActions || [],
+        isCrush: c.isCrush,
+        affectionToMe: c.affectionToMe,
+      };
+    }
+
     const saveData = {
-      version: 1, savedAt: new Date().toISOString(),
+      version: 1,
+      savedAt: new Date().toISOString(),
       game: {
         day: Game.day, hour: Game.hour, minute: Game.minute, speed: Game.speed,
-        lifeCurve: Game.lifeCurve, lastReportDay: Game.lastReportDay,
+        lifeCurve: [...Game.lifeCurve],
+        lastReportDay: Game.lastReportDay,
         crushActive: Game.crushActive, crushMet: Game.crushMet,
         eventFilter: Game.eventFilter,
       },
-      characters: {}, eventLog: Game.eventLog, pendingEvents: Game.pendingEvents,
+      characters: charactersData,
+      eventLog: Game.eventLog,
+      pendingEvents: Game.pendingEvents,
     };
-    for(const [id, c] of Object.entries(Game.characters)){
-      saveData.characters[id] = { ...c, spriteEl: undefined, currentAction: undefined };
-    }
-    localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
+
+    // 序列化
+    const json = JSON.stringify(saveData);
+
+    // 測試存儲
+    localStorage.setItem(SAVE_KEY, json);
+
+    // 驗證
+    const test = localStorage.getItem(SAVE_KEY);
+    if(!test) throw new Error('存檔驗證失敗');
+
+    // 解析測試
+    JSON.parse(test);
+
     updateSaveStatus();
     showToast('💾 已儲存');
+    console.log('Save successful:', json.length, 'bytes');
     return true;
-  } catch(e){ console.error('Save error:', e); showToast('❌ 儲存失敗', true); return false; }
+  } catch(e){
+    console.error('Save error:', e);
+    showToast('❌ 儲存失敗: ' + e.message, true);
+    return false;
+  }
 }
 
 function loadGame(){
   try {
     const data = localStorage.getItem(SAVE_KEY);
-    if(!data){ showToast('沒有找到存檔', true); return false; }
+    if(!data){
+      showToast('沒有找到存檔', true);
+      return false;
+    }
+
     const save = JSON.parse(data);
-    Game.day = save.game.day || 0; Game.hour = save.game.hour || 7;
-    Game.minute = save.game.minute || 0; Game.speed = save.game.speed || 1;
-    Game.lifeCurve = save.game.lifeCurve || []; Game.lastReportDay = save.game.lastReportDay ?? -1;
-    Game.crushActive = save.game.crushActive || false; Game.crushMet = save.game.crushMet || false;
+
+    // 恢復 Game 狀態
+    Game.day = save.game.day || 0;
+    Game.hour = save.game.hour || 7;
+    Game.minute = save.game.minute || 0;
+    Game.speed = save.game.speed || 1;
+    Game.lifeCurve = save.game.lifeCurve || [];
+    Game.lastReportDay = save.game.lastReportDay ?? -1;
+    Game.crushActive = save.game.crushActive || false;
+    Game.crushMet = save.game.crushMet || false;
     Game.eventFilter = save.game.eventFilter || 'all';
+
+    // 恢復角色
     Game.characters = {};
     for(const [id, c] of Object.entries(save.characters)){
-      Game.characters[id] = { ...c, spriteEl: null, currentAction: null, actionTimer: 0, recentActions: c.recentActions || [] };
+      Game.characters[id] = {
+        ...c,
+        currentAction: null,
+        spriteEl: null,
+        actionTimer: 0,
+      };
     }
-    Game.eventLog = save.eventLog || []; Game.pendingEvents = save.pendingEvents || [];
+
+    // 恢復事件
+    Game.eventLog = save.eventLog || [];
+    Game.pendingEvents = save.pendingEvents || [];
+
+    // 找到暗戀對象
     crushCharacter = Object.values(Game.characters).find(c => c.isCrush) || null;
+
+    // 更新速度按鈕
     document.querySelectorAll('.btn[data-speed]').forEach(b => {
       b.classList.toggle('active', parseInt(b.dataset.speed) === Game.speed);
     });
-    renderAll(); updateSaveStatus(); showToast('📂 已載入存檔');
+
+    // 重新渲染
+    renderAll();
+    updateSaveStatus();
+    showToast('📂 已載入存檔');
+    console.log('Load successful');
     return true;
-  } catch(e){ console.error('Load error:', e); showToast('❌ 載入失敗', true); return false; }
+  } catch(e){
+    console.error('Load error:', e);
+    showToast('❌ 載入失敗: ' + e.message, true);
+    return false;
+  }
 }
 
 function updateSaveStatus(){
   const el = $('save-status');
   if(!el) return;
-  const data = localStorage.getItem(SAVE_KEY);
-  if(data){
-    try {
+  try {
+    const data = localStorage.getItem(SAVE_KEY);
+    if(data){
       const save = JSON.parse(data);
       const time = new Date(save.savedAt);
       el.textContent = `已存 ${time.getHours()}:${String(time.getMinutes()).padStart(2,'0')}`;
-    } catch(e){ el.textContent = '已存檔'; }
-  } else { el.textContent = '未存檔'; }
+    } else {
+      el.textContent = '未存檔';
+    }
+  } catch(e){
+    el.textContent = '存檔損壞';
+  }
 }
 
 $('save-btn').onclick = () => saveGame();
-$('load-btn').onclick = () => { if(confirm('確定要載入存檔？')) loadGame(); };
+$('load-btn').onclick = () => {
+  if(confirm('確定要載入存檔？當前進度會丟失。')){
+    loadGame();
+  }
+};
 
 // ============================================================
 // 暗戀系統
@@ -849,7 +920,7 @@ let crushCharacter = null;
 function createCrushCharacter(){
   const names = ['阿詩','阿玲','阿Cat','阿欣','阿Yan','阿Wing','阿Faye'];
   return createCharacter({
-    id:'crush_'+Date.now(), name: names[Math.floor(Math.random()*names.length)],
+    id:'crush_'+Date.now(), name: pick(names),
     avatar: '👩', color: '#ff69b4',
     age: Game.characters.protagonist.age + Math.floor(Math.random()*3)-1,
     gender: 'F', isProtagonist: false, isCrush: true,
@@ -898,7 +969,6 @@ function crushAI(crush, deltaHours){
           const dialogues = [
             `${crushCharacter.name} 望咗你一眼，微笑`,
             `${crushCharacter.name} 同朋友傾偈，笑得好開心`,
-            `${crushCharacter.name} 喺度睇書，好專注`,
           ];
           addThought('protagonist','💭', pick(dialogues), false, 'crush');
         }
@@ -923,7 +993,7 @@ const NEEDS_DEF = [
 ];
 
 // ============================================================
-// 行動庫（簡化版，保持核心）
+// 行動庫
 // ============================================================
 const ACTIONS = {
   wake_up: { name:'起身', icon:'⏰', location:'home_bedroom', duration:0.2, effects:{sleep:-10, energy:5},
@@ -946,22 +1016,14 @@ const ACTIONS = {
     condition:(c)=> c.social.friends.length > 0 && Game.hour >= 14 && c.money > 80 && c.needs.social < 50, mutter:['好耐冇見'], socialGain:5 },
   group_dinner: { name:'班friend食飯', icon:'🍽', location:'restaurant', duration:2, effects:{social:40, fun:25, hunger:30, energy:-8}, cost:150,
     condition:(c)=> c.social.friends.length > 1 && Game.hour >= 18 && c.money > 200 && c.needs.social < 45, mutter:['乾杯！'], socialGain:10 },
-  karaoke_night: { name:'唱K', icon:'🎤', location:'karaoke', duration:3, effects:{social:45, fun:50, energy:-15}, cost:200,
-    condition:(c)=> c.social.friends.length > 0 && Game.hour >= 19 && c.money > 250 && c.needs.fun < 40, mutter:['你唱！'], socialGain:12 },
-  beach_trip: { name:'海灘玩', icon:'🏖', location:'beach', duration:4, effects:{social:40, fun:50, energy:-20, love:8}, cost:100,
-    condition:(c)=> c.social.friends.length > 1 && Game.hour >= 10 && Game.hour < 16 && c.money > 150, mutter:['游水！'], socialGain:15 },
   observe_crush: { name:'觀察暗戀對象', icon:'👀', location:'university', duration:0.5, effects:{love:15, fun:8},
     condition:(c)=> c.love.status === 'crush' && crushCharacter && c.currentLocation === crushCharacter.currentLocation, mutter:['佢今日好靚'], loveGain:3 },
-  talk_to_crush: { name:'同暗戀對象傾偈', icon:'💬', location:'cafe', duration:1, effects:{love:20, fun:15, social:10}, cost:40,
-    condition:(c)=> c.love.status === 'crush' && c.money > 50 && Game.hour >= 12 && c.personality.good.includes('brave'), mutter:['好緊張'], loveGain:8 },
   date_night: { name:'約會', icon:'💑', location:'restaurant', duration:2.5, effects:{love:30, fun:30, social:15, hunger:20}, cost:200,
     condition:(c)=> (c.love.status === 'dating' || c.love.status === 'in_relationship') && Game.hour >= 18 && c.money > 250, mutter:['今晚好開心'], loveGain:12 },
   solo_walk: { name:'獨自散步', icon:'🚶', location:'park', duration:1, effects:{fun:15, energy:5},
     condition:(c)=> Game.hour >= 7 && Game.hour < 21 && c.needs.fun < 60, mutter:['好寧靜'] },
   scroll_phone: { name:'滑手機', icon:'📱', location:'home_bedroom', duration:0.5, effects:{fun:12, social:5},
     condition:(c)=> Game.hour >= 19 && c.needs.fun < 70, mutter:['又有人like'] },
-  watch_netflix: { name:'睇Netflix', icon:'📺', location:'home_living', duration:1.5, effects:{fun:25, energy:-3},
-    condition:(c)=> Game.hour >= 19 && c.needs.fun < 60, mutter:['再睇多一集'] },
   eat_meal: { name:'食飯', icon:'🍽', location:'home_kitchen', duration:0.5, effects:{hunger:35, energy:10}, cost:30,
     condition:(c)=> c.needs.hunger < 50 && Game.hour >= 11 && c.money > 40, mutter:['食咩好呢'] },
   shower: { name:'沖涼', icon:'🚿', location:'home_bathroom', duration:0.3, effects:{hygiene:45, energy:5},
@@ -988,7 +1050,7 @@ function aiThink(c){
       const h = Game.hour;
       if(key.includes('breakfast') && h >= 7 && h < 9.5) score += 25;
       if(key.includes('lunch') && h >= 12 && h < 14) score += 25;
-      if((key === 'eat_meal') && h >= 18 && h < 21) score += 20;
+      if(key === 'eat_meal' && h >= 18 && h < 21) score += 20;
       if(key === 'sleep' && h >= 22) score += 30;
       if(act.socialGain && c.social.friends.length > 0) score += act.socialGain * 2;
       if(act.loveGain && c.love.status !== 'single') score += act.loveGain * 2;
@@ -1057,7 +1119,6 @@ function aiThink(c){
 // ============================================================
 function checkMajorLifeEvents(c){
   try {
-    // 23 歲職業選擇
     if(c.age === 23 && !c.job && Game.day % 365 >= 0 && Game.day % 365 < 5){
       const existingPending = Game.eventLog.find(e => e.type === 'career' && !e.resolved && e.title.includes('職業選擇'));
       if(!existingPending){
@@ -1074,7 +1135,6 @@ function checkMajorLifeEvents(c){
       }
     }
 
-    // 隨機人生事件
     if(Math.random() < 0.002){
       const events = [
         {type:'life', icon:'🎰', title:'中獎啦！', desc:'你買六合彩竟然中咗！', effect:(c)=>{c.money+=100000; c.mood.happy+=40;}, impact:25},
@@ -1082,7 +1142,6 @@ function checkMajorLifeEvents(c){
         {type:'low', icon:'📉', title:'被裁員', desc:'公司經營困難，你被列入裁員名單。', effect:(c)=>{c.job=null; c.mood.happy-=30;}, impact:-25},
         {type:'low', icon:'💸', title:'金錢損失', desc:'你投資失敗，損失了一筆錢。', effect:(c)=>{c.money-=Math.min(c.money*0.3,30000); c.mood.happy-=20;}, impact:-20},
         {type:'social', icon:'🗡', title:'朋友背叛', desc:'你發現好友在背後講你壞話。', effect:(c)=>{c.social.friends.pop(); c.mood.happy-=25;}, impact:-15},
-        {type:'life', icon:'✈️', title:'同朋友去旅行', desc:'一班朋友約你一起去旅行！', effect:(c)=>{c.money-=3000; c.mood.happy+=30;}, impact:15},
       ];
       const evt = pick(events);
       evt.effect(c);
@@ -1104,7 +1163,11 @@ function generateHalfYearReport(c){
 
     logEvent('report', '📊', `半年報告 #${halfYearNum}（${c.age}歲）`, reportText, 0);
     showToast(`📊 第 ${halfYearNum} 個半年報告已生成`);
-  } catch(e){ console.error('Report error:', e); }
+    console.log('Report generated:', reportText.substring(0, 100) + '...');
+  } catch(e){
+    console.error('Report error:', e);
+    showToast('❌ 報告生成失敗', true);
+  }
 }
 
 // ============================================================
@@ -1189,29 +1252,22 @@ function renderSocialDisplay(){
   } catch(e){ console.error(e); }
 }
 
-function renderLocationDisplay(){
-  try {
-    const c = Game.characters.protagonist;
-    const el = $('location-display');
-    if(!el) return;
-    const loc = LOCATIONS[c.currentLocation];
-    if(loc){
-      el.innerHTML = `${loc.icon} <b>${loc.name}</b>`;
-    }
-  } catch(e){ console.error(e); }
-}
-
+// ✅ 修復：簡化的場景渲染
 function renderScene(){
   try {
     const c = Game.characters.protagonist;
     const loc = LOCATIONS[c.currentLocation] || LOCATIONS.home_bedroom;
+
     const sceneBg = $('scene-bg');
-    const sceneVisual = $('scene-visual');
-    const sceneLoc = $('scene-loc');
-    const moodEl = $('mood-indicator');
     if(sceneBg) sceneBg.style.background = loc.bg;
-    if(sceneVisual) sceneVisual.textContent = loc.visual;
-    if(sceneLoc) sceneLoc.textContent = `${loc.icon} ${loc.name}`;
+
+    const sceneIcon = $('scene-icon');
+    if(sceneIcon) sceneIcon.textContent = loc.icon;
+
+    const sceneName = $('scene-name');
+    if(sceneName) sceneName.textContent = loc.name;
+
+    const moodEl = $('scene-mood');
     if(moodEl){
       const h = c.mood.happy;
       if(h > 40) moodEl.textContent = '😄 開心';
@@ -1219,6 +1275,15 @@ function renderScene(){
       else if(h > -20) moodEl.textContent = '😐 平靜';
       else if(h > -40) moodEl.textContent = '😟 低落';
       else moodEl.textContent = '😢 難過';
+    }
+
+    // 更新角色精靈
+    const sprite = $('main-sprite');
+    if(sprite){
+      const actionEl = sprite.querySelector('.action');
+      if(actionEl) actionEl.textContent = c.currentAction ? c.currentAction.icon : '';
+      const bodyEl = sprite.querySelector('.body');
+      if(bodyEl) bodyEl.style.background = c.color;
     }
   } catch(e){ console.error(e); }
 }
@@ -1236,8 +1301,6 @@ function renderCharList(){
         renderCharList();
         const log = $('thought-log');
         if(log) log.innerHTML = '';
-        const nameEl = $('log-char-name');
-        if(nameEl) nameEl.textContent = c.name;
       };
       const stateLine = c.currentAction ? `${c.currentAction.icon} ${c.currentAction.name}` : '思考中...';
       const loveInfo = c.love.status !== 'single' ? ` · ${getLoveStatusText(c.love.status)}` : '';
@@ -1253,29 +1316,6 @@ function renderCharList(){
       `;
       list.appendChild(card);
     });
-  } catch(e){ console.error(e); }
-}
-
-function renderSprites(){
-  try {
-    const c = Game.characters.protagonist;
-    if(!c.spriteEl){
-      const el = document.createElement('div');
-      el.className = 'char-sprite';
-      el.innerHTML = `
-        <div class="name-tag">${c.name}</div>
-        <div class="action"></div>
-        <div class="head"></div>
-        <div class="body" style="background:${c.color}"></div>
-      `;
-      document.getElementById('center').appendChild(el);
-      c.spriteEl = el;
-    }
-    const centerRect = $('center').getBoundingClientRect();
-    c.spriteEl.style.left = (centerRect.width / 2 - 14) + 'px';
-    c.spriteEl.style.bottom = (centerRect.height / 2 + 20) + 'px';
-    const actionEl = c.spriteEl.querySelector('.action');
-    if(actionEl) actionEl.textContent = c.currentAction ? c.currentAction.icon : '';
   } catch(e){ console.error(e); }
 }
 
@@ -1300,9 +1340,14 @@ function executeAction(c, deltaHours){
 }
 
 function renderAll(){
-  renderCharList(); renderSprites(); renderScene();
-  renderPersonality(); renderLoveDisplay(); renderSocialDisplay();
-  renderLocationDisplay(); renderEventLog(); renderStatus(); renderDateTime();
+  renderCharList();
+  renderScene();
+  renderPersonality();
+  renderLoveDisplay();
+  renderSocialDisplay();
+  renderEventLog();
+  renderStatus();
+  renderDateTime();
 }
 
 // ============================================================
@@ -1443,6 +1488,8 @@ function init(){
     addMutter('protagonist', '20歲，大學生活開始！');
 
     logEvent('life', '🌟', '人生開始', `${c.name}，${c.age} 歲，開始新的人生旅程。`, 0);
+
+    console.log('Game initialized successfully');
   } catch(e){
     console.error('Init error:', e);
     alert('初始化錯誤：' + e.message);
