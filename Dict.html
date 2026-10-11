@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中英文默書系統 22.0</title>
+<title>中英文默書系統 23.0</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
 :root{
@@ -87,6 +87,7 @@ button{font-family:inherit;}
 .mlink .ic{width:12px;height:12px;}
 .chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:5px 12px;border-radius:99px;background:#fff;border:1px solid var(--line);color:var(--ink2);}
 .chip .ic{width:13px;height:13px;}
+.chip.code{background:#F1F5F9;border-color:var(--line);color:var(--ink2);font-family:ui-monospace,monospace;letter-spacing:.5px;}
 .chip.blue{background:var(--blue-l);border-color:#C9DBFD;color:var(--blue-d);}
 .chip.purple{background:var(--purple-l);border-color:#DDD0FB;color:var(--purple);}
 .chip.red{background:var(--red-l);border-color:#FECDCA;color:#B42318;}
@@ -375,13 +376,9 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 </div>
 
 <main class="page">
+<!-- ===== 主頁（無 phead；未來默書＋本月/下月） ===== -->
 <div id="page-home">
-  <div class="phead">
-    <div class="phead-main">
-      <div><h1 class="ptitle">最新默書表</h1><p class="psub">掌握默書日程；▶️ 系統朗讀默書・👤 家長口述默書</p></div>
-    </div>
-  </div>
-  <div class="card"><div class="card-t"><svg class="ic"><use href="#i-cal"/></svg>臨近默書</div><div id="upcomingList"></div></div>
+  <div class="card"><div class="card-t"><svg class="ic"><use href="#i-cal"/></svg>未來默書</div><div id="upcomingList"></div></div>
   <div class="grid2">
     <div class="card"><div class="lang-title zh"><svg class="ic"><use href="#i-lang"/></svg>中文默書</div><div id="quickZh"></div></div>
     <div class="card"><div class="lang-title en"><svg class="ic"><use href="#i-lang"/></svg>英文默書</div><div id="quickEn"></div></div>
@@ -392,10 +389,10 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 <div id="page-projects" class="hidden">
   <div class="phead">
     <div class="phead-main">
-      <div><h1 class="ptitle">默書庫</h1><p class="psub">管理所有中文與英文默書表</p></div>
+      <div><h1 class="ptitle">默書庫</h1><p class="psub">管理所有中文與英文默書表（同名表以 ID 區分）</p></div>
       <div class="phead-acts">
         <div class="seg" id="libSortControl"></div>
-        <button class="btn btn-p" onclick="showModal('modalNewProject')"><svg class="ic"><use href="#i-plus"/></svg>新增默書表</button>
+        <button class="btn btn-p" onclick="openNewProjectModal()"><svg class="ic"><use href="#i-plus"/></svg>新增默書表</button>
       </div>
     </div>
   </div>
@@ -570,14 +567,14 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
           <p style="margin-bottom:8px;">試算表有兩個分頁，基本 4 欄＋可選 ID 欄：</p>
           <div class="mono-box">Project,Type,Details,Date,ID<br>第一課,詞語,學校;老師,2026-10-12,C01<br>第一課,句子,我喜歡上學。,2026-10-19,C02</div>
           <ul style="padding-left:20px;margin:8px 0;">
-            <li><strong>Project</strong>：默書表名稱（<strong>允許重複</strong>，例如同一課文嘅詞語／句子／文章）</li>
+            <li><strong>Project</strong>：默書表名稱（<strong>允許重複</strong>）</li>
             <li><strong>Type</strong>：類型（詞語／句子／文章 或 words/sentences/paragraphs）</li>
             <li><strong>Details</strong>：默書內容，用 <strong>;</strong> 分隔每一項</li>
             <li><strong>Date</strong>：默書日期（可選；支援 2026-10-12、12/10/2026、10月12日）</li>
-            <li><strong>ID</strong>：唯一識別碼（<strong>可選但建議</strong>）；同名默書表請每張填唔同 ID（如 C01、C02），同一張表嘅所有行填同一個 ID。無 ID 時同名表會按出現順序自動編號</li>
+            <li><strong>ID</strong>：唯一識別碼——中文用 <strong>C01、C02…</strong>，英文用 <strong>E01、E02…</strong>；App 手動新增會自動分配同規範嘅 ID，絕不重複。同名表請務必填 ID</li>
           </ul>
           <p style="display:flex;gap:6px;align-items:flex-start;"><svg class="ic sm" style="margin-top:2px;color:var(--amber);"><use href="#i-warn"/></svg><span>試算表須共用為「知道連結的任何人」都可檢視。</span></p>
-          <p style="display:flex;gap:6px;align-items:flex-start;margin-top:6px;"><svg class="ic sm" style="margin-top:2px;color:var(--blue);"><use href="#i-info"/></svg><span>再次匯入會以試算表為準（按 ID／名稱配對覆蓋，唔會合併同名表）。</span></p>
+          <p style="display:flex;gap:6px;align-items:flex-start;margin-top:6px;"><svg class="ic sm" style="margin-top:2px;color:var(--blue);"><use href="#i-info"/></svg><span>再次匯入會以試算表為準（按 ID 配對覆蓋，唔會合併同名表）。</span></p>
         </div>
       </details>
       <details><summary class="chev"><svg class="ic"><use href="#i-sliders"/></svg>進階：分頁名稱設定</summary>
@@ -684,9 +681,10 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
   <button class="mclose" data-close="modalNewProject"><svg class="ic sm"><use href="#i-x"/></svg></button>
   <div class="modal-t"><svg class="ic"><use href="#i-plus"/></svg>新增默書表</div>
   <div class="srow"><div class="slabel">名稱</div><input class="field" id="newProjectName" placeholder="例如：第三課詞語（可與其他表同名）"></div>
-  <div class="srow"><div class="slabel">語言</div><select class="field" id="newProjectLang" style="max-width:160px;"><option value="zh">中文</option><option value="en">英文</option></select></div>
+  <div class="srow"><div class="slabel">語言</div><select class="field" id="newProjectLang" style="max-width:160px;" onchange="updateCodeHint()"><option value="zh">中文</option><option value="en">英文</option></select></div>
   <div class="srow"><div class="slabel">類型</div><select class="field" id="newProjectType" style="max-width:160px;"><option value="words">詞語</option><option value="sentences">句子</option><option value="passage">文章</option></select></div>
   <div class="srow"><div class="slabel">默書日期（可選）</div><input type="date" class="field" style="max-width:180px;" id="newProjectDate"></div>
+  <div class="hint" id="newProjectCodeHint" style="margin-top:10px;"></div>
   <div class="mfoot">
     <button class="btn btn-s" onclick="closeModal('modalNewProject')">取消</button>
     <button class="btn btn-p" onclick="createProject()"><svg class="ic"><use href="#i-check"/></svg>建立</button>
@@ -754,7 +752,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 <script>
 'use strict';
 /* ============ 1. 常數 ============ */
-const APP_VERSION='22.0';
+const APP_VERSION='23.0';
 const SCHEMA_VERSION=3;
 const SHEET_ID='1Ok4OH76O2W5rtkHw-1Q_F6W4c4jD-WoQTA0UwAXv4t0';
 const TAB_CONFIG={zh:{defaultName:'Chinese',label:'中文默書'},en:{defaultName:'English',label:'英文默書'}};
@@ -764,6 +762,8 @@ const MODE_OPTS=[{v:'manual',label:'手動',icon:'user'},{v:'auto',label:'自動
 const INT_OPTS=[5,7,10,15,20].map(v=>({v:String(v),label:v+'秒'}));
 const PITCH_OPTS=[{v:'0.7',label:'低'},{v:'1',label:'正常'},{v:'1.3',label:'高'}];
 const PUNCT_ZH=[['……','省略號'],['，','逗號'],['。','句號'],['！','感嘆號'],['？','問號'],['；','分號'],['：','冒號'],['、','頓號'],['「','開引號'],['」','關引號'],['『','開引號'],['』','關引號'],['（','開括號'],['）','關括號'],['—','破折號']];
+const MONTH_EN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const CODE_RE=/^[CE]\d+$/;
 
 /* ============ 2. Store ============ */
 const Store={
@@ -793,7 +793,7 @@ function ic(n,c){return '<svg class="ic'+(c?' '+c:'')+'" aria-hidden="true"><use
 function emptyHint(msg){return '<div class="empty-hint">'+ic('inbox','lg')+msg+'</div>';}
 function isTimedMode(){const m=State.session.mode;return m==='manual'||m==='oral';}
 
-/* ============ 4. 日期工具 ============ */
+/* ============ 4. 日期／ID 工具 ============ */
 function parseDateFlex(s){
   if(!s)return null;
   s=String(s).trim();
@@ -807,21 +807,77 @@ function parseDateFlex(s){
   return isNaN(t)?null:t;
 }
 function isoDate(ts){const d=new Date(ts);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function fmtDateFull(ts,lang){
+  if(!ts)return '—';
+  const d=new Date(ts);
+  if(lang==='en')return d.getDate()+' '+MONTH_EN[d.getMonth()];
+  return (d.getMonth()+1)+'月'+d.getDate()+'日';
+}
 function daysUntil(ts){
   if(!ts)return null;
   const a=new Date();a.setHours(0,0,0,0);
   const b=new Date(ts);b.setHours(0,0,0,0);
   return Math.round((b-a)/86400000);
 }
+function inCurOrNextMonth(ts){
+  const d=new Date(ts),now=new Date();
+  const cy=now.getFullYear(),cm=now.getMonth();
+  const ny=cm===11?cy+1:cy,nm=cm===11?0:cm+1;
+  return (d.getFullYear()===cy&&d.getMonth()===cm)||(d.getFullYear()===ny&&d.getMonth()===nm);
+}
 function dateChip(p){
   if(!p.dictTs)return '';
   const du=daysUntil(p.dictTs);
-  const ds=fmtDate(p.dictTs).slice(5);
+  const ds=fmtDateFull(p.dictTs,p.lang);
   if(du<0)return '<span class="chip">已進行 '+ds+'</span>';
-  if(du===0)return '<span class="chip red">今天默書</span>';
+  if(du===0)return '<span class="chip red">今天默書 '+ds+'</span>';
   if(du<=3)return '<span class="chip red">'+ds+'・'+du+' 日後</span>';
   if(du<=7)return '<span class="chip amber">'+ds+'・'+du+' 日後</span>';
   return '<span class="chip green">'+ds+'・'+du+' 日後</span>';
+}
+/* --- 唯一識別碼 C01/E01：自動分配、永不重用 --- */
+function pad2(n){return String(n).padStart(2,'0');}
+function findFreeN(lang){
+  const seq=Store.read('dict_seq',{zh:1,en:1});
+  const prefix=lang==='zh'?'C':'E';
+  let n=seq[lang]||1;
+  const retired=Store.read('dict_retired',[]);
+  const code=prefix+pad2(n);
+  while(State.projects.some(p=>(p.sheetKey||'')===code)||retired.includes(code)){n++;}
+  return n;
+}
+function previewCode(lang){return (lang==='zh'?'C':'E')+pad2(findFreeN(lang));}
+function nextSheetCode(lang){
+  const n=findFreeN(lang);
+  const seq=Store.read('dict_seq',{zh:1,en:1});
+  seq[lang]=n+1;Store.write('dict_seq',seq);
+  return (lang==='zh'?'C':'E')+pad2(n);
+}
+function syncSeqFromProjects(){
+  const seq=Store.read('dict_seq',{zh:1,en:1});
+  State.projects.forEach(p=>{
+    const m=/^([CE])(\d+)$/.exec(p.sheetKey||'');
+    if(!m)return;
+    const lang=m[1]==='C'?'zh':'en';
+    if(lang!==p.lang)return;
+    const n=parseInt(m[2],10);
+    if(n>=(seq[lang]||1))seq[lang]=n+1;
+  });
+  Store.write('dict_seq',seq);
+}
+function retireCode(p){
+  if(p&&p.sheetKey&&CODE_RE.test(p.sheetKey)){
+    const ret=Store.read('dict_retired',[]);
+    if(!ret.includes(p.sheetKey)){ret.push(p.sheetKey);Store.write('dict_retired',ret);}
+  }
+}
+function updateCodeHint(){
+  const l=el('newProjectLang').value;
+  el('newProjectCodeHint').innerHTML=ic('info','sm')+' 將自動分配唯一識別碼：<strong>'+previewCode(l)+'</strong>（中文=C、英文=E，永不重複）';
+}
+function openNewProjectModal(){
+  updateCodeHint();
+  showModal('modalNewProject');
 }
 
 /* ============ 5. 迁移 ============ */
@@ -829,6 +885,7 @@ function loadData(){
   State.projects=Store.read('dict_p8',[]);
   State.records=Store.read('dict_r8',[]);
   runMigrations();
+  syncSeqFromProjects();
   State.global=Store.read('dict_global',{rate:.8,mode:'manual',interval:7,random:false,pitch:1,readPunct:true});
   if(State.global.readPunct===undefined)State.global.readPunct=true;
 }
@@ -986,6 +1043,7 @@ function setupDelegation(){
     const id=+b.dataset.id;
     if(b.dataset.act==='start'){openProject(id);startDictation();}
     if(b.dataset.act==='oral'){openProject(id);startOral();}
+    if(b.dataset.act==='view')openView(id);
   });
   el('page-projects').addEventListener('click',e=>{
     const b=e.target.closest('[data-act]');if(!b)return;
@@ -1217,7 +1275,7 @@ function speakText(text,lang,onDone,rate){
   speechSynthesis.speak(u);return true;
 }
 
-/* ============ 14. Google Sheets（支援重複名稱＋ID 欄） ============ */
+/* ============ 14. Google Sheets ============ */
 function getTabName(l){return Store.raw('dict_tab_'+l)||TAB_CONFIG[l].defaultName;}
 function getSheetUrl(l){return 'https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(getTabName(l));}
 function saveTabNames(){
@@ -1257,10 +1315,10 @@ function parseCSV(text){
 }
 function parseSheetCSV(csv,lang){
   const rows=parseCSV(csv);if(!rows.length)return[];
-  let pi=0,ti=1,di=2,dti=3,idi=-1,start=0,hasHeader=false;
+  let pi=0,ti=1,di=2,dti=3,idi=-1,start=0;
   const h=rows[0].map(c=>(c||'').trim().toLowerCase());
   if(h.some(x=>x.includes('project')||x.includes('type')||x.includes('detail')||x.includes('項目')||x.includes('類型')||x.includes('內容'))){
-    hasHeader=true;start=1;
+    start=1;
     const a=h.findIndex(x=>x.includes('project')||x.includes('項目')||x.includes('名稱'));
     const b=h.findIndex(x=>x.includes('type')||x.includes('類型'));
     const c=h.findIndex(x=>x.includes('detail')||x.includes('內容'));
@@ -1268,7 +1326,6 @@ function parseSheetCSV(csv,lang){
     const e2=h.findIndex(x=>x==='id'||x.includes('編碼')||x.includes('code')||x.includes('uid'));
     if(a>=0)pi=a;if(b>=0)ti=b;if(c>=0)di=c;if(d>=0)dti=d;if(e2>=0)idi=e2;
   }else if(rows[0].length>=5){idi=4;}
-  /* 第一遍：統計同名出現次數（無 ID 時決定 key） */
   const nameCount={},occ={};
   for(let i=start;i<rows.length;i++){
     const r=rows[i],nm=(r[pi]||'').trim(),dt=(r[di]||'').trim();
@@ -1326,6 +1383,7 @@ async function syncTab(lang){
 }
 function afterSync(){
   Store.write('dict_p8',State.projects);
+  syncSeqFromProjects();
   const now=new Date().toLocaleString('zh-HK');
   Store.setRaw('dict_last_sync',now);
   Store.setRaw('dict_last_sync_ts',String(Date.now()));
@@ -1361,7 +1419,8 @@ function resetRecords(){
 }
 function resetProjects(){
   if(!State.projects.length){toast('目前沒有任何默書表');return;}
-  confirmDialog('重置默書庫','所有默書表（'+State.projects.length+' 張，包括 Google Sheets 匯入內容）將會永久刪除，無法復原。',()=>{
+  confirmDialog('重置默書庫','所有默書表（'+State.projects.length+' 張）將會永久刪除；已用識別碼不會再被重用。',()=>{
+    State.projects.forEach(retireCode);
     State.projects=[];State.current=null;Store.write('dict_p8',State.projects);
     renderHome();renderProjects();renderImportStats();renderExportTables();refreshNotifications();
     toast('默書庫已重置','ok');
@@ -1451,20 +1510,21 @@ function copyShareUrl(){copyToClipboard(location.href).then(()=>flash('shareCopy
 
 /* ============ 19. 渲染 ============ */
 function badges(p){
+  let s='';
+  if(p.sheetKey&&CODE_RE.test(p.sheetKey))s+='<span class="chip code">'+escapeHtml(p.sheetKey)+'</span>';
   const tl={words:'詞語',sentences:'句子',passage:'文章'};
-  let s='<span class="chip blue">'+(tl[p.type]||'詞語')+'</span>';
+  s+='<span class="chip blue">'+(tl[p.type]||'詞語')+'</span>';
   if(p.isSample)s+='<span class="chip purple">示例</span>';
   return s;
 }
 function countLabel(p){const n=(p.contents||[]).length;return p.type==='sentences'?n+' 個句子':p.type==='passage'?n+' 段文章':n+' 個詞條';}
-/* 首頁卡：名稱一行；類型＋日期＋數量第二行；按鈕右側橫跨兩行 */
 function homeCardHTML(p){
   return '<div class="row"><div class="rbody"><div class="rtitle">'+escapeHtml(p.name||'(未命名)')+'</div>'+
     '<div class="rsub">'+badges(p)+dateChip(p)+'<span class="rcount">'+countLabel(p)+'</span></div></div>'+
-    '<div class="racts"><button class="ib go" data-act="start" data-id="'+p.id+'" title="開始默書（系統朗讀）">'+ic('play')+'</button>'+
+    '<div class="racts"><button class="ib" data-act="view" data-id="'+p.id+'" title="檢視全部內容">'+ic('eye')+'</button>'+
+    '<button class="ib go" data-act="start" data-id="'+p.id+'" title="開始默書（系統朗讀）">'+ic('play')+'</button>'+
     '<button class="ib oral" data-act="oral" data-id="'+p.id+'" title="家長口述默書">'+ic('user')+'</button></div></div>';
 }
-/* 默書庫卡：兩行資訊＋獨立按鈕行（檢視首位） */
 function libraryCardHTML(p){
   return '<div class="row lcard"><div class="rbody"><div class="rtitle">'+escapeHtml(p.name||'(未命名)')+'</div>'+
     '<div class="rsub">'+badges(p)+dateChip(p)+'<span class="rcount">'+countLabel(p)+' · 更新 '+fmtDate(p.updatedTs)+'</span></div></div>'+
@@ -1485,47 +1545,52 @@ function scheduleSort(list){
   });
   return list;
 }
-function renderLangList(id,lang,limit,fn,useSchedule,hidePast){
+function renderLangList(id,lang,fn,opt){
+  opt=opt||{};
   const e=el(id);if(!e)return;
   let list=State.projects.filter(p=>p.lang===lang);
-  if(hidePast)list=list.filter(p=>!p.dictTs||daysUntil(p.dictTs)>=0);
-  if(useSchedule&&(Store.raw('dict_sort')||'date')==='date')scheduleSort(list);
+  if(opt.monthOnly)list=list.filter(p=>p.dictTs&&inCurOrNextMonth(p.dictTs));
+  if(opt.hidePast)list=list.filter(p=>!p.dictTs||daysUntil(p.dictTs)>=0);
+  if(opt.schedule!==false)list=scheduleSort(list);
   else list.sort((a,b)=>(b.createdTs||0)-(a.createdTs||0));
-  const shown=limit?list.slice(0,limit):list;
-  e.innerHTML=shown.length?shown.map(fn).join(''):emptyHint('暫時未有'+(lang==='zh'?'中文':'英文')+'默書表');
+  const shown=opt.limit?list.slice(0,opt.limit):list;
+  e.innerHTML=shown.length?shown.map(fn).join(''):emptyHint(opt.emptyMsg||('暫時未有'+(lang==='zh'?'中文':'英文')+'默書表'));
 }
 function renderUpcoming(){
   const list=State.projects.filter(p=>p.dictTs&&daysUntil(p.dictTs)>=0)
-    .sort((a,b)=>a.dictTs===b.dictTs?a.name.localeCompare(b.name,'zh'):a.dictTs-b.dictTs).slice(0,5);
-  el('upcomingList').innerHTML=list.length?list.map(homeCardHTML).join(''):emptyHint('暫無臨近默書日程');
+    .sort((a,b)=>a.dictTs===b.dictTs?a.name.localeCompare(b.name,'zh'):a.dictTs-b.dictTs).slice(0,8);
+  el('upcomingList').innerHTML=list.length?list.map(homeCardHTML).join(''):emptyHint('暫無未來默書日程');
 }
 function renderHome(){
   renderUpcoming();
-  renderLangList('quickZh','zh',3,homeCardHTML,false,true);
-  renderLangList('quickEn','en',3,homeCardHTML,false,true);
+  renderLangList('quickZh','zh',homeCardHTML,{monthOnly:true,emptyMsg:'本月及下月暫無中文默書安排'});
+  renderLangList('quickEn','en',homeCardHTML,{monthOnly:true,emptyMsg:'本月及下月暫無英文默書安排'});
   el('recentScores').innerHTML=State.records.length?State.records.slice(-5).reverse().map(r=>
     '<div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line);"><span style="font-weight:600;">'+escapeHtml(r.project)+'</span><span style="font-weight:800;color:'+(r.percent>=70?'var(--green)':'var(--red)')+';">'+r.percent+'%</span></div>').join('')
     :emptyHint('暫時未有記錄');
 }
 function renderProjects(){
-  renderLangList('projListZh','zh',0,libraryCardHTML,true,false);
-  renderLangList('projListEn','en',0,libraryCardHTML,true,false);
+  renderLangList('projListZh','zh',libraryCardHTML,{});
+  renderLangList('projListEn','en',libraryCardHTML,{});
 }
 
 /* ============ 20. 項目管理 ============ */
 function createProject(){
   const n=el('newProjectName').value.trim();
   if(!n){toast('請輸入名稱','err');return;}
+  const lang=el('newProjectLang').value;
   const dv=el('newProjectDate').value;
+  const code=nextSheetCode(lang);
   const now=Date.now();
-  State.projects.push({id:now,name:n,type:el('newProjectType').value,lang:el('newProjectLang').value,contents:[],createdTs:now,updatedTs:now,dictTs:dv?new Date(dv+'T00:00:00').getTime():null});
+  State.projects.push({id:now,sheetKey:code,name:n,type:el('newProjectType').value,lang:lang,contents:[],createdTs:now,updatedTs:now,dictTs:dv?new Date(dv+'T00:00:00').getTime():null});
   Store.write('dict_p8',State.projects);
   closeModal('modalNewProject');el('newProjectName').value='';el('newProjectDate').value='';
-  renderProjects();renderHome();toast('已建立默書表','ok');
+  renderProjects();renderHome();toast('已建立默書表（ID: '+code+'）','ok');
 }
 function deleteProject(id){
   const p=State.projects.find(x=>sameId(x.id,id));if(!p)return;
-  confirmDialog('刪除默書表','確定刪除「'+(p.name||'')+'」？\n此操作無法復原。',()=>{
+  confirmDialog('刪除默書表','確定刪除「'+(p.name||'')+'」'+(p.sheetKey&&CODE_RE.test(p.sheetKey)?'（'+p.sheetKey+'）':'')+'？\n此操作無法復原，識別碼不會再被重用。',()=>{
+    retireCode(p);
     State.projects=State.projects.filter(x=>!sameId(x.id,id));
     Store.write('dict_p8',State.projects);
     renderProjects();renderHome();toast('已刪除','ok');
@@ -1708,7 +1773,7 @@ function resetScanModal(){
   State.ocr.items=[];State.ocr.editIndex=-1;
 }
 
-/* ============ 22. 默書流程（含家長口述） ============ */
+/* ============ 22. 默書流程 ============ */
 function setPill(phase){
   const p=el('stagePill');
   const map={speak:['speak','vol','朗讀中'],count:['count','clock','倒數中'],write:['write','edit','書寫中'],review:['review','reset','溫習模式'],oral:['oral','user','家長口述']};
@@ -1772,7 +1837,7 @@ function beginSession(oral){
   const tl={words:'詞語',sentences:'句子',passage:'文章'};
   const du=c.dictTs?daysUntil(c.dictTs):null;
   el('sessTitle').textContent=c.name||'(未命名)';
-  el('sessMeta').innerText=(c.lang==='en'?'英文':'中文')+' · '+(tl[c.type]||'詞語')+' · '+(oral?'家長口述默書':(o.mode==='auto'?'自動 '+o.interval+'s':'手動計時'))+(shuffle?' · 隨機':'')+(du!==null&&du>=0?' · '+(du===0?'今天默書':du+' 日後默書'):'');
+  el('sessMeta').innerText=(c.sheetKey&&CODE_RE.test(c.sheetKey)?c.sheetKey+' · ':'')+(c.lang==='en'?'英文':'中文')+' · '+(tl[c.type]||'詞語')+' · '+(oral?'家長口述默書':(o.mode==='auto'?'自動 '+o.interval+'s':'手動計時'))+(shuffle?' · 隨機':'')+(du!==null&&du>=0?' · '+(du===0?'今天默書':du+' 日後默書'):'');
   showPage('dictation');updateReviewUI();showDictItem();
 }
 function startDictation(){beginSession(false);}
@@ -1962,7 +2027,7 @@ function renderRecords(){
     '</tbody></table></div>';
 }
 
-/* ============ 25. 匯出（5 欄含 ID） ============ */
+/* ============ 25. 匯出 ============ */
 function typeLabelForExport(p){return p.lang==='en'?{words:'words',sentences:'sentences',passage:'paragraphs'}[p.type]||'words':{words:'詞語',sentences:'句子',passage:'文章'}[p.type]||'詞語';}
 function projectIdForExport(p){return (p.sheetKey&&p.sheetKey!==p.name)?p.sheetKey:'';}
 function buildProjectsTsv(l){return['Project\tType\tDetails\tDate\tID'].concat(State.projects.filter(p=>p.lang===l).map(p=>[escapeTsv(p.name),typeLabelForExport(p),escapeTsv((p.contents||[]).join(';')),p.dictTs?isoDate(p.dictTs):'',escapeTsv(projectIdForExport(p))].join('\t'))).join('\n');}
