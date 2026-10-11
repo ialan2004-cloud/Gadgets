@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中英文默書系統 23.1</title>
+<title>中英文默書系統 23.2</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
 :root{
@@ -756,7 +756,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 <script>
 'use strict';
 /* ============ 1. 常數 ============ */
-const APP_VERSION='23.1';
+const APP_VERSION='23.2';
 const SCHEMA_VERSION=3;
 const SHEET_ID='1Ok4OH76O2W5rtkHw-1Q_F6W4c4jD-WoQTA0UwAXv4t0';
 const TAB_CONFIG={zh:{defaultName:'Chinese',label:'中文默書'},en:{defaultName:'English',label:'英文默書'}};
@@ -798,6 +798,11 @@ function debounce(fn,ms){let t;return function(){clearTimeout(t);t=setTimeout(fn
 function ic(n,c){return '<svg class="ic'+(c?' '+c:'')+'" aria-hidden="true"><use href="#i-'+n+'"/></svg>';}
 function emptyHint(msg){return '<div class="empty-hint">'+ic('inbox','lg')+msg+'</div>';}
 function isTimedMode(){const m=State.session.mode;return m==='manual'||m==='oral';}
+/* iOS 檢測 */
+function isIOS(){
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
 
 /* ============ 4. 日期／ID 工具 ============ */
 function parseDateFlex(s){
@@ -1213,7 +1218,7 @@ function viewStart(oral){
   if(oral)startOral();else startDictation();
 }
 
-/* ============ 13. 語音引擎（v23.1 加固） ============ */
+/* ============ 13. 語音引擎（v23.2 iOS 專項修復） ============ */
 function refreshVoices(){State.voices.all=('speechSynthesis' in window)?(speechSynthesis.getVoices()||[]):[];}
 function filterVoices(l){
   const v=State.voices.all;
@@ -1249,7 +1254,13 @@ function stopSpeechEngine(){
   if(speakTimeout){clearTimeout(speakTimeout);speakTimeout=null;}
   if(speakWatch){clearTimeout(speakWatch);speakWatch=null;}
   stopKeepAlive();
-  if('speechSynthesis' in window)speechSynthesis.cancel();
+  if('speechSynthesis' in window){
+    speechSynthesis.cancel();
+    /* iOS 可能需要額外 cancel 確保完全停止 */
+    if(isIOS()){
+      setTimeout(()=>{try{speechSynthesis.cancel();}catch(e){}},100);
+    }
+  }
 }
 function speakPunct(text,lang){
   let out=text;
@@ -1278,12 +1289,24 @@ function speakItemText(text){
 }
 function testVoice(l){saveVoicePref(l);speakText(l==='zh'?'你好，呢個係中文語音測試。':'Hello, this is an English voice test.',l,null,State.global.rate);}
 function testPitch(){speakText('呢個係音調測試，聽下啱唔啱。','zh',null,State.global.rate);}
-/* 核心朗讀：cancel→延遲 speak→keep-alive→失敗看門狗 */
+/* 核心朗讀：v23.2 iOS 專項處理 */
 function speakText(text,lang,onDone,rate){
   if(!('speechSynthesis' in window)){if(onDone)onDone();return false;}
-  speechSynthesis.cancel();
-  if(speakTimeout){clearTimeout(speakTimeout);speakTimeout=null;}
-  if(speakWatch){clearTimeout(speakWatch);speakWatch=null;}
+  
+  const mySeq=++speakSeq;
+  let done=false;
+  const finish=()=>{
+    if(done)return;
+    done=true;
+    if(mySeq===speakSeq){stopKeepAlive();if(speakWatch){clearTimeout(speakWatch);speakWatch=null;}}
+    if(onDone)onDone();
+  };
+  
+  /* 只在有正在播放的語音時才 cancel（iOS 特別重要） */
+  if(speechSynthesis.speaking || speechSynthesis.pending){
+    speechSynthesis.cancel();
+  }
+  
   const u=new SpeechSynthesisUtterance(text);
   const voices=State.voices.all;
   let v=null;const saved=Store.raw('dict_voice_'+lang)||'';
@@ -1296,25 +1319,33 @@ function speakText(text,lang,onDone,rate){
   }
   u.rate=rate!=null?rate:State.global.rate;
   u.pitch=State.global.pitch;
-  const mySeq=++speakSeq;
-  let done=false;
-  const finish=()=>{
-    if(done)return;
-    done=true;
-    if(mySeq===speakSeq){stopKeepAlive();if(speakWatch){clearTimeout(speakWatch);speakWatch=null;}}
-    if(onDone)onDone();
-  };
   u.onend=finish;
   u.onerror=finish;
-  speakTimeout=setTimeout(()=>{
-    speakTimeout=null;
-    try{speechSynthesis.speak(u);}catch(e){finish();return;}
-    startKeepAlive();
-    speakWatch=setTimeout(()=>{
-      speakWatch=null;
-      if(mySeq===speakSeq&&!speechSynthesis.speaking&&!speechSynthesis.pending)finish();
-    },2500);
-  },60);
+  
+  /* iOS 特殊處理：立即 speak，保持 user gesture 同步 */
+  if(isIOS()){
+    try{
+      speechSynthesis.speak(u);
+      startKeepAlive();
+      /* iOS 上設置較長的 watchdog（語音啟動較慢） */
+      speakWatch=setTimeout(()=>{
+        speakWatch=null;
+        if(mySeq===speakSeq&&!speechSynthesis.speaking&&!speechSynthesis.pending)finish();
+      },4000);
+    }catch(e){finish();}
+  }else{
+    /* 非 iOS：使用短延遲處理 cancel→speak 競態 */
+    if(speakTimeout){clearTimeout(speakTimeout);speakTimeout=null;}
+    speakTimeout=setTimeout(()=>{
+      speakTimeout=null;
+      try{speechSynthesis.speak(u);}catch(e){finish();return;}
+      startKeepAlive();
+      speakWatch=setTimeout(()=>{
+        speakWatch=null;
+        if(mySeq===speakSeq&&!speechSynthesis.speaking&&!speechSynthesis.pending)finish();
+      },2500);
+    },60);
+  }
   return true;
 }
 
@@ -1438,8 +1469,8 @@ async function syncAll(){
   let a=0,u=0;const errs=[];
   for(const l of['zh','en']){try{const r=await syncTab(l);a+=r.added;u+=r.updated;}catch(e){errs.push(TAB_CONFIG[l].label+'：'+e.message);}}
   afterSync();
-  if(errs.length&&!(a+u))setSyncStatus('error','匯入失敗：'+errs.join('　'));
-  else if(errs.length)setSyncStatus('success','部分匯入成功：新增 '+a+'、更新 '+u+'。問題：'+errs.join('　'));
+  if(errs.length&&!(a+u))setSyncStatus('error','匯入失敗：'+errs.join(' '));
+  else if(errs.length)setSyncStatus('success','部分匯入成功：新增 '+a+'、更新 '+u+'。問題：'+errs.join(' '));
   else setSyncStatus('success','匯入成功！新增 '+a+' 個、更新 '+u+' 個默書表');
   setBtnLoading(false);
 }
@@ -2119,6 +2150,8 @@ window.onload=()=>{
   seedSample();
   loadOpenCC();
   if('speechSynthesis' in window){
+    /* iOS 特別處理：主動觸發語音載入 */
+    speechSynthesis.getVoices();
     speechSynthesis.onvoiceschanged=()=>{refreshVoices();populateVoiceSelects();};
   }
   refreshVoices();
