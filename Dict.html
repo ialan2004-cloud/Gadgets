@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中英文默書系統 21.4</title>
+<title>中英文默書系統 22.0</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
 :root{
@@ -103,15 +103,18 @@ button{font-family:inherit;}
 .s-sub{font-size:12px;color:var(--ink3);margin-top:10px;}
 .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px;}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.lhead{display:inline-flex;align-items:center;gap:7px;padding:6px 13px;border-radius:99px;font-size:13px;font-weight:700;margin-bottom:12px;}
-.lhead .ic{width:15px;height:15px;}
-.lhead.zh{background:#FFF1F0;color:#C0392B;}
-.lhead.en{background:var(--blue-l);color:var(--blue-d);}
+.lang-title{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:800;padding:10px 14px;border-radius:12px;margin-bottom:12px;}
+.lang-title .ic{width:17px;height:17px;}
+.lang-title.zh{background:#FFF1F0;color:#C0392B;}
+.lang-title.en{background:var(--blue-l);color:var(--blue-d);}
 .row{display:flex;align-items:center;gap:12px;padding:14px;background:#fff;border:1px solid var(--line);border-radius:14px;margin-bottom:10px;box-shadow:var(--sh);}
 .row .rbody{flex:1;min-width:0;}
 .row .rtitle{font-weight:700;font-size:15px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
-.row .rmeta{font-size:12px;color:var(--ink3);margin-top:3px;display:flex;align-items:center;flex-wrap:wrap;}
-.row .racts{display:flex;gap:6px;}
+.row .rsub{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:5px;}
+.rcount{font-size:12px;color:var(--ink3);font-weight:600;}
+.row .racts{display:flex;gap:6px;flex-shrink:0;}
+.lcard{flex-direction:column;align-items:stretch;gap:10px;}
+.lcard .racts{width:100%;justify-content:flex-end;}
 .empty-hint{color:var(--ink3);font-size:13px;text-align:center;padding:22px 12px;background:var(--bg);border-radius:12px;border:1px dashed var(--line);}
 .empty-hint .ic{display:block;margin:0 auto 8px;width:26px;height:26px;opacity:.5;}
 .vitem{display:flex;gap:10px;padding:9px 6px;border-bottom:1px solid var(--line);align-items:flex-start;}
@@ -380,8 +383,8 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
   </div>
   <div class="card"><div class="card-t"><svg class="ic"><use href="#i-cal"/></svg>臨近默書</div><div id="upcomingList"></div></div>
   <div class="grid2">
-    <div class="card"><div class="lhead zh"><svg class="ic"><use href="#i-lang"/></svg>中文默書</div><div id="quickZh"></div></div>
-    <div class="card"><div class="lhead en"><svg class="ic"><use href="#i-lang"/></svg>英文默書</div><div id="quickEn"></div></div>
+    <div class="card"><div class="lang-title zh"><svg class="ic"><use href="#i-lang"/></svg>中文默書</div><div id="quickZh"></div></div>
+    <div class="card"><div class="lang-title en"><svg class="ic"><use href="#i-lang"/></svg>英文默書</div><div id="quickEn"></div></div>
   </div>
   <div class="card"><div class="card-t"><svg class="ic"><use href="#i-chart"/></svg>最近成績</div><div id="recentScores"></div></div>
 </div>
@@ -397,8 +400,8 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
     </div>
   </div>
   <div class="grid2">
-    <div class="card"><div class="lhead zh"><svg class="ic"><use href="#i-lang"/></svg>中文默書</div><div id="projListZh"></div></div>
-    <div class="card"><div class="lhead en"><svg class="ic"><use href="#i-lang"/></svg>英文默書</div><div id="projListEn"></div></div>
+    <div class="card"><div class="lang-title zh"><svg class="ic"><use href="#i-lang"/></svg>中文默書</div><div id="projListZh"></div></div>
+    <div class="card"><div class="lang-title en"><svg class="ic"><use href="#i-lang"/></svg>英文默書</div><div id="projListEn"></div></div>
   </div>
 </div>
 
@@ -440,7 +443,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
       </div>
       <div class="hint" style="margin-top:10px;" id="ovHint"></div>
     </div>
-    <div class="card-foot"><button class="btn btn-p" onclick="saveProjectOpts()"><svg class="ic"><use href="#i-save"/></svg>儲存設定</button></div>
+    <div class="card-foot"><button class="btn btn-p" onclick="saveProjectOpts()"><svg class="ic"><use href="#i-save"/></svg>儲存設定並返回</button></div>
   </div>
 </div>
 
@@ -564,16 +567,17 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
       <details style="margin-top:12px;"><summary class="chev"><svg class="ic"><use href="#i-link"/></svg>已連接試算表 ID</summary><div class="mono-box" style="margin-top:8px;" id="sheetIdDisplay"></div></details>
       <details><summary class="chev"><svg class="ic"><use href="#i-file"/></svg>試算表格式說明</summary>
         <div style="margin-top:8px;font-size:13px;color:var(--ink2);line-height:1.7;">
-          <p style="margin-bottom:8px;">試算表有兩個分頁，每個分頁有 4 欄：</p>
-          <div class="mono-box">Project,Type,Details,Date<br>第一課,詞語,學校;老師;同學,2026-10-12<br>第二課,句子,我喜歡上學;天氣很好,2026-10-19</div>
+          <p style="margin-bottom:8px;">試算表有兩個分頁，基本 4 欄＋可選 ID 欄：</p>
+          <div class="mono-box">Project,Type,Details,Date,ID<br>第一課,詞語,學校;老師,2026-10-12,C01<br>第一課,句子,我喜歡上學。,2026-10-19,C02</div>
           <ul style="padding-left:20px;margin:8px 0;">
-            <li><strong>Project</strong>：默書表名稱</li>
+            <li><strong>Project</strong>：默書表名稱（<strong>允許重複</strong>，例如同一課文嘅詞語／句子／文章）</li>
             <li><strong>Type</strong>：類型（詞語／句子／文章 或 words/sentences/paragraphs）</li>
             <li><strong>Details</strong>：默書內容，用 <strong>;</strong> 分隔每一項</li>
-            <li><strong>Date</strong>：默書日期（可選；支援 2026-10-12、12/10/2026、10月12日 等格式）</li>
+            <li><strong>Date</strong>：默書日期（可選；支援 2026-10-12、12/10/2026、10月12日）</li>
+            <li><strong>ID</strong>：唯一識別碼（<strong>可選但建議</strong>）；同名默書表請每張填唔同 ID（如 C01、C02），同一張表嘅所有行填同一個 ID。無 ID 時同名表會按出現順序自動編號</li>
           </ul>
           <p style="display:flex;gap:6px;align-items:flex-start;"><svg class="ic sm" style="margin-top:2px;color:var(--amber);"><use href="#i-warn"/></svg><span>試算表須共用為「知道連結的任何人」都可檢視。</span></p>
-          <p style="display:flex;gap:6px;align-items:flex-start;margin-top:6px;"><svg class="ic sm" style="margin-top:2px;color:var(--blue);"><use href="#i-info"/></svg><span>再次匯入會以試算表為準（覆蓋同名默書表內容與日期）。</span></p>
+          <p style="display:flex;gap:6px;align-items:flex-start;margin-top:6px;"><svg class="ic sm" style="margin-top:2px;color:var(--blue);"><use href="#i-info"/></svg><span>再次匯入會以試算表為準（按 ID／名稱配對覆蓋，唔會合併同名表）。</span></p>
         </div>
       </details>
       <details><summary class="chev"><svg class="ic"><use href="#i-sliders"/></svg>進階：分頁名稱設定</summary>
@@ -615,7 +619,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
   <div class="acc-card" data-sec="export">
     <button class="acc-head chev"><span><svg class="ic"><use href="#i-table"/></svg>匯出資料（表格格式）</span></button>
     <div class="acc-body">
-      <p class="hint" style="margin:12px 0;">表格同 Google Sheets 格式一致（4 欄含 Date），中英文分開兩表，複製後可直接貼入。</p>
+      <p class="hint" style="margin:12px 0;">表格同 Google Sheets 格式一致（5 欄含 Date 與 ID），中英文分開兩表，複製後可直接貼入。</p>
       <div id="exportTables"></div>
     </div>
   </div>
@@ -679,7 +683,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 <div class="modal" id="modalNewProject"><div class="modal-card">
   <button class="mclose" data-close="modalNewProject"><svg class="ic sm"><use href="#i-x"/></svg></button>
   <div class="modal-t"><svg class="ic"><use href="#i-plus"/></svg>新增默書表</div>
-  <div class="srow"><div class="slabel">名稱</div><input class="field" id="newProjectName" placeholder="例如：第三課詞語"></div>
+  <div class="srow"><div class="slabel">名稱</div><input class="field" id="newProjectName" placeholder="例如：第三課詞語（可與其他表同名）"></div>
   <div class="srow"><div class="slabel">語言</div><select class="field" id="newProjectLang" style="max-width:160px;"><option value="zh">中文</option><option value="en">英文</option></select></div>
   <div class="srow"><div class="slabel">類型</div><select class="field" id="newProjectType" style="max-width:160px;"><option value="words">詞語</option><option value="sentences">句子</option><option value="passage">文章</option></select></div>
   <div class="srow"><div class="slabel">默書日期（可選）</div><input type="date" class="field" style="max-width:180px;" id="newProjectDate"></div>
@@ -750,7 +754,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 <script>
 'use strict';
 /* ============ 1. 常數 ============ */
-const APP_VERSION='21.4';
+const APP_VERSION='22.0';
 const SCHEMA_VERSION=3;
 const SHEET_ID='1Ok4OH76O2W5rtkHw-1Q_F6W4c4jD-WoQTA0UwAXv4t0';
 const TAB_CONFIG={zh:{defaultName:'Chinese',label:'中文默書'},en:{defaultName:'English',label:'英文默書'}};
@@ -1107,6 +1111,7 @@ function saveProjectOpts(){
   State.current.opts=el('ovGlobal').checked?null:{rate:State.ov.rate,mode:State.ov.mode,interval:State.ov.interval,random:State.ov.random};
   touch();Store.write('dict_p8',State.projects);
   updateOvHint();toast('已儲存設定','ok');
+  goBack();
 }
 function touch(){if(State.current)State.current.updatedTs=Date.now();}
 function setDictDate(v){
@@ -1212,7 +1217,7 @@ function speakText(text,lang,onDone,rate){
   speechSynthesis.speak(u);return true;
 }
 
-/* ============ 14. Google Sheets ============ */
+/* ============ 14. Google Sheets（支援重複名稱＋ID 欄） ============ */
 function getTabName(l){return Store.raw('dict_tab_'+l)||TAB_CONFIG[l].defaultName;}
 function getSheetUrl(l){return 'https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(getTabName(l));}
 function saveTabNames(){
@@ -1252,36 +1257,51 @@ function parseCSV(text){
 }
 function parseSheetCSV(csv,lang){
   const rows=parseCSV(csv);if(!rows.length)return[];
-  let pi=0,ti=1,di=2,dti=3,start=0;
+  let pi=0,ti=1,di=2,dti=3,idi=-1,start=0,hasHeader=false;
   const h=rows[0].map(c=>(c||'').trim().toLowerCase());
   if(h.some(x=>x.includes('project')||x.includes('type')||x.includes('detail')||x.includes('項目')||x.includes('類型')||x.includes('內容'))){
-    start=1;
+    hasHeader=true;start=1;
     const a=h.findIndex(x=>x.includes('project')||x.includes('項目')||x.includes('名稱'));
     const b=h.findIndex(x=>x.includes('type')||x.includes('類型'));
     const c=h.findIndex(x=>x.includes('detail')||x.includes('內容'));
     const d=h.findIndex(x=>x.includes('date')||x.includes('日期'));
-    if(a>=0)pi=a;if(b>=0)ti=b;if(c>=0)di=c;if(d>=0)dti=d;
+    const e2=h.findIndex(x=>x==='id'||x.includes('編碼')||x.includes('code')||x.includes('uid'));
+    if(a>=0)pi=a;if(b>=0)ti=b;if(c>=0)di=c;if(d>=0)dti=d;if(e2>=0)idi=e2;
+  }else if(rows[0].length>=5){idi=4;}
+  /* 第一遍：統計同名出現次數（無 ID 時決定 key） */
+  const nameCount={},occ={};
+  for(let i=start;i<rows.length;i++){
+    const r=rows[i],nm=(r[pi]||'').trim(),dt=(r[di]||'').trim();
+    if(!nm||!dt)continue;
+    if(!dt.split(/[;；]/).map(s=>s.trim()).filter(Boolean).length)continue;
+    nameCount[nm]=(nameCount[nm]||0)+1;
   }
   const map={},now=Date.now();
   for(let i=start;i<rows.length;i++){
     const r=rows[i],name=(r[pi]||'').trim(),type=(r[ti]||'').trim(),det=(r[di]||'').trim();
     if(!name||!det)continue;
-    const dts=parseDateFlex((r[dti]||'').trim());
     const items=det.split(/[;；]/).map(s=>s.trim()).filter(Boolean);
     if(!items.length)continue;
-    if(!map[name]){
+    const dts=parseDateFlex((r[dti]||'').trim());
+    const idCode=idi>=0?(r[idi]||'').trim():'';
+    let sheetKey;
+    if(idCode)sheetKey=idCode;
+    else if((nameCount[name]||0)===1)sheetKey=name;
+    else{occ[name]=(occ[name]||0)+1;sheetKey=name+'#'+occ[name];}
+    if(!map[sheetKey]){
       const t=(type||'').toLowerCase();
-      map[name]={id:generateIdFromName(name,lang),name,type:t.includes('句')||t.includes('sentence')?'sentences':(t.includes('文章')||t.includes('passage')||t.includes('段')||t.includes('paragraph'))?'passage':'words',lang,contents:[],fromSheet:true,createdTs:now,updatedTs:now,dictTs:dts};
+      map[sheetKey]={id:generateIdFromName(sheetKey,lang),sheetKey:sheetKey,name:name,type:t.includes('句')||t.includes('sentence')?'sentences':(t.includes('文章')||t.includes('passage')||t.includes('段')||t.includes('paragraph'))?'passage':'words',lang:lang,contents:[],fromSheet:true,createdTs:now,updatedTs:now,dictTs:dts};
     }
-    items.forEach(it=>{if(!map[name].contents.includes(it))map[name].contents.push(it);});
+    items.forEach(it=>{if(!map[sheetKey].contents.includes(it))map[sheetKey].contents.push(it);});
   }
   return Object.values(map);
 }
 function mergeSheetProjects(list){
   let added=0,updated=0;
   list.forEach(sp=>{
-    const i=State.projects.findIndex(p=>sameId(p.id,sp.id)||(p.name===sp.name&&p.lang===sp.lang));
-    if(i>=0){Object.assign(State.projects[i],{id:sp.id,contents:[...sp.contents],type:sp.type,fromSheet:true,updatedTs:Date.now(),dictTs:sp.dictTs});updated++;}
+    let i=State.projects.findIndex(p=>sameId(p.id,sp.id));
+    if(i<0)i=State.projects.findIndex(p=>p.fromSheet&&p.lang===sp.lang&&(p.sheetKey||p.name)===sp.sheetKey);
+    if(i>=0){Object.assign(State.projects[i],{id:sp.id,sheetKey:sp.sheetKey,contents:[...sp.contents],type:sp.type,fromSheet:true,updatedTs:Date.now(),dictTs:sp.dictTs});updated++;}
     else{State.projects.push(sp);added++;}
   });
   return{added,updated};
@@ -1301,7 +1321,7 @@ async function syncTab(lang){
   if(t.startsWith('<')||/<html/i.test(t))throw new Error('收到 HTML 而唔係 CSV，請確認試算表已共用');
   const sp=parseSheetCSV(text,lang);
   debugLog('['+lang+'] 解析到 '+sp.length+' 個默書表');
-  if(!sp.length)throw new Error('讀取唔到有效資料（Project / Type / Details / Date）');
+  if(!sp.length)throw new Error('讀取唔到有效資料（Project / Type / Details / Date / ID）');
   return mergeSheetProjects(sp);
 }
 function afterSync(){
@@ -1437,17 +1457,19 @@ function badges(p){
   return s;
 }
 function countLabel(p){const n=(p.contents||[]).length;return p.type==='sentences'?n+' 個句子':p.type==='passage'?n+' 段文章':n+' 個詞條';}
+/* 首頁卡：名稱一行；類型＋日期＋數量第二行；按鈕右側橫跨兩行 */
 function homeCardHTML(p){
-  return '<div class="row"><div class="rbody"><div class="rtitle">'+escapeHtml(p.name||'(未命名)')+' '+badges(p)+' '+dateChip(p)+'</div>'+
-    '<div class="rmeta">'+countLabel(p)+' · '+fmtDate(p.updatedTs)+'</div></div>'+
+  return '<div class="row"><div class="rbody"><div class="rtitle">'+escapeHtml(p.name||'(未命名)')+'</div>'+
+    '<div class="rsub">'+badges(p)+dateChip(p)+'<span class="rcount">'+countLabel(p)+'</span></div></div>'+
     '<div class="racts"><button class="ib go" data-act="start" data-id="'+p.id+'" title="開始默書（系統朗讀）">'+ic('play')+'</button>'+
     '<button class="ib oral" data-act="oral" data-id="'+p.id+'" title="家長口述默書">'+ic('user')+'</button></div></div>';
 }
+/* 默書庫卡：兩行資訊＋獨立按鈕行（檢視首位） */
 function libraryCardHTML(p){
-  return '<div class="row"><div class="rbody"><div class="rtitle">'+escapeHtml(p.name||'(未命名)')+' '+badges(p)+' '+dateChip(p)+'</div>'+
-    '<div class="rmeta">'+countLabel(p)+' · 更新 '+fmtDate(p.updatedTs)+
-    '<button class="mlink" data-act="view" data-id="'+p.id+'" title="檢視全部內容">'+ic('eye')+'檢視內容</button></div></div>'+
-    '<div class="racts"><button class="ib go" data-act="start" data-id="'+p.id+'" title="開始默書（系統朗讀）">'+ic('play')+'</button>'+
+  return '<div class="row lcard"><div class="rbody"><div class="rtitle">'+escapeHtml(p.name||'(未命名)')+'</div>'+
+    '<div class="rsub">'+badges(p)+dateChip(p)+'<span class="rcount">'+countLabel(p)+' · 更新 '+fmtDate(p.updatedTs)+'</span></div></div>'+
+    '<div class="racts"><button class="ib" data-act="view" data-id="'+p.id+'" title="檢視全部內容">'+ic('eye')+'</button>'+
+    '<button class="ib go" data-act="start" data-id="'+p.id+'" title="開始默書（系統朗讀）">'+ic('play')+'</button>'+
     '<button class="ib oral" data-act="oral" data-id="'+p.id+'" title="家長口述默書">'+ic('user')+'</button>'+
     '<button class="ib edit" data-act="open" data-id="'+p.id+'" title="編輯">'+ic('edit')+'</button>'+
     '<button class="ib del" data-act="del" data-id="'+p.id+'" title="刪除">'+ic('trash')+'</button></div></div>';
@@ -1463,9 +1485,10 @@ function scheduleSort(list){
   });
   return list;
 }
-function renderLangList(id,lang,limit,fn,useSchedule){
+function renderLangList(id,lang,limit,fn,useSchedule,hidePast){
   const e=el(id);if(!e)return;
   let list=State.projects.filter(p=>p.lang===lang);
+  if(hidePast)list=list.filter(p=>!p.dictTs||daysUntil(p.dictTs)>=0);
   if(useSchedule&&(Store.raw('dict_sort')||'date')==='date')scheduleSort(list);
   else list.sort((a,b)=>(b.createdTs||0)-(a.createdTs||0));
   const shown=limit?list.slice(0,limit):list;
@@ -1474,25 +1497,19 @@ function renderLangList(id,lang,limit,fn,useSchedule){
 function renderUpcoming(){
   const list=State.projects.filter(p=>p.dictTs&&daysUntil(p.dictTs)>=0)
     .sort((a,b)=>a.dictTs===b.dictTs?a.name.localeCompare(b.name,'zh'):a.dictTs-b.dictTs).slice(0,5);
-  el('upcomingList').innerHTML=list.length?list.map(p=>
-    '<div class="row"><div class="rbody"><div class="rtitle">'+escapeHtml(p.name||'(未命名)')+' '+dateChip(p)+'</div>'+
-    '<div class="rmeta">'+(p.lang==='en'?'英文':'中文')+' · '+countLabel(p)+
-    '<button class="mlink" data-act="view" data-id="'+p.id+'" title="檢視全部內容">'+ic('eye')+'檢視內容</button></div></div>'+
-    '<div class="racts"><button class="ib go" data-act="start" data-id="'+p.id+'" title="開始默書（系統朗讀）">'+ic('play')+'</button>'+
-    '<button class="ib oral" data-act="oral" data-id="'+p.id+'" title="家長口述默書">'+ic('user')+'</button></div></div>'
-  ).join(''):emptyHint('暫無臨近默書日程');
+  el('upcomingList').innerHTML=list.length?list.map(homeCardHTML).join(''):emptyHint('暫無臨近默書日程');
 }
 function renderHome(){
   renderUpcoming();
-  renderLangList('quickZh','zh',3,homeCardHTML,false);
-  renderLangList('quickEn','en',3,homeCardHTML,false);
+  renderLangList('quickZh','zh',3,homeCardHTML,false,true);
+  renderLangList('quickEn','en',3,homeCardHTML,false,true);
   el('recentScores').innerHTML=State.records.length?State.records.slice(-5).reverse().map(r=>
     '<div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line);"><span style="font-weight:600;">'+escapeHtml(r.project)+'</span><span style="font-weight:800;color:'+(r.percent>=70?'var(--green)':'var(--red)')+';">'+r.percent+'%</span></div>').join('')
     :emptyHint('暫時未有記錄');
 }
 function renderProjects(){
-  renderLangList('projListZh','zh',0,libraryCardHTML,true);
-  renderLangList('projListEn','en',0,libraryCardHTML,true);
+  renderLangList('projListZh','zh',0,libraryCardHTML,true,false);
+  renderLangList('projListEn','en',0,libraryCardHTML,true,false);
 }
 
 /* ============ 20. 項目管理 ============ */
@@ -1945,25 +1962,26 @@ function renderRecords(){
     '</tbody></table></div>';
 }
 
-/* ============ 25. 匯出 ============ */
+/* ============ 25. 匯出（5 欄含 ID） ============ */
 function typeLabelForExport(p){return p.lang==='en'?{words:'words',sentences:'sentences',passage:'paragraphs'}[p.type]||'words':{words:'詞語',sentences:'句子',passage:'文章'}[p.type]||'詞語';}
-function buildProjectsTsv(l){return['Project\tType\tDetails\tDate'].concat(State.projects.filter(p=>p.lang===l).map(p=>[escapeTsv(p.name),typeLabelForExport(p),escapeTsv((p.contents||[]).join(';')),p.dictTs?isoDate(p.dictTs):''].join('\t'))).join('\n');}
+function projectIdForExport(p){return (p.sheetKey&&p.sheetKey!==p.name)?p.sheetKey:'';}
+function buildProjectsTsv(l){return['Project\tType\tDetails\tDate\tID'].concat(State.projects.filter(p=>p.lang===l).map(p=>[escapeTsv(p.name),typeLabelForExport(p),escapeTsv((p.contents||[]).join(';')),p.dictTs?isoDate(p.dictTs):'',escapeTsv(projectIdForExport(p))].join('\t'))).join('\n');}
 function buildRecordsTsv(){return['日期\t默書表\t答對\t總數\t得分(%)\t用時'].concat(State.records.slice().reverse().map(r=>[fmtDateTime(r.ts),escapeTsv(r.project),r.correct,r.total,r.percent,r.totalTime!=null?fmtTime(r.totalTime):''].join('\t'))).join('\n');}
 function exportTable(title,cols,rows,copyKey,confirmId){
   return '<div class="tbl-wrap"><div class="tbl-head"><span>'+title+'</span><button class="btn btn-p btn-sm" data-copy="'+copyKey+'">'+ic('copy')+'複製</button></div>'+
     '<div style="max-height:220px;overflow:auto;"><table class="tbl"><thead><tr>'+cols.map(c=>'<th>'+c+'</th>').join('')+'</tr></thead><tbody>'+
-    (rows.map(r=>'<tr>'+r.map((c,i)=>'<td class="'+(i===cols.length-1?'wrap':'nowrap')+'">'+c+'</td>').join('')+'</tr>').join('')||'<tr><td colspan="'+cols.length+'" style="text-align:center;color:var(--ink3);padding:18px;">暫無資料</td></tr>')+
+    (rows.map(r=>'<tr>'+r.map((c,i)=>'<td class="'+(i>=cols.length-2?'wrap':'nowrap')+'">'+c+'</td>').join('')+'</tr>').join('')||'<tr><td colspan="'+cols.length+'" style="text-align:center;color:var(--ink3);padding:18px;">暫無資料</td></tr>')+
     '</tbody></table></div><span class="copy-confirm" id="'+confirmId+'">'+ic('okc','sm')+'已複製！可貼入 Google Sheets</span></div>';
 }
 function renderExportTables(){
   const w=el('exportTables');if(!w)return;
-  const zhRows=State.projects.filter(p=>p.lang==='zh').map(p=>[escapeHtml(p.name),typeLabelForExport(p),escapeHtml((p.contents||[]).join(';')),p.dictTs?fmtDate(p.dictTs):'—']);
-  const enRows=State.projects.filter(p=>p.lang==='en').map(p=>[escapeHtml(p.name),typeLabelForExport(p),escapeHtml((p.contents||[]).join(';')),p.dictTs?fmtDate(p.dictTs):'—']);
+  const zhRows=State.projects.filter(p=>p.lang==='zh').map(p=>[escapeHtml(p.name),typeLabelForExport(p),escapeHtml((p.contents||[]).join(';')),p.dictTs?fmtDate(p.dictTs):'—',projectIdForExport(p)||'—']);
+  const enRows=State.projects.filter(p=>p.lang==='en').map(p=>[escapeHtml(p.name),typeLabelForExport(p),escapeHtml((p.contents||[]).join(';')),p.dictTs?fmtDate(p.dictTs):'—',projectIdForExport(p)||'—']);
   const rcRows=State.records.slice().reverse().slice(0,100).map(r=>[escapeHtml(fmtDateTime(r.ts)),escapeHtml(r.project),r.correct+'/'+r.total,r.percent+'%',r.totalTime!=null?fmtTime(r.totalTime):'—']);
   w.innerHTML=
-    exportTable('中文默書表（'+zhRows.length+' 張）',['Project','Type','Details','Date'],zhRows,'zh','copyProjZhConfirm')+
+    exportTable('中文默書表（'+zhRows.length+' 張）',['Project','Type','Details','Date','ID'],zhRows,'zh','copyProjZhConfirm')+
     '<div style="height:12px;"></div>'+
-    exportTable('英文默書表（'+enRows.length+' 張）',['Project','Type','Details','Date'],enRows,'en','copyProjEnConfirm')+
+    exportTable('英文默書表（'+enRows.length+' 張）',['Project','Type','Details','Date','ID'],enRows,'en','copyProjEnConfirm')+
     '<div style="height:12px;"></div>'+
     exportTable('成績記錄（'+rcRows.length+' 筆）',['日期','默書表','成績','得分','用時'],rcRows,'rec','copyRecConfirm')+
     '<div class="card-foot" style="justify-content:flex-start;"><button class="btn btn-s" data-copy="tsv">'+ic('dl')+'下載 TSV 檔（全部）</button><span class="hint" style="align-self:center;">複製後可直接貼入 Google Sheets</span></div>';
