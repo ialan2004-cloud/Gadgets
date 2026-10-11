@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中英文默書系統 23.0</title>
+<title>中英文默書系統 23.1</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
 :root{
@@ -376,8 +376,12 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 </div>
 
 <main class="page">
-<!-- ===== 主頁（無 phead；未來默書＋本月/下月） ===== -->
 <div id="page-home">
+  <div class="phead">
+    <div class="phead-main">
+      <div><h1 class="ptitle">主頁</h1><p class="psub">未來默書日程、本月與下月默書表及最近成績一覽</p></div>
+    </div>
+  </div>
   <div class="card"><div class="card-t"><svg class="ic"><use href="#i-cal"/></svg>未來默書</div><div id="upcomingList"></div></div>
   <div class="grid2">
     <div class="card"><div class="lang-title zh"><svg class="ic"><use href="#i-lang"/></svg>中文默書</div><div id="quickZh"></div></div>
@@ -752,7 +756,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 <script>
 'use strict';
 /* ============ 1. 常數 ============ */
-const APP_VERSION='23.0';
+const APP_VERSION='23.1';
 const SCHEMA_VERSION=3;
 const SHEET_ID='1Ok4OH76O2W5rtkHw-1Q_F6W4c4jD-WoQTA0UwAXv4t0';
 const TAB_CONFIG={zh:{defaultName:'Chinese',label:'中文默書'},en:{defaultName:'English',label:'英文默書'}};
@@ -786,6 +790,8 @@ const State={
   ov:{rate:.8,mode:'manual',interval:7,random:false}
 };
 let debugLines=[],s2tReady=false,s2tConvert=null,confirmCb=null;
+/* 語音引擎防護變數 */
+let speakTimeout=null,speakKeepAlive=null,speakWatch=null,speakSeq=0;
 
 function el(id){return document.getElementById(id);}
 function debounce(fn,ms){let t;return function(){clearTimeout(t);t=setTimeout(fn,ms);};}
@@ -835,7 +841,6 @@ function dateChip(p){
   if(du<=7)return '<span class="chip amber">'+ds+'・'+du+' 日後</span>';
   return '<span class="chip green">'+ds+'・'+du+' 日後</span>';
 }
-/* --- 唯一識別碼 C01/E01：自動分配、永不重用 --- */
 function pad2(n){return String(n).padStart(2,'0');}
 function findFreeN(lang){
   const seq=Store.read('dict_seq',{zh:1,en:1});
@@ -995,7 +1000,7 @@ function closeModal(id){el(id).classList.remove('show');}
 function requestExitDictation(){
   confirmDialog('退出默書','確定要退出默書嗎？\n未完成嘅進度將不會保存。',()=>{
     stopCountdown();stopWordTimer();
-    if('speechSynthesis' in window)speechSynthesis.cancel();
+    stopSpeechEngine();
     State.dict.review=false;
     showPage(State.lastMain);
   },{okLabel:'退出'});
@@ -1208,7 +1213,7 @@ function viewStart(oral){
   if(oral)startOral();else startDictation();
 }
 
-/* ============ 13. 語音＋標點 ============ */
+/* ============ 13. 語音引擎（v23.1 加固） ============ */
 function refreshVoices(){State.voices.all=('speechSynthesis' in window)?(speechSynthesis.getVoices()||[]):[];}
 function filterVoices(l){
   const v=State.voices.all;
@@ -1229,6 +1234,23 @@ function populateVoiceSelects(){
   });
 }
 function saveVoicePref(l){const sel=el(l==='zh'?'zhVoiceSelect':'enVoiceSelect');if(sel)Store.setRaw('dict_voice_'+l,sel.value);}
+/* Chrome 長句停滯 keep-alive */
+function startKeepAlive(){
+  stopKeepAlive();
+  speakKeepAlive=setInterval(()=>{
+    if(!('speechSynthesis' in window)){stopKeepAlive();return;}
+    if(speechSynthesis.speaking&&!speechSynthesis.paused){try{speechSynthesis.resume();}catch(e){}}
+    else if(!speechSynthesis.speaking)stopKeepAlive();
+  },10000);
+}
+function stopKeepAlive(){if(speakKeepAlive){clearInterval(speakKeepAlive);speakKeepAlive=null;}}
+/* 完全停止語音引擎（排程＋keep-alive＋watchdog＋cancel） */
+function stopSpeechEngine(){
+  if(speakTimeout){clearTimeout(speakTimeout);speakTimeout=null;}
+  if(speakWatch){clearTimeout(speakWatch);speakWatch=null;}
+  stopKeepAlive();
+  if('speechSynthesis' in window)speechSynthesis.cancel();
+}
 function speakPunct(text,lang){
   let out=text;
   if(lang==='en'){
@@ -1256,9 +1278,12 @@ function speakItemText(text){
 }
 function testVoice(l){saveVoicePref(l);speakText(l==='zh'?'你好，呢個係中文語音測試。':'Hello, this is an English voice test.',l,null,State.global.rate);}
 function testPitch(){speakText('呢個係音調測試，聽下啱唔啱。','zh',null,State.global.rate);}
+/* 核心朗讀：cancel→延遲 speak→keep-alive→失敗看門狗 */
 function speakText(text,lang,onDone,rate){
   if(!('speechSynthesis' in window)){if(onDone)onDone();return false;}
   speechSynthesis.cancel();
+  if(speakTimeout){clearTimeout(speakTimeout);speakTimeout=null;}
+  if(speakWatch){clearTimeout(speakWatch);speakWatch=null;}
   const u=new SpeechSynthesisUtterance(text);
   const voices=State.voices.all;
   let v=null;const saved=Store.raw('dict_voice_'+lang)||'';
@@ -1271,8 +1296,26 @@ function speakText(text,lang,onDone,rate){
   }
   u.rate=rate!=null?rate:State.global.rate;
   u.pitch=State.global.pitch;
-  if(onDone){u.onend=onDone;u.onerror=onDone;}
-  speechSynthesis.speak(u);return true;
+  const mySeq=++speakSeq;
+  let done=false;
+  const finish=()=>{
+    if(done)return;
+    done=true;
+    if(mySeq===speakSeq){stopKeepAlive();if(speakWatch){clearTimeout(speakWatch);speakWatch=null;}}
+    if(onDone)onDone();
+  };
+  u.onend=finish;
+  u.onerror=finish;
+  speakTimeout=setTimeout(()=>{
+    speakTimeout=null;
+    try{speechSynthesis.speak(u);}catch(e){finish();return;}
+    startKeepAlive();
+    speakWatch=setTimeout(()=>{
+      speakWatch=null;
+      if(mySeq===speakSeq&&!speechSynthesis.speaking&&!speechSynthesis.pending)finish();
+    },2500);
+  },60);
+  return true;
 }
 
 /* ============ 14. Google Sheets ============ */
