@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中英文默書系統 23.2</title>
+<title>中英文默書系統 24.1</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
 :root{
@@ -116,6 +116,26 @@ button{font-family:inherit;}
 .row .racts{display:flex;gap:6px;flex-shrink:0;}
 .lcard{flex-direction:column;align-items:stretch;gap:10px;}
 .lcard .racts{width:100%;justify-content:flex-end;}
+/* 錯字分析塊 */
+.sheet-ana{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px;background:#fff;}
+.sheet-ana:last-child{margin-bottom:0;}
+.sa-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;flex-wrap:wrap;}
+.sa-name{font-weight:700;font-size:14px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+.sa-score{font-weight:800;font-size:13px;padding:4px 12px;border-radius:99px;flex-shrink:0;}
+.sa-score.good{background:var(--green-l);color:#067647;}
+.sa-score.bad{background:var(--red-l);color:#B42318;}
+.sa-meta{font-size:12px;color:var(--ink3);margin:7px 0;}
+.sa-wrong{display:flex;gap:6px;flex-wrap:wrap;}
+.sa-wrong .chip{max-width:100%;}
+.sa-acts{margin-top:12px;}
+.sa-acts .btn{width:100%;}
+/* 重點複習 chip 選擇器 */
+.fchips{display:flex;gap:8px;flex-wrap:wrap;}
+.fchip{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:12px;border:1px solid var(--line);background:#fff;font-size:14px;font-weight:600;color:var(--ink2);cursor:pointer;transition:.15s;max-width:100%;}
+.fchip:active{transform:scale(.96);}
+.fchip .cn{font-size:11px;font-weight:800;color:var(--red);background:var(--red-l);border-radius:99px;padding:2px 7px;flex-shrink:0;}
+.fchip.on{background:var(--blue-l);border-color:#C9DBFD;color:var(--blue-d);}
+.fchip.on .cn{background:var(--blue);color:#fff;}
 .empty-hint{color:var(--ink3);font-size:13px;text-align:center;padding:22px 12px;background:var(--bg);border-radius:12px;border:1px dashed var(--line);}
 .empty-hint .ic{display:block;margin:0 auto 8px;width:26px;height:26px;opacity:.5;}
 .vitem{display:flex;gap:10px;padding:9px 6px;border-bottom:1px solid var(--line);align-items:flex-start;}
@@ -167,7 +187,7 @@ details[open]>summary.chev::after{transform:rotate(225deg);}
 .pactions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
 .qr-wrap{display:flex;align-items:center;justify-content:center;padding:16px;background:#F8FAFC;border:1px solid var(--line);border-radius:12px;min-height:210px;}
 .qr-wrap img,.qr-wrap canvas{border-radius:8px;background:#fff;}
-.sess{display:flex;align-items:center;gap:10px;}
+.sess{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 .sess-info{flex:1;min-width:0;}
 .sess-title{font-weight:800;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .sess-meta{font-size:12px;color:var(--ink3);margin-top:2px;}
@@ -228,8 +248,9 @@ details[open]>summary.chev::after{transform:rotate(225deg);}
 .cbtn.ok.active{background:var(--green);border-color:var(--green);color:#fff;}
 .cbtn.no.active{background:var(--red);border-color:var(--red);color:#fff;}
 .tbl-wrap{margin-top:12px;border:1px solid var(--line);border-radius:12px;overflow:hidden;}
+.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
 .tbl-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#F8FAFC;font-weight:700;font-size:14px;}
-table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
+table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
 .tbl th,.tbl td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);}
 .tbl th{background:#F8FAFC;font-weight:700;font-size:11px;color:var(--ink2);text-transform:uppercase;letter-spacing:.4px;}
 .tbl tr:last-child td{border-bottom:none;}
@@ -254,7 +275,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 .mclose{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;background:var(--bg);border:1px solid var(--line);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink2);}
 .mclose .ic{width:14px;height:14px;}
 .mclose:hover{color:var(--red);border-color:#FECDCA;}
-.mfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;}
+.mfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;flex-wrap:wrap;}
 .ropts{display:flex;gap:12px;margin-top:18px;}
 .ropt{flex:1;padding:18px;border:1px solid var(--line);border-radius:14px;text-align:center;cursor:pointer;background:#fff;box-shadow:var(--sh);color:var(--ink);}
 .ropt:hover{border-color:var(--blue);background:var(--blue-l);}
@@ -299,6 +320,8 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
   .card-foot .btn{flex:1;}
   .row{flex-wrap:wrap;}
   .row .racts{width:100%;justify-content:flex-end;}
+  .mfoot .btn{flex:1;}
+  .sa-head{flex-direction:column;align-items:flex-start;}
 }
 </style>
 </head>
@@ -353,6 +376,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 <symbol id="i-type" viewBox="0 0 24 24"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></symbol>
 <symbol id="i-lang" viewBox="0 0 24 24"><path d="M5 8l6 6"/><path d="M4 14l6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="M22 22l-5-10-5 10"/><path d="M14 18h6"/></symbol>
 <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></symbol>
+<symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
 </svg>
 
 <div class="topwrap">
@@ -455,6 +479,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
       <div class="sess-title" id="sessTitle">默書</div>
       <div class="sess-meta" id="sessMeta"></div>
     </div>
+    <span class="chip red hidden" id="focusBadge"><svg class="ic"><use href="#i-target"/></svg>重點複習</span>
     <span class="chip purple hidden" id="reviewBadge"><svg class="ic"><use href="#i-reset"/></svg>溫習中</span>
     <span class="sess-count" id="dictProgressBadge">1/5</span>
   </div>
@@ -495,7 +520,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
       <div class="crumb">默書 / 校對</div>
     </div>
     <div class="phead-main">
-      <div><h1 class="ptitle">家長校對</h1><p class="psub">請對照學生喺紙上寫嘅答案，逐題標記對錯</p></div>
+      <div><h1 class="ptitle">家長校對</h1><p class="psub">請對照學生喺紙上寫嘅答案，逐題標記對錯；錯字會自動記入弱項分析</p></div>
       <div class="phead-acts"><button class="btn btn-p" onclick="finishChecking()"><svg class="ic"><use href="#i-check"/></svg>完成校對</button></div>
     </div>
   </div>
@@ -530,22 +555,29 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
     </div>
     <div id="perWordTimes"></div>
   </div>
-  <div id="resultWrong" class="card hidden"><div class="card-t"><svg class="ic"><use href="#i-warn"/></svg>錯嘅內容</div><div id="wrongList"></div></div>
+  <div id="resultWrong" class="card hidden"><div class="card-t"><svg class="ic"><use href="#i-warn"/></svg>錯嘅內容（已記入弱項分析）</div><div id="wrongList"></div></div>
 </div>
 
 <div id="page-records" class="hidden">
   <div class="phead">
     <div class="phead-main">
-      <div><h1 class="ptitle">歷史成績</h1><p class="psub">歷次默書嘅得分趨勢與詳細記錄（如需重置，請到「設定」）</p></div>
+      <div><h1 class="ptitle">默書記錄</h1><p class="psub">以錯字弱項分析為核心：撳錯字 chip 即可揀選重點複習；分數統計僅供參考</p></div>
     </div>
   </div>
-  <div class="stats-row">
-    <div class="stat"><div class="s-label">總測驗次數</div><div class="s-value" id="rcTests">0</div><div class="s-sub">次</div></div>
-    <div class="stat"><div class="s-label">平均得分</div><div class="s-value" id="rcAvg">—</div><div class="bar"><i id="rcAvgBar" style="width:0%"></i></div></div>
-    <div class="stat"><div class="s-label">累計寫字用時</div><div class="s-value" id="rcTime" style="font-size:24px;">—</div><div class="s-sub">手動／口述模式累計</div></div>
+  <div class="grid2">
+    <div class="card"><div class="lang-title zh"><svg class="ic"><use href="#i-target"/></svg>中文弱項分析</div><div id="anaZh"></div></div>
+    <div class="card"><div class="lang-title en"><svg class="ic"><use href="#i-target"/></svg>英文弱項分析</div><div id="anaEn"></div></div>
   </div>
-  <div class="card"><div class="card-t"><svg class="ic"><use href="#i-trend"/></svg>得分趨勢</div><canvas id="recordChart" width="800" height="280" style="width:100%;"></canvas></div>
-  <div class="card"><div class="card-t"><svg class="ic"><use href="#i-table"/></svg>最近記錄</div><div id="recordTable"></div></div>
+  <div class="card">
+    <div class="card-t"><svg class="ic"><use href="#i-chart"/></svg>成績統計（參考）</div>
+    <div class="stats-row">
+      <div class="stat"><div class="s-label">總測驗次數</div><div class="s-value" id="rcTests">0</div><div class="s-sub">次</div></div>
+      <div class="stat"><div class="s-label">平均得分</div><div class="s-value" id="rcAvg">—</div><div class="bar"><i id="rcAvgBar" style="width:0%"></i></div></div>
+      <div class="stat"><div class="s-label">累計錯字人次</div><div class="s-value" id="rcWrong" style="font-size:24px;color:var(--red);">0</div><div class="s-sub">所有默書合計</div></div>
+    </div>
+    <div class="tbl-scroll" style="margin-top:4px;"><canvas id="recordChart" width="800" height="280" style="width:100%;min-width:520px;"></canvas></div>
+  </div>
+  <div class="card"><div class="card-t"><svg class="ic"><use href="#i-table"/></svg>最近默書記錄</div><div id="recordTable"></div></div>
 </div>
 
 <div id="page-settings" class="hidden">
@@ -681,6 +713,23 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
   </div>
 </div></div>
 
+<div class="modal" id="modalFocus"><div class="modal-card">
+  <button class="mclose" data-close="modalFocus"><svg class="ic sm"><use href="#i-x"/></svg></button>
+  <div class="modal-t"><svg class="ic"><use href="#i-target"/></svg><span id="focusTitle">重點複習</span></div>
+  <p class="hint" style="margin-bottom:12px;">撳 chip 選取／取消要複習嘅錯字（預設全選）；紅色 ×N ＝ 累計錯次數</p>
+  <div class="pactions" style="margin:0 0 14px;">
+    <button class="btn btn-s btn-sm" onclick="focusSelectAll(true)">全選</button>
+    <button class="btn btn-s btn-sm" onclick="focusSelectAll(false)">全不選</button>
+    <button class="btn btn-s btn-sm" onclick="focusFrequent()">只選常錯（≥2）</button>
+  </div>
+  <div id="focusList"></div>
+  <div class="mfoot">
+    <button class="btn btn-s" onclick="closeModal('modalFocus')">取消</button>
+    <button class="btn btn-s" onclick="startFocusReview(true)"><svg class="ic"><use href="#i-user"/></svg>口述複習</button>
+    <button class="btn btn-p" onclick="startFocusReview(false)"><svg class="ic"><use href="#i-play"/></svg>系統複習 (<span id="focusCount">0</span>)</button>
+  </div>
+</div></div>
+
 <div class="modal" id="modalNewProject"><div class="modal-card">
   <button class="mclose" data-close="modalNewProject"><svg class="ic sm"><use href="#i-x"/></svg></button>
   <div class="modal-t"><svg class="ic"><use href="#i-plus"/></svg>新增默書表</div>
@@ -756,8 +805,8 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
 <script>
 'use strict';
 /* ============ 1. 常數 ============ */
-const APP_VERSION='23.2';
-const SCHEMA_VERSION=3;
+const APP_VERSION='24.1';
+const SCHEMA_VERSION=4;
 const SHEET_ID='1Ok4OH76O2W5rtkHw-1Q_F6W4c4jD-WoQTA0UwAXv4t0';
 const TAB_CONFIG={zh:{defaultName:'Chinese',label:'中文默書'},en:{defaultName:'English',label:'英文默書'}};
 const MAIN_PAGES=['home','projects','records','settings'];
@@ -781,7 +830,8 @@ const Store={
 const State={
   projects:[],records:[],global:{rate:.8,mode:'manual',interval:7,random:false,pitch:1,readPunct:true},
   current:null,page:'home',lastMain:'home',viewId:null,
-  session:{rate:.8,mode:'manual',interval:7,random:false,shuffle:false},
+  focus:null,
+  session:{rate:.8,mode:'manual',interval:7,random:false,shuffle:false,focus:false},
   dict:{items:[],original:[],index:0,checks:[],wordTimes:[],totalStart:0,totalSec:0,review:false,token:0},
   timers:{wordInt:null,wordStart:0,wordOn:false,cdInt:null,cdEnd:0,cdPaused:0,paused:false,autoPaused:false,countdown:0},
   voices:{all:[]},
@@ -790,7 +840,6 @@ const State={
   ov:{rate:.8,mode:'manual',interval:7,random:false}
 };
 let debugLines=[],s2tReady=false,s2tConvert=null,confirmCb=null;
-/* 語音引擎防護變數 */
 let speakTimeout=null,speakKeepAlive=null,speakWatch=null,speakSeq=0;
 
 function el(id){return document.getElementById(id);}
@@ -798,7 +847,6 @@ function debounce(fn,ms){let t;return function(){clearTimeout(t);t=setTimeout(fn
 function ic(n,c){return '<svg class="ic'+(c?' '+c:'')+'" aria-hidden="true"><use href="#i-'+n+'"/></svg>';}
 function emptyHint(msg){return '<div class="empty-hint">'+ic('inbox','lg')+msg+'</div>';}
 function isTimedMode(){const m=State.session.mode;return m==='manual'||m==='oral';}
-/* iOS 檢測 */
 function isIOS(){
   return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -928,6 +976,19 @@ function runMigrations(){
       });
     }
     v=3;
+  }
+  if(v<4){
+    State.records.forEach(r=>{
+      if(!Array.isArray(r.wrong))r.wrong=[];
+      if(r.projectId===undefined||r.projectId===null){
+        const p=State.projects.find(x=>x.name===r.project);
+        r.projectId=p?p.id:null;
+        r.lang=p?p.lang:null;
+      }
+      if(r.focus===undefined)r.focus=false;
+    });
+    Store.write('dict_r8',State.records);
+    v=4;
   }
   Store.setRaw('dict_schema',String(SCHEMA_VERSION));
 }
@@ -1063,6 +1124,18 @@ function setupDelegation(){
     if(b.dataset.act==='oral'){openProject(id);startOral();}
     if(b.dataset.act==='view')openView(id);
     if(b.dataset.act==='del')deleteProject(id);
+  });
+  el('page-records').addEventListener('click',e=>{
+    const b=e.target.closest('[data-act="focus"]');
+    if(b)openFocusModal(+b.dataset.id);
+  });
+  /* 重點複習：tap chip 切換選取 */
+  el('focusList').addEventListener('click',e=>{
+    const b=e.target.closest('.fchip');if(!b||!State.focus)return;
+    const k=b.dataset.item;
+    State.focus.sel[k]=!State.focus.sel[k];
+    b.classList.toggle('on',State.focus.sel[k]);
+    updateFocusCount();
   });
   el('contentList').addEventListener('click',e=>{
     const b=e.target.closest('[data-act]');if(!b)return;
@@ -1218,7 +1291,105 @@ function viewStart(oral){
   if(oral)startOral();else startDictation();
 }
 
-/* ============ 13. 語音引擎（v23.2 iOS 專項修復） ============ */
+/* ============ 12b. 錯字分析＋重點複習 ============ */
+function wrongStatsForProject(pid){
+  const map={};
+  State.records.forEach(r=>{
+    if(r.projectId!==pid)return;
+    (r.wrong||[]).forEach(w=>{
+      if(!map[w])map[w]={count:0,last:0};
+      map[w].count++;
+      if((r.ts||0)>map[w].last)map[w].last=r.ts||0;
+    });
+  });
+  return map;
+}
+function projectRecordSummary(pid){
+  const rs=State.records.filter(r=>r.projectId===pid);
+  if(!rs.length)return null;
+  const avg=Math.round(rs.reduce((s,r)=>s+r.percent,0)/rs.length);
+  return {n:rs.length,avg:avg,last:rs[rs.length-1]};
+}
+function truncLabel(k,n){return k.length>n?k.slice(0,n)+'…':k;}
+function renderSheetAnalysis(lang){
+  const wrap=el(lang==='zh'?'anaZh':'anaEn');
+  if(!wrap)return;
+  const list=State.projects.filter(p=>p.lang===lang).map(p=>{
+    const sum=projectRecordSummary(p.id);
+    if(!sum)return null;
+    return {p:p,sum:sum,ws:wrongStatsForProject(p.id)};
+  }).filter(Boolean).sort((a,b)=>(b.sum.last.ts||0)-(a.sum.last.ts||0));
+  wrap.innerHTML=list.length?list.map(o=>{
+    const keys=Object.keys(o.ws).sort((a,b)=>o.ws[b].count-o.ws[a].count||a.localeCompare(b,'zh'));
+    const chips=keys.slice(0,5).map(k=>'<span class="chip '+(o.ws[k].count>=2?'red':'')+'" title="'+escapeAttr(k)+'（錯 '+o.ws[k].count+' 次・最近 '+fmtDate(o.ws[k].last)+'）">'+escapeHtml(truncLabel(k,14))+' ×'+o.ws[k].count+'</span>').join('');
+    const more=keys.length>5?'<span class="chip">+'+(keys.length-5)+'</span>':'';
+    return '<div class="sheet-ana">'+
+      '<div class="sa-head"><span class="sa-name">'+escapeHtml(o.p.name||'(未命名)')+' '+badges(o.p)+'</span>'+
+      '<span class="sa-score '+(o.sum.last.percent>=70?'good':'bad')+'">最近 '+o.sum.last.percent+'%</span></div>'+
+      '<div class="sa-meta">共 '+o.sum.n+' 次默書 · 平均 '+o.sum.avg+'% · 錯字 '+keys.length+' 個</div>'+
+      '<div class="sa-wrong">'+(keys.length?chips+more:'<span class="hint">暫無錯字記錄，保持得好！</span>')+'</div>'+
+      (keys.length?'<div class="sa-acts"><button class="btn btn-p btn-sm" data-act="focus" data-id="'+o.p.id+'">'+ic('target')+'重點複習（'+keys.length+' 個錯字）</button></div>':'')+
+      '</div>';
+  }).join(''):emptyHint('暫無'+(lang==='zh'?'中文':'英文')+'默書記錄');
+}
+function openFocusModal(pid){
+  const p=State.projects.find(x=>sameId(x.id,pid));if(!p)return;
+  const ws=wrongStatsForProject(pid);
+  const keys=Object.keys(ws);
+  if(!keys.length){toast('呢張表暫無錯字記錄','err');return;}
+  State.focus={pid:pid,stats:ws,sel:{}};
+  keys.forEach(k=>{State.focus.sel[k]=true;});
+  el('focusTitle').textContent='重點複習 — '+(p.name||'');
+  renderFocusList();
+  showModal('modalFocus');
+}
+function renderFocusList(){
+  const f=State.focus;if(!f)return;
+  const keys=Object.keys(f.stats).sort((a,b)=>f.stats[b].count-f.stats[a].count||a.localeCompare(b,'zh'));
+  el('focusList').innerHTML='<div class="fchips">'+keys.map(k=>{
+    const s=f.stats[k];
+    return '<button type="button" class="fchip'+(f.sel[k]?' on':'')+'" data-item="'+escapeAttr(k)+'" title="最後錯：'+fmtDate(s.last)+'">'+escapeHtml(k)+'<span class="cn">×'+s.count+'</span></button>';
+  }).join('')+'</div>';
+  updateFocusCount();
+}
+function focusSelectAll(on){
+  if(!State.focus)return;
+  Object.keys(State.focus.sel).forEach(k=>{State.focus.sel[k]=on;});
+  renderFocusList();
+}
+function focusFrequent(){
+  if(!State.focus)return;
+  Object.keys(State.focus.sel).forEach(k=>{State.focus.sel[k]=State.focus.stats[k].count>=2;});
+  renderFocusList();
+}
+function updateFocusCount(){
+  const n=State.focus?Object.values(State.focus.sel).filter(Boolean).length:0;
+  el('focusCount').textContent=n;
+}
+function startFocusReview(oral){
+  const f=State.focus;
+  if(!f)return;
+  const items=Object.keys(f.sel).filter(k=>f.sel[k]);
+  if(!items.length){toast('請先選擇要複習嘅錯字','err');return;}
+  const p=State.projects.find(x=>sameId(x.id,f.pid));
+  if(!p){toast('找不到該默書表','err');return;}
+  closeModal('modalFocus');
+  State.current=p;
+  const o=effectiveOpts(p);
+  const shuffle=o.random&&p.type==='words';
+  State.session={rate:o.rate,mode:oral?'oral':o.mode,interval:o.interval,random:o.random,shuffle:shuffle,focus:true};
+  const D=State.dict;
+  D.original=items;
+  D.items=shuffle?shuffleArray([...items]):[...items];
+  D.index=0;D.review=false;
+  D.checks=new Array(D.items.length).fill(null);
+  D.totalStart=Date.now();D.wordTimes=[];D.totalSec=0;
+  el('sessTitle').textContent=p.name||'(未命名)';
+  el('sessMeta').innerText='重點複習 · '+items.length+' 個錯字 · '+(oral?'家長口述':(o.mode==='auto'?'自動 '+o.interval+'s':'手動計時'));
+  showPage('dictation');updateReviewUI();showDictItem();
+}
+
+/* ============ 13. 語音引擎 ============ */
 function refreshVoices(){State.voices.all=('speechSynthesis' in window)?(speechSynthesis.getVoices()||[]):[];}
 function filterVoices(l){
   const v=State.voices.all;
@@ -1239,7 +1410,6 @@ function populateVoiceSelects(){
   });
 }
 function saveVoicePref(l){const sel=el(l==='zh'?'zhVoiceSelect':'enVoiceSelect');if(sel)Store.setRaw('dict_voice_'+l,sel.value);}
-/* Chrome 長句停滯 keep-alive */
 function startKeepAlive(){
   stopKeepAlive();
   speakKeepAlive=setInterval(()=>{
@@ -1249,14 +1419,12 @@ function startKeepAlive(){
   },10000);
 }
 function stopKeepAlive(){if(speakKeepAlive){clearInterval(speakKeepAlive);speakKeepAlive=null;}}
-/* 完全停止語音引擎（排程＋keep-alive＋watchdog＋cancel） */
 function stopSpeechEngine(){
   if(speakTimeout){clearTimeout(speakTimeout);speakTimeout=null;}
   if(speakWatch){clearTimeout(speakWatch);speakWatch=null;}
   stopKeepAlive();
   if('speechSynthesis' in window){
     speechSynthesis.cancel();
-    /* iOS 可能需要額外 cancel 確保完全停止 */
     if(isIOS()){
       setTimeout(()=>{try{speechSynthesis.cancel();}catch(e){}},100);
     }
@@ -1289,10 +1457,8 @@ function speakItemText(text){
 }
 function testVoice(l){saveVoicePref(l);speakText(l==='zh'?'你好，呢個係中文語音測試。':'Hello, this is an English voice test.',l,null,State.global.rate);}
 function testPitch(){speakText('呢個係音調測試，聽下啱唔啱。','zh',null,State.global.rate);}
-/* 核心朗讀：v23.2 iOS 專項處理 */
 function speakText(text,lang,onDone,rate){
   if(!('speechSynthesis' in window)){if(onDone)onDone();return false;}
-  
   const mySeq=++speakSeq;
   let done=false;
   const finish=()=>{
@@ -1301,12 +1467,7 @@ function speakText(text,lang,onDone,rate){
     if(mySeq===speakSeq){stopKeepAlive();if(speakWatch){clearTimeout(speakWatch);speakWatch=null;}}
     if(onDone)onDone();
   };
-  
-  /* 只在有正在播放的語音時才 cancel（iOS 特別重要） */
-  if(speechSynthesis.speaking || speechSynthesis.pending){
-    speechSynthesis.cancel();
-  }
-  
+  if(speechSynthesis.speaking||speechSynthesis.pending){speechSynthesis.cancel();}
   const u=new SpeechSynthesisUtterance(text);
   const voices=State.voices.all;
   let v=null;const saved=Store.raw('dict_voice_'+lang)||'';
@@ -1321,20 +1482,16 @@ function speakText(text,lang,onDone,rate){
   u.pitch=State.global.pitch;
   u.onend=finish;
   u.onerror=finish;
-  
-  /* iOS 特殊處理：立即 speak，保持 user gesture 同步 */
   if(isIOS()){
     try{
       speechSynthesis.speak(u);
       startKeepAlive();
-      /* iOS 上設置較長的 watchdog（語音啟動較慢） */
       speakWatch=setTimeout(()=>{
         speakWatch=null;
         if(mySeq===speakSeq&&!speechSynthesis.speaking&&!speechSynthesis.pending)finish();
       },4000);
     }catch(e){finish();}
   }else{
-    /* 非 iOS：使用短延遲處理 cancel→speak 競態 */
     if(speakTimeout){clearTimeout(speakTimeout);speakTimeout=null;}
     speakTimeout=setTimeout(()=>{
       speakTimeout=null;
@@ -1469,8 +1626,8 @@ async function syncAll(){
   let a=0,u=0;const errs=[];
   for(const l of['zh','en']){try{const r=await syncTab(l);a+=r.added;u+=r.updated;}catch(e){errs.push(TAB_CONFIG[l].label+'：'+e.message);}}
   afterSync();
-  if(errs.length&&!(a+u))setSyncStatus('error','匯入失敗：'+errs.join(' '));
-  else if(errs.length)setSyncStatus('success','部分匯入成功：新增 '+a+'、更新 '+u+'。問題：'+errs.join(' '));
+  if(errs.length&&!(a+u))setSyncStatus('error','匯入失敗：'+errs.join('　'));
+  else if(errs.length)setSyncStatus('success','部分匯入成功：新增 '+a+'、更新 '+u+'。問題：'+errs.join('　'));
   else setSyncStatus('success','匯入成功！新增 '+a+' 個、更新 '+u+' 個默書表');
   setBtnLoading(false);
 }
@@ -1484,10 +1641,9 @@ async function syncSingle(lang){
 /* ============ 15. 重置 ============ */
 function resetRecords(){
   if(!State.records.length){toast('目前沒有任何成績記錄');return;}
-  confirmDialog('重置成績','所有默書記錄（'+State.records.length+' 筆）將會永久刪除，無法復原。',()=>{
+  confirmDialog('重置成績','所有默書記錄（'+State.records.length+' 筆）與錯字分析將會永久刪除，無法復原。',()=>{
     State.records=[];Store.write('dict_r8',State.records);
-    renderHome();refreshNotifications();
-    if(State.page==='records')renderRecords();
+    renderHome();renderRecords();refreshNotifications();
     toast('成績已重置','ok');
   },{danger:true,okLabel:'重置'});
 }
@@ -1511,13 +1667,20 @@ function buildNotifications(){
     if(du!==null&&du>=0&&du<=3){
       out.push({id:'dictdate-'+p.id+'-'+p.dictTs,ic:'cal',bg:du===0?'var(--red-l)':'#FEF3C7',
         t:du===0?'今天默書！':'【'+p.name+'】'+du+' 日後默書',
-        d:du===0?'「'+p.name+'」今日默書，出發前再做一次快速溫習！':'建議安排每日 1 次練習，錯題用「只溫錯題」鞏固。'});
+        d:du===0?'「'+p.name+'」今日默書，出發前再做一次快速溫習！':'建議安排每日 1 次練習，錯字用「重點複習」鞏固。'});
     }
+  });
+  State.projects.forEach(p=>{
+    const ws=wrongStatsForProject(p.id);
+    const hot=Object.keys(ws).filter(k=>ws[k].count>=3);
+    if(hot.length)out.push({id:'hotwrong-'+p.id+'-'+hot.length,ic:'target',bg:'var(--red-l)',
+      t:'【'+p.name+'】有 '+hot.length+' 個常錯字',
+      d:'「'+hot.slice(0,3).map(k=>truncLabel(k,8)).join('、')+'」等字錯咗 3 次以上，建議到「記錄」頁重點複習。'});
   });
   const didToday=State.records.some(r=>r.ts&&new Date(r.ts).toDateString()===today.toDateString());
   if(State.records.length&&!didToday)out.push({id:'practice-'+today.toDateString(),ic:'edit',bg:'var(--blue-l)',t:'練習提醒',d:'今日未進行默書，抽時間練習一次啦！'});
   const last=State.records[State.records.length-1];
-  if(last&&last.percent<70)out.push({id:'review-'+(last.ts||0),ic:'trenddown',bg:'var(--red-l)',t:'複習提醒',d:'上次得分 '+last.percent+'%，建議用「只溫錯題」加強練習。'});
+  if(last&&last.percent<70)out.push({id:'review-'+(last.ts||0),ic:'trenddown',bg:'var(--red-l)',t:'複習提醒',d:'上次得分 '+last.percent+'%，建議用「只溫錯題」或「重點複習」加強練習。'});
   const sheetCount=State.projects.filter(p=>p.fromSheet).length;
   const syncTs=parseInt(Store.raw('dict_last_sync_ts')||'0',10);
   if(!sheetCount)out.push({id:'sync-setup',ic:'cloud',bg:'var(--blue-l)',t:'連接 Google Sheets',d:'可以喺「設定」一鍵匯入中英文默書表。'});
@@ -1640,7 +1803,7 @@ function renderHome(){
   renderLangList('quickZh','zh',homeCardHTML,{monthOnly:true,emptyMsg:'本月及下月暫無中文默書安排'});
   renderLangList('quickEn','en',homeCardHTML,{monthOnly:true,emptyMsg:'本月及下月暫無英文默書安排'});
   el('recentScores').innerHTML=State.records.length?State.records.slice(-5).reverse().map(r=>
-    '<div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line);"><span style="font-weight:600;">'+escapeHtml(r.project)+'</span><span style="font-weight:800;color:'+(r.percent>=70?'var(--green)':'var(--red)')+';">'+r.percent+'%</span></div>').join('')
+    '<div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line);"><span style="font-weight:600;">'+escapeHtml(r.project)+(r.focus?' <span class="chip purple">重點</span>':'')+'</span><span style="font-weight:800;color:'+(r.percent>=70?'var(--green)':'var(--red)')+';">'+r.percent+'%</span></div>').join('')
     :emptyHint('暫時未有記錄');
 }
 function renderProjects(){
@@ -1667,7 +1830,7 @@ function deleteProject(id){
     retireCode(p);
     State.projects=State.projects.filter(x=>!sameId(x.id,id));
     Store.write('dict_p8',State.projects);
-    renderProjects();renderHome();toast('已刪除','ok');
+    renderProjects();renderHome();renderRecords();toast('已刪除','ok');
   },{danger:true,okLabel:'刪除'});
 }
 function openProject(id){
@@ -1901,7 +2064,7 @@ function beginSession(oral){
   if(!c||!c.contents||!c.contents.length){toast('請先加入默書內容','err');return;}
   const o=effectiveOpts(c);
   const shuffle=o.random&&c.type==='words';
-  State.session={rate:o.rate,mode:oral?'oral':o.mode,interval:o.interval,random:o.random,shuffle:shuffle};
+  State.session={rate:o.rate,mode:oral?'oral':o.mode,interval:o.interval,random:o.random,shuffle:shuffle,focus:false};
   const D=State.dict;
   D.original=[...c.contents];
   D.items=shuffle?shuffleArray([...D.original]):[...D.original];
@@ -1966,6 +2129,7 @@ function goToMarking(){stopCountdown();showPage('checking');renderCheckList();}
 function updateReviewUI(){
   const on=State.dict.review;
   el('reviewBadge').classList.toggle('hidden',!on);
+  el('focusBadge').classList.toggle('hidden',!State.session.focus);
   el('btnEnd').classList.toggle('hidden',on);
 }
 function startWordTimer(){
@@ -2054,7 +2218,7 @@ function finishChecking(){
     const wi=D.items.filter((_,i)=>D.checks[i]!==true);
     if(wi.length){el('resultWrong').classList.remove('hidden');el('wrongList').innerHTML=wi.map(w=>'<div style="padding:10px 12px;background:var(--red-l);border:1px solid #FECDCA;border-radius:10px;margin-bottom:8px;color:#B42318;font-weight:600;display:flex;gap:7px;align-items:center;">'+ic('x','sm')+escapeHtml(w)+'</div>').join('');}
     else el('resultWrong').classList.add('hidden');
-    State.records.push({ts:Date.now(),project:State.current.name,correct,total,percent:pct,totalTime:timed?D.totalSec:null});
+    State.records.push({ts:Date.now(),projectId:State.current.id,project:State.current.name,lang:State.current.lang,correct,total,percent:pct,totalTime:timed?D.totalSec:null,wrong:wi,focus:!!State.session.focus});
     Store.write('dict_r8',State.records);
     refreshNotifications();showPage('result');
   };
@@ -2077,13 +2241,15 @@ function retryWrong(){
 /* ============ 24. 記錄 ============ */
 function renderRecords(){
   const R=State.records,n=R.length;
+  renderSheetAnalysis('zh');
+  renderSheetAnalysis('en');
   el('rcTests').innerText=n;
+  const wrongTotal=R.reduce((s,r)=>s+(r.wrong||[]).length,0);
+  el('rcWrong').innerText=wrongTotal;
   if(n){
     const avg=Math.round(R.reduce((s,r)=>s+r.percent,0)/n);
     el('rcAvg').innerHTML=avg+'<span class="unit">%</span>';el('rcAvgBar').style.width=avg+'%';
-    const tt=R.reduce((s,r)=>s+(r.totalTime||0),0);
-    el('rcTime').innerText=tt?fmtTime(tt):'—';
-  }else{el('rcAvg').textContent='—';el('rcAvgBar').style.width='0%';el('rcTime').textContent='—';}
+  }else{el('rcAvg').textContent='—';el('rcAvgBar').style.width='0%';}
   const c=el('recordChart'),ctx=c.getContext('2d');
   ctx.clearRect(0,0,c.width,c.height);ctx.fillStyle='#F8FAFC';ctx.fillRect(0,0,c.width,c.height);
   ctx.strokeStyle='#E6E9F0';ctx.lineWidth=1;
@@ -2096,19 +2262,22 @@ function renderRecords(){
     ctx.stroke();
     rec.forEach((r,i)=>{const x=40+i*step,y=260-r.percent*2.4;ctx.fillStyle=r.percent>=70?'#12B76A':'#EF4444';ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fill();});
   }
-  el('recordTable').innerHTML='<div class="tbl-wrap" style="margin-top:0;"><table class="tbl"><thead><tr><th>日期</th><th>默書表</th><th>成績</th><th>得分</th><th>用時</th></tr></thead><tbody>'+
-    (R.slice().reverse().slice(0,15).map(r=>'<tr><td class="nowrap">'+fmtDateTime(r.ts)+'</td><td>'+escapeHtml(r.project)+'</td><td>'+r.correct+'/'+r.total+'</td><td><strong style="color:'+(r.percent>=70?'var(--green)':'var(--red)')+';">'+r.percent+'%</strong></td><td>'+(r.totalTime!=null?fmtTime(r.totalTime):'--')+'</td></tr>').join('')||'<tr><td colspan="5" style="text-align:center;color:var(--ink3);padding:18px;">暫無資料</td></tr>')+
-    '</tbody></table></div>';
+  el('recordTable').innerHTML='<div class="tbl-wrap" style="margin-top:0;"><div class="tbl-scroll"><table class="tbl"><thead><tr><th>日期</th><th>默書表</th><th>成績</th><th>得分</th><th>錯字</th><th>用時</th></tr></thead><tbody>'+
+    (R.slice().reverse().slice(0,20).map(r=>{
+      const wc=(r.wrong||[]).length;
+      return '<tr><td class="nowrap">'+fmtDateTime(r.ts)+'</td><td class="wrap">'+escapeHtml(r.project)+(r.focus?' <span class="chip purple">重點</span>':'')+'</td><td>'+r.correct+'/'+r.total+'</td><td><strong style="color:'+(r.percent>=70?'var(--green)':'var(--red)')+';">'+r.percent+'%</strong></td><td>'+(wc?'<strong style="color:var(--red);">'+wc+'</strong>':'—')+'</td><td>'+(r.totalTime!=null?fmtTime(r.totalTime):'--')+'</td></tr>';
+    }).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--ink3);padding:18px;">暫無資料</td></tr>')+
+    '</tbody></table></div></div>';
 }
 
 /* ============ 25. 匯出 ============ */
 function typeLabelForExport(p){return p.lang==='en'?{words:'words',sentences:'sentences',passage:'paragraphs'}[p.type]||'words':{words:'詞語',sentences:'句子',passage:'文章'}[p.type]||'詞語';}
 function projectIdForExport(p){return (p.sheetKey&&p.sheetKey!==p.name)?p.sheetKey:'';}
 function buildProjectsTsv(l){return['Project\tType\tDetails\tDate\tID'].concat(State.projects.filter(p=>p.lang===l).map(p=>[escapeTsv(p.name),typeLabelForExport(p),escapeTsv((p.contents||[]).join(';')),p.dictTs?isoDate(p.dictTs):'',escapeTsv(projectIdForExport(p))].join('\t'))).join('\n');}
-function buildRecordsTsv(){return['日期\t默書表\t答對\t總數\t得分(%)\t用時'].concat(State.records.slice().reverse().map(r=>[fmtDateTime(r.ts),escapeTsv(r.project),r.correct,r.total,r.percent,r.totalTime!=null?fmtTime(r.totalTime):''].join('\t'))).join('\n');}
+function buildRecordsTsv(){return['日期\t默書表\t答對\t總數\t得分(%)\t錯字\t用時'].concat(State.records.slice().reverse().map(r=>[fmtDateTime(r.ts),escapeTsv(r.project),r.correct,r.total,r.percent,(r.wrong||[]).map(escapeTsv).join(';'),r.totalTime!=null?fmtTime(r.totalTime):''].join('\t'))).join('\n');}
 function exportTable(title,cols,rows,copyKey,confirmId){
   return '<div class="tbl-wrap"><div class="tbl-head"><span>'+title+'</span><button class="btn btn-p btn-sm" data-copy="'+copyKey+'">'+ic('copy')+'複製</button></div>'+
-    '<div style="max-height:220px;overflow:auto;"><table class="tbl"><thead><tr>'+cols.map(c=>'<th>'+c+'</th>').join('')+'</tr></thead><tbody>'+
+    '<div class="tbl-scroll" style="max-height:220px;overflow:auto;"><table class="tbl"><thead><tr>'+cols.map(c=>'<th>'+c+'</th>').join('')+'</tr></thead><tbody>'+
     (rows.map(r=>'<tr>'+r.map((c,i)=>'<td class="'+(i>=cols.length-2?'wrap':'nowrap')+'">'+c+'</td>').join('')+'</tr>').join('')||'<tr><td colspan="'+cols.length+'" style="text-align:center;color:var(--ink3);padding:18px;">暫無資料</td></tr>')+
     '</tbody></table></div><span class="copy-confirm" id="'+confirmId+'">'+ic('okc','sm')+'已複製！可貼入 Google Sheets</span></div>';
 }
@@ -2116,13 +2285,13 @@ function renderExportTables(){
   const w=el('exportTables');if(!w)return;
   const zhRows=State.projects.filter(p=>p.lang==='zh').map(p=>[escapeHtml(p.name),typeLabelForExport(p),escapeHtml((p.contents||[]).join(';')),p.dictTs?fmtDate(p.dictTs):'—',projectIdForExport(p)||'—']);
   const enRows=State.projects.filter(p=>p.lang==='en').map(p=>[escapeHtml(p.name),typeLabelForExport(p),escapeHtml((p.contents||[]).join(';')),p.dictTs?fmtDate(p.dictTs):'—',projectIdForExport(p)||'—']);
-  const rcRows=State.records.slice().reverse().slice(0,100).map(r=>[escapeHtml(fmtDateTime(r.ts)),escapeHtml(r.project),r.correct+'/'+r.total,r.percent+'%',r.totalTime!=null?fmtTime(r.totalTime):'—']);
+  const rcRows=State.records.slice().reverse().slice(0,100).map(r=>[escapeHtml(fmtDateTime(r.ts)),escapeHtml(r.project)+(r.focus?'（重點）':''),r.correct+'/'+r.total,r.percent+'%',(r.wrong||[]).map(escapeHtml).join('; ')||'—',r.totalTime!=null?fmtTime(r.totalTime):'—']);
   w.innerHTML=
     exportTable('中文默書表（'+zhRows.length+' 張）',['Project','Type','Details','Date','ID'],zhRows,'zh','copyProjZhConfirm')+
     '<div style="height:12px;"></div>'+
     exportTable('英文默書表（'+enRows.length+' 張）',['Project','Type','Details','Date','ID'],enRows,'en','copyProjEnConfirm')+
     '<div style="height:12px;"></div>'+
-    exportTable('成績記錄（'+rcRows.length+' 筆）',['日期','默書表','成績','得分','用時'],rcRows,'rec','copyRecConfirm')+
+    exportTable('成績記錄（'+rcRows.length+' 筆）',['日期','默書表','成績','得分','錯字','用時'],rcRows,'rec','copyRecConfirm')+
     '<div class="card-foot" style="justify-content:flex-start;"><button class="btn btn-s" data-copy="tsv">'+ic('dl')+'下載 TSV 檔（全部）</button><span class="hint" style="align-self:center;">複製後可直接貼入 Google Sheets</span></div>';
 }
 function copyToClipboard(t){
@@ -2150,7 +2319,6 @@ window.onload=()=>{
   seedSample();
   loadOpenCC();
   if('speechSynthesis' in window){
-    /* iOS 特別處理：主動觸發語音載入 */
     speechSynthesis.getVoices();
     speechSynthesis.onvoiceschanged=()=>{refreshVoices();populateVoiceSelects();};
   }
