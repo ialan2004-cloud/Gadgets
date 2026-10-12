@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中英文默書系統 24.1</title>
+<title>中英文默書系統 24.4</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
 :root{
@@ -93,6 +93,9 @@ button{font-family:inherit;}
 .chip.red{background:var(--red-l);border-color:#FECDCA;color:#B42318;}
 .chip.amber{background:#FEF3C7;border-color:#FDE68A;color:#92400E;}
 .chip.green{background:var(--green-l);border-color:#B5E8D0;color:#067647;}
+.wcloud{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;padding:12px 4px;}
+.witem{display:inline-flex;align-items:center;padding:3px 10px;border-radius:99px;background:var(--red-l);color:#B42318;font-weight:700;border:1px solid #FECDCA;line-height:1.3;cursor:default;transition:.15s;max-width:100%;}
+.witem:hover{transform:translateY(-2px);box-shadow:0 3px 8px rgba(185,28,28,.15);}
 .note{background:#F5F3FF;border:1px solid #DDD6FE;border-radius:12px;padding:10px 14px;font-size:13px;color:#5B21B6;margin-bottom:12px;display:flex;gap:7px;align-items:flex-start;}
 .note .ic{width:15px;height:15px;margin-top:2px;flex-shrink:0;}
 .stat{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--sh);}
@@ -116,7 +119,6 @@ button{font-family:inherit;}
 .row .racts{display:flex;gap:6px;flex-shrink:0;}
 .lcard{flex-direction:column;align-items:stretch;gap:10px;}
 .lcard .racts{width:100%;justify-content:flex-end;}
-/* 錯字分析塊 */
 .sheet-ana{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px;background:#fff;}
 .sheet-ana:last-child{margin-bottom:0;}
 .sa-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;flex-wrap:wrap;}
@@ -129,7 +131,6 @@ button{font-family:inherit;}
 .sa-wrong .chip{max-width:100%;}
 .sa-acts{margin-top:12px;}
 .sa-acts .btn{width:100%;}
-/* 重點複習 chip 選擇器 */
 .fchips{display:flex;gap:8px;flex-wrap:wrap;}
 .fchip{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:12px;border:1px solid var(--line);background:#fff;font-size:14px;font-weight:600;color:var(--ink2);cursor:pointer;transition:.15s;max-width:100%;}
 .fchip:active{transform:scale(.96);}
@@ -173,6 +174,7 @@ details[open]>summary.chev::after{transform:rotate(225deg);}
 .hint{font-size:12px;color:var(--ink3);}
 .hint.flex{display:flex;align-items:flex-start;gap:6px;}
 .hint.flex .ic{margin-top:1px;}
+.hint.repeat{padding:0 0 8px;}
 .text-center{text-align:center;}
 .divider{display:flex;align-items:center;gap:10px;margin:14px 0;}
 .divider .line{flex:1;height:1px;background:var(--line);}
@@ -192,6 +194,12 @@ details[open]>summary.chev::after{transform:rotate(225deg);}
 .sess-title{font-weight:800;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .sess-meta{font-size:12px;color:var(--ink3);margin-top:2px;}
 .sess-count{font-weight:800;font-size:15px;color:var(--blue-d);background:var(--blue-l);border:1px solid #C9DBFD;padding:6px 13px;border-radius:99px;font-variant-numeric:tabular-nums;flex-shrink:0;}
+.ttsbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:16px;box-shadow:var(--sh);}
+.tb-label{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--ink2);margin-right:2px;}
+.tb-label .ic{width:14px;height:14px;color:var(--blue);}
+.tb-cap{font-size:11px;font-weight:700;color:var(--ink3);}
+.tb-lock{font-size:11px;color:var(--ink3);margin-left:auto;display:inline-flex;align-items:center;gap:5px;}
+.tb-lock .ic{width:12px;height:12px;}
 .prog{display:flex;gap:4px;margin:14px 0 20px;}
 .prog i{flex:1;height:6px;border-radius:99px;background:#E3E8EF;transition:background .3s;}
 .prog i.done{background:var(--blue);}
@@ -312,6 +320,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
   .sess-count{padding:5px 10px;font-size:13px;}
   .dock{gap:8px;}
   .seg{width:100%;}.seg-btn{flex:1;}
+  .ttsbar .seg{width:auto;flex:1;}
   .voice-control{max-width:100%;width:100%;}
   .srow{flex-direction:column;align-items:flex-start;}
   .ropts{flex-direction:column;}
@@ -322,6 +331,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
   .row .racts{width:100%;justify-content:flex-end;}
   .mfoot .btn{flex:1;}
   .sa-head{flex-direction:column;align-items:flex-start;}
+  .tb-lock{display:none;}
 }
 </style>
 </head>
@@ -377,6 +387,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
 <symbol id="i-lang" viewBox="0 0 24 24"><path d="M5 8l6 6"/><path d="M4 14l6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="M22 22l-5-10-5 10"/><path d="M14 18h6"/></symbol>
 <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></symbol>
 <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
 </svg>
 
 <div class="topwrap">
@@ -403,7 +414,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
 <div id="page-home">
   <div class="phead">
     <div class="phead-main">
-      <div><h1 class="ptitle">主頁</h1><p class="psub">未來默書日程、本月與下月默書表及最近成績一覽</p></div>
+      <div><h1 class="ptitle">主頁</h1><p class="psub">未來默書日程、本月與下月默書表及錯字弱項一覽</p></div>
     </div>
   </div>
   <div class="card"><div class="card-t"><svg class="ic"><use href="#i-cal"/></svg>未來默書</div><div id="upcomingList"></div></div>
@@ -411,7 +422,10 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
     <div class="card"><div class="lang-title zh"><svg class="ic"><use href="#i-lang"/></svg>中文默書</div><div id="quickZh"></div></div>
     <div class="card"><div class="lang-title en"><svg class="ic"><use href="#i-lang"/></svg>英文默書</div><div id="quickEn"></div></div>
   </div>
-  <div class="card"><div class="card-t"><svg class="ic"><use href="#i-chart"/></svg>最近成績</div><div id="recentScores"></div></div>
+  <div class="grid2">
+    <div class="card"><div class="lang-title zh"><svg class="ic"><use href="#i-target"/></svg>中文弱項</div><div id="weakZh"></div></div>
+    <div class="card"><div class="lang-title en"><svg class="ic"><use href="#i-target"/></svg>英文弱項</div><div id="weakEn"></div></div>
+  </div>
 </div>
 
 <div id="page-projects" class="hidden">
@@ -462,7 +476,10 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
       <div id="ovControls" class="hidden">
         <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-gauge"/></svg>朗讀速度</div><div class="seg" id="ovSpeedControl"></div></div>
         <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-user"/></svg>播放模式</div><div class="seg" id="ovModeControl"></div></div>
-        <div class="srow hidden" id="ovAutoRow"><div class="slabel"><svg class="ic"><use href="#i-clock"/></svg>自動間隔</div><div class="seg" id="ovIntervalControl"></div></div>
+        <div class="hidden" id="ovAutoRow">
+          <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-clock"/></svg>自動間隔</div><div class="seg" id="ovIntervalControl"></div></div>
+          <div class="hint repeat">20 秒或以上：倒數期間會自動重讀（每 10–15 秒一次）</div>
+        </div>
         <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-shuffle"/></svg>隨機打亂</div><label class="toggle"><input type="checkbox" id="ovRandomToggle" onchange="setOvRandom(this.checked)"><span class="toggle-slider"></span></label>
           <div class="hint hidden" id="ovRandomNote" style="width:100%;">句子／文章類型永遠順序朗讀，隨機打亂僅適用於詞語類型。</div></div>
       </div>
@@ -484,6 +501,14 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
     <span class="sess-count" id="dictProgressBadge">1/5</span>
   </div>
   <div class="prog" id="progBar"></div>
+  <div class="ttsbar">
+    <span class="tb-label"><svg class="ic"><use href="#i-vol"/></svg>TTS</span>
+    <span class="tb-cap">速度</span>
+    <div class="seg" id="tbSpeed"></div>
+    <span class="tb-cap">間隔</span>
+    <div class="seg" id="tbInterval"></div>
+    <span class="tb-lock"><svg class="ic"><use href="#i-lock"/></svg>20 秒以上會自動重讀；語音／音調／隨機請喺「設定」調整</span>
+  </div>
   <div class="stage">
     <div class="stage-status"><span class="spill write" id="stagePill"></span></div>
     <div class="stage-card">
@@ -630,7 +655,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
   <div class="acc-card" data-sec="voice">
     <button class="acc-head chev"><span><svg class="ic"><use href="#i-head"/></svg>朗讀與默書設定（全局）</span></button>
     <div class="acc-body">
-      <p class="hint" style="margin:12px 0;">以下設定套用於整個系統；如需為個別默書表微調，請到該表編輯頁關閉「跟隨全局」。</p>
+      <p class="hint" style="margin:12px 0;">以下設定套用於整個系統；如需為個別默書表微調，請到該表編輯頁關閉「跟隨全局」。默書進行中可喺 TTS 控制條臨時調整速度與間隔。</p>
       <div class="srow" style="border-top:1px solid var(--line);">
         <div class="slabel"><svg class="ic"><use href="#i-lang"/></svg>中文語音</div>
         <div class="voice-control"><select id="zhVoiceSelect" onchange="saveVoicePref('zh')"></select><button class="btn btn-s btn-sm" onclick="testVoice('zh')"><svg class="ic"><use href="#i-vol"/></svg>試聽</button></div>
@@ -642,10 +667,13 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
       <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-music"/></svg>音調</div><div class="hgroup"><div class="seg" id="pitchControl"></div><button class="btn btn-s btn-sm" onclick="testPitch()"><svg class="ic"><use href="#i-vol"/></svg>試聽</button></div></div>
       <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-gauge"/></svg>朗讀速度</div><div class="seg" id="gSpeedControl"></div></div>
       <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-user"/></svg>播放模式</div><div class="seg" id="gModeControl"></div></div>
-      <div class="srow hidden" id="gAutoRow"><div class="slabel"><svg class="ic"><use href="#i-clock"/></svg>自動間隔</div><div class="seg" id="gIntervalControl"></div></div>
+      <div class="hidden" id="gAutoRow">
+        <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-clock"/></svg>自動間隔</div><div class="seg" id="gIntervalControl"></div></div>
+        <div class="hint repeat">20 秒或以上：倒數期間會自動重讀（每 10–15 秒一次）</div>
+      </div>
       <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-shuffle"/></svg>隨機打亂</div><label class="toggle"><input type="checkbox" id="gRandomToggle" onchange="setGlobal('random',this.checked)"><span class="toggle-slider"></span></label>
         <div class="hint" style="width:100%;">僅適用於「詞語」類型；句子與文章永遠順序朗讀。</div></div>
-      <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-type"/></svg>朗讀標點（句子／文章）</div><label class="toggle"><input type="checkbox" id="gPunctToggle" onchange="setGlobal('readPunct',this.checked)"><span class="toggle-slider"></span></label></div>
+      <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-type"/></svg>朗讀標點＋停頓（句子／文章）</div><label class="toggle"><input type="checkbox" id="gPunctToggle" onchange="setGlobal('readPunct',this.checked)"><span class="toggle-slider"></span></label></div>
     </div>
   </div>
 
@@ -805,18 +833,20 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
 <script>
 'use strict';
 /* ============ 1. 常數 ============ */
-const APP_VERSION='24.1';
+const APP_VERSION='24.4';
 const SCHEMA_VERSION=4;
 const SHEET_ID='1Ok4OH76O2W5rtkHw-1Q_F6W4c4jD-WoQTA0UwAXv4t0';
 const TAB_CONFIG={zh:{defaultName:'Chinese',label:'中文默書'},en:{defaultName:'English',label:'英文默書'}};
 const MAIN_PAGES=['home','projects','records','settings'];
 const RATE_OPTS=[{v:'0.4',label:'0.4x'},{v:'0.6',label:'0.6x'},{v:'0.8',label:'0.8x'},{v:'1',label:'1.0x'}];
 const MODE_OPTS=[{v:'manual',label:'手動',icon:'user'},{v:'auto',label:'自動',icon:'cpu'}];
-const INT_OPTS=[5,7,10,15,20].map(v=>({v:String(v),label:v+'秒'}));
+const INT_OPTS=[5,7,10,15,20,30,45,60].map(v=>({v:String(v),label:v+'秒'}));
 const PITCH_OPTS=[{v:'0.7',label:'低'},{v:'1',label:'正常'},{v:'1.3',label:'高'}];
-const PUNCT_ZH=[['……','省略號'],['，','逗號'],['。','句號'],['！','感嘆號'],['？','問號'],['；','分號'],['：','冒號'],['、','頓號'],['「','開引號'],['」','關引號'],['『','開引號'],['』','關引號'],['（','開括號'],['）','關括號'],['—','破折號']];
 const MONTH_EN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const CODE_RE=/^[CE]\d+$/;
+const PAUSE_MS=320;
+const PUNCT_DEFS_EN=[['...','ellipsis'],['…','ellipsis'],[',','comma'],['.','full stop'],['!','exclamation mark'],['?','question mark'],[';','semicolon'],[':','colon'],['"','quote'],['“','quote'],['”','quote'],['(','open bracket'],[')','close bracket']];
+const PUNCT_DEFS_ZH=[['……','， ellipsis'],['，','， comma'],['。','。 period'],['！','！ exclamation mark'],['？','？ question mark'],['；','； semicolon'],['：','： colon'],['、','、 enumeration comma'],['「','「 left quote'],['」','」 right quote'],['『','『 left quote'],['』','』 right quote'],['（','（ left bracket'],['）','） right bracket'],['—','— dash']];
 
 /* ============ 2. Store ============ */
 const Store={
@@ -831,9 +861,9 @@ const State={
   projects:[],records:[],global:{rate:.8,mode:'manual',interval:7,random:false,pitch:1,readPunct:true},
   current:null,page:'home',lastMain:'home',viewId:null,
   focus:null,
-  session:{rate:.8,mode:'manual',interval:7,random:false,shuffle:false,focus:false},
+  session:{rate:.8,mode:'manual',interval:7,random:false,shuffle:false,focus:false,active:false},
   dict:{items:[],original:[],index:0,checks:[],wordTimes:[],totalStart:0,totalSec:0,review:false,token:0},
-  timers:{wordInt:null,wordStart:0,wordOn:false,cdInt:null,cdEnd:0,cdPaused:0,paused:false,autoPaused:false,countdown:0},
+  timers:{wordInt:null,wordStart:0,wordOn:false,cdInt:null,cdEnd:0,cdPaused:0,paused:false,autoPaused:false,countdown:0,cdRepeatCycle:0,cdNextRepeat:0},
   voices:{all:[]},
   ocr:{items:[],editIndex:-1},
   contentEditIndex:-1,
@@ -850,6 +880,12 @@ function isTimedMode(){const m=State.session.mode;return m==='manual'||m==='oral
 function isIOS(){
   return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+/* 自動重讀週期：<20 不重讀；20–44 每 10 秒；≥45 每 15 秒 */
+function repeatCycleFor(iv){
+  if(iv<20)return 0;
+  if(iv<45)return 10;
+  return 15;
 }
 
 /* ============ 4. 日期／ID 工具 ============ */
@@ -1068,6 +1104,7 @@ function requestExitDictation(){
     stopCountdown();stopWordTimer();
     stopSpeechEngine();
     State.dict.review=false;
+    State.session.active=false;
     showPage(State.lastMain);
   },{okLabel:'退出'});
 }
@@ -1103,7 +1140,13 @@ function setupDelegation(){
     if(document.hidden){
       if(T.cdInt&&!T.paused){T.paused=true;T.cdPaused=Date.now();T.autoPaused=true;el('pauseBtn').innerHTML=ic('play','sm');}
     }else{
-      if(T.autoPaused){T.autoPaused=false;T.paused=false;T.cdEnd+=Date.now()-T.cdPaused;el('pauseBtn').innerHTML=ic('pause','sm');}
+      if(T.autoPaused){
+        T.autoPaused=false;T.paused=false;
+        const delta=Date.now()-T.cdPaused;
+        T.cdEnd+=delta;
+        if(T.cdNextRepeat)T.cdNextRepeat+=delta;
+        el('pauseBtn').innerHTML=ic('pause','sm');
+      }
     }
   });
   window.addEventListener('beforeunload',e=>{
@@ -1129,7 +1172,6 @@ function setupDelegation(){
     const b=e.target.closest('[data-act="focus"]');
     if(b)openFocusModal(+b.dataset.id);
   });
-  /* 重點複習：tap chip 切換選取 */
   el('focusList').addEventListener('click',e=>{
     const b=e.target.closest('.fchip');if(!b||!State.focus)return;
     const k=b.dataset.item;
@@ -1187,7 +1229,7 @@ function updateNetChip(){
   c.innerHTML=navigator.onLine?'':ic('warn','sm')+'離線模式';
 }
 
-/* ============ 10. Seg factory ============ */
+/* ============ 10. Seg factory／TTS 控制條 ============ */
 function initSeg(id,opts,current,onPick){
   const box=el(id);if(!box)return;
   box.innerHTML=opts.map(o=>'<button class="seg-btn'+(String(o.v)===String(current)?' active':'')+'" data-v="'+o.v+'">'+(o.icon?ic(o.icon):'')+o.label+'</button>').join('');
@@ -1214,6 +1256,16 @@ function initOverrideSegs(){
   initSeg('ovIntervalControl',INT_OPTS,String(o.interval),v=>{o.interval=parseInt(v,10);updateOvHint();});
   el('ovRandomToggle').checked=o.random;
   el('ovAutoRow').classList.toggle('hidden',o.mode!=='auto');
+}
+function initTtsBar(){
+  initSeg('tbSpeed',RATE_OPTS,String(State.session.rate),v=>{
+    State.session.rate=parseFloat(v);
+  });
+  initSeg('tbInterval',INT_OPTS,String(State.session.interval),v=>{
+    State.session.interval=parseInt(v,10);
+    const T=State.timers;
+    if(T.cdInt&&!T.paused)startCountdown();
+  });
 }
 function effectiveOpts(p){
   const o=(p&&p.opts)?p.opts:null;
@@ -1311,6 +1363,43 @@ function projectRecordSummary(pid){
   return {n:rs.length,avg:avg,last:rs[rs.length-1]};
 }
 function truncLabel(k,n){return k.length>n?k.slice(0,n)+'…':k;}
+function renderWeakness(lang){
+  const wrap=el(lang==='zh'?'weakZh':'weakEn');
+  if(!wrap)return;
+  const wmap={};
+  let otherWrong=0;
+  State.records.forEach(r=>{
+    if(!r.projectId||!(r.wrong||[]).length)return;
+    const p=State.projects.find(x=>sameId(x.id,r.projectId));
+    if(!p||p.lang!==lang)return;
+    if(p.type==='words'){
+      r.wrong.forEach(w=>{wmap[w]=(wmap[w]||0)+1;});
+    }else{
+      otherWrong+=r.wrong.length;
+    }
+  });
+  const entries=Object.entries(wmap).sort((a,b)=>b[1]-a[1]).slice(0,20);
+  if(!entries.length&&!otherWrong){
+    wrap.innerHTML=emptyHint('暫無弱項記錄');
+    return;
+  }
+  let html='';
+  if(entries.length){
+    const maxC=entries[0][1];
+    html+='<div class="wcloud">';
+    html+=entries.map(en=>{
+      const w=en[0],c=en[1];
+      const size=12+Math.round((c/maxC)*12);
+      return '<span class="witem" style="font-size:'+size+'px" title="錯 '+c+' 次">'+escapeHtml(truncLabel(w,12))+'</span>';
+    }).join('');
+    html+='</div>';
+  }
+  if(otherWrong>0){
+    html+='<div class="hint flex" style="margin-top:10px;">'+ic('info','sm')+'<span>句子／文章有 '+otherWrong+' 個錯項，因篇幅較長唔喺主頁顯示，請到「記錄」頁查看及複習。</span></div>';
+  }
+  html+='<div class="card-foot" style="margin-top:12px;"><button class="btn btn-s btn-sm" onclick="navTo(\'records\')">'+ic('chart')+'查看弱項分析</button></div>';
+  wrap.innerHTML=html;
+}
 function renderSheetAnalysis(lang){
   const wrap=el(lang==='zh'?'anaZh':'anaEn');
   if(!wrap)return;
@@ -1328,7 +1417,7 @@ function renderSheetAnalysis(lang){
       '<span class="sa-score '+(o.sum.last.percent>=70?'good':'bad')+'">最近 '+o.sum.last.percent+'%</span></div>'+
       '<div class="sa-meta">共 '+o.sum.n+' 次默書 · 平均 '+o.sum.avg+'% · 錯字 '+keys.length+' 個</div>'+
       '<div class="sa-wrong">'+(keys.length?chips+more:'<span class="hint">暫無錯字記錄，保持得好！</span>')+'</div>'+
-      (keys.length?'<div class="sa-acts"><button class="btn btn-p btn-sm" data-act="focus" data-id="'+o.p.id+'">'+ic('target')+'重點複習（'+keys.length+' 個錯字）</button></div>':'')+
+      (keys.length?'<div class="sa-acts"><button class="btn btn-p btn-sm" data-act="focus" data-id="'+o.p.id+'">'+ic('target')+'重點複習</button></div>':'')+
       '</div>';
   }).join(''):emptyHint('暫無'+(lang==='zh'?'中文':'英文')+'默書記錄');
 }
@@ -1377,7 +1466,7 @@ function startFocusReview(oral){
   State.current=p;
   const o=effectiveOpts(p);
   const shuffle=o.random&&p.type==='words';
-  State.session={rate:o.rate,mode:oral?'oral':o.mode,interval:o.interval,random:o.random,shuffle:shuffle,focus:true};
+  State.session={rate:o.rate,mode:oral?'oral':o.mode,interval:o.interval,random:o.random,shuffle:shuffle,focus:true,active:true};
   const D=State.dict;
   D.original=items;
   D.items=shuffle?shuffleArray([...items]):[...items];
@@ -1386,6 +1475,7 @@ function startFocusReview(oral){
   D.totalStart=Date.now();D.wordTimes=[];D.totalSec=0;
   el('sessTitle').textContent=p.name||'(未命名)';
   el('sessMeta').innerText='重點複習 · '+items.length+' 個錯字 · '+(oral?'家長口述':(o.mode==='auto'?'自動 '+o.interval+'s':'手動計時'));
+  initTtsBar();
   showPage('dictation');updateReviewUI();showDictItem();
 }
 
@@ -1415,7 +1505,6 @@ function startKeepAlive(){
   speakKeepAlive=setInterval(()=>{
     if(!('speechSynthesis' in window)){stopKeepAlive();return;}
     if(speechSynthesis.speaking&&!speechSynthesis.paused){try{speechSynthesis.resume();}catch(e){}}
-    else if(!speechSynthesis.speaking)stopKeepAlive();
   },10000);
 }
 function stopKeepAlive(){if(speakKeepAlive){clearInterval(speakKeepAlive);speakKeepAlive=null;}}
@@ -1430,45 +1519,7 @@ function stopSpeechEngine(){
     }
   }
 }
-function speakPunct(text,lang){
-  let out=text;
-  if(lang==='en'){
-    out=out.replace(/\.\.\./g,' ellipsis ')
-           .replace(/\.(\s|$)/g,' period$1')
-           .replace(/,/g,' comma ')
-           .replace(/!/g,' exclamation ')
-           .replace(/\?/g,' question mark ')
-           .replace(/;/g,' semicolon ')
-           .replace(/:/g,' colon ')
-           .replace(/["""]/g,' quote ')
-           .replace(/\(/g,' open bracket ')
-           .replace(/\)/g,' close bracket ');
-  }else{
-    PUNCT_ZH.forEach(pair=>{out=out.split(pair[0]).join(' '+pair[1]+' ');});
-  }
-  return out.replace(/[ \t]+/g,' ').trim();
-}
-function speakItemText(text){
-  const c=State.current;
-  if(c&&(c.type==='sentences'||c.type==='passage')&&State.global.readPunct!==false){
-    return speakPunct(text,c.lang||'zh');
-  }
-  return text;
-}
-function testVoice(l){saveVoicePref(l);speakText(l==='zh'?'你好，呢個係中文語音測試。':'Hello, this is an English voice test.',l,null,State.global.rate);}
-function testPitch(){speakText('呢個係音調測試，聽下啱唔啱。','zh',null,State.global.rate);}
-function speakText(text,lang,onDone,rate){
-  if(!('speechSynthesis' in window)){if(onDone)onDone();return false;}
-  const mySeq=++speakSeq;
-  let done=false;
-  const finish=()=>{
-    if(done)return;
-    done=true;
-    if(mySeq===speakSeq){stopKeepAlive();if(speakWatch){clearTimeout(speakWatch);speakWatch=null;}}
-    if(onDone)onDone();
-  };
-  if(speechSynthesis.speaking||speechSynthesis.pending){speechSynthesis.cancel();}
-  const u=new SpeechSynthesisUtterance(text);
+function applyVoice(u,lang){
   const voices=State.voices.all;
   let v=null;const saved=Store.raw('dict_voice_'+lang)||'';
   if(saved)v=voices.find(x=>x.name===saved);
@@ -1478,19 +1529,91 @@ function speakText(text,lang,onDone,rate){
     else{u.lang='zh-HK';v=voices.find(x=>x.lang&&/^(zh|cmn|yue)/i.test(x.lang));}
     if(v)u.voice=v;
   }
+}
+function splitPunctSeq(text,lang){
+  const defs=lang==='en'?PUNCT_DEFS_EN:PUNCT_DEFS_ZH;
+  const esc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  const pat=new RegExp('('+defs.map(d=>esc(d[0])).join('|')+')','g');
+  const names={};defs.forEach(d=>{names[d[0]]=d[1];});
+  const seq=[];
+  text.split(pat).forEach(s=>{
+    if(s===undefined||s==='')return;
+    if(names[s]!==undefined)seq.push({t:'p',text:names[s]});
+    else if(s.trim())seq.push({t:'t',text:s.trim()});
+  });
+  return seq;
+}
+function speakSequence(seq,lang,onDone,rate){
+  if(!('speechSynthesis' in window)){if(onDone)onDone();return false;}
+  const mySeq=++speakSeq;
+  let done=false;
+  const clearWatch=()=>{if(speakWatch){clearTimeout(speakWatch);speakWatch=null;}};
+  const finish=()=>{
+    if(done)return;done=true;
+    if(mySeq===speakSeq){stopKeepAlive();clearWatch();}
+    if(onDone)onDone();
+  };
+  const armWatch=()=>{
+    clearWatch();
+    speakWatch=setTimeout(()=>{
+      speakWatch=null;
+      if(mySeq===speakSeq&&!done&&!speechSynthesis.speaking&&!speechSynthesis.pending)finish();
+    },6000);
+  };
+  const wasBusy=speechSynthesis.speaking||speechSynthesis.pending;
+  if(wasBusy)speechSynthesis.cancel();
+  let i=0;
+  const speakNext=()=>{
+    if(mySeq!==speakSeq||done)return;
+    if(i>=seq.length){finish();return;}
+    const part=seq[i++];
+    const u=new SpeechSynthesisUtterance(part.text);
+    applyVoice(u,lang);
+    u.rate=rate!=null?rate:State.session.rate;
+    u.pitch=State.global.pitch;
+    u.onend=()=>{
+      if(mySeq!==speakSeq||done)return;
+      setTimeout(speakNext,PAUSE_MS);
+    };
+    u.onerror=u.onend;
+    try{speechSynthesis.speak(u);}catch(e){finish();return;}
+    armWatch();
+  };
+  startKeepAlive();
+  /* iOS：取消舊語音後需稍延再開，避免被 Safari 吞掉 */
+  if(wasBusy)setTimeout(speakNext,80);else speakNext();
+  return true;
+}
+function speakSimple(text,lang,onDone,rate){
+  if(!('speechSynthesis' in window)){if(onDone)onDone();return false;}
+  const mySeq=++speakSeq;
+  let done=false;
+  const finish=()=>{
+    if(done)return;
+    done=true;
+    if(mySeq===speakSeq){stopKeepAlive();if(speakWatch){clearTimeout(speakWatch);speakWatch=null;}}
+    if(onDone)onDone();
+  };
+  const wasBusy=speechSynthesis.speaking||speechSynthesis.pending;
+  if(wasBusy)speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  applyVoice(u,lang);
   u.rate=rate!=null?rate:State.global.rate;
   u.pitch=State.global.pitch;
   u.onend=finish;
   u.onerror=finish;
   if(isIOS()){
-    try{
-      speechSynthesis.speak(u);
-      startKeepAlive();
-      speakWatch=setTimeout(()=>{
-        speakWatch=null;
-        if(mySeq===speakSeq&&!speechSynthesis.speaking&&!speechSynthesis.pending)finish();
-      },4000);
-    }catch(e){finish();}
+    const doSpeak=()=>{
+      try{
+        speechSynthesis.speak(u);
+        startKeepAlive();
+        speakWatch=setTimeout(()=>{
+          speakWatch=null;
+          if(mySeq===speakSeq&&!speechSynthesis.speaking&&!speechSynthesis.pending)finish();
+        },4000);
+      }catch(e){finish();}
+    };
+    if(wasBusy)setTimeout(doSpeak,80);else doSpeak();
   }else{
     if(speakTimeout){clearTimeout(speakTimeout);speakTimeout=null;}
     speakTimeout=setTimeout(()=>{
@@ -1505,6 +1628,16 @@ function speakText(text,lang,onDone,rate){
   }
   return true;
 }
+function speakText(text,lang,onDone,rate){
+  const c=State.current;
+  if(State.session.active&&c&&(c.type==='sentences'||c.type==='passage')&&State.global.readPunct!==false){
+    const seq=splitPunctSeq(text,lang);
+    if(seq.length>1)return speakSequence(seq,lang,onDone,rate!=null?rate:State.session.rate);
+  }
+  return speakSimple(text,lang,onDone,rate!=null?rate:State.global.rate);
+}
+function testVoice(l){saveVoicePref(l);speakText(l==='zh'?'你好，呢個係中文語音測試。':'Hello, this is an English voice test.',l,null,State.global.rate);}
+function testPitch(){speakText('呢個係音調測試，聽下啱唔啱。','zh',null,State.global.rate);}
 
 /* ============ 14. Google Sheets ============ */
 function getTabName(l){return Store.raw('dict_tab_'+l)||TAB_CONFIG[l].defaultName;}
@@ -1802,9 +1935,8 @@ function renderHome(){
   renderUpcoming();
   renderLangList('quickZh','zh',homeCardHTML,{monthOnly:true,emptyMsg:'本月及下月暫無中文默書安排'});
   renderLangList('quickEn','en',homeCardHTML,{monthOnly:true,emptyMsg:'本月及下月暫無英文默書安排'});
-  el('recentScores').innerHTML=State.records.length?State.records.slice(-5).reverse().map(r=>
-    '<div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line);"><span style="font-weight:600;">'+escapeHtml(r.project)+(r.focus?' <span class="chip purple">重點</span>':'')+'</span><span style="font-weight:800;color:'+(r.percent>=70?'var(--green)':'var(--red)')+';">'+r.percent+'%</span></div>').join('')
-    :emptyHint('暫時未有記錄');
+  renderWeakness('zh');
+  renderWeakness('en');
 }
 function renderProjects(){
   renderLangList('projListZh','zh',libraryCardHTML,{});
@@ -1847,7 +1979,7 @@ function openProject(id){
 }
 function speakContentAt(i){
   const c=State.current;
-  if(c&&c.contents[i]!==undefined)speakText(speakItemText(c.contents[i]),c.lang||'zh',null,State.global.rate);
+  if(c&&c.contents[i]!==undefined)speakText(c.contents[i],c.lang||'zh',null,State.global.rate);
 }
 function renderContentList(){
   const l=el('contentList'),cs=State.current.contents;
@@ -2041,22 +2173,21 @@ function updateTimerModules(){
 function speakAndSchedule(text,force){
   const D=State.dict;D.token++;
   const my=D.token,lang=State.current?State.current.lang||'zh':'zh';
-  const payload=speakItemText(text);
   if(State.session.mode==='oral'){
     setPill(D.review?'review':'oral');
-    if(force)speakText(payload,lang,null,State.session.rate);
+    if(force)speakText(text,lang,null,State.session.rate);
     return;
   }
   if(State.session.mode==='auto'||D.review){
     setPill('speak');
-    const ok=speakText(payload,lang,()=>{
+    const ok=speakText(text,lang,()=>{
       if(my!==D.token)return;
       setPill('count');startCountdown();
     },State.session.rate);
     if(!ok&&my===D.token){setPill('count');startCountdown();}
   }else{
     setPill('write');
-    speakText(payload,lang,null,State.session.rate);
+    speakText(text,lang,null,State.session.rate);
   }
 }
 function beginSession(oral){
@@ -2064,7 +2195,7 @@ function beginSession(oral){
   if(!c||!c.contents||!c.contents.length){toast('請先加入默書內容','err');return;}
   const o=effectiveOpts(c);
   const shuffle=o.random&&c.type==='words';
-  State.session={rate:o.rate,mode:oral?'oral':o.mode,interval:o.interval,random:o.random,shuffle:shuffle,focus:false};
+  State.session={rate:o.rate,mode:oral?'oral':o.mode,interval:o.interval,random:o.random,shuffle:shuffle,focus:false,active:true};
   const D=State.dict;
   D.original=[...c.contents];
   D.items=shuffle?shuffleArray([...D.original]):[...D.original];
@@ -2075,6 +2206,7 @@ function beginSession(oral){
   const du=c.dictTs?daysUntil(c.dictTs):null;
   el('sessTitle').textContent=c.name||'(未命名)';
   el('sessMeta').innerText=(c.sheetKey&&CODE_RE.test(c.sheetKey)?c.sheetKey+' · ':'')+(c.lang==='en'?'英文':'中文')+' · '+(tl[c.type]||'詞語')+' · '+(oral?'家長口述默書':(o.mode==='auto'?'自動 '+o.interval+'s':'手動計時'))+(shuffle?' · 隨機':'')+(du!==null&&du>=0?' · '+(du===0?'今天默書':du+' 日後默書'):'');
+  initTtsBar();
   showPage('dictation');updateReviewUI();showDictItem();
 }
 function startDictation(){beginSession(false);}
@@ -2123,9 +2255,9 @@ function requestEndDictation(){
   el('reviewOptDesc').innerText=State.session.mode==='oral'?'重新顯示所有詞語俾家長再念':'自動重播所有詞語';
   showModal('modalReview');
 }
-function startQuickReview(){closeModal('modalReview');const D=State.dict;D.review=true;D.index=0;updateReviewUI();showDictItem();}
+function startQuickReview(){closeModal('modalReview');const D=State.dict;D.review=true;D.index=0;State.session.active=true;initTtsBar();updateReviewUI();showDictItem();}
 function finishReview(){stopCountdown();State.dict.review=false;updateReviewUI();goToMarking();}
-function goToMarking(){stopCountdown();showPage('checking');renderCheckList();}
+function goToMarking(){stopCountdown();State.session.active=false;showPage('checking');renderCheckList();}
 function updateReviewUI(){
   const on=State.dict.review;
   el('reviewBadge').classList.toggle('hidden',!on);
@@ -2143,26 +2275,53 @@ function paintWord(){
   el('mtWord').innerText=fmtTime(Math.floor((Date.now()-T.wordStart)/1000));
   el('mtTotal').innerText=fmtTime(Math.floor((Date.now()-D.totalStart)/1000));
 }
+/* 長間隔自動重讀（≥20 秒） */
+function repeatCurrentSpeak(){
+  const D=State.dict;
+  if(!State.session.active||D.index>=D.items.length)return;
+  const lang=State.current?State.current.lang||'zh':'zh';
+  speakText(D.items[D.index],lang,null,State.session.rate);
+}
 function startCountdown(){
   stopCountdown();
   const T=State.timers;
-  T.paused=false;T.autoPaused=false;T.cdEnd=Date.now()+State.session.interval*1000;
+  const iv=State.session.interval||1;
+  T.paused=false;T.autoPaused=false;
+  T.cdEnd=Date.now()+iv*1000;
+  const cyc=repeatCycleFor(iv);
+  T.cdRepeatCycle=cyc;
+  T.cdNextRepeat=cyc?Date.now()+cyc*1000:0;
   el('pauseBtn').innerHTML=ic('pause','sm');
-  T.countdown=State.session.interval;paintCountdown();
+  T.countdown=iv;paintCountdown();
   T.cdInt=setInterval(tickCountdown,250);
 }
-function stopCountdown(){clearInterval(State.timers.cdInt);State.timers.cdInt=null;}
+function stopCountdown(){
+  const T=State.timers;
+  clearInterval(T.cdInt);T.cdInt=null;
+  T.cdRepeatCycle=0;T.cdNextRepeat=0;
+}
 function tickCountdown(){
   const T=State.timers;
   if(T.paused)return;
-  const left=Math.max(0,Math.ceil((T.cdEnd-Date.now())/1000));
+  const now=Date.now();
+  const left=Math.max(0,Math.ceil((T.cdEnd-now)/1000));
   T.countdown=left;paintCountdown();
-  if(left<=0){stopCountdown();nextDictItem();}
+  if(left<=0){stopCountdown();nextDictItem();return;}
+  if(T.cdRepeatCycle&&now>=T.cdNextRepeat){
+    T.cdNextRepeat=now+T.cdRepeatCycle*1000;
+    repeatCurrentSpeak();
+  }
 }
 function togglePause(){
   const T=State.timers;
   if(!T.paused){T.paused=true;T.cdPaused=Date.now();T.autoPaused=false;el('pauseBtn').innerHTML=ic('play','sm');}
-  else{T.paused=false;T.cdEnd+=Date.now()-T.cdPaused;el('pauseBtn').innerHTML=ic('pause','sm');}
+  else{
+    T.paused=false;
+    const delta=Date.now()-T.cdPaused;
+    T.cdEnd+=delta;
+    if(T.cdNextRepeat)T.cdNextRepeat+=delta;
+    el('pauseBtn').innerHTML=ic('pause','sm');
+  }
 }
 function paintCountdown(){
   const T=State.timers,iv=State.session.interval||1,c=T.countdown;
@@ -2235,6 +2394,8 @@ function retryWrong(){
   D.items=State.session.shuffle?shuffleArray([...wi]):[...wi];
   D.index=0;D.review=false;D.checks=new Array(D.items.length).fill(null);
   D.totalStart=Date.now();D.wordTimes=[];D.totalSec=0;
+  State.session.active=true;
+  initTtsBar();
   showPage('dictation');updateReviewUI();showDictItem();
 }
 
