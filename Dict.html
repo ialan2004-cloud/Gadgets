@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中英文默書系統 24.4</title>
+<title>中英文默書系統 24.5</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
 :root{
@@ -194,12 +194,19 @@ details[open]>summary.chev::after{transform:rotate(225deg);}
 .sess-title{font-weight:800;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .sess-meta{font-size:12px;color:var(--ink3);margin-top:2px;}
 .sess-count{font-weight:800;font-size:15px;color:var(--blue-d);background:var(--blue-l);border:1px solid #C9DBFD;padding:6px 13px;border-radius:99px;font-variant-numeric:tabular-nums;flex-shrink:0;}
-.ttsbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:16px;box-shadow:var(--sh);}
+/* TTS 控制條（單字面板下方） */
+.ttsbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;margin:12px 0 0;box-shadow:var(--sh);}
 .tb-label{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--ink2);margin-right:2px;}
 .tb-label .ic{width:14px;height:14px;color:var(--blue);}
 .tb-cap{font-size:11px;font-weight:700;color:var(--ink3);}
 .tb-lock{font-size:11px;color:var(--ink3);margin-left:auto;display:inline-flex;align-items:center;gap:5px;}
 .tb-lock .ic{width:12px;height:12px;}
+/* 底部操作列（校對頁等） */
+.actionbar{display:flex;gap:10px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap;}
+@media(max-width:768px){
+  .actionbar{position:sticky;bottom:92px;z-index:60;background:linear-gradient(180deg,rgba(244,246,250,0) 0%,var(--bg) 35%);padding-top:10px;margin-top:6px;}
+  .actionbar .btn{flex:1;}
+}
 .prog{display:flex;gap:4px;margin:14px 0 20px;}
 .prog i{flex:1;height:6px;border-radius:99px;background:#E3E8EF;transition:background .3s;}
 .prog i.done{background:var(--blue);}
@@ -214,16 +221,17 @@ details[open]>summary.chev::after{transform:rotate(225deg);}
 .spill.write{background:var(--green-l);color:#067647;}
 .spill.review{background:var(--purple-l);color:var(--purple);}
 .spill.oral{background:#FFF1F0;color:#C0392B;}
-.stage-card{position:relative;background:linear-gradient(180deg,#fff,#F8FAFC);border:1px solid var(--line);border-radius:20px;min-height:230px;display:flex;align-items:center;justify-content:center;padding:56px 24px;box-shadow:var(--sh);}
-.dtext{font-size:44px;font-weight:800;line-height:1.45;letter-spacing:2px;transition:filter .25s;text-align:center;word-break:break-word;}
+/* 單字面板（縮小） */
+.stage-card{position:relative;background:linear-gradient(180deg,#fff,#F8FAFC);border:1px solid var(--line);border-radius:var(--r);min-height:150px;display:flex;align-items:center;justify-content:center;padding:34px 20px;box-shadow:var(--sh);}
+.dtext{font-size:34px;font-weight:800;line-height:1.4;letter-spacing:2px;transition:filter .25s;text-align:center;word-break:break-word;}
 .dtext.hidden-text{filter:blur(14px);user-select:none;color:var(--ink3);}
-.eye-btn{position:absolute;top:12px;right:12px;width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--ink2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.15s;}
+.eye-btn{position:absolute;top:10px;right:10px;width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.15s;}
 .eye-btn:hover{border-color:var(--blue);color:var(--blue);}
 .eye-btn.on{background:var(--blue-l);border-color:#C9DBFD;color:var(--blue-d);}
-.eye-btn .ic{width:18px;height:18px;}
-.stage-hint{position:absolute;bottom:10px;left:16px;right:16px;text-align:center;font-size:11px;color:var(--ink3);}
+.eye-btn .ic{width:16px;height:16px;}
+.stage-hint{position:absolute;bottom:8px;left:16px;right:16px;text-align:center;font-size:11px;color:var(--ink3);}
 .stage-timer{margin-top:14px;display:flex;justify-content:center;}
-.tmod{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 14px;box-shadow:var(--sh);width:min(440px,100%);flex-wrap:wrap;justify-content:center;}
+.tmod{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:10px 14px;box-shadow:var(--sh);width:min(440px,100%);flex-wrap:wrap;justify-content:center;}
 .tbar{flex:1;min-width:120px;height:6px;background:#EDF0F5;border-radius:99px;overflow:hidden;}
 .tfill{height:100%;border-radius:99px;background:var(--green);transition:width .25s linear,background .4s;}
 .tfill.warning{background:var(--amber);}
@@ -314,8 +322,8 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
   .phead-main{flex-direction:column;align-items:stretch;}
   .phead-acts{width:100%;}
   .phead-acts .btn{flex:1;}
-  .dtext{font-size:30px;letter-spacing:1px;}
-  .stage-card{min-height:190px;padding:48px 18px;}
+  .dtext{font-size:26px;letter-spacing:1px;}
+  .stage-card{min-height:120px;padding:26px 14px;}
   .hide-sm{display:none;}
   .sess-count{padding:5px 10px;font-size:13px;}
   .dock{gap:8px;}
@@ -501,20 +509,25 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
     <span class="sess-count" id="dictProgressBadge">1/5</span>
   </div>
   <div class="prog" id="progBar"></div>
-  <div class="ttsbar">
-    <span class="tb-label"><svg class="ic"><use href="#i-vol"/></svg>TTS</span>
-    <span class="tb-cap">速度</span>
-    <div class="seg" id="tbSpeed"></div>
-    <span class="tb-cap">間隔</span>
-    <div class="seg" id="tbInterval"></div>
-    <span class="tb-lock"><svg class="ic"><use href="#i-lock"/></svg>20 秒以上會自動重讀；語音／音調／隨機請喺「設定」調整</span>
-  </div>
   <div class="stage">
     <div class="stage-status"><span class="spill write" id="stagePill"></span></div>
     <div class="stage-card">
       <button class="eye-btn" id="eyeBtn" onclick="toggleText()" title="顯示／隱藏（H）"><svg class="ic"><use href="#i-eye"/></svg></button>
       <div class="dtext hidden-text" id="dictText">準備好了嗎？</div>
       <div class="stage-hint" id="stageHint">撳右上角眼睛或 H 鍵顯示／隱藏答案</div>
+    </div>
+    <!-- TTS 控制條：單字面板下方 -->
+    <div class="ttsbar">
+      <span class="tb-label"><svg class="ic"><use href="#i-vol"/></svg>TTS</span>
+      <span id="tbModeWrap" style="display:inline-flex;align-items:center;gap:8px;">
+        <span class="tb-cap">模式</span>
+        <div class="seg" id="tbMode"></div>
+      </span>
+      <span class="tb-cap">速度</span>
+      <div class="seg" id="tbSpeed"></div>
+      <span class="tb-cap">間隔</span>
+      <div class="seg" id="tbInterval"></div>
+      <span class="tb-lock"><svg class="ic"><use href="#i-lock"/></svg>≥20秒自動重讀；語音／音調／隨機請喺「設定」調整</span>
     </div>
     <div class="stage-timer">
       <div class="tmod hidden" id="manualMod">
@@ -550,6 +563,10 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
     </div>
   </div>
   <div class="card"><div id="checkList"></div></div>
+  <div class="actionbar">
+    <button class="btn btn-s" onclick="goBack()"><svg class="ic"><use href="#i-back"/></svg>返回</button>
+    <button class="btn btn-p" onclick="finishChecking()"><svg class="ic"><use href="#i-check"/></svg>完成校對</button>
+  </div>
 </div>
 
 <div id="page-result" class="hidden">
@@ -655,7 +672,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
   <div class="acc-card" data-sec="voice">
     <button class="acc-head chev"><span><svg class="ic"><use href="#i-head"/></svg>朗讀與默書設定（全局）</span></button>
     <div class="acc-body">
-      <p class="hint" style="margin:12px 0;">以下設定套用於整個系統；如需為個別默書表微調，請到該表編輯頁關閉「跟隨全局」。默書進行中可喺 TTS 控制條臨時調整速度與間隔。</p>
+      <p class="hint" style="margin:12px 0;">以下設定套用於整個系統；如需為個別默書表微調，請到該表編輯頁關閉「跟隨全局」。默書進行中可喺 TTS 控制條臨時調整模式、速度與間隔。</p>
       <div class="srow" style="border-top:1px solid var(--line);">
         <div class="slabel"><svg class="ic"><use href="#i-lang"/></svg>中文語音</div>
         <div class="voice-control"><select id="zhVoiceSelect" onchange="saveVoicePref('zh')"></select><button class="btn btn-s btn-sm" onclick="testVoice('zh')"><svg class="ic"><use href="#i-vol"/></svg>試聽</button></div>
@@ -669,7 +686,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
       <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-user"/></svg>播放模式</div><div class="seg" id="gModeControl"></div></div>
       <div class="hidden" id="gAutoRow">
         <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-clock"/></svg>自動間隔</div><div class="seg" id="gIntervalControl"></div></div>
-        <div class="hint repeat">20 秒或以上：倒數期間會自動重讀（每 10–15 秒一次）</div>
+        <div class="hint repeat">20 秒或以上：倒數期間會自動重讀（每 10–15 秒一次），重讀時倒數自動暫停</div>
       </div>
       <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-shuffle"/></svg>隨機打亂</div><label class="toggle"><input type="checkbox" id="gRandomToggle" onchange="setGlobal('random',this.checked)"><span class="toggle-slider"></span></label>
         <div class="hint" style="width:100%;">僅適用於「詞語」類型；句子與文章永遠順序朗讀。</div></div>
@@ -833,7 +850,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
 <script>
 'use strict';
 /* ============ 1. 常數 ============ */
-const APP_VERSION='24.4';
+const APP_VERSION='24.5';
 const SCHEMA_VERSION=4;
 const SHEET_ID='1Ok4OH76O2W5rtkHw-1Q_F6W4c4jD-WoQTA0UwAXv4t0';
 const TAB_CONFIG={zh:{defaultName:'Chinese',label:'中文默書'},en:{defaultName:'English',label:'英文默書'}};
@@ -863,7 +880,7 @@ const State={
   focus:null,
   session:{rate:.8,mode:'manual',interval:7,random:false,shuffle:false,focus:false,active:false},
   dict:{items:[],original:[],index:0,checks:[],wordTimes:[],totalStart:0,totalSec:0,review:false,token:0},
-  timers:{wordInt:null,wordStart:0,wordOn:false,cdInt:null,cdEnd:0,cdPaused:0,paused:false,autoPaused:false,countdown:0,cdRepeatCycle:0,cdNextRepeat:0},
+  timers:{wordInt:null,wordStart:0,wordOn:false,cdInt:null,cdEnd:0,cdPaused:0,paused:false,autoPaused:false,countdown:0,cdRepeatCycle:0,cdNextRepeat:0,cdSeq:0,repeatBusy:false,repeatStart:0},
   voices:{all:[]},
   ocr:{items:[],editIndex:-1},
   contentEditIndex:-1,
@@ -881,7 +898,6 @@ function isIOS(){
   return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 }
-/* 自動重讀週期：<20 不重讀；20–44 每 10 秒；≥45 每 15 秒 */
 function repeatCycleFor(iv){
   if(iv<20)return 0;
   if(iv<45)return 10;
@@ -1257,15 +1273,36 @@ function initOverrideSegs(){
   el('ovRandomToggle').checked=o.random;
   el('ovAutoRow').classList.toggle('hidden',o.mode!=='auto');
 }
+/* 默書頁 TTS 控制條：模式／速度／間隔（本次會話） */
 function initTtsBar(){
-  initSeg('tbSpeed',RATE_OPTS,String(State.session.rate),v=>{
-    State.session.rate=parseFloat(v);
-  });
+  const oral=State.session.mode==='oral';
+  el('tbModeWrap').classList.toggle('hidden',oral);
+  initSeg('tbMode',MODE_OPTS,State.session.mode,v=>setSessionMode(v));
+  initSeg('tbSpeed',RATE_OPTS,String(State.session.rate),v=>{State.session.rate=parseFloat(v);});
   initSeg('tbInterval',INT_OPTS,String(State.session.interval),v=>{
     State.session.interval=parseInt(v,10);
     const T=State.timers;
     if(T.cdInt&&!T.paused)startCountdown();
   });
+}
+/* 默書中途切換 手動/自動 模式 */
+function setSessionMode(m){
+  if(State.session.mode===m)return;
+  stopCountdown();stopWordTimer();
+  State.session.mode=m;
+  const D=State.dict;
+  const t=el('dictText');
+  if(D.index<D.items.length){
+    if(m==='oral'){t.classList.remove('hidden-text');el('eyeBtn').classList.add('on');}
+    else{t.classList.add('hidden-text');el('eyeBtn').classList.remove('on');}
+  }
+  updateTimerModules();
+  if(m==='auto'){
+    if(D.index<D.items.length)speakAndSchedule(D.items[D.index]);
+  }else{
+    if(!D.review){setPill('write');startWordTimer();}
+    else setPill('review');
+  }
 }
 function effectiveOpts(p){
   const o=(p&&p.opts)?p.opts:null;
@@ -1580,7 +1617,6 @@ function speakSequence(seq,lang,onDone,rate){
     armWatch();
   };
   startKeepAlive();
-  /* iOS：取消舊語音後需稍延再開，避免被 Safari 吞掉 */
   if(wasBusy)setTimeout(speakNext,80);else speakNext();
   return true;
 }
@@ -2275,12 +2311,27 @@ function paintWord(){
   el('mtWord').innerText=fmtTime(Math.floor((Date.now()-T.wordStart)/1000));
   el('mtTotal').innerText=fmtTime(Math.floor((Date.now()-D.totalStart)/1000));
 }
-/* 長間隔自動重讀（≥20 秒） */
+/* 自動重讀：期間暫停倒數，讀完補回時間 */
 function repeatCurrentSpeak(){
-  const D=State.dict;
+  const D=State.dict,T=State.timers;
   if(!State.session.active||D.index>=D.items.length)return;
+  if(T.repeatBusy)return;
+  const seq=T.cdSeq;
+  T.repeatBusy=true;
+  T.repeatStart=Date.now();
+  setPill('speak');
   const lang=State.current?State.current.lang||'zh':'zh';
-  speakText(D.items[D.index],lang,null,State.session.rate);
+  speakText(D.items[D.index],lang,()=>{
+    if(seq===State.timers.cdSeq){
+      const dur=Date.now()-State.timers.repeatStart;
+      State.timers.cdEnd+=dur;
+      if(State.timers.cdNextRepeat)State.timers.cdNextRepeat+=dur;
+      State.timers.repeatBusy=false;
+      if(State.session.mode==='auto'||D.review)setPill('count');
+    }else{
+      State.timers.repeatBusy=false;
+    }
+  },State.session.rate);
 }
 function startCountdown(){
   stopCountdown();
@@ -2288,6 +2339,7 @@ function startCountdown(){
   const iv=State.session.interval||1;
   T.paused=false;T.autoPaused=false;
   T.cdEnd=Date.now()+iv*1000;
+  T.cdSeq=(T.cdSeq||0)+1;
   const cyc=repeatCycleFor(iv);
   T.cdRepeatCycle=cyc;
   T.cdNextRepeat=cyc?Date.now()+cyc*1000:0;
@@ -2302,7 +2354,7 @@ function stopCountdown(){
 }
 function tickCountdown(){
   const T=State.timers;
-  if(T.paused)return;
+  if(T.paused||T.repeatBusy)return;
   const now=Date.now();
   const left=Math.max(0,Math.ceil((T.cdEnd-now)/1000));
   T.countdown=left;paintCountdown();
