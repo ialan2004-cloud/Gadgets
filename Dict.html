@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中英文默書系統 24.5</title>
+<title>中英文默書系統 24.7</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
 :root{
@@ -59,12 +59,16 @@ button{font-family:inherit;}
 .card-t{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .card-t .ic{color:var(--ink2);}
 .card-t .sp{flex:1;}
+.card-t.home-title{background:#FEF3C7;color:#92400E;border-radius:12px;padding:10px 14px;font-size:16px;font-weight:800;}
+.card-t.home-title .ic{color:#B45309;width:17px;height:17px;}
 .card-foot{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:16px;}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 18px;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;transition:.15s;}
 .btn:active{transform:scale(.97);}
 .btn .ic{width:16px;height:16px;}
 .btn-p{background:var(--blue);color:#fff;box-shadow:0 6px 14px rgba(47,107,237,.22);}
 .btn-p:hover{background:var(--blue-d);}
+.btn-blue{background:var(--blue);color:#fff;box-shadow:0 4px 10px rgba(47,107,237,.18);}
+.btn-blue:hover{background:var(--blue-d);}
 .btn-s{background:#fff;border:1px solid var(--line);color:var(--ink);}
 .btn-s:hover{border-color:var(--blue);color:var(--blue);}
 .btn-dg{background:var(--red-l);border:1px solid #FECDCA;color:#D92D20;}
@@ -194,14 +198,15 @@ details[open]>summary.chev::after{transform:rotate(225deg);}
 .sess-title{font-weight:800;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .sess-meta{font-size:12px;color:var(--ink3);margin-top:2px;}
 .sess-count{font-weight:800;font-size:15px;color:var(--blue-d);background:var(--blue-l);border:1px solid #C9DBFD;padding:6px 13px;border-radius:99px;font-variant-numeric:tabular-nums;flex-shrink:0;}
-/* TTS 控制條（單字面板下方） */
-.ttsbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;margin:12px 0 0;box-shadow:var(--sh);}
-.tb-label{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--ink2);margin-right:2px;}
-.tb-label .ic{width:14px;height:14px;color:var(--blue);}
-.tb-cap{font-size:11px;font-weight:700;color:var(--ink3);}
-.tb-lock{font-size:11px;color:var(--ink3);margin-left:auto;display:inline-flex;align-items:center;gap:5px;}
-.tb-lock .ic{width:12px;height:12px;}
-/* 底部操作列（校對頁等） */
+/* TTS 控制條 — 分組卡片式 */
+.ttsbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin:12px 0 0;padding:10px;background:#F8FAFC;border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);}
+.tts-group{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:6px;min-width:0;}
+.tts-group-label{font-size:11px;font-weight:800;color:var(--ink2);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:5px;}
+.tts-group-label .ic{width:12px;height:12px;color:var(--blue);}
+.tts-group .seg{width:100%;}
+.tts-group .seg-btn{flex:1;min-width:0;padding:6px 8px;font-size:12px;}
+.tts-lock{grid-column:1/-1;font-size:11px;color:var(--ink3);padding:6px 4px;display:flex;align-items:center;gap:5px;}
+.tts-lock .ic{width:12px;height:12px;}
 .actionbar{display:flex;gap:10px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap;}
 @media(max-width:768px){
   .actionbar{position:sticky;bottom:92px;z-index:60;background:linear-gradient(180deg,rgba(244,246,250,0) 0%,var(--bg) 35%);padding-top:10px;margin-top:6px;}
@@ -221,7 +226,6 @@ details[open]>summary.chev::after{transform:rotate(225deg);}
 .spill.write{background:var(--green-l);color:#067647;}
 .spill.review{background:var(--purple-l);color:var(--purple);}
 .spill.oral{background:#FFF1F0;color:#C0392B;}
-/* 單字面板（縮小） */
 .stage-card{position:relative;background:linear-gradient(180deg,#fff,#F8FAFC);border:1px solid var(--line);border-radius:var(--r);min-height:150px;display:flex;align-items:center;justify-content:center;padding:34px 20px;box-shadow:var(--sh);}
 .dtext{font-size:34px;font-weight:800;line-height:1.4;letter-spacing:2px;transition:filter .25s;text-align:center;word-break:break-word;}
 .dtext.hidden-text{filter:blur(14px);user-select:none;color:var(--ink3);}
@@ -284,7 +288,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
 .debug-box{font-size:11px;background:#0F172A;color:#94A3B8;padding:12px;border-radius:10px;white-space:pre-wrap;word-break:break-all;max-height:200px;overflow-y:auto;font-family:monospace;margin-top:10px;}
 .modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center;padding:20px;}
 .modal.show{display:flex;}
-.modal-card{background:#fff;border-radius:20px;padding:26px;max-width:540px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,.2);position:relative;animation:up .25s ease;}
+.modal-card{background:#fff;border-radius:20px;padding:26px;max-width:640px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,.2);position:relative;animation:up .25s ease;}
 @keyframes up{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
 .modal-t{font-size:17px;font-weight:800;margin-bottom:14px;padding-right:36px;display:flex;align-items:center;gap:8px;}
 .modal-t .ic{width:19px;height:19px;color:var(--blue);}
@@ -306,6 +310,14 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
 .toast.out{opacity:0;transform:translateY(-6px);transition:.3s;}
 @keyframes tin{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
 .app-footer{text-align:center;padding:20px 16px 26px;color:var(--ink3);font-size:12px;}
+/* 弱項列表 modal */
+.wl-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center;}
+.wl-toolbar .seg{flex:1;}
+.wl-toolbar .seg-btn{flex:1;}
+.wl-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:6px;background:#fff;}
+.wl-item .wl-word{flex:1;font-weight:700;font-size:14px;}
+.wl-item .wl-count{background:var(--red-l);color:#B42318;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700;}
+.wl-item .wl-meta{font-size:11px;color:var(--ink3);}
 @media(max-width:768px){
   .tabs{position:fixed;left:0;right:0;bottom:0;border-bottom:0;border-top:1px solid var(--line);justify-content:space-around;padding:6px 8px calc(10px + env(safe-area-inset-bottom));box-shadow:0 -4px 16px rgba(16,24,40,.06);gap:0;z-index:90;background:#fff;}
   .tab{flex:1;flex-direction:column;gap:4px;font-size:12px;font-weight:700;letter-spacing:.2px;padding:9px 4px 6px;border-radius:12px;}
@@ -328,7 +340,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
   .sess-count{padding:5px 10px;font-size:13px;}
   .dock{gap:8px;}
   .seg{width:100%;}.seg-btn{flex:1;}
-  .ttsbar .seg{width:auto;flex:1;}
+  .ttsbar{grid-template-columns:1fr;}
   .voice-control{max-width:100%;width:100%;}
   .srow{flex-direction:column;align-items:flex-start;}
   .ropts{flex-direction:column;}
@@ -339,7 +351,12 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
   .row .racts{width:100%;justify-content:flex-end;}
   .mfoot .btn{flex:1;}
   .sa-head{flex-direction:column;align-items:flex-start;}
-  .tb-lock{display:none;}
+  .tts-lock{display:none;}
+}
+@media(orientation:landscape) and (max-height:500px){
+  .stage-card{min-height:100px;padding:20px 16px;}
+  .dtext{font-size:28px;}
+  .ttsbar{grid-template-columns:repeat(3,1fr);}
 }
 </style>
 </head>
@@ -396,6 +413,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
 <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></symbol>
 <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
 <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+<symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="12" r="1" fill="currentColor"/><circle cx="4" cy="18" r="1" fill="currentColor"/></symbol>
 </svg>
 
 <div class="topwrap">
@@ -425,7 +443,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
       <div><h1 class="ptitle">主頁</h1><p class="psub">未來默書日程、本月與下月默書表及錯字弱項一覽</p></div>
     </div>
   </div>
-  <div class="card"><div class="card-t"><svg class="ic"><use href="#i-cal"/></svg>未來默書</div><div id="upcomingList"></div></div>
+  <div class="card"><div class="card-t home-title"><svg class="ic"><use href="#i-cal"/></svg>未來默書</div><div id="upcomingList"></div></div>
   <div class="grid2">
     <div class="card"><div class="lang-title zh"><svg class="ic"><use href="#i-lang"/></svg>中文默書</div><div id="quickZh"></div></div>
     <div class="card"><div class="lang-title en"><svg class="ic"><use href="#i-lang"/></svg>英文默書</div><div id="quickEn"></div></div>
@@ -516,18 +534,21 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
       <div class="dtext hidden-text" id="dictText">準備好了嗎？</div>
       <div class="stage-hint" id="stageHint">撳右上角眼睛或 H 鍵顯示／隱藏答案</div>
     </div>
-    <!-- TTS 控制條：單字面板下方 -->
+    <!-- TTS 控制條：分組卡片式 -->
     <div class="ttsbar">
-      <span class="tb-label"><svg class="ic"><use href="#i-vol"/></svg>TTS</span>
-      <span id="tbModeWrap" style="display:inline-flex;align-items:center;gap:8px;">
-        <span class="tb-cap">模式</span>
+      <div class="tts-group" id="tbModeGroup">
+        <span class="tts-group-label"><svg class="ic"><use href="#i-user"/></svg>模式</span>
         <div class="seg" id="tbMode"></div>
-      </span>
-      <span class="tb-cap">速度</span>
-      <div class="seg" id="tbSpeed"></div>
-      <span class="tb-cap">間隔</span>
-      <div class="seg" id="tbInterval"></div>
-      <span class="tb-lock"><svg class="ic"><use href="#i-lock"/></svg>≥20秒自動重讀；語音／音調／隨機請喺「設定」調整</span>
+      </div>
+      <div class="tts-group">
+        <span class="tts-group-label"><svg class="ic"><use href="#i-gauge"/></svg>速度</span>
+        <div class="seg" id="tbSpeed"></div>
+      </div>
+      <div class="tts-group">
+        <span class="tts-group-label"><svg class="ic"><use href="#i-clock"/></svg>間隔</span>
+        <div class="seg" id="tbInterval"></div>
+      </div>
+      <div class="tts-lock"><svg class="ic"><use href="#i-lock"/></svg>≥20秒自動重讀（倒數暫停）；語音／音調／隨機請喺「設定」調整</div>
     </div>
     <div class="stage-timer">
       <div class="tmod hidden" id="manualMod">
@@ -775,6 +796,24 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
   </div>
 </div></div>
 
+<div class="modal" id="modalWeakList"><div class="modal-card">
+  <button class="mclose" data-close="modalWeakList"><svg class="ic sm"><use href="#i-x"/></svg></button>
+  <div class="modal-t"><svg class="ic"><use href="#i-list"/></svg><span id="wlTitle">弱項列表</span></div>
+  <div class="wl-toolbar">
+    <div class="seg" id="wlSort">
+      <button class="seg-btn active" data-v="count">按次數</button>
+      <button class="seg-btn" data-v="date">按日期</button>
+    </div>
+    <select class="field" id="wlFilter" style="max-width:180px;">
+      <option value="">全部默書表</option>
+    </select>
+  </div>
+  <div id="wlList" style="max-height:50vh;overflow-y:auto;"></div>
+  <div class="mfoot">
+    <button class="btn btn-s" onclick="closeModal('modalWeakList')">關閉</button>
+  </div>
+</div></div>
+
 <div class="modal" id="modalNewProject"><div class="modal-card">
   <button class="mclose" data-close="modalNewProject"><svg class="ic sm"><use href="#i-x"/></svg></button>
   <div class="modal-t"><svg class="ic"><use href="#i-plus"/></svg>新增默書表</div>
@@ -849,9 +888,8 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
 
 <script>
 'use strict';
-/* ============ 1. 常數 ============ */
-const APP_VERSION='24.5';
-const SCHEMA_VERSION=4;
+const APP_VERSION='24.7';
+const SCHEMA_VERSION=5;
 const SHEET_ID='1Ok4OH76O2W5rtkHw-1Q_F6W4c4jD-WoQTA0UwAXv4t0';
 const TAB_CONFIG={zh:{defaultName:'Chinese',label:'中文默書'},en:{defaultName:'English',label:'英文默書'}};
 const MAIN_PAGES=['home','projects','records','settings'];
@@ -864,8 +902,8 @@ const CODE_RE=/^[CE]\d+$/;
 const PAUSE_MS=320;
 const PUNCT_DEFS_EN=[['...','ellipsis'],['…','ellipsis'],[',','comma'],['.','full stop'],['!','exclamation mark'],['?','question mark'],[';','semicolon'],[':','colon'],['"','quote'],['“','quote'],['”','quote'],['(','open bracket'],[')','close bracket']];
 const PUNCT_DEFS_ZH=[['……','， ellipsis'],['，','， comma'],['。','。 period'],['！','！ exclamation mark'],['？','？ question mark'],['；','； semicolon'],['：','： colon'],['、','、 enumeration comma'],['「','「 left quote'],['」','」 right quote'],['『','『 left quote'],['』','』 right quote'],['（','（ left bracket'],['）','） right bracket'],['—','— dash']];
+const TYPE_LABELS={words:'詞語',sentences:'句子',passage:'文章'};
 
-/* ============ 2. Store ============ */
 const Store={
   read(k,fb){try{const v=JSON.parse(localStorage.getItem(k));return (v===null||v===undefined)?fb:v;}catch(e){return fb;}},
   write(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true;}catch(e){debugLog('儲存失敗 '+k+'：'+e.message);return false;}},
@@ -873,7 +911,6 @@ const Store={
   setRaw(k,v){localStorage.setItem(k,v);}
 };
 
-/* ============ 3. State ============ */
 const State={
   projects:[],records:[],global:{rate:.8,mode:'manual',interval:7,random:false,pitch:1,readPunct:true},
   current:null,page:'home',lastMain:'home',viewId:null,
@@ -884,7 +921,8 @@ const State={
   voices:{all:[]},
   ocr:{items:[],editIndex:-1},
   contentEditIndex:-1,
-  ov:{rate:.8,mode:'manual',interval:7,random:false}
+  ov:{rate:.8,mode:'manual',interval:7,random:false},
+  weakListFilter:'',weakListSort:'count'
 };
 let debugLines=[],s2tReady=false,s2tConvert=null,confirmCb=null;
 let speakTimeout=null,speakKeepAlive=null,speakWatch=null,speakSeq=0;
@@ -904,7 +942,6 @@ function repeatCycleFor(iv){
   return 15;
 }
 
-/* ============ 4. 日期／ID 工具 ============ */
 function parseDateFlex(s){
   if(!s)return null;
   s=String(s).trim();
@@ -990,7 +1027,6 @@ function openNewProjectModal(){
   showModal('modalNewProject');
 }
 
-/* ============ 5. 迁移 ============ */
 function loadData(){
   State.projects=Store.read('dict_p8',[]);
   State.records=Store.read('dict_r8',[]);
@@ -1042,6 +1078,18 @@ function runMigrations(){
     Store.write('dict_r8',State.records);
     v=4;
   }
+  if(v<5){
+    let ch=false;
+    State.records.forEach(r=>{
+      const p=State.projects.find(x=>sameId(x.id,r.projectId));
+      if(p){
+        if(!r.type){r.type=p.type;ch=true;}
+        if(!r.sheetKey){r.sheetKey=p.sheetKey;ch=true;}
+      }
+    });
+    if(ch)Store.write('dict_r8',State.records);
+    v=5;
+  }
   Store.setRaw('dict_schema',String(SCHEMA_VERSION));
 }
 function seedSample(){
@@ -1054,7 +1102,6 @@ function seedSample(){
   Store.setRaw('dict_seeded_v11','1');
 }
 
-/* ============ 6. 工具 ============ */
 function escapeHtml(s){const d=document.createElement('div');d.textContent=(s==null)?'':String(s);return d.innerHTML;}
 function escapeAttr(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function escapeTsv(s){return String(s==null?'':s).replace(/[\t\r\n]/g,' ').trim();}
@@ -1067,7 +1114,6 @@ function generateIdFromName(n,l){const s=(n||'')+'_'+(l||'zh');let h=0;for(let i
 function debugLog(m){const line='['+new Date().toLocaleTimeString()+'] '+m;debugLines.push(line);if(debugLines.length>60)debugLines.shift();const e=el('debugContent');if(e)e.innerText=debugLines.join('\n');console.log('[Sync]',m);}
 function clearDebug(){debugLines=[];const e=el('debugContent');if(e)e.innerText='（暫無）';}
 
-/* ============ 7. Toast / Confirm ============ */
 function toast(msg,type){
   const t=document.createElement('div');
   t.className='toast'+(type?' '+type:'');
@@ -1091,7 +1137,6 @@ function closeConfirm(ok){
   if(ok&&cb)cb();
 }
 
-/* ============ 8. 導覽 ============ */
 function showPage(p){
   State.page=p;
   if(MAIN_PAGES.includes(p))State.lastMain=p;
@@ -1125,7 +1170,6 @@ function requestExitDictation(){
   },{okLabel:'退出'});
 }
 
-/* ============ 9. 事件委託 ============ */
 function setupDelegation(){
   el('tabs').addEventListener('click',e=>{const t=e.target.closest('.tab');if(t)navTo(t.dataset.p);});
   el('page-settings').addEventListener('click',e=>{const h=e.target.closest('.acc-head');if(h)toggleAcc(h.closest('.acc-card'));});
@@ -1174,6 +1218,7 @@ function setupDelegation(){
     if(b.dataset.act==='start'){openProject(id);startDictation();}
     if(b.dataset.act==='oral'){openProject(id);startOral();}
     if(b.dataset.act==='view')openView(id);
+    if(b.dataset.act==='weaklist')openWeakList(b.dataset.lang);
   });
   el('page-projects').addEventListener('click',e=>{
     const b=e.target.closest('[data-act]');if(!b)return;
@@ -1235,6 +1280,16 @@ function setupDelegation(){
     const k=b.dataset.copy;
     if(k==='zh')copyProjectsZh();else if(k==='en')copyProjectsEn();else if(k==='rec')copyRecords();else if(k==='tsv')downloadTsv();
   });
+  el('wlSort').addEventListener('click',e=>{
+    const b=e.target.closest('.seg-btn');if(!b)return;
+    el('wlSort').querySelectorAll('.seg-btn').forEach(x=>x.classList.toggle('active',x===b));
+    State.weakListSort=b.dataset.v;
+    renderWeakList();
+  });
+  el('wlFilter').addEventListener('change',e=>{
+    State.weakListFilter=e.target.value;
+    renderWeakList();
+  });
   window.addEventListener('resize',debounce(moveIndicator,120));
   window.addEventListener('online',updateNetChip);
   window.addEventListener('offline',updateNetChip);
@@ -1245,7 +1300,6 @@ function updateNetChip(){
   c.innerHTML=navigator.onLine?'':ic('warn','sm')+'離線模式';
 }
 
-/* ============ 10. Seg factory／TTS 控制條 ============ */
 function initSeg(id,opts,current,onPick){
   const box=el(id);if(!box)return;
   box.innerHTML=opts.map(o=>'<button class="seg-btn'+(String(o.v)===String(current)?' active':'')+'" data-v="'+o.v+'">'+(o.icon?ic(o.icon):'')+o.label+'</button>').join('');
@@ -1273,10 +1327,10 @@ function initOverrideSegs(){
   el('ovRandomToggle').checked=o.random;
   el('ovAutoRow').classList.toggle('hidden',o.mode!=='auto');
 }
-/* 默書頁 TTS 控制條：模式／速度／間隔（本次會話） */
 function initTtsBar(){
   const oral=State.session.mode==='oral';
-  el('tbModeWrap').classList.toggle('hidden',oral);
+  const mg=el('tbModeGroup');
+  if(mg)mg.style.display=oral?'none':'flex';
   initSeg('tbMode',MODE_OPTS,State.session.mode,v=>setSessionMode(v));
   initSeg('tbSpeed',RATE_OPTS,String(State.session.rate),v=>{State.session.rate=parseFloat(v);});
   initSeg('tbInterval',INT_OPTS,String(State.session.interval),v=>{
@@ -1285,7 +1339,6 @@ function initTtsBar(){
     if(T.cdInt&&!T.paused)startCountdown();
   });
 }
-/* 默書中途切換 手動/自動 模式 */
 function setSessionMode(m){
   if(State.session.mode===m)return;
   stopCountdown();stopWordTimer();
@@ -1310,7 +1363,6 @@ function effectiveOpts(p){
          :{rate:State.global.rate,mode:State.global.mode,interval:State.global.interval,random:State.global.random};
 }
 
-/* ============ 11. 編輯頁微調＋日期 ============ */
 function initOverrideUI(){
   const o=(State.current&&State.current.opts)?State.current.opts:null;
   const follow=!o;
@@ -1364,7 +1416,6 @@ function updateDetailHead(){
   }else ph.classList.add('hidden');
 }
 
-/* ============ 12. 檢視全部內容 ============ */
 function openView(id){
   const p=State.projects.find(x=>sameId(x.id,id));if(!p)return;
   State.viewId=id;
@@ -1380,7 +1431,6 @@ function viewStart(oral){
   if(oral)startOral();else startDictation();
 }
 
-/* ============ 12b. 錯字分析＋重點複習 ============ */
 function wrongStatsForProject(pid){
   const map={};
   State.records.forEach(r=>{
@@ -1434,9 +1484,66 @@ function renderWeakness(lang){
   if(otherWrong>0){
     html+='<div class="hint flex" style="margin-top:10px;">'+ic('info','sm')+'<span>句子／文章有 '+otherWrong+' 個錯項，因篇幅較長唔喺主頁顯示，請到「記錄」頁查看及複習。</span></div>';
   }
-  html+='<div class="card-foot" style="margin-top:12px;"><button class="btn btn-s btn-sm" onclick="navTo(\'records\')">'+ic('chart')+'查看弱項分析</button></div>';
+  html+='<div class="card-foot" style="margin-top:12px;">';
+  html+='<button class="btn btn-blue btn-sm" data-act="weaklist" data-lang="'+lang+'">'+ic('list')+'查看弱項列表</button>';
+  html+='<button class="btn btn-s btn-sm" onclick="navTo(\'records\')">'+ic('chart')+'查看弱項分析</button>';
+  html+='</div>';
   wrap.innerHTML=html;
 }
+
+function openWeakList(lang){
+  State.weakListLang=lang;
+  el('wlTitle').textContent=(lang==='zh'?'中文':'英文')+'弱項列表';
+  const sel=el('wlFilter');
+  sel.innerHTML='<option value="">全部默書表</option>';
+  State.projects.filter(p=>p.lang===lang).forEach(p=>{
+    const opt=document.createElement('option');
+    opt.value=String(p.id);
+    opt.textContent=p.name+(p.sheetKey&&CODE_RE.test(p.sheetKey)?' ('+p.sheetKey+')':'');
+    sel.appendChild(opt);
+  });
+  sel.value=State.weakListFilter||'';
+  renderWeakList();
+  showModal('modalWeakList');
+}
+function renderWeakList(){
+  const wrap=el('wlList');
+  if(!wrap)return;
+  const lang=State.weakListLang;
+  const filterPid=State.weakListFilter?+State.weakListFilter:null;
+  const list=[];
+  State.records.forEach(r=>{
+    if(!r.projectId||!(r.wrong||[]).length)return;
+    const p=State.projects.find(x=>sameId(x.id,r.projectId));
+    if(!p||p.lang!==lang)return;
+    if(filterPid&&!sameId(r.projectId,filterPid))return;
+    r.wrong.forEach(w=>{
+      if(p.type!=='words')return;
+      list.push({word:w,project:p.name,sheetKey:p.sheetKey,type:p.type,ts:r.ts});
+    });
+  });
+  const agg={};
+  list.forEach(i=>{
+    const k=i.word+'||'+i.project;
+    if(!agg[k])agg[k]={word:i.word,project:i.project,sheetKey:i.sheetKey,type:i.type,count:0,last:0};
+    agg[k].count++;
+    if(i.ts>agg[k].last)agg[k].last=i.ts;
+  });
+  let arr=Object.values(agg);
+  if(State.weakListSort==='count')arr.sort((a,b)=>b.count-a.count||b.last-a.last);
+  else arr.sort((a,b)=>b.last-a.last||b.count-a.count);
+  if(!arr.length){wrap.innerHTML=emptyHint('暫無錯字記錄');return;}
+  wrap.innerHTML=arr.map(i=>{
+    const typeLabel=TYPE_LABELS[i.type]||'詞語';
+    const meta=i.sheetKey&&CODE_RE.test(i.sheetKey)?i.sheetKey+' · '+typeLabel:typeLabel;
+    return '<div class="wl-item">'+
+      '<div style="flex:1;min-width:0;"><div class="wl-word">'+escapeHtml(i.word)+'</div><div class="wl-meta">'+escapeHtml(i.project)+' · '+meta+'</div></div>'+
+      '<span class="wl-count">×'+i.count+'</span>'+
+      '<span class="wl-meta">'+fmtDate(i.last)+'</span>'+
+      '</div>';
+  }).join('');
+}
+
 function renderSheetAnalysis(lang){
   const wrap=el(lang==='zh'?'anaZh':'anaEn');
   if(!wrap)return;
@@ -1516,7 +1623,6 @@ function startFocusReview(oral){
   showPage('dictation');updateReviewUI();showDictItem();
 }
 
-/* ============ 13. 語音引擎 ============ */
 function refreshVoices(){State.voices.all=('speechSynthesis' in window)?(speechSynthesis.getVoices()||[]):[];}
 function filterVoices(l){
   const v=State.voices.all;
@@ -1675,7 +1781,6 @@ function speakText(text,lang,onDone,rate){
 function testVoice(l){saveVoicePref(l);speakText(l==='zh'?'你好，呢個係中文語音測試。':'Hello, this is an English voice test.',l,null,State.global.rate);}
 function testPitch(){speakText('呢個係音調測試，聽下啱唔啱。','zh',null,State.global.rate);}
 
-/* ============ 14. Google Sheets ============ */
 function getTabName(l){return Store.raw('dict_tab_'+l)||TAB_CONFIG[l].defaultName;}
 function getSheetUrl(l){return 'https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(getTabName(l));}
 function saveTabNames(){
@@ -1807,7 +1912,6 @@ async function syncSingle(lang){
   setBtnLoading(false);
 }
 
-/* ============ 15. 重置 ============ */
 function resetRecords(){
   if(!State.records.length){toast('目前沒有任何成績記錄');return;}
   confirmDialog('重置成績','所有默書記錄（'+State.records.length+' 筆）與錯字分析將會永久刪除，無法復原。',()=>{
@@ -1826,7 +1930,6 @@ function resetProjects(){
   },{danger:true,okLabel:'重置'});
 }
 
-/* ============ 16. 通知 ============ */
 function notifRead(){return Store.read('dict_notif_read',[]);}
 function buildNotifications(){
   const out=[],now=Date.now(),today=new Date();
@@ -1880,7 +1983,6 @@ function toggleNotif(){
 }
 function closeNotif(){el('notifPanel').classList.add('hidden');}
 
-/* ============ 17. 手風琴 ============ */
 function toggleAcc(card){
   const was=card.classList.contains('open');
   document.querySelectorAll('#page-settings .acc-card').forEach(c=>c.classList.remove('open'));
@@ -1893,7 +1995,6 @@ function toggleAcc(card){
   else if(sec==='share')renderShare();
 }
 
-/* ============ 18. 分享 QR ============ */
 function renderShare(){
   const url=location.href;
   el('shareUrl').textContent=url;
@@ -1914,12 +2015,10 @@ function drawQR(box,url){
 }
 function copyShareUrl(){copyToClipboard(location.href).then(()=>flash('shareCopyOk'));}
 
-/* ============ 19. 渲染 ============ */
 function badges(p){
   let s='';
   if(p.sheetKey&&CODE_RE.test(p.sheetKey))s+='<span class="chip code">'+escapeHtml(p.sheetKey)+'</span>';
-  const tl={words:'詞語',sentences:'句子',passage:'文章'};
-  s+='<span class="chip blue">'+(tl[p.type]||'詞語')+'</span>';
+  s+='<span class="chip blue">'+(TYPE_LABELS[p.type]||'詞語')+'</span>';
   if(p.isSample)s+='<span class="chip purple">示例</span>';
   return s;
 }
@@ -1979,7 +2078,6 @@ function renderProjects(){
   renderLangList('projListEn','en',libraryCardHTML,{});
 }
 
-/* ============ 20. 項目管理 ============ */
 function createProject(){
   const n=el('newProjectName').value.trim();
   if(!n){toast('請輸入名稱','err');return;}
@@ -2059,7 +2157,6 @@ function addContent(){
   el('newContentText').value='';closeModal('modalAddContent');renderContentList();
 }
 
-/* ============ 21. OCR／剪貼簿匯入 ============ */
 function loadOpenCC(){return new Promise(res=>{if(window.OpenCC){init();res(true);return;}const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/opencc.js';s.onload=()=>{init();res(true);};s.onerror=()=>res(false);document.head.appendChild(s);function init(){try{s2tConvert=OpenCC.Converter({from:'cn',to:'hk'});s2tReady=true;}catch(e){}}});}
 function toTraditional(t){if(s2tReady&&s2tConvert){try{return s2tConvert(t);}catch(e){}}return t;}
 function openScanModal(){showModal('modalScan');resetScanModal();}
@@ -2178,7 +2275,6 @@ function resetScanModal(){
   State.ocr.items=[];State.ocr.editIndex=-1;
 }
 
-/* ============ 22. 默書流程 ============ */
 function setPill(phase){
   const p=el('stagePill');
   const map={speak:['speak','vol','朗讀中'],count:['count','clock','倒數中'],write:['write','edit','書寫中'],review:['review','reset','溫習模式'],oral:['oral','user','家長口述']};
@@ -2311,7 +2407,6 @@ function paintWord(){
   el('mtWord').innerText=fmtTime(Math.floor((Date.now()-T.wordStart)/1000));
   el('mtTotal').innerText=fmtTime(Math.floor((Date.now()-D.totalStart)/1000));
 }
-/* 自動重讀：期間暫停倒數，讀完補回時間 */
 function repeatCurrentSpeak(){
   const D=State.dict,T=State.timers;
   if(!State.session.active||D.index>=D.items.length)return;
@@ -2384,7 +2479,6 @@ function paintCountdown(){
   if(pct<=25)f.classList.add('danger');else if(pct<=50)f.classList.add('warning');
 }
 
-/* ============ 23. 校對／結果 ============ */
 function renderCheckList(){
   const D=State.dict;
   el('checkList').innerHTML=D.items.map((it,i)=>{
@@ -2429,7 +2523,18 @@ function finishChecking(){
     const wi=D.items.filter((_,i)=>D.checks[i]!==true);
     if(wi.length){el('resultWrong').classList.remove('hidden');el('wrongList').innerHTML=wi.map(w=>'<div style="padding:10px 12px;background:var(--red-l);border:1px solid #FECDCA;border-radius:10px;margin-bottom:8px;color:#B42318;font-weight:600;display:flex;gap:7px;align-items:center;">'+ic('x','sm')+escapeHtml(w)+'</div>').join('');}
     else el('resultWrong').classList.add('hidden');
-    State.records.push({ts:Date.now(),projectId:State.current.id,project:State.current.name,lang:State.current.lang,correct,total,percent:pct,totalTime:timed?D.totalSec:null,wrong:wi,focus:!!State.session.focus});
+    State.records.push({
+      ts:Date.now(),
+      projectId:State.current.id,
+      project:State.current.name,
+      sheetKey:State.current.sheetKey,
+      type:State.current.type,
+      lang:State.current.lang,
+      correct,total,percent:pct,
+      totalTime:timed?D.totalSec:null,
+      wrong:wi,
+      focus:!!State.session.focus
+    });
     Store.write('dict_r8',State.records);
     refreshNotifications();showPage('result');
   };
@@ -2451,7 +2556,12 @@ function retryWrong(){
   showPage('dictation');updateReviewUI();showDictItem();
 }
 
-/* ============ 24. 記錄 ============ */
+function recordLabel(r){
+  const name=r.project||'(未命名)';
+  const sk=r.sheetKey&&CODE_RE.test(r.sheetKey)?' '+r.sheetKey:'';
+  const tl=TYPE_LABELS[r.type]||'';
+  return name+sk+(tl?' '+tl:'');
+}
 function renderRecords(){
   const R=State.records,n=R.length;
   renderSheetAnalysis('zh');
@@ -2478,16 +2588,15 @@ function renderRecords(){
   el('recordTable').innerHTML='<div class="tbl-wrap" style="margin-top:0;"><div class="tbl-scroll"><table class="tbl"><thead><tr><th>日期</th><th>默書表</th><th>成績</th><th>得分</th><th>錯字</th><th>用時</th></tr></thead><tbody>'+
     (R.slice().reverse().slice(0,20).map(r=>{
       const wc=(r.wrong||[]).length;
-      return '<tr><td class="nowrap">'+fmtDateTime(r.ts)+'</td><td class="wrap">'+escapeHtml(r.project)+(r.focus?' <span class="chip purple">重點</span>':'')+'</td><td>'+r.correct+'/'+r.total+'</td><td><strong style="color:'+(r.percent>=70?'var(--green)':'var(--red)')+';">'+r.percent+'%</strong></td><td>'+(wc?'<strong style="color:var(--red);">'+wc+'</strong>':'—')+'</td><td>'+(r.totalTime!=null?fmtTime(r.totalTime):'--')+'</td></tr>';
+      return '<tr><td class="nowrap">'+fmtDateTime(r.ts)+'</td><td class="wrap">'+escapeHtml(recordLabel(r))+(r.focus?' <span class="chip purple">重點</span>':'')+'</td><td>'+r.correct+'/'+r.total+'</td><td><strong style="color:'+(r.percent>=70?'var(--green)':'var(--red)')+';">'+r.percent+'%</strong></td><td>'+(wc?'<strong style="color:var(--red);">'+wc+'</strong>':'—')+'</td><td>'+(r.totalTime!=null?fmtTime(r.totalTime):'--')+'</td></tr>';
     }).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--ink3);padding:18px;">暫無資料</td></tr>')+
     '</tbody></table></div></div>';
 }
 
-/* ============ 25. 匯出 ============ */
 function typeLabelForExport(p){return p.lang==='en'?{words:'words',sentences:'sentences',passage:'paragraphs'}[p.type]||'words':{words:'詞語',sentences:'句子',passage:'文章'}[p.type]||'詞語';}
 function projectIdForExport(p){return (p.sheetKey&&p.sheetKey!==p.name)?p.sheetKey:'';}
 function buildProjectsTsv(l){return['Project\tType\tDetails\tDate\tID'].concat(State.projects.filter(p=>p.lang===l).map(p=>[escapeTsv(p.name),typeLabelForExport(p),escapeTsv((p.contents||[]).join(';')),p.dictTs?isoDate(p.dictTs):'',escapeTsv(projectIdForExport(p))].join('\t'))).join('\n');}
-function buildRecordsTsv(){return['日期\t默書表\t答對\t總數\t得分(%)\t錯字\t用時'].concat(State.records.slice().reverse().map(r=>[fmtDateTime(r.ts),escapeTsv(r.project),r.correct,r.total,r.percent,(r.wrong||[]).map(escapeTsv).join(';'),r.totalTime!=null?fmtTime(r.totalTime):''].join('\t'))).join('\n');}
+function buildRecordsTsv(){return['日期\t默書表\t類型\tID\t答對\t總數\t得分(%)\t錯字\t用時'].concat(State.records.slice().reverse().map(r=>[fmtDateTime(r.ts),escapeTsv(r.project),typeLabelForExport({type:r.type,lang:r.lang}),r.sheetKey||'',r.correct,r.total,r.percent,(r.wrong||[]).map(escapeTsv).join(';'),r.totalTime!=null?fmtTime(r.totalTime):''].join('\t'))).join('\n');}
 function exportTable(title,cols,rows,copyKey,confirmId){
   return '<div class="tbl-wrap"><div class="tbl-head"><span>'+title+'</span><button class="btn btn-p btn-sm" data-copy="'+copyKey+'">'+ic('copy')+'複製</button></div>'+
     '<div class="tbl-scroll" style="max-height:220px;overflow:auto;"><table class="tbl"><thead><tr>'+cols.map(c=>'<th>'+c+'</th>').join('')+'</tr></thead><tbody>'+
@@ -2498,13 +2607,13 @@ function renderExportTables(){
   const w=el('exportTables');if(!w)return;
   const zhRows=State.projects.filter(p=>p.lang==='zh').map(p=>[escapeHtml(p.name),typeLabelForExport(p),escapeHtml((p.contents||[]).join(';')),p.dictTs?fmtDate(p.dictTs):'—',projectIdForExport(p)||'—']);
   const enRows=State.projects.filter(p=>p.lang==='en').map(p=>[escapeHtml(p.name),typeLabelForExport(p),escapeHtml((p.contents||[]).join(';')),p.dictTs?fmtDate(p.dictTs):'—',projectIdForExport(p)||'—']);
-  const rcRows=State.records.slice().reverse().slice(0,100).map(r=>[escapeHtml(fmtDateTime(r.ts)),escapeHtml(r.project)+(r.focus?'（重點）':''),r.correct+'/'+r.total,r.percent+'%',(r.wrong||[]).map(escapeHtml).join('; ')||'—',r.totalTime!=null?fmtTime(r.totalTime):'—']);
+  const rcRows=State.records.slice().reverse().slice(0,100).map(r=>[escapeHtml(fmtDateTime(r.ts)),escapeHtml(r.project),TYPE_LABELS[r.type]||'',r.sheetKey||'',r.correct+'/'+r.total,r.percent+'%',(r.wrong||[]).map(escapeHtml).join('; ')||'—',r.totalTime!=null?fmtTime(r.totalTime):'—']);
   w.innerHTML=
     exportTable('中文默書表（'+zhRows.length+' 張）',['Project','Type','Details','Date','ID'],zhRows,'zh','copyProjZhConfirm')+
     '<div style="height:12px;"></div>'+
     exportTable('英文默書表（'+enRows.length+' 張）',['Project','Type','Details','Date','ID'],enRows,'en','copyProjEnConfirm')+
     '<div style="height:12px;"></div>'+
-    exportTable('成績記錄（'+rcRows.length+' 筆）',['日期','默書表','成績','得分','錯字','用時'],rcRows,'rec','copyRecConfirm')+
+    exportTable('成績記錄（'+rcRows.length+' 筆）',['日期','默書表','類型','ID','成績','得分','錯字','用時'],rcRows,'rec','copyRecConfirm')+
     '<div class="card-foot" style="justify-content:flex-start;"><button class="btn btn-s" data-copy="tsv">'+ic('dl')+'下載 TSV 檔（全部）</button><span class="hint" style="align-self:center;">複製後可直接貼入 Google Sheets</span></div>';
 }
 function copyToClipboard(t){
@@ -2524,7 +2633,6 @@ function downloadTsv(){
   a.click();URL.revokeObjectURL(u);toast('已下載 TSV','ok');
 }
 
-/* ============ 26. 初始化 ============ */
 window.onload=()=>{
   el('appVersion').textContent=APP_VERSION;
   el('verChip').textContent='v'+APP_VERSION;
