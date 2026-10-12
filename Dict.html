@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中英文默書系統 24.7</title>
+<title>中英文默書系統 24.8</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
 :root{
@@ -133,8 +133,8 @@ button{font-family:inherit;}
 .sa-meta{font-size:12px;color:var(--ink3);margin:7px 0;}
 .sa-wrong{display:flex;gap:6px;flex-wrap:wrap;}
 .sa-wrong .chip{max-width:100%;}
-.sa-acts{margin-top:12px;}
-.sa-acts .btn{width:100%;}
+.sa-acts{margin-top:12px;display:flex;gap:8px;}
+.sa-acts .btn{flex:1;width:auto;}
 .fchips{display:flex;gap:8px;flex-wrap:wrap;}
 .fchip{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:12px;border:1px solid var(--line);background:#fff;font-size:14px;font-weight:600;color:var(--ink2);cursor:pointer;transition:.15s;max-width:100%;}
 .fchip:active{transform:scale(.96);}
@@ -198,7 +198,6 @@ details[open]>summary.chev::after{transform:rotate(225deg);}
 .sess-title{font-weight:800;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .sess-meta{font-size:12px;color:var(--ink3);margin-top:2px;}
 .sess-count{font-weight:800;font-size:15px;color:var(--blue-d);background:var(--blue-l);border:1px solid #C9DBFD;padding:6px 13px;border-radius:99px;font-variant-numeric:tabular-nums;flex-shrink:0;}
-/* TTS 控制條 — 分組卡片式 */
 .ttsbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin:12px 0 0;padding:10px;background:#F8FAFC;border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);}
 .tts-group{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:6px;min-width:0;}
 .tts-group-label{font-size:11px;font-weight:800;color:var(--ink2);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:5px;}
@@ -270,13 +269,14 @@ details[open]>summary.chev::after{transform:rotate(225deg);}
 .tbl-wrap{margin-top:12px;border:1px solid var(--line);border-radius:12px;overflow:hidden;}
 .tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
 .tbl-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#F8FAFC;font-weight:700;font-size:14px;}
-table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
+table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:560px;}
 .tbl th,.tbl td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);}
 .tbl th{background:#F8FAFC;font-weight:700;font-size:11px;color:var(--ink2);text-transform:uppercase;letter-spacing:.4px;}
 .tbl tr:last-child td{border-bottom:none;}
 .tbl td{max-width:300px;}
 .tbl td.wrap{white-space:normal;word-break:break-word;}
 .tbl td.nowrap{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tbl .chip{margin:1px 2px 1px 0;}
 .copy-confirm{color:var(--green);font-size:13px;margin-left:8px;display:none;font-weight:600;align-items:center;gap:5px;}
 .sync-status{margin-top:12px;padding:10px 14px;border-radius:12px;font-size:14px;display:none;font-weight:600;align-items:center;gap:8px;}
 .sync-status.show{display:flex;}
@@ -310,7 +310,6 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
 .toast.out{opacity:0;transform:translateY(-6px);transition:.3s;}
 @keyframes tin{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
 .app-footer{text-align:center;padding:20px 16px 26px;color:var(--ink3);font-size:12px;}
-/* 弱項列表 modal */
 .wl-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center;}
 .wl-toolbar .seg{flex:1;}
 .wl-toolbar .seg-btn{flex:1;}
@@ -351,6 +350,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
   .row .racts{width:100%;justify-content:flex-end;}
   .mfoot .btn{flex:1;}
   .sa-head{flex-direction:column;align-items:flex-start;}
+  .sa-acts{flex-direction:column;}
   .tts-lock{display:none;}
 }
 @media(orientation:landscape) and (max-height:500px){
@@ -534,7 +534,6 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
       <div class="dtext hidden-text" id="dictText">準備好了嗎？</div>
       <div class="stage-hint" id="stageHint">撳右上角眼睛或 H 鍵顯示／隱藏答案</div>
     </div>
-    <!-- TTS 控制條：分組卡片式 -->
     <div class="ttsbar">
       <div class="tts-group" id="tbModeGroup">
         <span class="tts-group-label"><svg class="ic"><use href="#i-user"/></svg>模式</span>
@@ -627,7 +626,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
       <div><h1 class="ptitle">默書記錄</h1><p class="psub">以錯字弱項分析為核心：撳錯字 chip 即可揀選重點複習；分數統計僅供參考</p></div>
     </div>
   </div>
-  <div class="grid2">
+  <div class="grid2" id="recordsAnalysis">
     <div class="card"><div class="lang-title zh"><svg class="ic"><use href="#i-target"/></svg>中文弱項分析</div><div id="anaZh"></div></div>
     <div class="card"><div class="lang-title en"><svg class="ic"><use href="#i-target"/></svg>英文弱項分析</div><div id="anaEn"></div></div>
   </div>
@@ -888,7 +887,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
 
 <script>
 'use strict';
-const APP_VERSION='24.7';
+const APP_VERSION='24.8';
 const SCHEMA_VERSION=5;
 const SHEET_ID='1Ok4OH76O2W5rtkHw-1Q_F6W4c4jD-WoQTA0UwAXv4t0';
 const TAB_CONFIG={zh:{defaultName:'Chinese',label:'中文默書'},en:{defaultName:'English',label:'英文默書'}};
@@ -915,14 +914,14 @@ const State={
   projects:[],records:[],global:{rate:.8,mode:'manual',interval:7,random:false,pitch:1,readPunct:true},
   current:null,page:'home',lastMain:'home',viewId:null,
   focus:null,
+  weakListLang:'zh',weakListFilter:'',weakListSort:'count',
   session:{rate:.8,mode:'manual',interval:7,random:false,shuffle:false,focus:false,active:false},
   dict:{items:[],original:[],index:0,checks:[],wordTimes:[],totalStart:0,totalSec:0,review:false,token:0},
   timers:{wordInt:null,wordStart:0,wordOn:false,cdInt:null,cdEnd:0,cdPaused:0,paused:false,autoPaused:false,countdown:0,cdRepeatCycle:0,cdNextRepeat:0,cdSeq:0,repeatBusy:false,repeatStart:0},
   voices:{all:[]},
   ocr:{items:[],editIndex:-1},
   contentEditIndex:-1,
-  ov:{rate:.8,mode:'manual',interval:7,random:false},
-  weakListFilter:'',weakListSort:'count'
+  ov:{rate:.8,mode:'manual',interval:7,random:false}
 };
 let debugLines=[],s2tReady=false,s2tConvert=null,confirmCb=null;
 let speakTimeout=null,speakKeepAlive=null,speakWatch=null,speakSeq=0;
@@ -1137,6 +1136,12 @@ function closeConfirm(ok){
   if(ok&&cb)cb();
 }
 
+/* 導覽＋錨點捲動 */
+function scrollToSection(id){
+  const t=el(id);if(!t)return;
+  const y=t.getBoundingClientRect().top+window.scrollY-116;
+  window.scrollTo({top:Math.max(0,y),behavior:'smooth'});
+}
 function showPage(p){
   State.page=p;
   if(MAIN_PAGES.includes(p))State.lastMain=p;
@@ -1144,6 +1149,7 @@ function showPage(p){
   el('page-'+p).classList.remove('hidden');
   const active=MAIN_PAGES.includes(p)?p:State.lastMain;
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.p===active));
+  window.scrollTo({top:0});
   requestAnimationFrame(moveIndicator);
   if(p==='home')renderHome();
   if(p==='projects')renderProjects();
@@ -1156,7 +1162,11 @@ function moveIndicator(){
   ind.style.width=act.offsetWidth+'px';
   ind.style.left=act.offsetLeft+'px';
 }
-function navTo(p){State.page==='dictation'?requestExitDictation():showPage(p);}
+function navTo(p,anchor){
+  if(State.page==='dictation'){requestExitDictation();return;}
+  showPage(p);
+  if(anchor)requestAnimationFrame(()=>scrollToSection(anchor));
+}
 function goBack(){showPage(State.lastMain);}
 function showModal(id){el(id).classList.add('show');}
 function closeModal(id){el(id).classList.remove('show');}
@@ -1230,8 +1240,9 @@ function setupDelegation(){
     if(b.dataset.act==='del')deleteProject(id);
   });
   el('page-records').addEventListener('click',e=>{
-    const b=e.target.closest('[data-act="focus"]');
-    if(b)openFocusModal(+b.dataset.id);
+    const b=e.target.closest('[data-act]');if(!b)return;
+    if(b.dataset.act==='focus')openFocusModal(+b.dataset.id);
+    if(b.dataset.act==='weaklist')openWeakList(b.dataset.lang,+b.dataset.id);
   });
   el('focusList').addEventListener('click',e=>{
     const b=e.target.closest('.fchip');if(!b||!State.focus)return;
@@ -1482,27 +1493,31 @@ function renderWeakness(lang){
     html+='</div>';
   }
   if(otherWrong>0){
-    html+='<div class="hint flex" style="margin-top:10px;">'+ic('info','sm')+'<span>句子／文章有 '+otherWrong+' 個錯項，因篇幅較長唔喺主頁顯示，請到「記錄」頁查看及複習。</span></div>';
+    html+='<div class="hint flex" style="margin-top:10px;">'+ic('info','sm')+'<span>句子／文章有 '+otherWrong+' 個錯項，可喺「弱項列表」查看完整內容。</span></div>';
   }
-  html+='<div class="card-foot" style="margin-top:12px;">';
+  html+='<div class="card-foot" style="margin-top:12px;justify-content:flex-start;">';
   html+='<button class="btn btn-blue btn-sm" data-act="weaklist" data-lang="'+lang+'">'+ic('list')+'查看弱項列表</button>';
-  html+='<button class="btn btn-s btn-sm" onclick="navTo(\'records\')">'+ic('chart')+'查看弱項分析</button>';
+  html+='<button class="btn btn-blue btn-sm" onclick="navTo(\'records\',\'recordsAnalysis\')">'+ic('chart')+'查看弱項分析</button>';
   html+='</div>';
   wrap.innerHTML=html;
 }
 
-function openWeakList(lang){
-  State.weakListLang=lang;
-  el('wlTitle').textContent=(lang==='zh'?'中文':'英文')+'弱項列表';
+/* 弱項列表 Modal（含所有類型；可篩選/排序） */
+function openWeakList(lang,pid){
+  State.weakListLang=lang||'zh';
+  el('wlTitle').textContent=(State.weakListLang==='zh'?'中文':'英文')+'弱項列表';
   const sel=el('wlFilter');
   sel.innerHTML='<option value="">全部默書表</option>';
-  State.projects.filter(p=>p.lang===lang).forEach(p=>{
+  State.projects.filter(p=>p.lang===State.weakListLang).forEach(p=>{
     const opt=document.createElement('option');
     opt.value=String(p.id);
     opt.textContent=p.name+(p.sheetKey&&CODE_RE.test(p.sheetKey)?' ('+p.sheetKey+')':'');
     sel.appendChild(opt);
   });
-  sel.value=State.weakListFilter||'';
+  const want=pid?String(pid):(State.weakListFilter||'');
+  sel.value=want;
+  if(sel.value!==want){sel.value='';}
+  State.weakListFilter=sel.value;
   renderWeakList();
   showModal('modalWeakList');
 }
@@ -1511,33 +1526,28 @@ function renderWeakList(){
   if(!wrap)return;
   const lang=State.weakListLang;
   const filterPid=State.weakListFilter?+State.weakListFilter:null;
-  const list=[];
+  const agg={};
   State.records.forEach(r=>{
     if(!r.projectId||!(r.wrong||[]).length)return;
     const p=State.projects.find(x=>sameId(x.id,r.projectId));
     if(!p||p.lang!==lang)return;
     if(filterPid&&!sameId(r.projectId,filterPid))return;
     r.wrong.forEach(w=>{
-      if(p.type!=='words')return;
-      list.push({word:w,project:p.name,sheetKey:p.sheetKey,type:p.type,ts:r.ts});
+      const k=w+'||'+p.id;
+      if(!agg[k])agg[k]={word:w,project:p.name,sheetKey:p.sheetKey,type:p.type,count:0,last:0};
+      agg[k].count++;
+      if((r.ts||0)>agg[k].last)agg[k].last=r.ts||0;
     });
-  });
-  const agg={};
-  list.forEach(i=>{
-    const k=i.word+'||'+i.project;
-    if(!agg[k])agg[k]={word:i.word,project:i.project,sheetKey:i.sheetKey,type:i.type,count:0,last:0};
-    agg[k].count++;
-    if(i.ts>agg[k].last)agg[k].last=i.ts;
   });
   let arr=Object.values(agg);
   if(State.weakListSort==='count')arr.sort((a,b)=>b.count-a.count||b.last-a.last);
   else arr.sort((a,b)=>b.last-a.last||b.count-a.count);
   if(!arr.length){wrap.innerHTML=emptyHint('暫無錯字記錄');return;}
   wrap.innerHTML=arr.map(i=>{
-    const typeLabel=TYPE_LABELS[i.type]||'詞語';
-    const meta=i.sheetKey&&CODE_RE.test(i.sheetKey)?i.sheetKey+' · '+typeLabel:typeLabel;
+    const meta=(i.sheetKey&&CODE_RE.test(i.sheetKey)?i.sheetKey+' · ':'')+(TYPE_LABELS[i.type]||'詞語');
     return '<div class="wl-item">'+
-      '<div style="flex:1;min-width:0;"><div class="wl-word">'+escapeHtml(i.word)+'</div><div class="wl-meta">'+escapeHtml(i.project)+' · '+meta+'</div></div>'+
+      '<div style="flex:1;min-width:0;"><div class="wl-word">'+escapeHtml(i.word)+'</div>'+
+      '<div class="wl-meta">'+escapeHtml(i.project)+' · '+escapeHtml(meta)+'</div></div>'+
       '<span class="wl-count">×'+i.count+'</span>'+
       '<span class="wl-meta">'+fmtDate(i.last)+'</span>'+
       '</div>';
@@ -1561,7 +1571,10 @@ function renderSheetAnalysis(lang){
       '<span class="sa-score '+(o.sum.last.percent>=70?'good':'bad')+'">最近 '+o.sum.last.percent+'%</span></div>'+
       '<div class="sa-meta">共 '+o.sum.n+' 次默書 · 平均 '+o.sum.avg+'% · 錯字 '+keys.length+' 個</div>'+
       '<div class="sa-wrong">'+(keys.length?chips+more:'<span class="hint">暫無錯字記錄，保持得好！</span>')+'</div>'+
-      (keys.length?'<div class="sa-acts"><button class="btn btn-p btn-sm" data-act="focus" data-id="'+o.p.id+'">'+ic('target')+'重點複習</button></div>':'')+
+      (keys.length?'<div class="sa-acts">'+
+        '<button class="btn btn-p btn-sm" data-act="focus" data-id="'+o.p.id+'">'+ic('target')+'重點複習</button>'+
+        '<button class="btn btn-blue btn-sm" data-act="weaklist" data-id="'+o.p.id+'" data-lang="'+lang+'">'+ic('list')+'檢視列表</button>'+
+      '</div>':'')+
       '</div>';
   }).join(''):emptyHint('暫無'+(lang==='zh'?'中文':'英文')+'默書記錄');
 }
@@ -2556,11 +2569,13 @@ function retryWrong(){
   showPage('dictation');updateReviewUI();showDictItem();
 }
 
-function recordLabel(r){
-  const name=r.project||'(未命名)';
-  const sk=r.sheetKey&&CODE_RE.test(r.sheetKey)?' '+r.sheetKey:'';
-  const tl=TYPE_LABELS[r.type]||'';
-  return name+sk+(tl?' '+tl:'');
+/* 記錄表格：名稱＋UID/類型 chip 標籤 */
+function recordChips(r){
+  let s=escapeHtml(r.project||'(未命名)');
+  if(r.sheetKey&&CODE_RE.test(r.sheetKey))s+=' <span class="chip code">'+escapeHtml(r.sheetKey)+'</span>';
+  if(r.type)s+=' <span class="chip blue">'+(TYPE_LABELS[r.type]||'')+'</span>';
+  if(r.focus)s+=' <span class="chip purple">重點</span>';
+  return s;
 }
 function renderRecords(){
   const R=State.records,n=R.length;
@@ -2588,7 +2603,7 @@ function renderRecords(){
   el('recordTable').innerHTML='<div class="tbl-wrap" style="margin-top:0;"><div class="tbl-scroll"><table class="tbl"><thead><tr><th>日期</th><th>默書表</th><th>成績</th><th>得分</th><th>錯字</th><th>用時</th></tr></thead><tbody>'+
     (R.slice().reverse().slice(0,20).map(r=>{
       const wc=(r.wrong||[]).length;
-      return '<tr><td class="nowrap">'+fmtDateTime(r.ts)+'</td><td class="wrap">'+escapeHtml(recordLabel(r))+(r.focus?' <span class="chip purple">重點</span>':'')+'</td><td>'+r.correct+'/'+r.total+'</td><td><strong style="color:'+(r.percent>=70?'var(--green)':'var(--red)')+';">'+r.percent+'%</strong></td><td>'+(wc?'<strong style="color:var(--red);">'+wc+'</strong>':'—')+'</td><td>'+(r.totalTime!=null?fmtTime(r.totalTime):'--')+'</td></tr>';
+      return '<tr><td class="nowrap">'+fmtDateTime(r.ts)+'</td><td class="wrap">'+recordChips(r)+'</td><td>'+r.correct+'/'+r.total+'</td><td><strong style="color:'+(r.percent>=70?'var(--green)':'var(--red)')+';">'+r.percent+'%</strong></td><td>'+(wc?'<strong style="color:var(--red);">'+wc+'</strong>':'—')+'</td><td>'+(r.totalTime!=null?fmtTime(r.totalTime):'--')+'</td></tr>';
     }).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--ink3);padding:18px;">暫無資料</td></tr>')+
     '</tbody></table></div></div>';
 }
