@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中英文默書系統 25.0</title>
+<title>中英文默書系統 25.2</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='10' fill='%232F6BED'/%3E%3Crect x='8' y='8' width='17' height='24' rx='3' fill='white'/%3E%3Crect x='11' y='13' width='10' height='2.4' rx='1.2' fill='%23A5B4FC'/%3E%3Crect x='11' y='18' width='7' height='2.4' rx='1.2' fill='%23A5B4FC'/%3E%3Ccircle cx='26.5' cy='27' r='7.5' fill='%23F59E0B'/%3E%3Cpath d='M23 27.2l2.4 2.4 4.2-4.8' stroke='white' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M30 11.5a7.5 7.5 0 0 1 0 9' stroke='white' stroke-width='2.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
 :root{
@@ -23,7 +24,7 @@ button{font-family:inherit;}
 .topwrap{position:sticky;top:0;z-index:100;}
 .topbar{position:relative;background:linear-gradient(135deg,#2563EB 0%,#1E40AF 100%);display:flex;align-items:center;gap:10px;padding:12px 18px;color:#fff;}
 .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:17px;color:#fff;cursor:pointer;}
-.logo{width:36px;height:36px;border-radius:10px;background:#fff;color:#2563EB;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.18);}
+.logo{width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0;filter:drop-shadow(0 2px 6px rgba(0,0,0,.25));}
 .ver{font-size:11px;font-weight:700;color:#fff;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);padding:3px 9px;border-radius:99px;}
 .net-chip{font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;background:rgba(239,68,68,.28);border:1px solid rgba(239,68,68,.65);color:#fff;display:none;align-items:center;gap:5px;}
 .net-chip.off{display:inline-flex;}
@@ -73,6 +74,8 @@ button{font-family:inherit;}
 .btn-green:hover{background:#0EA25E;}
 .btn-purple{background:var(--purple);color:#fff;box-shadow:0 4px 10px rgba(109,40,217,.25);}
 .btn-purple:hover{background:#5B21B6;}
+.btn-read{background:var(--amber);color:#fff;box-shadow:0 4px 12px rgba(245,158,11,.3);}
+.btn-read:hover{background:#D97706;}
 .btn-s{background:#fff;border:1px solid var(--line);color:var(--ink);}
 .btn-s:hover{border-color:var(--blue);color:var(--blue);}
 .btn-dg{background:var(--red-l);border:1px solid #FECDCA;color:#D92D20;}
@@ -91,7 +94,7 @@ button{font-family:inherit;}
 .ib.del{background:var(--red-l);border-color:#FECDCA;color:#B42318;}
 .ib.sm{width:30px;height:30px;border-radius:8px;}
 .ib.sm .ic{width:14px;height:14px;}
-.ib:disabled{opacity:.4;cursor:not-allowed;}
+.ib:disabled{opacity:.35;cursor:not-allowed;}
 .mlink{background:none;border:none;color:var(--ink3);font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:0;margin-left:8px;}
 .mlink:hover{color:var(--blue);}
 .mlink .ic{width:12px;height:12px;}
@@ -127,6 +130,12 @@ button{font-family:inherit;}
 .row .rsub{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:5px;}
 .rcount{font-size:12px;color:var(--ink3);font-weight:600;}
 .row .racts{display:flex;gap:6px;flex-shrink:0;}
+.hcard{gap:14px;padding-right:10px;}
+.hcard .racts{align-self:stretch;display:flex;}
+.go-strip{align-self:stretch;width:52px;border:none;border-radius:12px;background:linear-gradient(180deg,#3B82F6,var(--blue-d));color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 12px rgba(47,107,237,.3);transition:.15s;flex-shrink:0;}
+.go-strip:hover{filter:brightness(1.08);}
+.go-strip:active{transform:scale(.96);}
+.go-strip .ic{width:20px;height:20px;fill:currentColor;stroke:none;}
 .lcard{flex-direction:column;align-items:stretch;gap:10px;}
 .lcard .racts{width:100%;justify-content:flex-end;}
 .sheet-ana{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px;background:#fff;}
@@ -156,6 +165,7 @@ button{font-family:inherit;}
 .field{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;font-size:14px;background:#fff;}
 textarea.field{min-height:110px;resize:vertical;line-height:1.6;}
 .field:focus,select:focus,textarea:focus{border-color:var(--blue);outline:none;box-shadow:0 0 0 3px rgba(47,107,237,.12);}
+select.field:disabled{opacity:.5;cursor:not-allowed;background:#F1F5F9;}
 .seg{display:inline-flex;background:#EDF0F5;border-radius:10px;padding:4px;gap:4px;flex-wrap:wrap;}
 .seg-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:8px 14px;border:none;background:transparent;border-radius:8px;font-size:13px;font-weight:600;color:var(--ink2);cursor:pointer;}
 .seg-btn .ic{width:14px;height:14px;}
@@ -163,7 +173,7 @@ textarea.field{min-height:110px;resize:vertical;line-height:1.6;}
 .settingsbox{background:#F8FAFC;border:1px solid var(--line);border-radius:12px;padding:4px 14px;margin-top:14px;}
 .srow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);flex-wrap:wrap;}
 .srow:last-of-type{border-bottom:0;}
-.slabel{font-size:14px;font-weight:600;color:var(--ink2);display:flex;align-items:center;gap:7px;}
+.slabel{font-size:14px;font-weight:600;color:var(--ink2);display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
 .slabel .ic{width:16px;height:16px;color:var(--ink3);}
 .hgroup{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
 .voice-control{display:flex;gap:6px;align-items:center;flex:1;justify-content:flex-end;max-width:400px;min-width:0;}
@@ -204,16 +214,16 @@ details[open]>summary.chev::after{transform:rotate(225deg);}
 .sess-title{font-weight:800;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .sess-meta{font-size:12px;color:var(--ink3);margin-top:2px;}
 .sess-count{font-weight:800;font-size:15px;color:var(--blue-d);background:var(--blue-l);border:1px solid #C9DBFD;padding:6px 13px;border-radius:99px;font-variant-numeric:tabular-nums;flex-shrink:0;}
-/* TTS 控制條 — 下拉選單式 */
 .ttsbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:12px 0 0;padding:10px;background:#F8FAFC;border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);}
-.tts-field{display:flex;flex-direction:column;gap:4px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-width:0;}
+.tts-field{display:flex;flex-direction:column;gap:4px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-width:0;transition:opacity .2s;}
 .tts-field label{font-size:11px;font-weight:800;color:var(--ink2);letter-spacing:.5px;}
 .tts-field select{width:100%;padding:7px 8px;border:1px solid var(--line);border-radius:8px;font-size:13px;font-weight:600;background:#fff;color:var(--ink);cursor:pointer;}
+.tts-field select:disabled{opacity:.55;cursor:not-allowed;background:#F1F5F9;color:var(--ink3);}
 .tts-lock{grid-column:1/-1;font-size:11px;color:var(--ink3);padding:2px 4px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
 .tts-lock .ic{width:12px;height:12px;}
 .actionbar{display:flex;gap:10px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap;}
 @media(max-width:768px){
-  .actionbar{position:sticky;bottom:92px;z-index:60;background:linear-gradient(180deg,rgba(244,246,250,0) 0%,var(--bg) 35%);padding-top:10px;margin-top:6px;}
+  .actionbar{position:sticky;bottom:170px;z-index:60;background:linear-gradient(180deg,rgba(244,246,250,0) 0%,var(--bg) 35%);padding-top:10px;margin-top:6px;}
   .actionbar .btn{flex:1;}
 }
 .prog{display:flex;gap:4px;margin:14px 0 20px;}
@@ -249,9 +259,11 @@ details[open]>summary.chev::after{transform:rotate(225deg);}
 .mchip{background:#F8FAFC;border:1px solid var(--line);border-radius:99px;padding:6px 14px;font-size:13px;color:var(--ink2);font-weight:600;display:inline-flex;align-items:center;gap:6px;}
 .mchip .ic{width:13px;height:13px;}
 .mchip strong{color:var(--ink);font-variant-numeric:tabular-nums;}
-.dock{display:flex;gap:10px;margin-top:18px;}
-.dock #btnSpeak{flex:1;}
-.dock #btnNext{flex:1.4;}
+.dock{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:860px;display:flex;gap:10px;align-items:center;padding:12px 20px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(244,246,250,0) 0%,var(--bg) 45%);z-index:80;}
+.dock #btnPrev{width:46px;height:46px;border-radius:12px;flex-shrink:0;}
+.dock #btnSpeak{flex:1;height:46px;}
+.dock #btnNext{flex:1.4;height:46px;}
+.dock-spacer{height:96px;}
 .dock-sub{display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:10px;flex-wrap:wrap;}
 .linkbtn{display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:var(--ink3);font-size:13px;font-weight:600;cursor:pointer;padding:6px 4px;}
 .linkbtn:hover{color:var(--red);}
@@ -331,7 +343,9 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:560px;}
   .ver{display:none;}
   .page{padding:16px 14px 118px;}
   .app-footer{padding:20px 16px 118px;}
-  #toastWrap{bottom:110px;}
+  #toastWrap{bottom:200px;}
+  .dock{bottom:calc(78px + env(safe-area-inset-bottom));padding-bottom:10px;}
+  .dock-spacer{height:150px;}
 }
 @media(max-width:640px){
   .stats-row,.grid2{grid-template-columns:1fr;}
@@ -344,7 +358,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:560px;}
   .stage-card{min-height:120px;padding:26px 14px;}
   .hide-sm{display:none;}
   .sess-count{padding:5px 10px;font-size:13px;}
-  .dock{gap:8px;}
+  .dock{gap:8px;padding-left:14px;padding-right:14px;}
   .seg{width:100%;}.seg-btn{flex:1;}
   .ttsbar{grid-template-columns:repeat(2,1fr);}
   .voice-control{max-width:100%;width:100%;}
@@ -355,9 +369,11 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:560px;}
   .card-foot .btn{flex:1;}
   .row{flex-wrap:wrap;}
   .row .racts{width:100%;justify-content:flex-end;}
+  .hcard{flex-wrap:nowrap;}
+  .hcard .racts{width:auto;}
+  .go-strip{min-height:60px;}
   .mfoot .btn{flex:1;}
   .sa-head{flex-direction:column;align-items:flex-start;}
-  .sa-acts{flex-direction:column;}
   .tts-lock{grid-column:1/-1;}
 }
 @media(orientation:landscape) and (max-height:500px){
@@ -425,7 +441,26 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:560px;}
 
 <div class="topwrap">
   <header class="topbar">
-    <div class="brand" onclick="navTo('home')"><span class="logo"><svg class="ic"><use href="#i-clip"/></svg></span><span>中英文默書系統</span></div>
+    <div class="brand" onclick="navTo('home')">
+      <span class="logo">
+        <svg width="36" height="36" viewBox="0 0 40 40" aria-hidden="true">
+          <defs>
+            <linearGradient id="logoBg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6366F1"/><stop offset="1" stop-color="#1E40AF"/></linearGradient>
+            <linearGradient id="logoChk" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FCD34D"/><stop offset="1" stop-color="#F59E0B"/></linearGradient>
+          </defs>
+          <rect width="40" height="40" rx="12" fill="url(#logoBg)"/>
+          <rect x="8" y="8" width="17" height="24" rx="3.5" fill="#fff"/>
+          <rect x="11.5" y="13" width="10" height="2.4" rx="1.2" fill="#C7D2FE"/>
+          <rect x="11.5" y="18" width="7" height="2.4" rx="1.2" fill="#C7D2FE"/>
+          <rect x="11.5" y="23" width="9" height="2.4" rx="1.2" fill="#E0E7FF"/>
+          <circle cx="26.5" cy="27" r="7.5" fill="url(#logoChk)"/>
+          <path d="M23 27.2l2.4 2.4 4.2-4.8" stroke="#fff" stroke-width="2.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M30 11.5a7.5 7.5 0 0 1 0 9" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" opacity=".95"/>
+          <path d="M33.8 8.8a11.5 11.5 0 0 1 0 14.4" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" opacity=".55"/>
+        </svg>
+      </span>
+      <span>中英文默書系統</span>
+    </div>
     <span class="ver" id="verChip"></span>
     <span class="net-chip" id="netChip"></span>
     <button class="bell" onclick="toggleNotif()" title="消息通知"><svg class="ic"><use href="#i-bell"/></svg><span class="bell-badge hidden" id="bellBadge">0</span></button>
@@ -447,7 +482,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:560px;}
 <div id="page-home">
   <div class="phead">
     <div class="phead-main">
-      <div><h1 class="ptitle">主頁</h1><p class="psub">未來默書日程、本月與下月默書表及錯字弱項一覽</p></div>
+      <div><h1 class="ptitle">主頁</h1><p class="psub">未來默書日程、本月與下月默書表及溫習焦點一覽</p></div>
     </div>
   </div>
   <div class="card"><div class="card-t home-title"><svg class="ic"><use href="#i-cal"/></svg>未來默書</div><div id="upcomingList"></div></div>
@@ -456,8 +491,8 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:560px;}
     <div class="card"><div class="lang-title en"><svg class="ic"><use href="#i-lang"/></svg>英文默書</div><div id="quickEn"></div></div>
   </div>
   <div class="grid2">
-    <div class="card"><div class="lang-title zh"><svg class="ic"><use href="#i-target"/></svg>中文弱項</div><div id="weakZh"></div></div>
-    <div class="card"><div class="lang-title en"><svg class="ic"><use href="#i-target"/></svg>英文弱項</div><div id="weakEn"></div></div>
+    <div class="card"><div class="lang-title zh"><svg class="ic"><use href="#i-target"/></svg>中文溫習焦點</div><div id="weakZh"></div></div>
+    <div class="card"><div class="lang-title en"><svg class="ic"><use href="#i-target"/></svg>英文溫習焦點</div><div id="weakEn"></div></div>
   </div>
 </div>
 
@@ -541,13 +576,12 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:560px;}
       <div class="dtext hidden-text" id="dictText">準備好了嗎？</div>
       <div class="stage-hint" id="stageHint">撳右上角眼睛或 H 鍵顯示／隱藏答案</div>
     </div>
-    <!-- TTS 控制（下拉選單） -->
     <div class="ttsbar">
       <div class="tts-field" id="tbModeField"><label>模式</label><select id="tbMode"></select></div>
       <div class="tts-field"><label>速度</label><select id="tbSpeed"></select></div>
-      <div class="tts-field"><label>間隔</label><select id="tbInterval"></select></div>
-      <div class="tts-field"><label>重複朗讀</label><select id="tbRepeat"></select></div>
-      <div class="tts-lock"><svg class="ic"><use href="#i-lock"/></svg>語音／音調／隨機／預備倒數請喺「設定」調整 · 倒數期間及默書中均可隨時更改</div>
+      <div class="tts-field" id="tbIntervalField"><label>間隔</label><select id="tbInterval"></select></div>
+      <div class="tts-field" id="tbRepeatField"><label>重複朗讀</label><select id="tbRepeat"></select></div>
+      <div class="tts-lock"><svg class="ic"><use href="#i-lock"/></svg><span id="ttsLockText"></span></div>
     </div>
     <div class="stage-timer">
       <div class="tmod hidden" id="manualMod">
@@ -561,13 +595,15 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:560px;}
       </div>
     </div>
   </div>
-  <div class="dock">
-    <button class="btn btn-s" id="btnSpeak" onclick="speakCurrentManual()"><svg class="ic"><use href="#i-vol"/></svg>朗讀</button>
-    <button class="btn btn-p" id="btnNext" onclick="nextDictItem()"><svg class="ic"><use href="#i-next"/></svg>下一題</button>
-  </div>
   <div class="dock-sub">
     <button class="linkbtn" id="btnEnd" onclick="requestEndDictation()"><svg class="ic"><use href="#i-stop"/></svg>結束默書</button>
     <span class="hint hide-sm">快捷鍵：Space 下一題 · R 朗讀 · H 顯示/隱藏 · P 暫停 · Esc 退出</span>
+  </div>
+  <div class="dock-spacer"></div>
+  <div class="dock">
+    <button class="ib" id="btnPrev" onclick="prevDictItem()" title="上一題"><svg class="ic"><use href="#i-back"/></svg></button>
+    <button class="btn btn-read" id="btnSpeak" onclick="speakCurrentManual()"><svg class="ic"><use href="#i-vol"/></svg>朗讀</button>
+    <button class="btn btn-p" id="btnNext" onclick="nextDictItem()"><svg class="ic"><use href="#i-next"/></svg>下一題</button>
   </div>
 </div>
 
@@ -578,7 +614,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:560px;}
       <div class="crumb">默書 / 校對</div>
     </div>
     <div class="phead-main">
-      <div><h1 class="ptitle">家長校對</h1><p class="psub">請對照學生喺紙上寫嘅答案，逐題標記對錯；錯字會自動記入弱項分析</p></div>
+      <div><h1 class="ptitle">家長校對</h1><p class="psub">請對照學生喺紙上寫嘅答案，逐題標記對錯；答錯嘅字會自動記入溫習焦點</p></div>
       <div class="phead-acts"><button class="btn btn-p" onclick="finishChecking()"><svg class="ic"><use href="#i-check"/></svg>完成校對</button></div>
     </div>
   </div>
@@ -617,25 +653,25 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:560px;}
     </div>
     <div id="perWordTimes"></div>
   </div>
-  <div id="resultWrong" class="card hidden"><div class="card-t"><svg class="ic"><use href="#i-warn"/></svg>錯嘅內容（已記入弱項分析）</div><div id="wrongList"></div></div>
+  <div id="resultWrong" class="card hidden"><div class="card-t"><svg class="ic"><use href="#i-warn"/></svg>需要溫習嘅內容（已記入溫習焦點）</div><div id="wrongList"></div></div>
 </div>
 
 <div id="page-records" class="hidden">
   <div class="phead">
     <div class="phead-main">
-      <div><h1 class="ptitle">默書記錄</h1><p class="psub">以錯字弱項分析為核心：撳錯字 chip 即可揀選重點複習；分數統計僅供參考</p></div>
+      <div><h1 class="ptitle">默書記錄</h1><p class="psub">以溫習焦點為核心：撳字詞 chip 即可揀選重點複習；分數統計僅供參考</p></div>
     </div>
   </div>
   <div class="grid2" id="recordsAnalysis">
-    <div class="card"><div class="lang-title zh"><svg class="ic"><use href="#i-target"/></svg>中文弱項分析</div><div id="anaZh"></div></div>
-    <div class="card"><div class="lang-title en"><svg class="ic"><use href="#i-target"/></svg>英文弱項分析</div><div id="anaEn"></div></div>
+    <div class="card"><div class="lang-title zh"><svg class="ic"><use href="#i-target"/></svg>中文溫習焦點</div><div id="anaZh"></div></div>
+    <div class="card"><div class="lang-title en"><svg class="ic"><use href="#i-target"/></svg>英文溫習焦點</div><div id="anaEn"></div></div>
   </div>
   <div class="card">
     <div class="card-t"><svg class="ic"><use href="#i-chart"/></svg>成績統計（參考）</div>
     <div class="stats-row">
       <div class="stat"><div class="s-label">總測驗次數</div><div class="s-value" id="rcTests">0</div><div class="s-sub">次</div></div>
       <div class="stat"><div class="s-label">平均得分</div><div class="s-value" id="rcAvg">—</div><div class="bar"><i id="rcAvgBar" style="width:0%"></i></div></div>
-      <div class="stat"><div class="s-label">累計錯字人次</div><div class="s-value" id="rcWrong" style="font-size:24px;color:var(--red);">0</div><div class="s-sub">所有默書合計</div></div>
+      <div class="stat"><div class="s-label">累計溫習字次</div><div class="s-value" id="rcWrong" style="font-size:24px;color:var(--blue);">0</div><div class="s-sub">所有默書合計</div></div>
     </div>
     <div class="tbl-scroll" style="margin-top:4px;"><canvas id="recordChart" width="800" height="280" style="width:100%;min-width:520px;"></canvas></div>
   </div>
@@ -704,11 +740,15 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:560px;}
       <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-music"/></svg>音調</div><div class="hgroup"><div class="seg" id="pitchControl"></div><button class="btn btn-s btn-sm" onclick="testPitch()"><svg class="ic"><use href="#i-vol"/></svg>試聽</button></div></div>
       <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-gauge"/></svg>朗讀速度</div><div class="seg" id="gSpeedControl"></div></div>
       <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-user"/></svg>播放模式</div><div class="seg" id="gModeControl"></div></div>
-      <div class="hidden" id="gAutoRow">
-        <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-clock"/></svg>自動間隔</div><div class="seg" id="gIntervalControl"></div></div>
-        <div class="hint repeat">間隔 20 秒或以上時，會按下方「重複朗讀」設定重讀（重讀期間倒數暫停）</div>
+      <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-clock"/></svg>自動間隔</div><div class="seg" id="gIntervalControl"></div></div>
+      <div class="hint repeat">用於自動模式倒數；重複朗讀會根據間隔自動適配</div>
+      <div class="srow" style="align-items:flex-start;">
+        <div class="slabel"><svg class="ic"><use href="#i-reset"/></svg>重複朗讀 <span class="chip green" id="gRepeatState">適用</span></div>
+        <div style="flex:1;min-width:220px;">
+          <div class="seg" id="gRepeatControl"></div>
+          <div class="hint" id="gRepeatHint" style="margin-top:6px;"></div>
+        </div>
       </div>
-      <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-reset"/></svg>重複朗讀（自動模式）</div><div class="seg" id="gRepeatControl"></div></div>
       <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-clock"/></svg>預備倒數（開始前）</div><div class="seg" id="gPrepControl"></div></div>
       <div class="srow"><div class="slabel"><svg class="ic"><use href="#i-shuffle"/></svg>隨機打亂</div><label class="toggle"><input type="checkbox" id="gRandomToggle" onchange="setGlobal('random',this.checked)"><span class="toggle-slider"></span></label>
         <div class="hint" style="width:100%;">僅適用於「詞語」類型；句子與文章永遠順序朗讀。</div></div>
@@ -783,11 +823,11 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:560px;}
 <div class="modal" id="modalFocus"><div class="modal-card">
   <button class="mclose" data-close="modalFocus"><svg class="ic sm"><use href="#i-x"/></svg></button>
   <div class="modal-t"><svg class="ic"><use href="#i-target"/></svg><span id="focusTitle">重點複習</span></div>
-  <p class="hint" style="margin-bottom:12px;">撳 chip 選取／取消要複習嘅錯字（預設全選）；紅色 ×N ＝ 累計錯次數</p>
+  <p class="hint" style="margin-bottom:12px;">撳 chip 選取／取消要複習嘅字詞（預設全選）；紅色 ×N ＝ 累計溫習次數</p>
   <div class="pactions" style="margin:0 0 14px;">
     <button class="btn btn-s btn-sm" onclick="focusSelectAll(true)">全選</button>
     <button class="btn btn-s btn-sm" onclick="focusSelectAll(false)">全不選</button>
-    <button class="btn btn-s btn-sm" onclick="focusFrequent()">只選常錯（≥2）</button>
+    <button class="btn btn-s btn-sm" onclick="focusFrequent()">只選常溫習（≥2）</button>
   </div>
   <div id="focusList"></div>
   <div class="mfoot">
@@ -799,7 +839,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:560px;}
 
 <div class="modal" id="modalWeakList"><div class="modal-card">
   <button class="mclose" data-close="modalWeakList"><svg class="ic sm"><use href="#i-x"/></svg></button>
-  <div class="modal-t"><svg class="ic"><use href="#i-list"/></svg><span id="wlTitle">弱項列表</span></div>
+  <div class="modal-t"><svg class="ic"><use href="#i-list"/></svg><span id="wlTitle">溫習列表</span></div>
   <div class="wl-toolbar">
     <div class="seg" id="wlSort">
       <button class="seg-btn active" data-v="count">按次數</button>
@@ -889,7 +929,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:560px;}
 
 <script>
 'use strict';
-const APP_VERSION='25.0';
+const APP_VERSION='25.2';
 const SCHEMA_VERSION=5;
 const SHEET_ID='1Ok4OH76O2W5rtkHw-1Q_F6W4c4jD-WoQTA0UwAXv4t0';
 const TAB_CONFIG={zh:{defaultName:'Chinese',label:'中文默書'},en:{defaultName:'English',label:'英文默書'}};
@@ -1335,14 +1375,35 @@ function buildSelect(id,opts,current,onChange){
 function setGlobal(k,v){State.global[k]=v;Store.write('dict_global',State.global);}
 function initGlobalSegs(){
   initSeg('gSpeedControl',RATE_OPTS,String(State.global.rate),v=>setGlobal('rate',parseFloat(v)));
-  initSeg('gModeControl',MODE_OPTS_IC,State.global.mode,v=>{setGlobal('mode',v);el('gAutoRow').classList.toggle('hidden',v!=='auto');});
-  initSeg('gIntervalControl',INT_OPTS,String(State.global.interval),v=>setGlobal('interval',parseInt(v,10)));
+  initSeg('gModeControl',MODE_OPTS_IC,State.global.mode,v=>setGlobal('mode',v));
+  initSeg('gIntervalControl',INT_OPTS,String(State.global.interval),v=>{setGlobal('interval',parseInt(v,10));updateRepeatUI();});
   initSeg('pitchControl',PITCH_OPTS,String(State.global.pitch),v=>setGlobal('pitch',parseFloat(v)));
   initSeg('gPrepControl',PREP_OPTS,String(State.global.prepCount||5),v=>setGlobal('prepCount',parseInt(v,10)));
-  initSeg('gRepeatControl',REPEAT_OPTS,String(State.global.repeatMax==null?2:State.global.repeatMax),v=>setGlobal('repeatMax',parseInt(v,10)));
+  initSeg('gRepeatControl',REPEAT_OPTS,String(State.global.repeatMax==null?2:State.global.repeatMax),v=>{setGlobal('repeatMax',parseInt(v,10));updateRepeatUI();});
   el('gRandomToggle').checked=State.global.random;
   el('gPunctToggle').checked=State.global.readPunct!==false;
-  el('gAutoRow').classList.toggle('hidden',State.global.mode!=='auto');
+  updateRepeatUI();
+}
+/* 設定頁：重複朗讀跟隨間隔自動鎖定／適配 */
+function updateRepeatUI(){
+  const iv=State.global.interval||7;
+  const ok=iv>=20;
+  const ctl=el('gRepeatControl');
+  if(ctl){
+    ctl.style.opacity=ok?'1':'.4';
+    ctl.style.pointerEvents=ok?'auto':'none';
+  }
+  const st=el('gRepeatState');
+  if(st){
+    st.className='chip '+(ok?'green':'');
+    st.textContent=ok?'適用':'不適用';
+  }
+  const hint=el('gRepeatHint');
+  if(hint){
+    hint.textContent=ok
+      ?('目前間隔 '+iv+' 秒 → 倒數期間每 '+repeatCycleFor(iv)+' 秒自動重讀一次，上限按所選次數；揀「不重複」即關閉。')
+      :('間隔少於 20 秒時無須重讀，此設定自動停用（變灰）。間隔 20–44 秒每 10 秒重讀；45 秒以上每 15 秒重讀。');
+  }
 }
 function initOverrideSegs(){
   const o=State.ov;
@@ -1352,22 +1413,39 @@ function initOverrideSegs(){
   el('ovRandomToggle').checked=o.random;
   el('ovAutoRow').classList.toggle('hidden',o.mode!=='auto');
 }
-/* 默書頁 TTS 下拉選單 */
 function initTtsBar(){
   const oral=State.session.mode==='oral';
   el('tbModeField').style.display=oral?'none':'';
+  el('tbIntervalField').style.display=oral?'none':'';
+  el('tbRepeatField').style.display=oral?'none':'';
   buildSelect('tbMode',MODE_OPTS,State.session.mode,v=>setSessionMode(v));
   buildSelect('tbSpeed',RATE_OPTS,String(State.session.rate),v=>{State.session.rate=parseFloat(v);});
   buildSelect('tbInterval',INT_OPTS,String(State.session.interval),v=>{
     State.session.interval=parseInt(v,10);
+    updateTtsRepeatLock();
     const T=State.timers;
     if(T.cdInt&&!T.paused)startCountdown();
   });
   buildSelect('tbRepeat',REPEAT_OPTS,String(State.session.repeatMax||0),v=>{
     State.session.repeatMax=parseInt(v,10);
+    updateTtsRepeatLock();
     const T=State.timers;
     if(T.cdInt&&!T.paused)startCountdown();
   });
+  updateTtsRepeatLock();
+}
+/* 默書頁：間隔 <20 秒時鎖定重複下拉 */
+function updateTtsRepeatLock(){
+  const iv=State.session.interval||7;
+  const ok=iv>=20;
+  const s=el('tbRepeat');
+  if(s)s.disabled=!ok;
+  const f=el('tbRepeatField');
+  if(f)f.style.opacity=ok?'1':'.5';
+  const lk=el('ttsLockText');
+  if(lk)lk.textContent=ok
+    ?('間隔 ≥20 秒：每 '+repeatCycleFor(iv)+' 秒自動重讀（上限 '+(State.session.repeatMax||0)+' 次，重讀時倒數暫停）· 語音／音調／隨機／預備倒數請喺「設定」調整')
+    :('間隔少於 20 秒：重複朗讀不適用（已鎖定）· 語音／音調／隨機／預備倒數請喺「設定」調整');
 }
 function setSessionMode(m){
   if(State.session.mode===m)return;
@@ -1497,7 +1575,7 @@ function renderWeakness(lang){
   });
   const entries=Object.entries(wmap).sort((a,b)=>b[1]-a[1]).slice(0,20);
   if(!entries.length&&!otherWrong){
-    wrap.innerHTML=emptyHint('暫無弱項記錄');
+    wrap.innerHTML=emptyHint('暫無溫習焦點');
     return;
   }
   let html='';
@@ -1507,23 +1585,23 @@ function renderWeakness(lang){
     html+=entries.map(en=>{
       const w=en[0],c=en[1];
       const size=12+Math.round((c/maxC)*12);
-      return '<span class="witem" style="font-size:'+size+'px" title="錯 '+c+' 次">'+escapeHtml(truncLabel(w,12))+'</span>';
+      return '<span class="witem" style="font-size:'+size+'px" title="出現 '+c+' 次">'+escapeHtml(truncLabel(w,12))+'</span>';
     }).join('');
     html+='</div>';
   }
   if(otherWrong>0){
-    html+='<div class="hint flex" style="margin-top:10px;">'+ic('info','sm')+'<span>句子／文章有 '+otherWrong+' 個錯項，可喺「弱項列表」查看完整內容。</span></div>';
+    html+='<div class="hint flex" style="margin-top:10px;">'+ic('info','sm')+'<span>句子／文章有 '+otherWrong+' 個待溫習項，可喺「溫習列表」查看完整內容。</span></div>';
   }
   html+='<div class="card-foot" style="margin-top:12px;justify-content:flex-start;">';
-  html+='<button class="btn btn-blue btn-sm" data-act="weaklist" data-lang="'+lang+'">'+ic('list')+'查看弱項列表</button>';
-  html+='<button class="btn btn-blue btn-sm" onclick="navTo(\'records\',\'recordsAnalysis\')">'+ic('chart')+'查看弱項分析</button>';
+  html+='<button class="btn btn-blue btn-sm" data-act="weaklist" data-lang="'+lang+'">'+ic('list')+'查看溫習列表</button>';
+  html+='<button class="btn btn-blue btn-sm" onclick="navTo(\'records\',\'recordsAnalysis\')">'+ic('chart')+'查看溫習焦點</button>';
   html+='</div>';
   wrap.innerHTML=html;
 }
 
 function openWeakList(lang,pid){
   State.weakListLang=lang||'zh';
-  el('wlTitle').textContent=(State.weakListLang==='zh'?'中文':'英文')+'弱項列表';
+  el('wlTitle').textContent=(State.weakListLang==='zh'?'中文':'英文')+'溫習列表';
   const sel=el('wlFilter');
   sel.innerHTML='<option value="">全部默書表</option>';
   State.projects.filter(p=>p.lang===State.weakListLang).forEach(p=>{
@@ -1560,7 +1638,7 @@ function renderWeakList(){
   let arr=Object.values(agg);
   if(State.weakListSort==='count')arr.sort((a,b)=>b.count-a.count||b.last-a.last);
   else arr.sort((a,b)=>b.last-a.last||b.count-a.count);
-  if(!arr.length){wrap.innerHTML=emptyHint('暫無錯字記錄');return;}
+  if(!arr.length){wrap.innerHTML=emptyHint('暫無待溫習字');return;}
   wrap.innerHTML=arr.map(i=>{
     const meta=(i.sheetKey&&CODE_RE.test(i.sheetKey)?i.sheetKey+' · ':'')+(TYPE_LABELS[i.type]||'詞語');
     return '<div class="wl-item">'+
@@ -1582,13 +1660,13 @@ function renderSheetAnalysis(lang){
   }).filter(Boolean).sort((a,b)=>(b.sum.last.ts||0)-(a.sum.last.ts||0));
   wrap.innerHTML=list.length?list.map(o=>{
     const keys=Object.keys(o.ws).sort((a,b)=>o.ws[b].count-o.ws[a].count||a.localeCompare(b,'zh'));
-    const chips=keys.slice(0,5).map(k=>'<span class="chip '+(o.ws[k].count>=2?'red':'')+'" title="'+escapeAttr(k)+'（錯 '+o.ws[k].count+' 次・最近 '+fmtDate(o.ws[k].last)+'）">'+escapeHtml(truncLabel(k,14))+' ×'+o.ws[k].count+'</span>').join('');
+    const chips=keys.slice(0,5).map(k=>'<span class="chip '+(o.ws[k].count>=2?'red':'')+'" title="'+escapeAttr(k)+'（'+o.ws[k].count+' 次・最近 '+fmtDate(o.ws[k].last)+'）">'+escapeHtml(truncLabel(k,14))+' ×'+o.ws[k].count+'</span>').join('');
     const more=keys.length>5?'<span class="chip">+'+(keys.length-5)+'</span>':'';
     return '<div class="sheet-ana">'+
       '<div class="sa-head"><span class="sa-name">'+escapeHtml(o.p.name||'(未命名)')+' '+badges(o.p)+'</span>'+
       '<span class="sa-score '+(o.sum.last.percent>=70?'good':'bad')+'">最近 '+o.sum.last.percent+'%</span></div>'+
-      '<div class="sa-meta">共 '+o.sum.n+' 次默書 · 平均 '+o.sum.avg+'% · 錯字 '+keys.length+' 個</div>'+
-      '<div class="sa-wrong">'+(keys.length?chips+more:'<span class="hint">暫無錯字記錄，保持得好！</span>')+'</div>'+
+      '<div class="sa-meta">共 '+o.sum.n+' 次默書 · 平均 '+o.sum.avg+'% · 溫習字 '+keys.length+' 個</div>'+
+      '<div class="sa-wrong">'+(keys.length?chips+more:'<span class="hint">暫無待溫習字，保持得好！</span>')+'</div>'+
       (keys.length?'<div class="sa-acts">'+
         '<button class="btn btn-p btn-sm" data-act="focus" data-id="'+o.p.id+'">'+ic('target')+'重點複習</button>'+
         '<button class="btn btn-blue btn-sm" data-act="weaklist" data-id="'+o.p.id+'" data-lang="'+lang+'">'+ic('list')+'檢視列表</button>'+
@@ -1600,7 +1678,7 @@ function openFocusModal(pid){
   const p=State.projects.find(x=>sameId(x.id,pid));if(!p)return;
   const ws=wrongStatsForProject(pid);
   const keys=Object.keys(ws);
-  if(!keys.length){toast('呢張表暫無錯字記錄','err');return;}
+  if(!keys.length){toast('呢張表暫無待溫習字','err');return;}
   State.focus={pid:pid,stats:ws,sel:{}};
   keys.forEach(k=>{State.focus.sel[k]=true;});
   el('focusTitle').textContent='重點複習 — '+(p.name||'');
@@ -1612,7 +1690,7 @@ function renderFocusList(){
   const keys=Object.keys(f.stats).sort((a,b)=>f.stats[b].count-f.stats[a].count||a.localeCompare(b,'zh'));
   el('focusList').innerHTML='<div class="fchips">'+keys.map(k=>{
     const s=f.stats[k];
-    return '<button type="button" class="fchip'+(f.sel[k]?' on':'')+'" data-item="'+escapeAttr(k)+'" title="最後錯：'+fmtDate(s.last)+'">'+escapeHtml(k)+'<span class="cn">×'+s.count+'</span></button>';
+    return '<button type="button" class="fchip'+(f.sel[k]?' on':'')+'" data-item="'+escapeAttr(k)+'" title="最近：'+fmtDate(s.last)+'">'+escapeHtml(k)+'<span class="cn">×'+s.count+'</span></button>';
   }).join('')+'</div>';
   updateFocusCount();
 }
@@ -1634,7 +1712,7 @@ function startFocusReview(oral){
   const f=State.focus;
   if(!f)return;
   const items=Object.keys(f.sel).filter(k=>f.sel[k]);
-  if(!items.length){toast('請先選擇要複習嘅錯字','err');return;}
+  if(!items.length){toast('請先選擇要複習嘅字詞','err');return;}
   const p=State.projects.find(x=>sameId(x.id,f.pid));
   if(!p){toast('找不到該默書表','err');return;}
   closeModal('modalFocus');
@@ -1649,7 +1727,7 @@ function startFocusReview(oral){
   D.checks=new Array(D.items.length).fill(null);
   D.totalStart=Date.now();D.wordTimes=[];D.totalSec=0;
   el('sessTitle').textContent=p.name||'(未命名)';
-  el('sessMeta').innerText='重點複習 · '+items.length+' 個錯字 · '+(oral?'家長口述':(o.mode==='auto'?'自動 '+o.interval+'s':'手動計時'));
+  el('sessMeta').innerText='重點複習 · '+items.length+' 個字詞 · '+(oral?'家長口述':(o.mode==='auto'?'自動 '+o.interval+'s':'手動計時'));
   initTtsBar();
   showPage('dictation');updateReviewUI();updateProgress();
   startOrShow();
@@ -1810,7 +1888,6 @@ function speakText(text,lang,onDone,rate){
   }
   return speakSimple(text,lang,onDone,rate!=null?rate:State.global.rate);
 }
-/* 完結語：明亮清晰（慢速＋稍高音調） */
 function speakAnnounce(){
   if(!('speechSynthesis' in window))return;
   const lang=State.current?State.current.lang||'zh':'zh';
@@ -1958,7 +2035,7 @@ async function syncSingle(lang){
 
 function resetRecords(){
   if(!State.records.length){toast('目前沒有任何成績記錄');return;}
-  confirmDialog('重置成績','所有默書記錄（'+State.records.length+' 筆）與錯字分析將會永久刪除，無法復原。',()=>{
+  confirmDialog('重置成績','所有默書記錄（'+State.records.length+' 筆）與溫習焦點將會永久刪除，無法復原。',()=>{
     State.records=[];Store.write('dict_r8',State.records);
     renderHome();renderRecords();refreshNotifications();
     toast('成績已重置','ok');
@@ -1983,15 +2060,15 @@ function buildNotifications(){
     if(du!==null&&du>=0&&du<=3){
       out.push({id:'dictdate-'+p.id+'-'+p.dictTs,ic:'cal',bg:du===0?'var(--red-l)':'#FEF3C7',
         t:du===0?'今天默書！':'【'+p.name+'】'+du+' 日後默書',
-        d:du===0?'「'+p.name+'」今日默書，出發前再做一次快速溫習！':'建議安排每日 1 次練習，錯字用「重點複習」鞏固。'});
+        d:du===0?'「'+p.name+'」今日默書，出發前再做一次快速溫習！':'建議安排每日 1 次練習，用「重點複習」鞏固。'});
     }
   });
   State.projects.forEach(p=>{
     const ws=wrongStatsForProject(p.id);
     const hot=Object.keys(ws).filter(k=>ws[k].count>=3);
-    if(hot.length)out.push({id:'hotwrong-'+p.id+'-'+hot.length,ic:'target',bg:'var(--red-l)',
-      t:'【'+p.name+'】有 '+hot.length+' 個常錯字',
-      d:'「'+hot.slice(0,3).map(k=>truncLabel(k,8)).join('、')+'」等字錯咗 3 次以上，建議到「記錄」頁重點複習。'});
+    if(hot.length)out.push({id:'hotwrong-'+p.id+'-'+hot.length,ic:'target',bg:'var(--blue-l)',
+      t:'【'+p.name+'】有 '+hot.length+' 個字值得溫習',
+      d:'「'+hot.slice(0,3).map(k=>truncLabel(k,8)).join('、')+'」等字出現 3 次以上，建議到「記錄」頁重點複習。'});
   });
   const didToday=State.records.some(r=>r.ts&&new Date(r.ts).toDateString()===today.toDateString());
   if(State.records.length&&!didToday)out.push({id:'practice-'+today.toDateString(),ic:'edit',bg:'var(--blue-l)',t:'練習提醒',d:'今日未進行默書，抽時間練習一次啦！'});
@@ -2067,11 +2144,10 @@ function badges(p){
   return s;
 }
 function countLabel(p){const n=(p.contents||[]).length;return p.type==='sentences'?n+' 個句子':p.type==='passage'?n+' 段文章':n+' 個詞條';}
-/* 主頁卡：單一藍色 ▶ 按鈕，開啟檢視視窗再選擇模式 */
 function homeCardHTML(p){
-  return '<div class="row"><div class="rbody"><div class="rtitle">'+escapeHtml(p.name||'(未命名)')+'</div>'+
+  return '<div class="row hcard"><div class="rbody"><div class="rtitle">'+escapeHtml(p.name||'(未命名)')+'</div>'+
     '<div class="rsub">'+badges(p)+dateChip(p)+'<span class="rcount">'+countLabel(p)+'</span></div></div>'+
-    '<div class="racts"><button class="ib pri" data-act="view" data-id="'+p.id+'" title="檢視內容・選擇默書方式">'+ic('play')+'</button></div></div>';
+    '<div class="racts"><button class="go-strip" data-act="view" data-id="'+p.id+'" title="檢視內容・選擇默書方式">'+ic('play')+'</button></div></div>';
 }
 function libraryCardHTML(p){
   return '<div class="row lcard"><div class="rbody"><div class="rtitle">'+escapeHtml(p.name||'(未命名)')+'</div>'+
@@ -2345,15 +2421,13 @@ function updateTimerModules(){
   el('manualMod').classList.toggle('hidden',!timed);
   el('countMod').classList.toggle('hidden',!((m==='auto'||rev)&&m!=='oral'));
 }
-/* 預備倒數：開始前 5/10 秒，期間可調整語音設定 */
 function startPrep(cb){
   stopPrep();
   prepActive=true;
   const secs=State.global.prepCount||5;
   let left=secs;
   const t=el('dictText');
-  t.classList.remove('hidden-text','prep');
-  void t.offsetWidth;
+  t.classList.remove('hidden-text');
   t.classList.add('prep');
   el('eyeBtn').classList.add('on');
   const paint=()=>{
@@ -2361,7 +2435,7 @@ function startPrep(cb){
     const p=el('stagePill');
     p.className='spill count';
     p.innerHTML=ic('clock')+'預備開始 '+left+' 秒';
-    el('stageHint').innerText='可以先調整上方語音設定；撳「下一題」或 Space 即時開始';
+    el('stageHint').innerText='可以先調整語音設定；撳「下一題」或 Space 即時開始';
   };
   paint();
   prepTimer=setInterval(()=>{
@@ -2434,6 +2508,7 @@ function showDictItem(){
   else{t.classList.add('hidden-text');el('eyeBtn').classList.remove('on');}
   el('stageHint').innerText=oral?(D.review?'溫習模式：家長再念一次，孩子核對與補寫':'家長口述：念出上方內容俾孩子書寫，完成後撳「下一題」'):'撳右上角眼睛或 H 鍵顯示／隱藏答案';
   el('btnNext').innerHTML=cur===total-1?(D.review?ic('check')+'完成溫習':ic('check')+'完成'):ic('next')+'下一題';
+  el('btnPrev').disabled=(cur===0);
   updateProgress();
   updateTimerModules();
   stopCountdown();
@@ -2456,6 +2531,16 @@ function speakCurrentManual(){
   stopCountdown();
   const D=State.dict;
   if(D.index<D.items.length)speakAndSchedule(D.items[D.index],true);
+}
+function prevDictItem(){
+  if(prepActive)return;
+  const D=State.dict;
+  if(D.index<=0)return;
+  stopCountdown();
+  const T=State.timers;
+  if(isTimedMode()&&T.wordOn){stopWordTimer();}
+  D.index--;
+  showDictItem();
 }
 function nextDictItem(){
   if(prepActive){stopPrep();showDictItem();return;}
@@ -2636,7 +2721,7 @@ function finishChecking(){
 function retryWrong(){
   const D=State.dict;
   const wi=D.items.filter((_,i)=>D.checks[i]!==true);
-  if(!wi.length){toast('冇錯題！','err');return;}
+  if(!wi.length){toast('全部答對！','ok');return;}
   const order=State.current?State.current.contents:[];
   wi.sort((a,b)=>order.indexOf(a)-order.indexOf(b));
   D.original=wi;
@@ -2679,10 +2764,10 @@ function renderRecords(){
     ctx.stroke();
     rec.forEach((r,i)=>{const x=40+i*step,y=260-r.percent*2.4;ctx.fillStyle=r.percent>=70?'#12B76A':'#EF4444';ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fill();});
   }
-  el('recordTable').innerHTML='<div class="tbl-wrap" style="margin-top:0;"><div class="tbl-scroll"><table class="tbl"><thead><tr><th>日期</th><th>默書表</th><th>成績</th><th>得分</th><th>錯字</th><th>用時</th></tr></thead><tbody>'+
+  el('recordTable').innerHTML='<div class="tbl-wrap" style="margin-top:0;"><div class="tbl-scroll"><table class="tbl"><thead><tr><th>日期</th><th>默書表</th><th>成績</th><th>得分</th><th>溫習字</th><th>用時</th></tr></thead><tbody>'+
     (R.slice().reverse().slice(0,20).map(r=>{
       const wc=(r.wrong||[]).length;
-      return '<tr><td class="nowrap">'+fmtDateTime(r.ts)+'</td><td class="wrap">'+recordChips(r)+'</td><td>'+r.correct+'/'+r.total+'</td><td><strong style="color:'+(r.percent>=70?'var(--green)':'var(--red)')+';">'+r.percent+'%</strong></td><td>'+(wc?'<strong style="color:var(--red);">'+wc+'</strong>':'—')+'</td><td>'+(r.totalTime!=null?fmtTime(r.totalTime):'--')+'</td></tr>';
+      return '<tr><td class="nowrap">'+fmtDateTime(r.ts)+'</td><td class="wrap">'+recordChips(r)+'</td><td>'+r.correct+'/'+r.total+'</td><td><strong style="color:'+(r.percent>=70?'var(--green)':'var(--red)')+';">'+r.percent+'%</strong></td><td>'+(wc?'<strong style="color:var(--blue);">'+wc+'</strong>':'—')+'</td><td>'+(r.totalTime!=null?fmtTime(r.totalTime):'--')+'</td></tr>';
     }).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--ink3);padding:18px;">暫無資料</td></tr>')+
     '</tbody></table></div></div>';
 }
@@ -2690,7 +2775,7 @@ function renderRecords(){
 function typeLabelForExport(p){return p.lang==='en'?{words:'words',sentences:'sentences',passage:'paragraphs'}[p.type]||'words':{words:'詞語',sentences:'句子',passage:'文章'}[p.type]||'詞語';}
 function projectIdForExport(p){return (p.sheetKey&&p.sheetKey!==p.name)?p.sheetKey:'';}
 function buildProjectsTsv(l){return['Project\tType\tDetails\tDate\tID'].concat(State.projects.filter(p=>p.lang===l).map(p=>[escapeTsv(p.name),typeLabelForExport(p),escapeTsv((p.contents||[]).join(';')),p.dictTs?isoDate(p.dictTs):'',escapeTsv(projectIdForExport(p))].join('\t'))).join('\n');}
-function buildRecordsTsv(){return['日期\t默書表\t類型\tID\t答對\t總數\t得分(%)\t錯字\t用時'].concat(State.records.slice().reverse().map(r=>[fmtDateTime(r.ts),escapeTsv(r.project),typeLabelForExport({type:r.type,lang:r.lang}),r.sheetKey||'',r.correct,r.total,r.percent,(r.wrong||[]).map(escapeTsv).join(';'),r.totalTime!=null?fmtTime(r.totalTime):''].join('\t'))).join('\n');}
+function buildRecordsTsv(){return['日期\t默書表\t類型\tID\t答對\t總數\t得分(%)\t溫習字\t用時'].concat(State.records.slice().reverse().map(r=>[fmtDateTime(r.ts),escapeTsv(r.project),typeLabelForExport({type:r.type,lang:r.lang}),r.sheetKey||'',r.correct,r.total,r.percent,(r.wrong||[]).map(escapeTsv).join(';'),r.totalTime!=null?fmtTime(r.totalTime):''].join('\t'))).join('\n');}
 function exportTable(title,cols,rows,copyKey,confirmId){
   return '<div class="tbl-wrap"><div class="tbl-head"><span>'+title+'</span><button class="btn btn-p btn-sm" data-copy="'+copyKey+'">'+ic('copy')+'複製</button></div>'+
     '<div class="tbl-scroll" style="max-height:220px;overflow:auto;"><table class="tbl"><thead><tr>'+cols.map(c=>'<th>'+c+'</th>').join('')+'</tr></thead><tbody>'+
@@ -2707,7 +2792,7 @@ function renderExportTables(){
     '<div style="height:12px;"></div>'+
     exportTable('英文默書表（'+enRows.length+' 張）',['Project','Type','Details','Date','ID'],enRows,'en','copyProjEnConfirm')+
     '<div style="height:12px;"></div>'+
-    exportTable('成績記錄（'+rcRows.length+' 筆）',['日期','默書表','類型','ID','成績','得分','錯字','用時'],rcRows,'rec','copyRecConfirm')+
+    exportTable('成績記錄（'+rcRows.length+' 筆）',['日期','默書表','類型','ID','成績','得分','溫習字','用時'],rcRows,'rec','copyRecConfirm')+
     '<div class="card-foot" style="justify-content:flex-start;"><button class="btn btn-s" data-copy="tsv">'+ic('dl')+'下載 TSV 檔（全部）</button><span class="hint" style="align-self:center;">複製後可直接貼入 Google Sheets</span></div>';
 }
 function copyToClipboard(t){
