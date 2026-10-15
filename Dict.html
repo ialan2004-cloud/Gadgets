@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中英文默書系統 24.2</title>
+<title>中英文默書系統 25.3</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='12' fill='%232F6BED'/%3E%3Crect x='8' y='8' width='17' height='24' rx='3.5' fill='%23fff'/%3E%3Crect x='11.5' y='13' width='10' height='2.4' rx='1.2' fill='%23C7D2FE'/%3E%3Crect x='11.5' y='18' width='7' height='2.4' rx='1.2' fill='%23C7D2FE'/%3E%3Crect x='11.5' y='23' width='9' height='2.4' rx='1.2' fill='%23E0E7FF'/%3E%3Ccircle cx='26.5' cy='27' r='7.5' fill='%23F59E0B'/%3E%3Cpath d='M23 27.2l2.4 2.4 4.2-4.8' stroke='%23fff' stroke-width='2.3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M30 11.5a7.5 7.5 0 0 1 0 9' stroke='%23fff' stroke-width='2.2' fill='none' stroke-linecap='round' opacity='.95'/%3E%3C/svg%3E">
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
@@ -49,6 +49,7 @@ button{font-family:inherit;}
 .page{max-width:860px;margin:0 auto;padding:16px 14px 40px;width:100%;flex:1;}
 .phead{margin-bottom:12px;}
 .phead-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.phead-top .chip{margin-left:auto;}
 .phead-main{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;}
 .phead-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
 .crumb{font-size:13px;color:var(--ink3);}
@@ -61,8 +62,8 @@ button{font-family:inherit;}
 .card-t .sp{flex:1;}
 .card-t.home-title{background:#FEF3C7;color:#92400E;border-radius:12px;padding:8px 12px;font-size:15px;font-weight:800;}
 .card-t.home-title .ic{color:#B45309;width:16px;height:16px;}
-.card-foot{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:12px;}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 16px;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;transition:.15s;}
+.card-foot{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 16px;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;transition:.15s;white-space:nowrap;}
 .btn:active{transform:scale(.97);}
 .btn .ic{width:16px;height:16px;}
 .btn-p{background:var(--blue);color:#fff;box-shadow:0 6px 14px rgba(47,107,237,.22);}
@@ -94,6 +95,9 @@ button{font-family:inherit;}
 .ib.sm{width:28px;height:28px;border-radius:8px;}
 .ib.sm .ic{width:13px;height:13px;}
 .ib:disabled{opacity:.35;cursor:not-allowed;}
+.mlink{background:none;border:none;color:var(--ink3);font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:0;margin-left:8px;}
+.mlink:hover{color:var(--blue);}
+.mlink .ic{width:12px;height:12px;}
 .chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:4px 10px;border-radius:99px;background:#fff;border:1px solid var(--line);color:var(--ink2);}
 .chip .ic{width:12px;height:12px;}
 .chip.code{background:#F1F5F9;border-color:var(--line);color:var(--ink2);font-family:ui-monospace,monospace;letter-spacing:.5px;}
@@ -128,7 +132,7 @@ button{font-family:inherit;}
 .row .racts{display:flex;gap:4px;flex-shrink:0;}
 .hcard{gap:10px;padding-right:8px;}
 .hcard .racts{align-self:stretch;display:flex;}
-.go-strip{align-self:stretch;width:48px;border:none;border-radius:10px;background:linear-gradient(135deg,#3B82F6 0%,#2563EB 50%,#1E40AF 100%);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 14px rgba(37,99,235,.35),inset 0 1px 0 rgba(255,255,255,.2);transition:.2s;flex-shrink:0;position:relative;overflow:hidden;}
+.go-strip{align-self:stretch;width:52px;border:none;border-radius:12px;background:linear-gradient(135deg,#60A5FA 0%,#2563EB 50%,#1E40AF 100%);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 14px rgba(37,99,235,.35),inset 0 1px 0 rgba(255,255,255,.2);transition:.2s;flex-shrink:0;position:relative;overflow:hidden;}
 .go-strip::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);pointer-events:none;}
 .go-strip:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(37,99,235,.45),inset 0 1px 0 rgba(255,255,255,.25);}
 .go-strip:active{transform:translateY(0) scale(.97);}
@@ -146,8 +150,8 @@ button{font-family:inherit;}
 .sa-meta{font-size:11px;color:var(--ink3);margin:6px 0;}
 .sa-wrong{display:flex;gap:5px;flex-wrap:wrap;}
 .sa-wrong .chip{max-width:100%;}
-.sa-acts{margin-top:10px;display:flex;gap:6px;}
-.sa-acts .btn{flex:1;width:auto;}
+.sa-acts{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;}
+.sa-acts .btn{flex:1;min-width:100px;}
 .fchips{display:flex;gap:6px;flex-wrap:wrap;}
 .fchip{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:13px;font-weight:600;color:var(--ink2);cursor:pointer;transition:.15s;max-width:100%;}
 .fchip:active{transform:scale(.96);}
@@ -258,11 +262,6 @@ details[open]>summary.chev::after{transform:rotate(225deg);}
 .countdown-ring .ring-fg.warning{stroke:var(--amber);}
 .countdown-ring .ring-fg.danger{stroke:var(--red);}
 .countdown-ring .ring-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:var(--ink2);font-variant-numeric:tabular-nums;}
-.tbar{flex:1;min-width:100px;height:5px;background:#EDF0F5;border-radius:99px;overflow:hidden;}
-.tfill{height:100%;border-radius:99px;background:var(--green);transition:width .25s linear,background .4s;}
-.tfill.warning{background:var(--amber);}
-.tfill.danger{background:var(--red);}
-.tsec{font-weight:800;font-size:14px;min-width:30px;text-align:right;font-variant-numeric:tabular-nums;color:var(--ink2);}
 .mchip{background:#F8FAFC;border:1px solid var(--line);border-radius:99px;padding:5px 12px;font-size:12px;color:var(--ink2);font-weight:600;display:inline-flex;align-items:center;gap:5px;}
 .mchip .ic{width:12px;height:12px;}
 .mchip strong{color:var(--ink);font-variant-numeric:tabular-nums;}
@@ -321,6 +320,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:480px;}
 .mclose .ic{width:13px;height:13px;}
 .mclose:hover{color:var(--red);border-color:#FECDCA;}
 .mfoot{display:flex;justify-content:flex-end;gap:6px;margin-top:16px;flex-wrap:wrap;}
+.mfoot .btn{flex:0 1 auto;min-width:0;}
 .ropts{display:flex;gap:10px;margin-top:16px;}
 .ropt{flex:1;padding:16px;border:1px solid var(--line);border-radius:12px;text-align:center;cursor:pointer;background:#fff;box-shadow:var(--sh);color:var(--ink);}
 .ropt:hover{border-color:var(--blue);background:var(--blue-l);}
@@ -345,7 +345,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:480px;}
 .am-list{max-height:40vh;overflow-y:auto;border:1px solid var(--line);border-radius:10px;padding:6px;background:#F8FAFC;}
 .am-proj{margin-bottom:8px;}
 .am-proj:last-child{margin-bottom:0;}
-.am-proj-head{font-weight:700;font-size:13px;padding:6px 8px;background:#fff;border:1px solid var(--line);border-radius:8px;margin-bottom:4px;display:flex;align-items:center;gap:6px;}
+.am-proj-head{font-weight:700;font-size:13px;padding:6px 8px;background:#fff;border:1px solid var(--line);border-radius:8px;margin-bottom:4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
 .am-items{display:flex;gap:5px;flex-wrap:wrap;padding:0 4px;}
 .am-item{display:inline-flex;align-items:center;padding:5px 10px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:12px;font-weight:600;color:var(--ink2);cursor:pointer;transition:.15s;max-width:100%;}
 .am-item:hover{border-color:var(--blue);color:var(--blue);}
@@ -361,6 +361,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:480px;}
   #toastWrap{bottom:180px;}
   .dock{bottom:calc(72px + env(safe-area-inset-bottom));padding-bottom:8px;}
   .dock-spacer{height:130px;}
+  .mfoot .btn{flex:1;min-width:0;}
 }
 @media(max-width:640px){
   .stats-row,.grid2{grid-template-columns:1fr;}
@@ -384,7 +385,6 @@ table.tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:480px;}
   .card-foot .btn{flex:1;}
   .row{flex-wrap:wrap;}
   .row .racts{width:100%;justify-content:flex-end;}
-  .mfoot .btn{flex:1;min-width:0;}
   .sa-head{flex-direction:column;align-items:flex-start;}
   .tts-lock{grid-column:1/-1;}
   .hcard{flex-wrap:nowrap;}
@@ -960,7 +960,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:480px;}
 
 <script>
 'use strict';
-const APP_VERSION='24.2';
+const APP_VERSION='25.3';
 const SCHEMA_VERSION=5;
 const SHEET_ID='1Ok4OH76O2W5rtkHw-1Q_F6W4c4jD-WoQTA0UwAXv4t0';
 const TAB_CONFIG={zh:{defaultName:'Chinese',label:'中文默書'},en:{defaultName:'English',label:'英文默書'}};
@@ -1469,13 +1469,13 @@ function stopSpeechEngine(){
 function applyVoice(u,lang){
   const voices=State.voices.all;let v=null;const saved=Store.raw('dict_voice_'+lang)||'';
   if(saved)v=voices.find(x=>x.name===saved);
-  if(v){u.voice=v;u.lang=v.lang;}}
+  if(v){u.voice=v;u.lang=v.lang;}
   else{if(lang==='en'){u.lang='en-US';v=voices.find(x=>x.lang&&x.lang.toLowerCase().startsWith('en'));}else{u.lang='zh-HK';v=voices.find(x=>x.lang&&/^(zh|cmn|yue)/i.test(x.lang));}if(v)u.voice=v;}
 }
 function splitPunctSeq(text,lang){
   const defs=lang==='en'?PUNCT_DEFS_EN:PUNCT_DEFS_ZH;const esc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
   const pat=new RegExp('('+defs.map(d=>esc(d[0])).join('|')+')','g');const names={};defs.forEach(d=>{names[d[0]]=d[1];});
-  const seq=[];text.split(pat).forEach(s=>{if(s===undefined||s==='')return;if(names[s]!==undefined)seq.push({t:'p',text:names[s]});else if(s.trim())seq.push({t:'t',text:s.trim()});});  });
+  const seq=[];text.split(pat).forEach(s=>{if(s===undefined||s==='')return;if(names[s]!==undefined)seq.push({t:'p',text:names[s]});else if(s.trim())seq.push({t:'t',text:s.trim()});});
   return seq;
 }
 function speakSequence(seq,lang,onDone,rate){
