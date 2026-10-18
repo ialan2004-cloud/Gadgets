@@ -2,277 +2,324 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
+    <!-- Safari 專屬：禁止縮放、支援全螢幕、適配瀏海 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>虛擬布偶 AR</title>
+    <title>虛擬布偶 AR - Safari 修復版</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             overflow: hidden;
-            background: #2c3e50;
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #000;
+            font-family: -apple-system, BlinkMacSystemFont, monospace;
             touch-action: none; 
             -webkit-touch-callout: none;
             -webkit-user-select: none;
             user-select: none;
+            /* 適配 iOS 瀏海與底部安全區域 */
             padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
         }
         
-        /* 影片與 Canvas：鏡像顯示，符合照鏡子直覺 */
+        /* 核心修復 1：統一使用 contain，確保 Video 與 Canvas 座標 100% 對齊，不裁切 */
         #videoInput, #canvasOutput {
             position: absolute;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            object-fit: cover;
-            -webkit-transform: scaleX(-1);
-            transform: scaleX(-1);
+            object-fit: contain; 
+            background: #000;
         }
-        #videoInput { z-index: 1; opacity: 0.4; filter: brightness(0.8); }
+        /* 核心修復 2：Video 鏡像，符合照鏡子直覺 */
+        #videoInput { 
+            z-index: 1; 
+            opacity: 0.5; 
+            -webkit-transform: scaleX(-1); 
+            transform: scaleX(-1); 
+        }
         #canvasOutput { z-index: 2; pointer-events: none; }
 
-        /* 啟動遮罩 */
+        /* Debug 面板：放在最上層，文字不鏡像，確保可讀 */
+        #debug-panel {
+            position: absolute;
+            top: calc(10px + env(safe-area-inset-top));
+            left: 10px;
+            background: rgba(0,0,0,0.85);
+            color: #0f0;
+            padding: 12px 15px;
+            border-radius: 10px;
+            font-size: 12px;
+            line-height: 1.8;
+            z-index: 100;
+            max-width: 260px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px); /* Safari 支援 */
+            border: 1px solid rgba(0,255,0,0.3);
+        }
+        #debug-panel .label { color: #888; }
+        #debug-panel .value { color: #0f0; font-weight: bold; }
+        #debug-panel .warning { color: #ff0; }
+        #debug-panel .error { color: #f00; }
+
         #start-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.95);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             color: white;
-            z-index: 100;
+            z-index: 200;
             padding: 20px;
             text-align: center;
         }
-        #start-overlay h1 { font-size: 2.5rem; margin-bottom: 1rem; color: #f39c12; }
-        #start-overlay p { font-size: 1rem; color: #ccc; line-height: 1.6; margin-bottom: 10px; max-width: 320px;}
+        #start-overlay h1 { font-size: 2rem; margin-bottom: 1rem; color: #0f0; }
+        #start-overlay p { font-size: 0.95rem; color: #ccc; line-height: 1.6; margin-bottom: 10px; max-width: 320px;}
         .btn-start {
             margin-top: 20px;
             padding: 15px 40px;
-            background: #f39c12;
-            color: white;
+            background: #0f0;
+            color: #000;
             border: none;
             border-radius: 50px;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: bold;
-            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.4);
+            box-shadow: 0 5px 15px rgba(0,255,0,0.3);
         }
         .hidden { display: none !important; }
-        
-        #status {
-            position: absolute;
-            top: calc(15px + env(safe-area-inset-top));
-            left: 50%;
-            transform: translateX(-50%) scaleX(-1); /* 狀態文字也要鏡像回來才能看 */
-            color: #0f0;
-            font-size: 14px;
-            z-index: 10;
-            background: rgba(0,0,0,0.6);
-            padding: 8px 15px;
-            border-radius: 20px;
-            backdrop-filter: blur(5px);
-        }
     </style>
 </head>
 <body>
 
+    <!-- 核心修復 3：加上 muted 確保 Safari 允許自動播放 -->
     <video id="videoInput" autoplay playsinline muted></video>
     <canvas id="canvasOutput"></canvas>
-    <div id="status">準備啟動...</div>
+
+    <div id="debug-panel">
+        <div><span class="label">狀態：</span><span id="dbg-status" class="value">初始化中...</span></div>
+        <div><span class="label">FPS：</span><span id="dbg-fps" class="value">0</span></div>
+        <div><span class="label">DPR：</span><span id="dbg-dpr" class="value">-</span></div>
+        <div><span class="label">偵測到手：</span><span id="dbg-hands" class="value">0</span></div>
+        <hr style="border-color: #333; margin: 5px 0;">
+        <div><span class="label">中心座標：</span><span id="dbg-center" class="value">-</span></div>
+        <div><span class="label">手掌寬度：</span><span id="dbg-width" class="value">-</span></div>
+        <div><span class="label">旋轉角度：</span><span id="dbg-angle" class="value">-</span></div>
+        <div><span class="label">捏合距離：</span><span id="dbg-pinch" class="value">-</span></div>
+        <div><span class="label">嘴巴開合：</span><span id="dbg-mouth" class="value">-</span></div>
+    </div>
 
     <div id="start-overlay">
-        <h1>🧸 虛擬布偶</h1>
-        <p>將手掌對準鏡頭，布偶會套在你的手上！</p>
-        <p style="font-size: 0.9rem; color: #f39c12; margin-top: 15px; border: 1px dashed #f39c12; padding: 10px; border-radius: 10px;">
-            ✨ <strong>互動彩蛋</strong>：<br>
-            張開或捏合「拇指與食指」<br>
-            可以控制布偶的嘴巴開合！
+        <h1>🔍 Safari 修復版</h1>
+        <p>針對 iOS Safari 深度優化，<br>解決黑屏、模糊與座標錯位問題。</p>
+        <p style="font-size: 0.85rem; color: #888; margin-top: 15px;">
+            請確保在 <strong>HTTPS</strong> 環境下執行。<br>
+            點擊按鈕後，請允許攝影機權限。
         </p>
-        <button class="btn-start">點擊啟動鏡頭</button>
+        <button class="btn-start" id="btn-start">啟動 Debug</button>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 
     <script>
-        const statusEl = document.getElementById('status');
         const videoElement = document.getElementById('videoInput');
         const canvasElement = document.getElementById('canvasOutput');
         const canvasCtx = canvasElement.getContext('2d');
 
+        // Debug 面板元素
+        const dbgStatus = document.getElementById('dbg-status');
+        const dbgFps = document.getElementById('dbg-fps');
+        const dbgDpr = document.getElementById('dbg-dpr');
+        const dbgHands = document.getElementById('dbg-hands');
+        const dbgCenter = document.getElementById('dbg-center');
+        const dbgWidth = document.getElementById('dbg-width');
+        const dbgAngle = document.getElementById('dbg-angle');
+        const dbgPinch = document.getElementById('dbg-pinch');
+        const dbgMouth = document.getElementById('dbg-mouth');
+
+        // 核心修復 4：處理 Retina 螢幕 (devicePixelRatio)
+        let dpr = window.devicePixelRatio || 1;
+        dbgDpr.innerText = dpr.toFixed(1);
+
         function resizeCanvas() {
-            canvasElement.width = window.innerWidth;
-            canvasElement.height = window.innerHeight;
+            dpr = window.devicePixelRatio || 1;
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            
+            // CSS 尺寸
+            canvasElement.style.width = width + 'px';
+            canvasElement.style.height = height + 'px';
+            
+            // Canvas 實際解析度 (乘以 DPR 確保清晰)
+            canvasElement.width = width * dpr;
+            canvasElement.height = height * dpr;
         }
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
 
-        // ================= 1. 平滑濾波工具 =================
-        function lerp(start, end, factor) { return start + (end - start) * factor; }
-        function lerpAngle(start, end, factor) {
-            let diff = end - start;
-            while (diff > Math.PI) diff -= Math.PI * 2;
-            while (diff < -Math.PI) diff += Math.PI * 2;
-            return start + diff * factor;
-        }
+        // FPS 計算
+        let frameCount = 0;
+        let lastFpsTime = performance.now();
+        let currentFps = 0;
 
-        // 平滑狀態記錄
+        // 平滑濾波
+        function lerp(start, end, factor) { return start + (end - start) * factor; }
         let smoothState = { x: 0, y: 0, scale: 1, angle: 0, mouth: 0 };
         let isTracking = false;
 
-        // ================= 2. 繪製布偶 (純 Canvas 代碼) =================
+        // 繪製布偶
         function drawPuppet(ctx, x, y, scale, rotation, mouthOpenRatio) {
             ctx.save();
             ctx.translate(x, y);
             ctx.rotate(rotation);
             ctx.scale(scale, scale);
             
-            // 陰影增加立體感
-            ctx.shadowColor = 'rgba(0,0,0,0.4)';
-            ctx.shadowBlur = 20;
-            ctx.shadowOffsetY = 10;
-
-            // 身體/頭部
+            ctx.globalAlpha = 0.8; 
+            
+            // 身體
             ctx.fillStyle = '#A0522D'; 
             ctx.beginPath();
             ctx.ellipse(0, 0, 70, 90, 0, 0, Math.PI * 2);
             ctx.fill();
             
-            ctx.shadowColor = 'transparent'; // 關閉陰影避免影響後續繪圖
-            
             // 耳朵
             ctx.fillStyle = '#8B4513'; 
-            ctx.beginPath();
-            ctx.arc(-45, -70, 25, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(45, -70, 25, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.beginPath(); ctx.arc(-45, -70, 25, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(45, -70, 25, 0, Math.PI * 2); ctx.fill();
             
-            // 內耳
-            ctx.fillStyle = '#FFC0CB'; 
-            ctx.beginPath();
-            ctx.arc(-45, -70, 12, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(45, -70, 12, 0, Math.PI * 2);
-            ctx.fill();
-
             // 眼睛
             ctx.fillStyle = '#000';
-            ctx.beginPath();
-            ctx.arc(-25, -20, 10, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(25, -20, 10, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // 眼睛高光
-            ctx.fillStyle = '#FFF';
-            ctx.beginPath();
-            ctx.arc(-22, -23, 3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(28, -23, 3, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.beginPath(); ctx.arc(-25, -20, 10, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(25, -20, 10, 0, Math.PI * 2); ctx.fill();
 
-            // 鼻子
-            ctx.fillStyle = '#000';
-            ctx.beginPath();
-            ctx.ellipse(0, 15, 12, 8, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            // 嘴巴 (動態張合)
+            // 嘴巴
             ctx.fillStyle = '#800000'; 
             ctx.beginPath();
             const mouthHeight = 5 + mouthOpenRatio * 35;
             ctx.ellipse(0, 35, 18, mouthHeight, 0, 0, Math.PI * 2);
             ctx.fill();
-            
-            // 舌頭 (當嘴巴張開時出現)
-            if (mouthOpenRatio > 0.3) {
-                ctx.fillStyle = '#FF69B4';
-                ctx.beginPath();
-                ctx.ellipse(0, 35 + mouthHeight * 0.5, 10, mouthHeight * 0.4, 0, 0, Math.PI * 2);
-                ctx.fill();
-            }
 
+            ctx.globalAlpha = 1.0;
             ctx.restore();
         }
 
-        // ================= 3. MediaPipe 追蹤與邏輯 =================
         function onResults(results) {
+            // FPS 計算
+            frameCount++;
+            const now = performance.now();
+            if (now - lastFpsTime >= 1000) {
+                currentFps = frameCount;
+                frameCount = 0;
+                lastFpsTime = now;
+                dbgFps.innerText = currentFps;
+                dbgFps.className = currentFps < 15 ? 'value error' : (currentFps < 25 ? 'value warning' : 'value');
+            }
+
+            // 清除 Canvas (考慮 DPR)
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
             
-            // 因為 CSS 做了鏡像，Canvas 繪製時也要鏡像，確保座標與視頻完美重合
             canvasCtx.save();
+            // 套用 DPR 縮放，這樣後續繪圖座標就可以直接用 CSS 像素 (window.innerWidth)
+            canvasCtx.scale(dpr, dpr); 
+            // 鏡像處理 (與 Video 的 CSS 鏡像對應)
             canvasCtx.scale(-1, 1);
-            canvasCtx.translate(-canvasElement.width, 0);
+            canvasCtx.translate(-window.innerWidth, 0);
 
-            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                const landmarks = results.multiHandLandmarks[0]; // 只取第一隻手
+            const handCount = results.multiHandLandmarks ? results.multiHandLandmarks.length : 0;
+            dbgHands.innerText = handCount;
+            dbgHands.className = handCount > 0 ? 'value' : 'value warning';
+
+            if (handCount > 0) {
+                const landmarks = results.multiHandLandmarks[0];
+                const W = window.innerWidth;
+                const H = window.innerHeight;
                 
-                // 關鍵點
-                const wrist = landmarks[0];
-                const indexMcp = landmarks[5];   // 食指根
-                const pinkyMcp = landmarks[17];  // 小指根
-                const middleMcp = landmarks[9];  // 中指根
-                const thumbTip = landmarks[4];   // 拇指尖
-                const indexTip = landmarks[8];   // 食指尖
+                // 繪製 21 個關鍵點
+                for (let i = 0; i < landmarks.length; i++) {
+                    const lm = landmarks[i];
+                    canvasCtx.beginPath();
+                    canvasCtx.arc(lm.x * W, lm.y * H, 4, 0, 2 * Math.PI);
+                    canvasCtx.fillStyle = '#0f0';
+                    canvasCtx.fill();
+                }
 
-                // 1. 計算中心位置 (手腕與中指根的中點，作為布偶身體中心)
+                // 計算用關鍵點
+                const wrist = landmarks[0];
+                const indexMcp = landmarks[5];
+                const pinkyMcp = landmarks[17];
+                const middleMcp = landmarks[9];
+                const thumbTip = landmarks[4];
+                const indexTip = landmarks[8];
+
+                // 繪製計算用關鍵點（紅色）
+                [wrist, indexMcp, pinkyMcp, middleMcp, thumbTip, indexTip].forEach(kp => {
+                    canvasCtx.beginPath();
+                    canvasCtx.arc(kp.x * W, kp.y * H, 8, 0, 2 * Math.PI);
+                    canvasCtx.fillStyle = '#f00';
+                    canvasCtx.fill();
+                    canvasCtx.strokeStyle = '#fff';
+                    canvasCtx.lineWidth = 2;
+                    canvasCtx.stroke();
+                });
+
+                // 計算數值
                 const cx = (wrist.x + middleMcp.x) / 2;
                 const cy = (wrist.y + middleMcp.y) / 2;
 
-                // 2. 計算縮放比例 (基於食指根與小指根的距離，即手掌寬度)
                 const dxW = pinkyMcp.x - indexMcp.x;
                 const dyW = pinkyMcp.y - indexMcp.y;
                 const handWidth = Math.sqrt(dxW*dxW + dyW*dyW);
-                const scale = (handWidth / 0.15) * 1.8; // 映射到合適的布偶大小
 
-                // 3. 計算旋轉角度 (基於手腕到中指根的向量)
                 const dirX = middleMcp.x - wrist.x;
                 const dirY = middleMcp.y - wrist.y;
-                const angle = Math.atan2(dirY, dirX) + Math.PI / 2; // +PI/2 讓頭頂對齊手指方向
+                const angle = Math.atan2(dirY, dirX) + Math.PI / 2;
 
-                // 4. 計算嘴巴張開比例 (基於拇指尖與食指尖的距離)
                 const dxP = thumbTip.x - indexTip.x;
                 const dyP = thumbTip.y - indexTip.y;
                 const pinchDist = Math.sqrt(dxP*dxP + dyP*dyP);
-                // 捏合時約 0.02，張開時約 0.15。映射到 0~1
-                let mouthOpen = (pinchDist - 0.03) / 0.10;
-                mouthOpen = Math.max(0, Math.min(1, mouthOpen)); 
 
-                // 5. 平滑處理 (防止布偶抖動)
+                let mouthOpen = (pinchDist - 0.03) / 0.10;
+                mouthOpen = Math.max(0, Math.min(1, mouthOpen));
+
+                const scale = (handWidth / 0.15) * 1.8;
+
+                // 平滑處理
                 if (!isTracking) {
-                    smoothState.x = cx; smoothState.y = cy; 
-                    smoothState.scale = scale; smoothState.angle = angle;
+                    smoothState = { x: cx, y: cy, scale: scale, angle: angle, mouth: mouthOpen };
                     isTracking = true;
                 } else {
                     smoothState.x = lerp(smoothState.x, cx, 0.4);
                     smoothState.y = lerp(smoothState.y, cy, 0.4);
                     smoothState.scale = lerp(smoothState.scale, scale, 0.3);
-                    smoothState.angle = lerpAngle(smoothState.angle, angle, 0.3);
+                    smoothState.angle = lerp(smoothState.angle, angle, 0.3);
                     smoothState.mouth = lerp(smoothState.mouth, mouthOpen, 0.4);
                 }
 
                 // 繪製布偶
                 drawPuppet(
                     canvasCtx, 
-                    smoothState.x * canvasElement.width, 
-                    smoothState.y * canvasElement.height, 
+                    smoothState.x * W, 
+                    smoothState.y * H, 
                     smoothState.scale, 
                     smoothState.angle, 
                     smoothState.mouth
                 );
-                
-                statusEl.innerText = "追蹤中... 試著張開手指！";
-                statusEl.style.color = "#0f0";
+
+                // 更新 Debug 面板
+                dbgStatus.innerText = "追蹤中";
+                dbgStatus.className = 'value';
+                dbgCenter.innerText = `${(cx * 100).toFixed(1)}%, ${(cy * 100).toFixed(1)}%`;
+                dbgWidth.innerText = handWidth.toFixed(4);
+                dbgAngle.innerText = `${(angle * 180 / Math.PI).toFixed(1)}°`;
+                dbgPinch.innerText = pinchDist.toFixed(4);
+                dbgMouth.innerText = `${(mouthOpen * 100).toFixed(0)}%`;
 
             } else {
                 isTracking = false;
-                statusEl.innerText = "請將手掌對準鏡頭";
-                statusEl.style.color = "#ff0";
+                dbgStatus.innerText = "未偵測到手";
+                dbgStatus.className = 'value warning';
+                dbgCenter.innerText = '-'; dbgWidth.innerText = '-';
+                dbgAngle.innerText = '-'; dbgPinch.innerText = '-'; dbgMouth.innerText = '-';
             }
 
             canvasCtx.restore();
@@ -289,33 +336,46 @@
         });
         hands.onResults(onResults);
 
-        // ================= 4. 啟動邏輯 =================
-        const startOverlay = document.getElementById('start-overlay');
-        
-        startOverlay.addEventListener('click', async () => {
-            startOverlay.classList.add('hidden');
-            statusEl.innerText = "啟動鏡頭中...";
+        // 核心修復 5：捨棄 MediaPipe Camera 類，改用原生 RAF 循環 (iOS Safari 最穩定)
+        async function processFrame() {
+            if (videoElement.readyState >= 2) {
+                await hands.send({image: videoElement});
+            }
+            requestAnimationFrame(processFrame);
+        }
+
+        // 啟動邏輯
+        document.getElementById('btn-start').addEventListener('click', async () => {
+            document.getElementById('start-overlay').classList.add('hidden');
+            dbgStatus.innerText = "請求攝影機...";
 
             try {
+                // Safari 相容的約束
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+                    video: { 
+                        facingMode: 'user', 
+                        width: { ideal: 1280 }, 
+                        height: { ideal: 720 } 
+                    },
                     audio: false
                 });
                 
                 videoElement.srcObject = stream;
                 
-                videoElement.onloadeddata = () => {
-                    statusEl.innerText = "就緒！請伸出手掌";
-                    const camera = new Camera(videoElement, {
-                        onFrame: async () => { await hands.send({image: videoElement}); },
-                        width: 1280, height: 720
-                    });
-                    camera.start();
+                // 確保 Video 真的開始播放 (Safari 有時會暫停)
+                videoElement.onloadeddata = async () => {
+                    try {
+                        await videoElement.play();
+                    } catch(e) {
+                        console.warn("Video play failed:", e);
+                    }
+                    dbgStatus.innerText = "就緒，啟動追蹤";
+                    processFrame(); // 開始推理循環
                 };
             } catch (err) {
-                console.error(err);
-                statusEl.innerText = "啟動失敗，請檢查權限";
-                statusEl.style.color = "red";
+                console.error("getUserMedia error:", err);
+                dbgStatus.innerText = "啟動失敗: " + err.name;
+                dbgStatus.className = 'value error';
             }
         });
     </script>
