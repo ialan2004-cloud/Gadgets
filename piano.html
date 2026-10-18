@@ -4,79 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>虛擬鋼琴 - 後置俯視版</title>
+    <title>虛擬布偶 AR</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             overflow: hidden;
-            background: #000; /* 黑色背景配合 contain */
+            background: #2c3e50;
             font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             touch-action: none; 
             -webkit-touch-callout: none;
             -webkit-user-select: none;
             user-select: none;
             padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
         }
         
-        /* 影片與 Canvas：使用 contain 確保座標 100% 準確不裁切 */
+        /* 影片與 Canvas：鏡像顯示，符合照鏡子直覺 */
         #videoInput, #canvasOutput {
             position: absolute;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            object-fit: contain; 
-            background: #111;
+            object-fit: cover;
+            -webkit-transform: scaleX(-1);
+            transform: scaleX(-1);
         }
-        #videoInput { z-index: 1; opacity: 0.4; } /* 降低影片透明度 */
+        #videoInput { z-index: 1; opacity: 0.4; filter: brightness(0.8); }
         #canvasOutput { z-index: 2; pointer-events: none; }
-
-        /* 鋼琴鍵盤：放在底部 */
-        #piano-container {
-            position: absolute;
-            bottom: calc(2% + env(safe-area-inset-bottom));
-            left: 2%;
-            width: 96%;
-            height: 18vh;
-            display: flex;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            pointer-events: none;
-            z-index: 3;
-            background: #222;
-            padding: 3px;
-            gap: 3px;
-        }
-
-        .key {
-            flex: 1;
-            background: linear-gradient(to bottom, #fff 0%, #eee 100%);
-            border-radius: 0 0 6px 6px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            transition: all 0.05s ease-out;
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
-            padding-bottom: 10px;
-            color: #888;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .key.active {
-            background: linear-gradient(to bottom, #ff4444 0%, #cc0000 100%);
-            transform: scaleY(0.95);
-            box-shadow: 0 0 20px rgba(255, 0, 0, 0.8);
-            color: white;
-        }
 
         /* 啟動遮罩 */
         #start-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95);
+            background: rgba(0,0,0,0.9);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -86,17 +44,18 @@
             padding: 20px;
             text-align: center;
         }
-        #start-overlay h1 { font-size: 2rem; margin-bottom: 1rem; color: #ff4444; }
-        #start-overlay p { font-size: 0.95rem; color: #ccc; line-height: 1.6; margin-bottom: 10px; max-width: 320px;}
+        #start-overlay h1 { font-size: 2.5rem; margin-bottom: 1rem; color: #f39c12; }
+        #start-overlay p { font-size: 1rem; color: #ccc; line-height: 1.6; margin-bottom: 10px; max-width: 320px;}
         .btn-start {
             margin-top: 20px;
             padding: 15px 40px;
-            background: #ff4444;
+            background: #f39c12;
             color: white;
             border: none;
             border-radius: 50px;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             font-weight: bold;
+            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.4);
         }
         .hidden { display: none !important; }
         
@@ -104,13 +63,14 @@
             position: absolute;
             top: calc(15px + env(safe-area-inset-top));
             left: 50%;
-            transform: translateX(-50%);
+            transform: translateX(-50%) scaleX(-1); /* 狀態文字也要鏡像回來才能看 */
             color: #0f0;
-            font-size: 12px;
+            font-size: 14px;
             z-index: 10;
-            background: rgba(0,0,0,0.7);
-            padding: 6px 12px;
+            background: rgba(0,0,0,0.6);
+            padding: 8px 15px;
             border-radius: 20px;
+            backdrop-filter: blur(5px);
         }
     </style>
 </head>
@@ -120,210 +80,244 @@
     <canvas id="canvasOutput"></canvas>
     <div id="status">準備啟動...</div>
 
-    <div id="piano-container">
-        <div class="key" data-index="0">C4</div>
-        <div class="key" data-index="1">D4</div>
-        <div class="key" data-index="2">E4</div>
-        <div class="key" data-index="3">F4</div>
-        <div class="key" data-index="4">G4</div>
-        <div class="key" data-index="5">A4</div>
-        <div class="key" data-index="6">B4</div>
-        <div class="key" data-index="7">C5</div>
-        <div class="key" data-index="8">D5</div>
-        <div class="key" data-index="9">E5</div>
-    </div>
-
     <div id="start-overlay">
-        <h1>🎹 俯視虛擬鋼琴</h1>
-        <p>請將手機<strong>平放在桌上，鏡頭朝上</strong>。<br>雙手在手機上方懸空彈奏。</p>
-        <p style="font-size: 0.85rem; color: #888; margin-top: 15px;">
-            ※ 改用後置鏡頭，畫質更清晰<br>
-            ※ <strong>新的按鍵方式</strong>：手指在原地「彎曲/伸直」即可按鍵，<br>不需要上下揮動。<br>
-            ※ 請確保環境光線充足
+        <h1>🧸 虛擬布偶</h1>
+        <p>將手掌對準鏡頭，布偶會套在你的手上！</p>
+        <p style="font-size: 0.9rem; color: #f39c12; margin-top: 15px; border: 1px dashed #f39c12; padding: 10px; border-radius: 10px;">
+            ✨ <strong>互動彩蛋</strong>：<br>
+            張開或捏合「拇指與食指」<br>
+            可以控制布偶的嘴巴開合！
         </p>
-        <button class="btn-start">點擊啟動</button>
+        <button class="btn-start">點擊啟動鏡頭</button>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tone@14.7.77/build/Tone.js"></script>
 
     <script>
         const statusEl = document.getElementById('status');
-        
-        // ================= 1. 音訊初始化 =================
-        const reverb = new Tone.Reverb({ decay: 2, wet: 0.15 }).toDestination();
-        const synth = new Tone.PolySynth(Tone.Synth, {
-            oscillator: { type: "triangle" },
-            envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 1 }
-        }).connect(reverb);
-        synth.volume.value = -5;
-        
-        const notes = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5', 'D5', 'E5'];
-        const keyElements = document.querySelectorAll('.key');
-        const keyStates = new Array(10).fill(false);
-
-        function playNote(index, isDown) {
-            if (isDown) {
-                synth.triggerAttack(notes[index], Tone.now());
-                keyElements[index].classList.add('active');
-            } else {
-                synth.triggerRelease(notes[index], Tone.now());
-                keyElements[index].classList.remove('active');
-            }
-        }
-
-        // ================= 2. MediaPipe 與 Canvas 初始化 =================
         const videoElement = document.getElementById('videoInput');
         const canvasElement = document.getElementById('canvasOutput');
         const canvasCtx = canvasElement.getContext('2d');
-        
+
         function resizeCanvas() {
-            // 確保 Canvas 尺寸與顯示區域一致
             canvasElement.width = window.innerWidth;
             canvasElement.height = window.innerHeight;
         }
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
 
-        // 鍵盤 X 軸映射 (左右各留 2% 邊距)
-        const KEY_MARGIN = 0.02;
-        const KEY_WIDTH = 0.96 / 10;
+        // ================= 1. 平滑濾波工具 =================
+        function lerp(start, end, factor) { return start + (end - start) * factor; }
+        function lerpAngle(start, end, factor) {
+            let diff = end - start;
+            while (diff > Math.PI) diff -= Math.PI * 2;
+            while (diff < -Math.PI) diff += Math.PI * 2;
+            return start + diff * factor;
+        }
 
-        // 核心優化：幀緩衝計數器 (防止 AI 閃爍導致斷音)
-        // 每個手指一個計數器，正數代表彎曲趨勢，負數代表伸直趨勢
-        const fingerFrameCounters = { 8: 0, 12: 0, 16: 0, 20: 0 }; 
-        const BEND_THRESHOLD = 0.08; // 2D 距離閾值：小於此值視為彎曲
-        const FRAME_BUFFER = 3;      // 需要連續 3 幀確認才觸發
+        // 平滑狀態記錄
+        let smoothState = { x: 0, y: 0, scale: 1, angle: 0, mouth: 0 };
+        let isTracking = false;
 
+        // ================= 2. 繪製布偶 (純 Canvas 代碼) =================
+        function drawPuppet(ctx, x, y, scale, rotation, mouthOpenRatio) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(rotation);
+            ctx.scale(scale, scale);
+            
+            // 陰影增加立體感
+            ctx.shadowColor = 'rgba(0,0,0,0.4)';
+            ctx.shadowBlur = 20;
+            ctx.shadowOffsetY = 10;
+
+            // 身體/頭部
+            ctx.fillStyle = '#A0522D'; 
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 70, 90, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.shadowColor = 'transparent'; // 關閉陰影避免影響後續繪圖
+            
+            // 耳朵
+            ctx.fillStyle = '#8B4513'; 
+            ctx.beginPath();
+            ctx.arc(-45, -70, 25, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(45, -70, 25, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 內耳
+            ctx.fillStyle = '#FFC0CB'; 
+            ctx.beginPath();
+            ctx.arc(-45, -70, 12, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(45, -70, 12, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 眼睛
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(-25, -20, 10, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(25, -20, 10, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 眼睛高光
+            ctx.fillStyle = '#FFF';
+            ctx.beginPath();
+            ctx.arc(-22, -23, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(28, -23, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 鼻子
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.ellipse(0, 15, 12, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 嘴巴 (動態張合)
+            ctx.fillStyle = '#800000'; 
+            ctx.beginPath();
+            const mouthHeight = 5 + mouthOpenRatio * 35;
+            ctx.ellipse(0, 35, 18, mouthHeight, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 舌頭 (當嘴巴張開時出現)
+            if (mouthOpenRatio > 0.3) {
+                ctx.fillStyle = '#FF69B4';
+                ctx.beginPath();
+                ctx.ellipse(0, 35 + mouthHeight * 0.5, 10, mouthHeight * 0.4, 0, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.restore();
+        }
+
+        // ================= 3. MediaPipe 追蹤與邏輯 =================
         function onResults(results) {
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
             
-            // 重置本幀未偵測到的手指計數器
-            const detectedFingers = new Set();
+            // 因為 CSS 做了鏡像，Canvas 繪製時也要鏡像，確保座標與視頻完美重合
+            canvasCtx.save();
+            canvasCtx.scale(-1, 1);
+            canvasCtx.translate(-canvasElement.width, 0);
 
-            if (results.multiHandLandmarks) {
-                for (const landmarks of results.multiHandLandmarks) {
-                    // 追蹤食指(8), 中指(12), 無名指(16), 小指(20)
-                    const fingersToTrack = [8, 12, 16, 20]; 
-                    
-                    for (const idx of fingersToTrack) {
-                        detectedFingers.add(idx);
-                        const tip = landmarks[idx];
-                        const pip = landmarks[idx - 3]; // 指根關節 (5, 9, 13, 17)
-                        
-                        // 核心邏輯：計算指尖與指根的 2D 距離
-                        const dx = tip.x - pip.x;
-                        const dy = tip.y - pip.y;
-                        const distance = Math.sqrt(dx*dx + dy*dy);
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                const landmarks = results.multiHandLandmarks[0]; // 只取第一隻手
+                
+                // 關鍵點
+                const wrist = landmarks[0];
+                const indexMcp = landmarks[5];   // 食指根
+                const pinkyMcp = landmarks[17];  // 小指根
+                const middleMcp = landmarks[9];  // 中指根
+                const thumbTip = landmarks[4];   // 拇指尖
+                const indexTip = landmarks[8];   // 食指尖
 
-                        // 判斷是否彎曲
-                        const isBent = distance < BEND_THRESHOLD;
+                // 1. 計算中心位置 (手腕與中指根的中點，作為布偶身體中心)
+                const cx = (wrist.x + middleMcp.x) / 2;
+                const cy = (wrist.y + middleMcp.y) / 2;
 
-                        // 幀緩衝邏輯
-                        if (isBent) {
-                            fingerFrameCounters[idx] = Math.min(fingerFrameCounters[idx] + 1, FRAME_BUFFER);
-                        } else {
-                            fingerFrameCounters[idx] = Math.max(fingerFrameCounters[idx] - 1, -FRAME_BUFFER);
-                        }
+                // 2. 計算縮放比例 (基於食指根與小指根的距離，即手掌寬度)
+                const dxW = pinkyMcp.x - indexMcp.x;
+                const dyW = pinkyMcp.y - indexMcp.y;
+                const handWidth = Math.sqrt(dxW*dxW + dyW*dyW);
+                const scale = (handWidth / 0.15) * 1.8; // 映射到合適的布偶大小
 
-                        // 決定最終狀態
-                        const isPressed = fingerFrameCounters[idx] >= FRAME_BUFFER;
-                        const isReleased = fingerFrameCounters[idx] <= -FRAME_BUFFER;
+                // 3. 計算旋轉角度 (基於手腕到中指根的向量)
+                const dirX = middleMcp.x - wrist.x;
+                const dirY = middleMcp.y - wrist.y;
+                const angle = Math.atan2(dirY, dirX) + Math.PI / 2; // +PI/2 讓頭頂對齊手指方向
 
-                        // 計算對應的琴鍵索引
-                        let keyIndex = Math.floor((tip.x - KEY_MARGIN) / KEY_WIDTH);
+                // 4. 計算嘴巴張開比例 (基於拇指尖與食指尖的距離)
+                const dxP = thumbTip.x - indexTip.x;
+                const dyP = thumbTip.y - indexTip.y;
+                const pinchDist = Math.sqrt(dxP*dxP + dyP*dyP);
+                // 捏合時約 0.02，張開時約 0.15。映射到 0~1
+                let mouthOpen = (pinchDist - 0.03) / 0.10;
+                mouthOpen = Math.max(0, Math.min(1, mouthOpen)); 
 
-                        // 繪製指尖指示器 (視覺反饋)
-                        const screenX = tip.x * canvasElement.width;
-                        const screenY = tip.y * canvasElement.height;
-                        
-                        canvasCtx.beginPath();
-                        canvasCtx.arc(screenX, screenY, 12, 0, 2 * Math.PI);
-                        canvasCtx.fillStyle = isPressed ? 'rgba(255, 50, 50, 0.9)' : 'rgba(0, 255, 100, 0.6)';
-                        canvasCtx.fill();
-                        canvasCtx.strokeStyle = 'white';
-                        canvasCtx.lineWidth = 2;
-                        canvasCtx.stroke();
-
-                        // 觸發按鍵 (只針對有效的 10 個琴鍵範圍)
-                        if (keyIndex >= 0 && keyIndex < 10) {
-                            if (isPressed && !keyStates[keyIndex]) {
-                                keyStates[keyIndex] = true;
-                                playNote(keyIndex, true);
-                            } else if (isReleased && keyStates[keyIndex]) {
-                                keyStates[keyIndex] = false;
-                                playNote(keyIndex, false);
-                            }
-                        }
-                    }
+                // 5. 平滑處理 (防止布偶抖動)
+                if (!isTracking) {
+                    smoothState.x = cx; smoothState.y = cy; 
+                    smoothState.scale = scale; smoothState.angle = angle;
+                    isTracking = true;
+                } else {
+                    smoothState.x = lerp(smoothState.x, cx, 0.4);
+                    smoothState.y = lerp(smoothState.y, cy, 0.4);
+                    smoothState.scale = lerp(smoothState.scale, scale, 0.3);
+                    smoothState.angle = lerpAngle(smoothState.angle, angle, 0.3);
+                    smoothState.mouth = lerp(smoothState.mouth, mouthOpen, 0.4);
                 }
+
+                // 繪製布偶
+                drawPuppet(
+                    canvasCtx, 
+                    smoothState.x * canvasElement.width, 
+                    smoothState.y * canvasElement.height, 
+                    smoothState.scale, 
+                    smoothState.angle, 
+                    smoothState.mouth
+                );
+                
+                statusEl.innerText = "追蹤中... 試著張開手指！";
+                statusEl.style.color = "#0f0";
+
+            } else {
+                isTracking = false;
+                statusEl.innerText = "請將手掌對準鏡頭";
+                statusEl.style.color = "#ff0";
             }
 
-            // 如果某根手指在本幀完全丟失，將其計數器歸零並釋放按鍵
-            for (const idx of [8, 12, 16, 20]) {
-                if (!detectedFingers.has(idx)) {
-                    fingerFrameCounters[idx] = 0;
-                }
-            }
+            canvasCtx.restore();
         }
 
         const hands = new Hands({locateFile: (file) => {
             return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
         }});
-        
         hands.setOptions({
-            maxNumHands: 2,
-            modelComplexity: 1, // 後置鏡頭畫質好，使用完整模型
+            maxNumHands: 1,
+            modelComplexity: 1,
             minDetectionConfidence: 0.7,
             minTrackingConfidence: 0.5
         });
         hands.onResults(onResults);
 
-        // ================= 3. 啟動邏輯 (後置鏡頭) =================
+        // ================= 4. 啟動邏輯 =================
         const startOverlay = document.getElementById('start-overlay');
         
         startOverlay.addEventListener('click', async () => {
             startOverlay.classList.add('hidden');
-            statusEl.innerText = "初始化中...";
+            statusEl.innerText = "啟動鏡頭中...";
 
             try {
-                await Tone.start();
-                synth.triggerAttackRelease("C4", "32n", Tone.now());
-                
-                statusEl.innerText = "啟動後置鏡頭...";
-
-                // 核心：改為 environment (後置鏡頭)
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { 
-                        facingMode: 'environment', 
-                        width: { ideal: 1280 }, // 後置鏡頭可用更高解析度
-                        height: { ideal: 720 } 
-                    },
+                    video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
                     audio: false
                 });
                 
                 videoElement.srcObject = stream;
                 
                 videoElement.onloadeddata = () => {
-                    statusEl.innerText = "就緒！請彎曲手指按鍵";
-                    startDetectionLoop();
+                    statusEl.innerText = "就緒！請伸出手掌";
+                    const camera = new Camera(videoElement, {
+                        onFrame: async () => { await hands.send({image: videoElement}); },
+                        width: 1280, height: 720
+                    });
+                    camera.start();
                 };
-
             } catch (err) {
-                console.error("啟動失敗:", err);
+                console.error(err);
                 statusEl.innerText = "啟動失敗，請檢查權限";
                 statusEl.style.color = "red";
             }
         });
-
-        async function startDetectionLoop() {
-            if (videoElement.readyState >= 2) {
-                await hands.send({image: videoElement});
-            }
-            requestAnimationFrame(startDetectionLoop);
-        }
     </script>
 </body>
 </html>
