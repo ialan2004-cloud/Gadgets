@@ -4,71 +4,72 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>虛擬鋼琴 - 完美優化版</title>
+    <title>虛擬鋼琴 - 後置俯視版</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             overflow: hidden;
-            background: #1a1a1a;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #000; /* 黑色背景配合 contain */
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             touch-action: none; 
             -webkit-touch-callout: none;
             -webkit-user-select: none;
             user-select: none;
             padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
         }
         
-        /* 影片與 Canvas：不鏡像，保持真實視角 */
+        /* 影片與 Canvas：使用 contain 確保座標 100% 準確不裁切 */
         #videoInput, #canvasOutput {
             position: absolute;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            object-fit: cover;
-            will-change: transform;
+            object-fit: contain; 
+            background: #111;
         }
-        #videoInput { z-index: 1; opacity: 0.2; filter: blur(2px) brightness(0.5); } /* 背景模糊化 */
+        #videoInput { z-index: 1; opacity: 0.4; } /* 降低影片透明度 */
         #canvasOutput { z-index: 2; pointer-events: none; }
 
-        /* 現代化鋼琴鍵盤 */
+        /* 鋼琴鍵盤：放在底部 */
         #piano-container {
             position: absolute;
             bottom: calc(2% + env(safe-area-inset-bottom));
-            left: 5%;
-            width: 90%;
-            height: 22vh;
+            left: 2%;
+            width: 96%;
+            height: 18vh;
             display: flex;
-            border-radius: 12px;
+            border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.8), inset 0 2px 5px rgba(255,255,255,0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
             pointer-events: none;
             z-index: 3;
             background: #222;
-            padding: 4px;
-            gap: 4px;
+            padding: 3px;
+            gap: 3px;
         }
 
         .key {
             flex: 1;
-            background: linear-gradient(to bottom, #ffffff 0%, #f0f0f0 80%, #d0d0d0 100%);
-            border-radius: 0 0 8px 8px;
-            box-shadow: 0 5px 10px rgba(0,0,0,0.3), inset 0 -3px 5px rgba(0,0,0,0.1);
+            background: linear-gradient(to bottom, #fff 0%, #eee 100%);
+            border-radius: 0 0 6px 6px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
             transition: all 0.05s ease-out;
             display: flex;
             align-items: flex-end;
             justify-content: center;
-            padding-bottom: 12px;
+            padding-bottom: 10px;
             color: #888;
-            font-size: 14px;
-            font-weight: 500;
-            position: relative;
+            font-size: 12px;
+            font-weight: bold;
         }
 
-        /* 琴鍵按下時的華麗反饋 */
         .key.active {
-            background: linear-gradient(to bottom, #ffd700 0%, #ffaa00 80%, #ff8800 100%);
-            transform: translateY(4px) scaleY(0.96);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.5), inset 0 -1px 3px rgba(0,0,0,0.2), 0 0 20px rgba(255, 170, 0, 0.6);
-            color: #333;
+            background: linear-gradient(to bottom, #ff4444 0%, #cc0000 100%);
+            transform: scaleY(0.95);
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.8);
+            color: white;
         }
 
         /* 啟動遮罩 */
@@ -82,23 +83,20 @@
             justify-content: center;
             color: white;
             z-index: 100;
-            cursor: pointer;
             padding: 20px;
             text-align: center;
-            backdrop-filter: blur(10px);
         }
-        #start-overlay h1 { font-size: 2.5rem; margin-bottom: 1rem; background: linear-gradient(to right, #ffd700, #ffaa00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        #start-overlay p { font-size: 1rem; color: #ccc; line-height: 1.6; margin-bottom: 10px; max-width: 300px;}
+        #start-overlay h1 { font-size: 2rem; margin-bottom: 1rem; color: #ff4444; }
+        #start-overlay p { font-size: 0.95rem; color: #ccc; line-height: 1.6; margin-bottom: 10px; max-width: 320px;}
         .btn-start {
             margin-top: 20px;
             padding: 15px 40px;
-            background: linear-gradient(to right, #ffd700, #ffaa00);
-            color: #000;
+            background: #ff4444;
+            color: white;
             border: none;
             border-radius: 50px;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: bold;
-            box-shadow: 0 5px 15px rgba(255, 170, 0, 0.4);
         }
         .hidden { display: none !important; }
         
@@ -110,10 +108,9 @@
             color: #0f0;
             font-size: 12px;
             z-index: 10;
-            background: rgba(0,0,0,0.6);
+            background: rgba(0,0,0,0.7);
             padding: 6px 12px;
             border-radius: 20px;
-            backdrop-filter: blur(5px);
         }
     </style>
 </head>
@@ -137,11 +134,12 @@
     </div>
 
     <div id="start-overlay">
-        <h1>🎹 虛擬鋼琴</h1>
-        <p>將雙手放在鏡頭前，<br>用食指或中指「往下點」琴鍵即可發聲。</p>
-        <p style="font-size: 0.85rem; color: #888;">
-            ※ 請允許攝影機權限<br>
-            ※ 確保光線充足，背景不要太雜亂
+        <h1>🎹 俯視虛擬鋼琴</h1>
+        <p>請將手機<strong>平放在桌上，鏡頭朝上</strong>。<br>雙手在手機上方懸空彈奏。</p>
+        <p style="font-size: 0.85rem; color: #888; margin-top: 15px;">
+            ※ 改用後置鏡頭，畫質更清晰<br>
+            ※ <strong>新的按鍵方式</strong>：手指在原地「彎曲/伸直」即可按鍵，<br>不需要上下揮動。<br>
+            ※ 請確保環境光線充足
         </p>
         <button class="btn-start">點擊啟動</button>
     </div>
@@ -154,13 +152,13 @@
     <script>
         const statusEl = document.getElementById('status');
         
-        // ================= 1. 音訊初始化 (加入混響提升聽感) =================
-        const reverb = new Tone.Reverb({ decay: 2.5, wet: 0.2 }).toDestination();
+        // ================= 1. 音訊初始化 =================
+        const reverb = new Tone.Reverb({ decay: 2, wet: 0.15 }).toDestination();
         const synth = new Tone.PolySynth(Tone.Synth, {
-            oscillator: { type: "triangle8" }, // 更豐富的泛音
-            envelope: { attack: 0.005, decay: 0.2, sustain: 0.1, release: 1.2 }
+            oscillator: { type: "triangle" },
+            envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 1 }
         }).connect(reverb);
-        synth.volume.value = -6;
+        synth.volume.value = -5;
         
         const notes = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5', 'D5', 'E5'];
         const keyElements = document.querySelectorAll('.key');
@@ -182,94 +180,91 @@
         const canvasCtx = canvasElement.getContext('2d');
         
         function resizeCanvas() {
+            // 確保 Canvas 尺寸與顯示區域一致
             canvasElement.width = window.innerWidth;
             canvasElement.height = window.innerHeight;
         }
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
 
-        // 鍵盤區域定義 (Y軸比例)
-        const KEY_TOP = 0.75;   // 琴鍵頂部 (觸發線)
-        const RELEASE_Y = 0.68; // 釋放線 (遲滯區間，防止抖動)
-        
-        // 鍵盤區域定義 (X軸比例，左右各留 5% 邊距)
-        const KEY_MARGIN = 0.05;
-        const KEY_WIDTH = 0.90 / 10;
+        // 鍵盤 X 軸映射 (左右各留 2% 邊距)
+        const KEY_MARGIN = 0.02;
+        const KEY_WIDTH = 0.96 / 10;
 
-        // 座標平滑處理 (防止指尖抖動)
-        const fingerHistory = {};
-        function getSmoothedLandmark(id, currentX, currentY) {
-            if (!fingerHistory[id]) fingerHistory[id] = { x: [], y: [] };
-            fingerHistory[id].x.push(currentX);
-            fingerHistory[id].y.push(currentY);
-            if (fingerHistory[id].x.length > 3) fingerHistory[id].x.shift();
-            if (fingerHistory[id].y.length > 3) fingerHistory[id].y.shift();
-            
-            const avgX = fingerHistory[id].x.reduce((a, b) => a + b) / fingerHistory[id].x.length;
-            const avgY = fingerHistory[id].y.reduce((a, b) => a + b) / fingerHistory[id].y.length;
-            return { x: avgX, y: avgY };
-        }
+        // 核心優化：幀緩衝計數器 (防止 AI 閃爍導致斷音)
+        // 每個手指一個計數器，正數代表彎曲趨勢，負數代表伸直趨勢
+        const fingerFrameCounters = { 8: 0, 12: 0, 16: 0, 20: 0 }; 
+        const BEND_THRESHOLD = 0.08; // 2D 距離閾值：小於此值視為彎曲
+        const FRAME_BUFFER = 3;      // 需要連續 3 幀確認才觸發
 
         function onResults(results) {
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
             
-            // 繪製手部骨骼 (可選，這裡改為只畫指尖指示器，畫面更乾淨)
+            // 重置本幀未偵測到的手指計數器
+            const detectedFingers = new Set();
+
             if (results.multiHandLandmarks) {
                 for (const landmarks of results.multiHandLandmarks) {
-                    // 追蹤食指 (8) 和中指 (12)
-                    const fingersToTrack = [8, 12]; 
+                    // 追蹤食指(8), 中指(12), 無名指(16), 小指(20)
+                    const fingersToTrack = [8, 12, 16, 20]; 
                     
                     for (const idx of fingersToTrack) {
-                        const tipRaw = landmarks[idx];
-                        const pipRaw = landmarks[idx - 3]; // 指根
+                        detectedFingers.add(idx);
+                        const tip = landmarks[idx];
+                        const pip = landmarks[idx - 3]; // 指根關節 (5, 9, 13, 17)
                         
-                        // 座標平滑
-                        const tip = getSmoothedLandmark(idx, tipRaw.x, tipRaw.y);
-                        const pip = pipRaw; // 指根不需要平滑，用於判斷方向
-                        
-                        // 計算對應的琴鍵索引 (直接使用原始 X，不翻轉！)
+                        // 核心邏輯：計算指尖與指根的 2D 距離
+                        const dx = tip.x - pip.x;
+                        const dy = tip.y - pip.y;
+                        const distance = Math.sqrt(dx*dx + dy*dy);
+
+                        // 判斷是否彎曲
+                        const isBent = distance < BEND_THRESHOLD;
+
+                        // 幀緩衝邏輯
+                        if (isBent) {
+                            fingerFrameCounters[idx] = Math.min(fingerFrameCounters[idx] + 1, FRAME_BUFFER);
+                        } else {
+                            fingerFrameCounters[idx] = Math.max(fingerFrameCounters[idx] - 1, -FRAME_BUFFER);
+                        }
+
+                        // 決定最終狀態
+                        const isPressed = fingerFrameCounters[idx] >= FRAME_BUFFER;
+                        const isReleased = fingerFrameCounters[idx] <= -FRAME_BUFFER;
+
+                        // 計算對應的琴鍵索引
                         let keyIndex = Math.floor((tip.x - KEY_MARGIN) / KEY_WIDTH);
 
-                        // 判斷手指是否向下 (指尖 Y 大於 指根 Y)
-                        const isPointingDown = tip.y > pip.y;
-
-                        // 繪製指尖指示器
+                        // 繪製指尖指示器 (視覺反饋)
                         const screenX = tip.x * canvasElement.width;
                         const screenY = tip.y * canvasElement.height;
                         
                         canvasCtx.beginPath();
-                        canvasCtx.arc(screenX, screenY, 15, 0, 2 * Math.PI);
-                        canvasCtx.fillStyle = isPointingDown && tip.y > KEY_TOP ? 'rgba(255, 170, 0, 0.8)' : 'rgba(0, 255, 0, 0.5)';
+                        canvasCtx.arc(screenX, screenY, 12, 0, 2 * Math.PI);
+                        canvasCtx.fillStyle = isPressed ? 'rgba(255, 50, 50, 0.9)' : 'rgba(0, 255, 100, 0.6)';
                         canvasCtx.fill();
                         canvasCtx.strokeStyle = 'white';
                         canvasCtx.lineWidth = 2;
                         canvasCtx.stroke();
 
-                        // 核心觸發邏輯 (加入遲滯區間)
+                        // 觸發按鍵 (只針對有效的 10 個琴鍵範圍)
                         if (keyIndex >= 0 && keyIndex < 10) {
-                            if (tip.y > KEY_TOP && isPointingDown) {
-                                // 進入琴鍵區域且手指向下 -> 按下
-                                if (!keyStates[keyIndex]) {
-                                    keyStates[keyIndex] = true;
-                                    playNote(keyIndex, true);
-                                }
-                            } else if (tip.y < RELEASE_Y) {
-                                // 離開釋放線 -> 釋放
-                                if (keyStates[keyIndex]) {
-                                    keyStates[keyIndex] = false;
-                                    playNote(keyIndex, false);
-                                }
+                            if (isPressed && !keyStates[keyIndex]) {
+                                keyStates[keyIndex] = true;
+                                playNote(keyIndex, true);
+                            } else if (isReleased && keyStates[keyIndex]) {
+                                keyStates[keyIndex] = false;
+                                playNote(keyIndex, false);
                             }
                         }
                     }
                 }
-            } else {
-                // 偵測不到手，重置所有狀態
-                for (let i = 0; i < 10; i++) {
-                    if (keyStates[i]) {
-                        keyStates[i] = false;
-                        playNote(i, false);
-                    }
+            }
+
+            // 如果某根手指在本幀完全丟失，將其計數器歸零並釋放按鍵
+            for (const idx of [8, 12, 16, 20]) {
+                if (!detectedFingers.has(idx)) {
+                    fingerFrameCounters[idx] = 0;
                 }
             }
         }
@@ -279,35 +274,40 @@
         }});
         
         hands.setOptions({
-            maxNumHands: 2, // 支援雙手
-            modelComplexity: 1, // 平衡準確度與效能
+            maxNumHands: 2,
+            modelComplexity: 1, // 後置鏡頭畫質好，使用完整模型
             minDetectionConfidence: 0.7,
             minTrackingConfidence: 0.5
         });
         hands.onResults(onResults);
 
-        // ================= 3. 啟動邏輯 =================
+        // ================= 3. 啟動邏輯 (後置鏡頭) =================
         const startOverlay = document.getElementById('start-overlay');
         
         startOverlay.addEventListener('click', async () => {
             startOverlay.classList.add('hidden');
-            statusEl.innerText = "初始化音訊...";
+            statusEl.innerText = "初始化中...";
 
             try {
                 await Tone.start();
-                synth.triggerAttackRelease("C4", "32n", Tone.now()); // 解鎖音訊
+                synth.triggerAttackRelease("C4", "32n", Tone.now());
                 
-                statusEl.innerText = "啟動攝影機...";
+                statusEl.innerText = "啟動後置鏡頭...";
 
+                // 核心：改為 environment (後置鏡頭)
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+                    video: { 
+                        facingMode: 'environment', 
+                        width: { ideal: 1280 }, // 後置鏡頭可用更高解析度
+                        height: { ideal: 720 } 
+                    },
                     audio: false
                 });
                 
                 videoElement.srcObject = stream;
                 
                 videoElement.onloadeddata = () => {
-                    statusEl.innerText = "就緒！請將手指往下點";
+                    statusEl.innerText = "就緒！請彎曲手指按鍵";
                     startDetectionLoop();
                 };
 
