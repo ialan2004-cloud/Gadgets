@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>精緻布偶 AR - 多重手勢控制</title>
+    <title>Iron Man AR Glove</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             overflow: hidden;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #000;
+            font-family: 'Courier New', monospace;
             touch-action: none; 
             -webkit-touch-callout: none;
             -webkit-user-select: none;
@@ -27,35 +27,58 @@
         }
         #videoInput { 
             z-index: 1; 
-            opacity: 0.4; 
+            opacity: 0.3; 
+            filter: brightness(0.6) contrast(1.2) saturate(0.5);
             -webkit-transform: scaleX(-1); 
             transform: scaleX(-1); 
         }
         #canvasOutput { z-index: 2; pointer-events: none; }
 
-        #info-panel {
+        #hud-top {
+            position: absolute;
+            top: calc(15px + env(safe-area-inset-top));
+            left: 15px;
+            right: 15px;
+            display: flex;
+            justify-content: space-between;
+            color: #00e5ff;
+            font-size: 11px;
+            z-index: 10;
+            text-shadow: 0 0 10px rgba(0, 229, 255, 0.8);
+            pointer-events: none;
+        }
+        .hud-box {
+            background: rgba(0, 229, 255, 0.08);
+            border: 1px solid rgba(0, 229, 255, 0.4);
+            padding: 8px 12px;
+            border-radius: 4px;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+        .hud-label { color: #888; font-size: 9px; }
+        .hud-value { color: #00e5ff; font-weight: bold; font-size: 13px; }
+        .hud-warning { color: #ff3d00; text-shadow: 0 0 10px rgba(255, 61, 0, 0.8); }
+
+        #status-bar {
             position: absolute;
             bottom: calc(15px + env(safe-area-inset-bottom));
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
-            color: #fff;
-            padding: 10px 20px;
-            border-radius: 25px;
-            font-size: 11px;
-            line-height: 1.6;
+            background: rgba(0,0,0,0.7);
+            color: #00e5ff;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 12px;
             z-index: 10;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            text-align: center;
-            max-width: 90%;
+            border: 1px solid rgba(0, 229, 255, 0.4);
+            text-shadow: 0 0 8px rgba(0, 229, 255, 0.6);
+            pointer-events: none;
         }
-        #info-panel strong { color: #ffd700; }
 
         #start-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95);
+            background: radial-gradient(circle at center, #1a0000 0%, #000 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -67,74 +90,81 @@
         }
         #start-overlay h1 { 
             font-size: 2.5rem; 
-            margin-bottom: 1rem; 
-            background: linear-gradient(to right, #ffd700, #ff6b6b);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem; 
+            color: #ff3d00;
+            text-shadow: 0 0 20px rgba(255, 61, 0, 0.8), 0 0 40px rgba(255, 61, 0, 0.4);
+            letter-spacing: 4px;
         }
-        #start-overlay p { font-size: 0.95rem; color: #ccc; line-height: 1.8; margin-bottom: 10px; max-width: 340px;}
+        #start-overlay h2 {
+            font-size: 1rem;
+            color: #ffd700;
+            margin-bottom: 2rem;
+            letter-spacing: 2px;
+        }
+        #start-overlay p { font-size: 0.9rem; color: #aaa; line-height: 1.8; margin-bottom: 10px; max-width: 340px;}
         .btn-start {
-            margin-top: 20px;
+            margin-top: 25px;
             padding: 15px 50px;
-            background: linear-gradient(to right, #ffd700, #ff6b6b);
-            color: #000;
-            border: none;
-            border-radius: 50px;
-            font-size: 1.2rem;
+            background: linear-gradient(to bottom, #ff3d00, #b71c1c);
+            color: #fff;
+            border: 2px solid #ffd700;
+            border-radius: 4px;
+            font-size: 1.1rem;
             font-weight: bold;
-            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+            letter-spacing: 3px;
+            box-shadow: 0 0 30px rgba(255, 61, 0, 0.6), inset 0 0 20px rgba(255, 215, 0, 0.2);
+            cursor: pointer;
         }
         .hidden { display: none !important; }
-        
-        #status {
-            position: absolute;
-            top: calc(15px + env(safe-area-inset-top));
-            left: 50%;
-            transform: translateX(-50%);
-            color: #0f0;
-            font-size: 13px;
-            z-index: 10;
-            background: rgba(0,0,0,0.7);
-            padding: 8px 16px;
-            border-radius: 20px;
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-        }
     </style>
 </head>
 <body>
 
     <video id="videoInput" autoplay playsinline muted></video>
     <canvas id="canvasOutput"></canvas>
-    <div id="status">準備啟動...</div>
 
-    <div id="info-panel">
-        <strong>🎭 手勢控制指南</strong><br>
-        食指彎曲 → 左眼閉合 | 中指彎曲 → 右眼閉合<br>
-        拇指上翹 → 耳朵豎起 | 拇指+尾指張開 → 大笑
+    <div id="hud-top">
+        <div class="hud-box">
+            <div class="hud-label">SYSTEM</div>
+            <div class="hud-value" id="hud-system">INITIALIZING</div>
+        </div>
+        <div class="hud-box">
+            <div class="hud-label">POWER</div>
+            <div class="hud-value" id="hud-power">0%</div>
+        </div>
+        <div class="hud-box">
+            <div class="hud-label">FPS</div>
+            <div class="hud-value" id="hud-fps">0</div>
+        </div>
     </div>
 
+    <div id="status-bar">J.A.R.V.I.S. ONLINE</div>
+
     <div id="start-overlay">
-        <h1>🎨 精緻布偶 AR</h1>
-        <p>將手掌對準鏡頭，布偶會套在你的手上！<br>用不同的手勢控制布偶的表情。</p>
-        <p style="font-size: 0.85rem; color: #ffd700; margin-top: 15px; border: 1px dashed #ffd700; padding: 12px; border-radius: 10px; line-height: 1.8;">
-            ✨ <strong>互動功能</strong>：<br>
-            👆 食指彎曲 → 閉左眼<br>
-            ☝️ 中指彎曲 → 閉右眼<br>
-            👍 拇指上翹 → 耳朵豎起<br>
-            🤙 拇指+尾指張開 → 開心大笑
+        <h1>IRON MAN</h1>
+        <h2>MARK AR GLOVE</h2>
+        <p>將手掌對準鏡頭，啟動裝甲系統</p>
+        <p style="font-size: 0.85rem; color: #ff3d00; margin-top: 15px; border: 1px solid #ff3d00; padding: 12px; border-radius: 4px; line-height: 1.8;">
+            ✦ <strong>手勢控制</strong> ✦<br>
+            ✊ 握拳 → 啟動 Repulsor<br>
+            ☝️ 伸出食指 → 發射光束<br>
+            🖐️ 張開五指 → 裝甲充能
         </p>
-        <button class="btn-start">啟動鏡頭</button>
+        <button class="btn-start" id="btn-start">INITIALIZE</button>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 
     <script>
-        const statusEl = document.getElementById('status');
         const videoElement = document.getElementById('videoInput');
         const canvasElement = document.getElementById('canvasOutput');
         const canvasCtx = canvasElement.getContext('2d');
+        const hudSystem = document.getElementById('hud-system');
+        const hudPower = document.getElementById('hud-power');
+        const hudFps = document.getElementById('hud-fps');
+        const statusBar = document.getElementById('status-bar');
 
         let dpr = window.devicePixelRatio || 1;
 
@@ -152,292 +182,366 @@
 
         // 平滑濾波
         function lerp(start, end, factor) { return start + (end - start) * factor; }
-        let smoothState = { 
-            x: 0, y: 0, scale: 1, angle: 0,
-            leftEye: 1, rightEye: 1, earAngle: 0, smile: 0.3
-        };
+        let smoothState = { power: 0, beam: 0, charge: 0 };
         let isTracking = false;
+        let beamParticles = [];
 
-        // 精緻布偶繪製
-        function drawPuppet(ctx, x, y, scale, rotation, leftEyeOpen, rightEyeOpen, earAngle, smileLevel) {
-            ctx.save();
-            ctx.translate(x, y);
-            ctx.rotate(rotation);
-            ctx.scale(scale, scale);
+        // 計算手指彎曲度 (0 = 伸直, 1 = 彎曲)
+        function getFingerCurl(landmarks, tipIdx, pipIdx, mcpIdx) {
+            const tip = landmarks[tipIdx];
+            const pip = landmarks[pipIdx];
+            const mcp = landmarks[mcpIdx];
             
-            // 陰影
-            ctx.shadowColor = 'rgba(0,0,0,0.5)';
-            ctx.shadowBlur = 25;
-            ctx.shadowOffsetY = 15;
+            // 用向量夾角判斷彎曲
+            const v1x = pip.x - mcp.x, v1y = pip.y - mcp.y;
+            const v2x = tip.x - pip.x, v2y = tip.y - pip.y;
+            const dot = v1x * v2x + v1y * v2y;
+            const mag1 = Math.sqrt(v1x*v1x + v1y*v1y);
+            const mag2 = Math.sqrt(v2x*v2x + v2y*v2y);
+            const cosAngle = dot / (mag1 * mag2);
+            // cosAngle 接近 1 = 伸直, 接近 -1 = 彎曲
+            return Math.max(0, Math.min(1, (1 - cosAngle) / 2));
+        }
 
-            // 頭部主體（漸層）
-            const headGradient = ctx.createRadialGradient(0, -20, 10, 0, 0, 100);
-            headGradient.addColorStop(0, '#FFB347');
-            headGradient.addColorStop(0.7, '#FF8C42');
-            headGradient.addColorStop(1, '#D2691E');
-            ctx.fillStyle = headGradient;
-            ctx.beginPath();
-            ctx.ellipse(0, 0, 85, 100, 0, 0, Math.PI * 2);
-            ctx.fill();
+        // 繪製鋼鐵人手套
+        function drawIronManGlove(ctx, landmarks, W, H, powerLevel, beamLevel, chargeLevel) {
+            const toScreen = (lm) => ({ x: lm.x * W, y: lm.y * H });
             
-            ctx.shadowColor = 'transparent';
+            // 關鍵點索引
+            const wrist = toScreen(landmarks[0]);
+            const mcps = [5, 9, 13, 17].map(i => toScreen(landmarks[i]));
+            const thumbMcp = toScreen(landmarks[1]);
+            
+            // 手指段定義 [MCP, PIP, DIP, TIP]
+            const fingers = [
+                [1, 2, 3, 4],     // 拇指
+                [5, 6, 7, 8],     // 食指
+                [9, 10, 11, 12],  // 中指
+                [13, 14, 15, 16], // 無名指
+                [17, 18, 19, 20]  // 尾指
+            ];
 
-            // 耳朵（動態旋轉）
+            // === 1. 繪製手掌主體（紅色金屬） ===
             ctx.save();
-            ctx.translate(-60, -75);
-            ctx.rotate(earAngle - 0.3);
-            const earGradient = ctx.createRadialGradient(0, 0, 5, 0, 0, 30);
-            earGradient.addColorStop(0, '#FF8C42');
-            earGradient.addColorStop(1, '#D2691E');
-            ctx.fillStyle = earGradient;
-            ctx.beginPath();
-            ctx.ellipse(0, 0, 25, 35, -0.3, 0, Math.PI * 2);
-            ctx.fill();
-            // 內耳
-            ctx.fillStyle = '#FFB6C1';
-            ctx.beginPath();
-            ctx.ellipse(0, 0, 12, 18, -0.3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-
-            ctx.save();
-            ctx.translate(60, -75);
-            ctx.rotate(-earAngle + 0.3);
-            ctx.fillStyle = earGradient;
-            ctx.beginPath();
-            ctx.ellipse(0, 0, 25, 35, 0.3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#FFB6C1';
-            ctx.beginPath();
-            ctx.ellipse(0, 0, 12, 18, 0.3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-
-            // 臉頰紅暈
-            ctx.fillStyle = 'rgba(255, 105, 180, 0.4)';
-            ctx.beginPath();
-            ctx.arc(-45, 20, 18, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(45, 20, 18, 0, Math.PI * 2);
-            ctx.fill();
-
-            // 左眼
-            ctx.save();
-            ctx.translate(-30, -15);
-            // 眼白
-            ctx.fillStyle = '#FFF';
-            ctx.beginPath();
-            ctx.ellipse(0, 0, 18, 22 * leftEyeOpen, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = '#333';
+            
+            // 手掌外殼
+            const palmGrad = ctx.createLinearGradient(wrist.x, wrist.y, mcps[1].x, mcps[1].y);
+            palmGrad.addColorStop(0, '#8B0000');
+            palmGrad.addColorStop(0.5, '#C62828');
+            palmGrad.addColorStop(1, '#D32F2F');
+            
+            ctx.fillStyle = palmGrad;
+            ctx.strokeStyle = '#FFD700';
             ctx.lineWidth = 2;
-            ctx.stroke();
+            ctx.lineJoin = 'round';
             
-            if (leftEyeOpen > 0.3) {
-                // 瞳孔
-                ctx.fillStyle = '#2C3E50';
-                ctx.beginPath();
-                ctx.arc(0, 2, 10, 0, Math.PI * 2);
-                ctx.fill();
-                // 高光
-                ctx.fillStyle = '#FFF';
-                ctx.beginPath();
-                ctx.arc(3, -2, 4, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(-2, 3, 2, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            
-            // 睫毛
-            if (leftEyeOpen < 0.5) {
-                ctx.strokeStyle = '#333';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(-15, 0);
-                ctx.lineTo(15, 0);
-                ctx.stroke();
-            }
-            ctx.restore();
-
-            // 右眼
-            ctx.save();
-            ctx.translate(30, -15);
-            ctx.fillStyle = '#FFF';
             ctx.beginPath();
-            ctx.ellipse(0, 0, 18, 22 * rightEyeOpen, 0, 0, Math.PI * 2);
+            ctx.moveTo(wrist.x, wrist.y);
+            ctx.lineTo(mcps[3].x, mcps[3].y);
+            ctx.lineTo(mcps[2].x, mcps[2].y);
+            ctx.lineTo(mcps[1].x, mcps[1].y);
+            ctx.lineTo(mcps[0].x, mcps[0].y);
+            ctx.lineTo(thumbMcp.x, thumbMcp.y);
+            ctx.closePath();
             ctx.fill();
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-            
-            if (rightEyeOpen > 0.3) {
-                ctx.fillStyle = '#2C3E50';
-                ctx.beginPath();
-                ctx.arc(0, 2, 10, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = '#FFF';
-                ctx.beginPath();
-                ctx.arc(3, -2, 4, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(-2, 3, 2, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            
-            if (rightEyeOpen < 0.5) {
-                ctx.strokeStyle = '#333';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(-15, 0);
-                ctx.lineTo(15, 0);
-                ctx.stroke();
-            }
-            ctx.restore();
-
-            // 鼻子
-            ctx.fillStyle = '#8B4513';
-            ctx.beginPath();
-            ctx.ellipse(0, 15, 8, 6, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            // 嘴巴（動態笑容）
-            ctx.strokeStyle = '#8B4513';
-            ctx.lineWidth = 3;
-            ctx.lineCap = 'round';
-            ctx.beginPath();
-            const mouthWidth = 25 + smileLevel * 15;
-            const mouthCurve = 5 + smileLevel * 20;
-            ctx.moveTo(-mouthWidth, 35);
-            ctx.quadraticCurveTo(0, 35 + mouthCurve, mouthWidth, 35);
             ctx.stroke();
 
-            // 大笑時露出舌頭
-            if (smileLevel > 0.6) {
-                ctx.fillStyle = '#FF69B4';
-                ctx.beginPath();
-                ctx.ellipse(0, 45, 12, 8, 0, 0, Math.PI);
-                ctx.fill();
-            }
+            // 手掌金屬高光
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.beginPath();
+            ctx.moveTo(wrist.x, wrist.y);
+            ctx.lineTo(mcps[3].x, mcps[3].y);
+            ctx.lineTo(mcps[2].x, mcps[2].y);
+            ctx.lineTo((mcps[1].x + mcps[2].x) / 2, (mcps[1].y + mcps[2].y) / 2);
+            ctx.closePath();
+            ctx.fill();
 
-            // 蝴蝶結裝飾
-            ctx.fillStyle = '#FF6B6B';
+            // === 2. 繪製 Repulsor（手掌心發光裝置）===
+            const palmCenter = {
+                x: (mcps[0].x + mcps[1].x + mcps[2].x + mcps[3].x + wrist.x) / 5,
+                y: (mcps[0].y + mcps[1].y + mcps[2].y + mcps[3].y + wrist.y) / 5
+            };
+            
+            const repulsorRadius = 18 * (1 + powerLevel * 0.5);
+            
+            // 外圈金色
             ctx.beginPath();
-            ctx.ellipse(-15, -95, 12, 8, -0.3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.ellipse(15, -95, 12, 8, 0.3, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.arc(palmCenter.x, palmCenter.y, repulsorRadius + 4, 0, Math.PI * 2);
             ctx.fillStyle = '#FFD700';
-            ctx.beginPath();
-            ctx.arc(0, -95, 6, 0, Math.PI * 2);
             ctx.fill();
+            ctx.strokeStyle = '#8B6914';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            
+            // 內圈發光
+            const repulsorGrad = ctx.createRadialGradient(
+                palmCenter.x, palmCenter.y, 0,
+                palmCenter.x, palmCenter.y, repulsorRadius
+            );
+            repulsorGrad.addColorStop(0, `rgba(255, 255, 255, ${0.3 + powerLevel * 0.7})`);
+            repulsorGrad.addColorStop(0.3, `rgba(100, 200, 255, ${0.5 + powerLevel * 0.5})`);
+            repulsorGrad.addColorStop(0.7, `rgba(0, 150, 255, ${0.3 + powerLevel * 0.5})`);
+            repulsorGrad.addColorStop(1, 'rgba(0, 50, 150, 0.2)');
+            
+            ctx.shadowColor = `rgba(100, 200, 255, ${powerLevel})`;
+            ctx.shadowBlur = 30 * powerLevel;
+            ctx.beginPath();
+            ctx.arc(palmCenter.x, palmCenter.y, repulsorRadius, 0, Math.PI * 2);
+            ctx.fillStyle = repulsorGrad;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // === 3. 繪製每個手指的裝甲 ===
+            for (let f = 0; f < fingers.length; f++) {
+                const [mcpIdx, pipIdx, dipIdx, tipIdx] = fingers[f];
+                const mcp = toScreen(landmarks[mcpIdx]);
+                const pip = toScreen(landmarks[pipIdx]);
+                const dip = toScreen(landmarks[dipIdx]);
+                const tip = toScreen(landmarks[tipIdx]);
+                
+                // 每段裝甲
+                const segments = [
+                    { from: mcp, to: pip, width: 14 },
+                    { from: pip, to: dip, width: 12 },
+                    { from: dip, to: tip, width: 10 }
+                ];
+                
+                for (const seg of segments) {
+                    const dx = seg.to.x - seg.from.x;
+                    const dy = seg.to.y - seg.from.y;
+                    const len = Math.sqrt(dx*dx + dy*dy);
+                    const nx = -dy / len * seg.width / 2;
+                    const ny = dx / len * seg.width / 2;
+                    
+                    // 紅色裝甲
+                    const segGrad = ctx.createLinearGradient(
+                        seg.from.x + nx, seg.from.y + ny,
+                        seg.from.x - nx, seg.from.y - ny
+                    );
+                    segGrad.addColorStop(0, '#D32F2F');
+                    segGrad.addColorStop(0.5, '#F44336');
+                    segGrad.addColorStop(1, '#B71C1C');
+                    
+                    ctx.fillStyle = segGrad;
+                    ctx.strokeStyle = '#FFD700';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(seg.from.x + nx, seg.from.y + ny);
+                    ctx.lineTo(seg.to.x + nx * 0.8, seg.to.y + ny * 0.8);
+                    ctx.lineTo(seg.to.x - nx * 0.8, seg.to.y - ny * 0.8);
+                    ctx.lineTo(seg.from.x - nx, seg.from.y - ny);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                }
+                
+                // 金色關節圓
+                [mcp, pip, dip].forEach((joint, i) => {
+                    const r = 7 - i;
+                    // 金色外圈
+                    ctx.beginPath();
+                    ctx.arc(joint.x, joint.y, r + 1, 0, Math.PI * 2);
+                    ctx.fillStyle = '#FFD700';
+                    ctx.fill();
+                    ctx.strokeStyle = '#8B6914';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    // 深色內圈
+                    ctx.beginPath();
+                    ctx.arc(joint.x, joint.y, r - 2, 0, Math.PI * 2);
+                    ctx.fillStyle = '#B8860B';
+                    ctx.fill();
+                });
+                
+                // 指尖發光（充能時）
+                if (chargeLevel > 0.3) {
+                    ctx.shadowColor = `rgba(100, 200, 255, ${chargeLevel})`;
+                    ctx.shadowBlur = 15 * chargeLevel;
+                    ctx.beginPath();
+                    ctx.arc(tip.x, tip.y, 5, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(150, 220, 255, ${chargeLevel})`;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+            }
+
+            // === 4. 發射光束特效（食指伸直時）===
+            if (beamLevel > 0.3) {
+                const indexTip = toScreen(landmarks[8]);
+                const indexMcp = toScreen(landmarks[5]);
+                const dx = indexTip.x - indexMcp.x;
+                const dy = indexTip.y - indexMcp.y;
+                const len = Math.sqrt(dx*dx + dy*dy);
+                const dirX = dx / len;
+                const dirY = dy / len;
+                
+                // 光束
+                const beamLength = 400 * beamLevel;
+                const beamGrad = ctx.createLinearGradient(
+                    indexTip.x, indexTip.y,
+                    indexTip.x + dirX * beamLength, indexTip.y + dirY * beamLength
+                );
+                beamGrad.addColorStop(0, `rgba(255, 255, 255, ${beamLevel})`);
+                beamGrad.addColorStop(0.3, `rgba(100, 200, 255, ${beamLevel * 0.8})`);
+                beamGrad.addColorStop(1, 'rgba(0, 100, 255, 0)');
+                
+                ctx.shadowColor = `rgba(100, 200, 255, ${beamLevel})`;
+                ctx.shadowBlur = 30;
+                ctx.strokeStyle = beamGrad;
+                ctx.lineWidth = 8 * beamLevel;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(indexTip.x, indexTip.y);
+                ctx.lineTo(indexTip.x + dirX * beamLength, indexTip.y + dirY * beamLength);
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+                
+                // 光束粒子
+                for (let i = 0; i < 3; i++) {
+                    const t = Math.random();
+                    const px = indexTip.x + dirX * beamLength * t;
+                    const py = indexTip.y + dirY * beamLength * t;
+                    const spread = (Math.random() - 0.5) * 20 * beamLevel;
+                    ctx.beginPath();
+                    ctx.arc(px + (-dirY) * spread, py + dirX * spread, Math.random() * 3 + 1, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(200, 230, 255, ${beamLevel * Math.random()})`;
+                    ctx.fill();
+                }
+            }
 
             ctx.restore();
         }
 
+        // 繪製 HUD 骨骼
+        function drawHUDSkeleton(ctx, landmarks, W, H) {
+            const toScreen = (lm) => ({ x: lm.x * W, y: lm.y * H });
+            
+            ctx.save();
+            
+            // 連接線條（青色發光）
+            const connections = [
+                [0,1],[1,2],[2,3],[3,4],       // 拇指
+                [0,5],[5,6],[6,7],[7,8],       // 食指
+                [0,9],[9,10],[10,11],[11,12],  // 中指
+                [0,13],[13,14],[14,15],[15,16],// 無名指
+                [0,17],[17,18],[18,19],[19,20],// 尾指
+                [5,9],[9,13],[13,17]           // 手掌
+            ];
+            
+            // 外發光
+            ctx.shadowColor = 'rgba(0, 229, 255, 0.8)';
+            ctx.shadowBlur = 8;
+            ctx.strokeStyle = 'rgba(0, 229, 255, 0.6)';
+            ctx.lineWidth = 2;
+            
+            for (const [a, b] of connections) {
+                const pa = toScreen(landmarks[a]);
+                const pb = toScreen(landmarks[b]);
+                ctx.beginPath();
+                ctx.moveTo(pa.x, pa.y);
+                ctx.lineTo(pb.x, pb.y);
+                ctx.stroke();
+            }
+            
+            // 關節點
+            ctx.shadowBlur = 10;
+            for (let i = 0; i < landmarks.length; i++) {
+                const p = toScreen(landmarks[i]);
+                // 外圈
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0, 229, 255, 0.9)';
+                ctx.fill();
+                // 內圈
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+                ctx.fillStyle = '#fff';
+                ctx.fill();
+            }
+            
+            ctx.shadowBlur = 0;
+            ctx.restore();
+        }
+
         function onResults(results) {
+            // FPS
+            if (!onResults.lastTime) onResults.lastTime = performance.now();
+            if (!onResults.frameCount) onResults.frameCount = 0;
+            onResults.frameCount++;
+            const now = performance.now();
+            if (now - onResults.lastTime >= 1000) {
+                hudFps.innerText = onResults.frameCount;
+                onResults.frameCount = 0;
+                onResults.lastTime = now;
+            }
+
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
             canvasCtx.save();
             canvasCtx.scale(dpr, dpr);
             canvasCtx.scale(-1, 1);
             canvasCtx.translate(-window.innerWidth, 0);
 
+            const W = window.innerWidth;
+            const H = window.innerHeight;
+
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 const landmarks = results.multiHandLandmarks[0];
-                const W = window.innerWidth;
-                const H = window.innerHeight;
                 
-                const wrist = landmarks[0];
-                const indexMcp = landmarks[5];
-                const pinkyMcp = landmarks[17];
-                const middleMcp = landmarks[9];
+                // 計算每根手指的彎曲度
+                const thumbCurl = getFingerCurl(landmarks, 4, 3, 2);
+                const indexCurl = getFingerCurl(landmarks, 8, 6, 5);
+                const middleCurl = getFingerCurl(landmarks, 12, 10, 9);
+                const ringCurl = getFingerCurl(landmarks, 16, 14, 13);
+                const pinkyCurl = getFingerCurl(landmarks, 20, 18, 17);
                 
-                const indexTip = landmarks[8];
-                const indexPip = landmarks[6];
-                const middleTip = landmarks[12];
-                const middlePip = landmarks[10];
-                const thumbTip = landmarks[4];
-                const thumbIp = landmarks[3];
-                const pinkyTip = landmarks[20];
+                // 握拳偵測（所有手指彎曲）
+                const fistLevel = (thumbCurl + indexCurl + middleCurl + ringCurl + pinkyCurl) / 5;
+                const isFist = fistLevel > 0.6;
+                
+                // 食指伸直偵測（發射光束）
+                const indexExtended = indexCurl < 0.3;
+                const otherFingersCurled = middleCurl > 0.5 && ringCurl > 0.5 && pinkyCurl > 0.5;
+                const isPointing = indexExtended && otherFingersCurled;
+                
+                // 張開五指偵測（充能）
+                const allExtended = (thumbCurl + indexCurl + middleCurl + ringCurl + pinkyCurl) / 5 < 0.3;
+                
+                // 平滑目標值
+                const targetPower = isFist ? 1 : 0;
+                const targetBeam = isPointing ? 1 : 0;
+                const targetCharge = allExtended ? 1 : 0;
+                
+                smoothState.power = lerp(smoothState.power, targetPower, 0.2);
+                smoothState.beam = lerp(smoothState.beam, targetBeam, 0.3);
+                smoothState.charge = lerp(smoothState.charge, targetCharge, 0.2);
 
-                // 1. 計算中心位置
-                const cx = (wrist.x + middleMcp.x) / 2;
-                const cy = (wrist.y + middleMcp.y) / 2;
-
-                // 2. 計算縮放
-                const dxW = pinkyMcp.x - indexMcp.x;
-                const dyW = pinkyMcp.y - indexMcp.y;
-                const handWidth = Math.sqrt(dxW*dxW + dyW*dyW);
-                const scale = (handWidth / 0.15) * 1.8;
-
-                // 3. 計算旋轉
-                const dirX = middleMcp.x - wrist.x;
-                const dirY = middleMcp.y - wrist.y;
-                const angle = Math.atan2(dirY, dirX) + Math.PI / 2;
-
-                // 4. 食指彎曲度 -> 左眼
-                const indexDx = indexTip.x - indexPip.x;
-                const indexDy = indexTip.y - indexPip.y;
-                const indexDist = Math.sqrt(indexDx*indexDx + indexDy*indexDy);
-                let leftEyeOpen = Math.max(0, Math.min(1, (indexDist - 0.03) / 0.08));
-
-                // 5. 中指彎曲度 -> 右眼
-                const middleDx = middleTip.x - middlePip.x;
-                const middleDy = middleTip.y - middlePip.y;
-                const middleDist = Math.sqrt(middleDx*middleDx + middleDy*middleDy);
-                let rightEyeOpen = Math.max(0, Math.min(1, (middleDist - 0.03) / 0.08));
-
-                // 6. 拇指位置 -> 耳朵角度
-                const thumbAngle = Math.atan2(thumbTip.y - thumbIp.y, thumbTip.x - thumbIp.x);
-                let earAngle = (thumbAngle + Math.PI / 2) * 0.5;
-                earAngle = Math.max(-0.5, Math.min(0.5, earAngle));
-
-                // 7. 拇指與尾指距離 -> 笑容
-                const thumbPinkyDx = thumbTip.x - pinkyTip.x;
-                const thumbPinkyDy = thumbTip.y - pinkyTip.y;
-                const thumbPinkyDist = Math.sqrt(thumbPinkyDx*thumbPinkyDx + thumbPinkyDy*thumbPinkyDy);
-                let smile = Math.max(0, Math.min(1, (thumbPinkyDist - 0.08) / 0.15));
-
-                // 平滑處理
-                if (!isTracking) {
-                    smoothState = { 
-                        x: cx, y: cy, scale: scale, angle: angle,
-                        leftEye: leftEyeOpen, rightEye: rightEyeOpen, 
-                        earAngle: earAngle, smile: smile
-                    };
-                    isTracking = true;
-                } else {
-                    smoothState.x = lerp(smoothState.x, cx, 0.4);
-                    smoothState.y = lerp(smoothState.y, cy, 0.4);
-                    smoothState.scale = lerp(smoothState.scale, scale, 0.3);
-                    smoothState.angle = lerp(smoothState.angle, angle, 0.3);
-                    smoothState.leftEye = lerp(smoothState.leftEye, leftEyeOpen, 0.4);
-                    smoothState.rightEye = lerp(smoothState.rightEye, rightEyeOpen, 0.4);
-                    smoothState.earAngle = lerp(smoothState.earAngle, earAngle, 0.3);
-                    smoothState.smile = lerp(smoothState.smile, smile, 0.4);
-                }
-
-                drawPuppet(
-                    canvasCtx, 
-                    smoothState.x * W, 
-                    smoothState.y * H, 
-                    smoothState.scale, 
-                    smoothState.angle,
-                    smoothState.leftEye,
-                    smoothState.rightEye,
-                    smoothState.earAngle,
-                    smoothState.smile
+                // 繪製 HUD 骨骼（底層）
+                drawHUDSkeleton(canvasCtx, landmarks, W, H);
+                
+                // 繪製鋼鐵人手套（上層）
+                drawIronManGlove(
+                    canvasCtx, landmarks, W, H,
+                    smoothState.power,
+                    smoothState.beam,
+                    smoothState.charge
                 );
-                
-                statusEl.innerText = "追蹤中... 試試不同手勢！";
-                statusEl.style.color = "#0f0";
+
+                // 更新 HUD
+                hudSystem.innerText = isPointing ? 'FIRING' : (isFist ? 'REPULSOR ON' : (allExtended ? 'CHARGING' : 'STANDBY'));
+                hudSystem.className = 'hud-value' + (isPointing ? ' hud-warning' : '');
+                hudPower.innerText = Math.round(smoothState.power * 100) + '%';
+                statusBar.innerText = isPointing ? '⚡ TARGETING...' : (isFist ? '◆ REPULSOR ACTIVE' : (allExtended ? '◇ CHARGING ARC REACTOR' : '● SYSTEM ONLINE'));
+                isTracking = true;
 
             } else {
                 isTracking = false;
-                statusEl.innerText = "請將手掌對準鏡頭";
-                statusEl.style.color = "#ff0";
+                smoothState.power = lerp(smoothState.power, 0, 0.1);
+                smoothState.beam = lerp(smoothState.beam, 0, 0.1);
+                smoothState.charge = lerp(smoothState.charge, 0, 0.1);
+                hudSystem.innerText = 'NO SIGNAL';
+                hudSystem.className = 'hud-value hud-warning';
+                hudPower.innerText = '0%';
+                statusBar.innerText = '○ SEARCHING FOR HAND...';
             }
 
             canvasCtx.restore();
@@ -461,9 +565,9 @@
             requestAnimationFrame(processFrame);
         }
 
-        document.querySelector('.btn-start').addEventListener('click', async () => {
+        document.getElementById('btn-start').addEventListener('click', async () => {
             document.getElementById('start-overlay').classList.add('hidden');
-            statusEl.innerText = "啟動鏡頭中...";
+            hudSystem.innerText = 'BOOTING';
 
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
@@ -475,13 +579,14 @@
                 
                 videoElement.onloadeddata = async () => {
                     try { await videoElement.play(); } catch(e) { console.warn(e); }
-                    statusEl.innerText = "就緒！請伸出手掌";
+                    hudSystem.innerText = 'STANDBY';
                     processFrame();
                 };
             } catch (err) {
                 console.error(err);
-                statusEl.innerText = "啟動失敗";
-                statusEl.style.color = "red";
+                hudSystem.innerText = 'ERROR';
+                hudSystem.className = 'hud-value hud-warning';
+                statusBar.innerText = '✕ CAMERA ACCESS DENIED';
             }
         });
     </script>
