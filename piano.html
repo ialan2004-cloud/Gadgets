@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>🫧 泡泡大作戰 v1.1.0</title>
+    <title>🫧 泡泡大作戰 v1.1.1</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -18,15 +18,24 @@
             background: linear-gradient(180deg, #87CEEB 0%, #FFB6C1 50%, #FFD700 100%);
         }
 
-        /* 鏡像由 JS 動態控制 */
-        #videoInput, #canvasOutput {
+        /* 🔧 關鍵修復：Video 鏡像，Canvas 不鏡像（由 JS 控制繪圖鏡像） */
+        #videoInput {
             position: absolute;
             top: 0; left: 0;
             width: 100%; height: 100%;
             object-fit: cover;
+            z-index: 1; 
+            opacity: 0.25; 
+            filter: blur(3px) brightness(1.1);
         }
-        #videoInput { z-index: 1; opacity: 0.25; filter: blur(3px) brightness(1.1); }
-        #canvasOutput { z-index: 2; pointer-events: none; }
+        #canvasOutput {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 2; 
+            pointer-events: none;
+            /* 不設 transform，由 JS 控制 */
+        }
 
         /* 版本號 */
         #version-tag {
@@ -62,54 +71,38 @@
             text-align: center;
             flex: 1;
         }
-        .hud-label {
-            font-size: 10px;
-            color: #FF1493;
-            font-weight: bold;
-            letter-spacing: 1px;
-        }
+        .hud-label { font-size: 10px; color: #FF1493; font-weight: bold; letter-spacing: 1px; }
         .hud-value {
-            font-size: 22px;
-            color: #FF1493;
-            font-weight: bold;
+            font-size: 22px; color: #FF1493; font-weight: bold;
             text-shadow: 2px 2px 0 #FFF, 3px 3px 0 rgba(255, 105, 180, 0.3);
         }
 
-        /* 連擊顯示 */
         #combo-display {
             position: absolute;
-            top: 30%;
-            left: 50%;
+            top: 30%; left: 50%;
             transform: translateX(-50%) scale(0);
-            font-size: 60px;
-            font-weight: bold;
+            font-size: 60px; font-weight: bold;
             color: #FF6B00;
             text-shadow: 3px 3px 0 #FFF, 5px 5px 0 rgba(255, 107, 0, 0.5);
-            z-index: 15;
-            pointer-events: none;
+            z-index: 15; pointer-events: none;
             transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
         }
         #combo-display.show { transform: translateX(-50%) scale(1); }
 
-        /* 等級提示 */
         #level-up {
             position: absolute;
-            top: 40%;
-            left: 50%;
+            top: 40%; left: 50%;
             transform: translate(-50%, -50%) scale(0);
-            font-size: 40px;
-            font-weight: bold;
+            font-size: 40px; font-weight: bold;
             background: linear-gradient(45deg, #FFD700, #FF69B4, #00BFFF);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             text-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
-            z-index: 15;
-            pointer-events: none;
+            z-index: 15; pointer-events: none;
             transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
         }
         #level-up.show { transform: translate(-50%, -50%) scale(1.2); }
 
-        /* 屏幕特效 */
         #screen-effects {
             position: absolute;
             top: 0; left: 0;
@@ -125,10 +118,7 @@
             opacity: 0;
             animation: flash 0.3s ease-out;
         }
-        @keyframes flash {
-            0% { opacity: 0.6; }
-            100% { opacity: 0; }
-        }
+        @keyframes flash { 0% { opacity: 0.6; } 100% { opacity: 0; } }
         .screen-shake { animation: shake 0.3s ease-out; }
         @keyframes shake {
             0%, 100% { transform: translate(0, 0); }
@@ -144,12 +134,9 @@
             opacity: 0;
             animation: vignette 0.5s ease-out;
         }
-        @keyframes vignette {
-            0% { opacity: 0.8; }
-            100% { opacity: 0; }
-        }
+        @keyframes vignette { 0% { opacity: 0.8; } 100% { opacity: 0; } }
 
-        /* ============ 設定畫面 ============ */
+        /* 設定畫面 */
         #settings-screen {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -172,11 +159,7 @@
             max-width: 400px;
             margin-bottom: 20px;
         }
-        .settings-title {
-            font-size: 1.8rem;
-            color: #FFF;
-            text-shadow: 2px 2px 0 rgba(0,0,0,0.3);
-        }
+        .settings-title { font-size: 1.8rem; color: #FFF; text-shadow: 2px 2px 0 rgba(0,0,0,0.3); }
         .settings-version {
             background: rgba(255, 255, 255, 0.2);
             color: #FFF;
@@ -204,19 +187,9 @@
             align-items: center;
             gap: 8px;
         }
-        .settings-group-desc {
-            font-size: 0.8rem;
-            color: #888;
-            margin-bottom: 10px;
-            line-height: 1.4;
-        }
+        .settings-group-desc { font-size: 0.8rem; color: #888; margin-bottom: 10px; line-height: 1.4; }
 
-        /* 選項按鈕組 */
-        .option-group {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
+        .option-group { display: flex; gap: 8px; flex-wrap: wrap; }
         .option-btn {
             flex: 1;
             min-width: 80px;
@@ -232,11 +205,7 @@
             transition: all 0.2s;
             text-align: center;
         }
-        .option-btn .icon {
-            font-size: 1.5rem;
-            display: block;
-            margin-bottom: 4px;
-        }
+        .option-btn .icon { font-size: 1.5rem; display: block; margin-bottom: 4px; }
         .option-btn.active {
             background: linear-gradient(135deg, #FFD700, #FFA500);
             color: #FFF;
@@ -246,18 +215,10 @@
         }
         .option-btn:active { transform: scale(0.95); }
 
-        /* 難度特殊樣式 */
-        .option-btn[data-difficulty="easy"].active {
-            background: linear-gradient(135deg, #90EE90, #32CD32);
-        }
-        .option-btn[data-difficulty="normal"].active {
-            background: linear-gradient(135deg, #FFD700, #FFA500);
-        }
-        .option-btn[data-difficulty="hard"].active {
-            background: linear-gradient(135deg, #FF6B6B, #C62828);
-        }
+        .option-btn[data-difficulty="easy"].active { background: linear-gradient(135deg, #90EE90, #32CD32); }
+        .option-btn[data-difficulty="normal"].active { background: linear-gradient(135deg, #FFD700, #FFA500); }
+        .option-btn[data-difficulty="hard"].active { background: linear-gradient(135deg, #FF6B6B, #C62828); }
 
-        /* 主選單按鈕 */
         .main-menu-btn {
             margin-top: 10px;
             padding: 18px 50px;
@@ -270,7 +231,6 @@
             font-family: inherit;
             box-shadow: 0 8px 20px rgba(255, 165, 0, 0.5), inset 0 -4px 0 rgba(0,0,0,0.2);
             cursor: pointer;
-            transition: transform 0.1s;
             width: 100%;
             max-width: 400px;
         }
@@ -290,7 +250,7 @@
             max-width: 400px;
         }
 
-        /* 開始畫面（簡化版） */
+        /* 開始畫面 */
         #start-screen {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -323,19 +283,9 @@
             margin-bottom: 10px;
             animation: bounce 2s infinite;
         }
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-15px); }
-        }
-        #start-screen .mascot {
-            font-size: 80px;
-            margin: 20px 0;
-            animation: wiggle 3s infinite;
-        }
-        @keyframes wiggle {
-            0%, 100% { transform: rotate(-5deg); }
-            50% { transform: rotate(5deg); }
-        }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        #start-screen .mascot { font-size: 80px; margin: 20px 0; animation: wiggle 3s infinite; }
+        @keyframes wiggle { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
         #start-screen p {
             font-size: 1.1rem;
             color: #FFF;
@@ -366,7 +316,6 @@
             cursor: pointer;
         }
         .btn-start:active { transform: scale(0.95); }
-        .hidden { display: none !important; }
 
         /* 結算畫面 */
         #game-over {
@@ -398,22 +347,10 @@
             margin-bottom: 20px;
             min-width: 280px;
         }
-        .stat-row {
-            display: flex;
-            justify-content: space-between;
-            margin: 10px 0;
-            font-size: 1.2rem;
-            color: #333;
-        }
+        .stat-row { display: flex; justify-content: space-between; margin: 10px 0; font-size: 1.2rem; color: #333; }
         .stat-row .label { color: #888; }
         .stat-row .value { color: #FF1493; font-weight: bold; }
-        .badges {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-top: 15px;
-        }
+        .badges { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 15px; }
         .badge {
             background: linear-gradient(135deg, #FFD700, #FFA500);
             color: #FFF;
@@ -424,7 +361,6 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
-        /* 時間條 */
         #time-bar-container {
             position: absolute;
             bottom: calc(15px + env(safe-area-inset-bottom));
@@ -457,7 +393,6 @@
             pointer-events: none;
         }
 
-        /* 難度指示器 */
         #difficulty-indicator {
             position: absolute;
             top: calc(75px + env(safe-area-inset-top));
@@ -470,6 +405,23 @@
             z-index: 10;
             pointer-events: none;
         }
+
+        /* 🔧 新增：除錯模式指示器 */
+        #debug-info {
+            position: absolute;
+            bottom: calc(60px + env(safe-area-inset-bottom));
+            left: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            color: #0f0;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-family: monospace;
+            z-index: 50;
+            pointer-events: none;
+            display: none;
+        }
+        #debug-info.show { display: block; }
     </style>
 </head>
 <body>
@@ -477,10 +429,10 @@
     <video id="videoInput" autoplay playsinline muted></video>
     <canvas id="canvasOutput"></canvas>
     <div id="screen-effects"></div>
-    <div id="version-tag">v1.1.0</div>
+    <div id="version-tag">v1.1.1</div>
     <div id="difficulty-indicator"></div>
+    <div id="debug-info"></div>
 
-    <!-- HUD -->
     <div id="hud-top">
         <div class="hud-card">
             <div class="hud-label">⭐ 分數</div>
@@ -501,18 +453,17 @@
     <div id="time-text">60</div>
     <div id="time-bar-container"><div id="time-bar"></div></div>
 
-    <!-- ============ 設定畫面 ============ -->
+    <!-- 設定畫面 -->
     <div id="settings-screen">
         <div class="settings-header">
             <div class="settings-title">⚙️ 設定</div>
-            <div class="settings-version">v1.1.0</div>
+            <div class="settings-version">v1.1.1</div>
         </div>
 
-        <!-- 鏡像模式 -->
         <div class="settings-group">
             <div class="settings-group-title">🪞 鏡頭方向</div>
             <div class="settings-group-desc">
-                如果手指移動方向與畫面相反，請切換此選項
+                如果手指移動方向與激光點相反，請切換此選項
             </div>
             <div class="option-group" id="mirror-options">
                 <button class="option-btn active" data-mirror="mirror">
@@ -526,12 +477,9 @@
             </div>
         </div>
 
-        <!-- 難度選擇 -->
         <div class="settings-group">
             <div class="settings-group-title">🎮 遊戲難度</div>
-            <div class="settings-group-desc">
-                選擇適合你的挑戰程度
-            </div>
+            <div class="settings-group-desc">選擇適合你的挑戰程度</div>
             <div class="option-group" id="difficulty-options">
                 <button class="option-btn" data-difficulty="easy">
                     <span class="icon">🌱</span>
@@ -548,12 +496,9 @@
             </div>
         </div>
 
-        <!-- 鏡頭選擇 -->
         <div class="settings-group">
             <div class="settings-group-title">📹 攝影機</div>
-            <div class="settings-group-desc">
-                前置鏡頭適合自拍視角，後置鏡頭畫質更好
-            </div>
+            <div class="settings-group-desc">前置鏡頭適合自拍，後置鏡頭畫質更好</div>
             <div class="option-group" id="camera-options">
                 <button class="option-btn active" data-camera="user">
                     <span class="icon">🤳</span>
@@ -566,12 +511,27 @@
             </div>
         </div>
 
+        <div class="settings-group">
+            <div class="settings-group-title">🐛 除錯模式</div>
+            <div class="settings-group-desc">顯示激光點座標，幫助確認方向是否正確</div>
+            <div class="option-group" id="debug-options">
+                <button class="option-btn" data-debug="off">
+                    <span class="icon">🚫</span>
+                    關閉
+                </button>
+                <button class="option-btn active" data-debug="on">
+                    <span class="icon">🔍</span>
+                    開啟
+                </button>
+            </div>
+        </div>
+
         <button class="main-menu-btn" id="btn-to-start">下一步 →</button>
     </div>
 
-    <!-- ============ 開始畫面 ============ -->
+    <!-- 開始畫面 -->
     <div id="start-screen">
-        <div id="start-version">v1.1.0</div>
+        <div id="start-version">v1.1.1</div>
         <h1>泡泡大作戰</h1>
         <div class="mascot">🫧</div>
         <p>用你的手指戳破飛來的泡泡！<br>小心黑色的炸彈泡泡喔 💣</p>
@@ -582,7 +542,7 @@
         <button class="secondary-btn" id="btn-back-settings">← 返回設定</button>
     </div>
 
-    <!-- ============ 結算畫面 ============ -->
+    <!-- 結算畫面 -->
     <div id="game-over">
         <h2>🎉 遊戲結束！</h2>
         <div class="final-stats">
@@ -605,7 +565,7 @@
             <div class="badges" id="badges"></div>
         </div>
         <button class="btn-start" id="btn-restart">再玩一次！</button>
-        <button class="secondary-btn" id="btn-to-settings" style="background: rgba(255,255,255,0.2); color: #FFF; border: 2px solid rgba(255,255,255,0.5);">⚙️ 修改設定</button>
+        <button class="secondary-btn" id="btn-to-settings">⚙️ 修改設定</button>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
@@ -614,68 +574,41 @@
 
     <script>
         // ============ 版本資訊 ============
-        const VERSION = '1.1.0';
+        const VERSION = '1.1.1';
         console.log(`🫧 泡泡大作戰 v${VERSION} 啟動`);
+        console.log(`🔧 修復：激光點與手指方向對齊問題`);
 
         // ============ 設定系統 ============
         const DEFAULT_SETTINGS = {
-            mirror: 'mirror',        // 'mirror' | 'real'
-            difficulty: 'normal',    // 'easy' | 'normal' | 'hard'
-            camera: 'user'           // 'user' | 'environment'
+            mirror: 'mirror',
+            difficulty: 'normal',
+            camera: 'user',
+            debug: 'on'  // 🔧 預設開啟除錯模式
         };
 
         const DIFFICULTY_CONFIG = {
-            easy: {
-                name: '🌱 簡單',
-                duration: 90,
-                speedMul: 0.7,
-                bombWeight: 2,
-                spawnInterval: 1.5,
-                levelUpScore: 300
-            },
-            normal: {
-                name: '⭐ 普通',
-                duration: 60,
-                speedMul: 1.0,
-                bombWeight: 5,
-                spawnInterval: 1.2,
-                levelUpScore: 200
-            },
-            hard: {
-                name: '🔥 困難',
-                duration: 45,
-                speedMul: 1.4,
-                bombWeight: 10,
-                spawnInterval: 0.8,
-                levelUpScore: 150
-            }
+            easy: { name: '🌱 簡單', duration: 90, speedMul: 0.7, bombWeight: 2, spawnInterval: 1.5, levelUpScore: 300 },
+            normal: { name: '⭐ 普通', duration: 60, speedMul: 1.0, bombWeight: 5, spawnInterval: 1.2, levelUpScore: 200 },
+            hard: { name: '🔥 困難', duration: 45, speedMul: 1.4, bombWeight: 10, spawnInterval: 0.8, levelUpScore: 150 }
         };
 
-        // 載入設定
         function loadSettings() {
             try {
-                const saved = localStorage.getItem('bubble_game_settings');
-                if (saved) {
-                    return { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
-                }
-            } catch (e) {
-                console.warn('載入設定失敗:', e);
-            }
+                const saved = localStorage.getItem('bubble_game_settings_v2');
+                if (saved) return { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
+            } catch (e) {}
             return { ...DEFAULT_SETTINGS };
         }
 
-        // 儲存設定
         function saveSettings() {
             try {
-                localStorage.setItem('bubble_game_settings', JSON.stringify(settings));
-            } catch (e) {
-                console.warn('儲存設定失敗:', e);
-            }
+                localStorage.setItem('bubble_game_settings_v2', JSON.stringify(settings));
+            } catch (e) {}
         }
 
         let settings = loadSettings();
 
-        // ============ 設定 UI 綁定 ============
+        // ============ 設定 UI ============
         function setupSettingsUI() {
             // 鏡像模式
             document.querySelectorAll('#mirror-options .option-btn').forEach(btn => {
@@ -687,6 +620,7 @@
                     });
                     saveSettings();
                     applyMirrorMode();
+                    updateStartScreenInfo();
                 });
             });
 
@@ -716,11 +650,25 @@
                 });
             });
 
+            // 除錯模式
+            document.querySelectorAll('#debug-options .option-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.debug === settings.debug);
+                btn.addEventListener('click', () => {
+                    settings.debug = btn.dataset.debug;
+                    document.querySelectorAll('#debug-options .option-btn').forEach(b => {
+                        b.classList.toggle('active', b.dataset.debug === settings.debug);
+                    });
+                    saveSettings();
+                    applyDebugMode();
+                });
+            });
+
             applyMirrorMode();
+            applyDebugMode();
             updateStartScreenInfo();
         }
 
-        // 套用鏡像模式
+        // 🔧 關鍵修復：只鏡像 Video，不鏡像 Canvas（由 JS 控制）
         function applyMirrorMode() {
             const video = document.getElementById('videoInput');
             if (settings.mirror === 'mirror') {
@@ -732,7 +680,15 @@
             }
         }
 
-        // 更新開始畫面資訊
+        function applyDebugMode() {
+            const debugEl = document.getElementById('debug-info');
+            if (settings.debug === 'on') {
+                debugEl.classList.add('show');
+            } else {
+                debugEl.classList.remove('show');
+            }
+        }
+
         function updateStartScreenInfo() {
             const diff = DIFFICULTY_CONFIG[settings.difficulty];
             const mirrorText = settings.mirror === 'mirror' ? '🪞 鏡像' : '📷 真實';
@@ -742,7 +698,6 @@
                 `<small>遊戲時間：${diff.duration} 秒</small>`;
         }
 
-        // 初始化設定 UI
         setupSettingsUI();
 
         // ============ 畫面切換 ============
@@ -765,16 +720,10 @@
 
         // ============ 遊戲狀態 ============
         let gameState = {
-            score: 0,
-            combo: 0,
-            maxCombo: 0,
-            level: 1,
-            popped: 0,
-            timeLeft: 60,
-            slowMotion: false,
-            slowMotionEnd: 0,
-            running: false,
-            lastComboTime: 0
+            score: 0, combo: 0, maxCombo: 0, level: 1,
+            popped: 0, timeLeft: 60,
+            slowMotion: false, slowMotionEnd: 0,
+            running: false, lastComboTime: 0
         };
 
         // ============ 音效系統 ============
@@ -816,10 +765,7 @@
         }).toDestination();
         gameOverSynth.volume.value = -5;
 
-        function playPopSound(pitch = 'C5') {
-            if (!audioReady) return;
-            popSynth.triggerAttackRelease(pitch, '32n', Tone.now());
-        }
+        function playPopSound(pitch = 'C5') { if (!audioReady) return; popSynth.triggerAttackRelease(pitch, '32n', Tone.now()); }
         function playComboSound(combo) {
             if (!audioReady) return;
             const notes = ['C5', 'E5', 'G5', 'B5', 'C6', 'D6', 'E6'];
@@ -831,18 +777,9 @@
             else if (type === 'rainbow') specialSynth.triggerAttackRelease(['C5', 'E5', 'G5', 'B5'], '2n', Tone.now());
             else if (type === 'clock') specialSynth.triggerAttackRelease(['G4', 'C5'], '4n', Tone.now());
         }
-        function playBombSound() {
-            if (!audioReady) return;
-            bombSynth.triggerAttackRelease('C2', '2n', Tone.now());
-        }
-        function playLevelUpSound() {
-            if (!audioReady) return;
-            levelUpSynth.triggerAttackRelease(['C5', 'E5', 'G5', 'C6'], '2n', Tone.now());
-        }
-        function playGameOverSound() {
-            if (!audioReady) return;
-            gameOverSynth.triggerAttackRelease(['C5', 'E5', 'G5'], '1n', Tone.now());
-        }
+        function playBombSound() { if (!audioReady) return; bombSynth.triggerAttackRelease('C2', '2n', Tone.now()); }
+        function playLevelUpSound() { if (!audioReady) return; levelUpSynth.triggerAttackRelease(['C5', 'E5', 'G5', 'C6'], '2n', Tone.now()); }
+        function playGameOverSound() { if (!audioReady) return; gameOverSynth.triggerAttackRelease(['C5', 'E5', 'G5'], '1n', Tone.now()); }
 
         // ============ 屏幕特效 ============
         const screenEffects = document.getElementById('screen-effects');
@@ -901,11 +838,8 @@
 
         function getRandomBubbleType() {
             const types = Object.keys(BUBBLE_TYPES);
-            // 根據難度調整炸彈權重
             const bombWeight = DIFFICULTY_CONFIG[settings.difficulty].bombWeight;
-            const totalWeight = types.reduce((sum, t) => {
-                return sum + (t === 'bomb' ? bombWeight : BUBBLE_TYPES[t].weight);
-            }, 0);
+            const totalWeight = types.reduce((sum, t) => sum + (t === 'bomb' ? bombWeight : BUBBLE_TYPES[t].weight), 0);
             let r = Math.random() * totalWeight;
             for (const t of types) {
                 const w = t === 'bomb' ? bombWeight : BUBBLE_TYPES[t].weight;
@@ -925,27 +859,15 @@
             let x, y, vx, vy;
             const speed = (1 + gameState.level * 0.3) * (0.5 + Math.random() * 0.8) * diffConfig.speedMul;
             
-            if (side === 0) {
-                x = Math.random() * W; y = H + radius;
-                vx = (Math.random() - 0.5) * speed; vy = -speed;
-            } else if (side === 1) {
-                x = Math.random() * W; y = -radius;
-                vx = (Math.random() - 0.5) * speed; vy = speed * 0.7;
-            } else if (side === 2) {
-                x = -radius; y = Math.random() * H;
-                vx = speed; vy = (Math.random() - 0.5) * speed * 0.5;
-            } else {
-                x = W + radius; y = Math.random() * H;
-                vx = -speed; vy = (Math.random() - 0.5) * speed * 0.5;
-            }
+            if (side === 0) { x = Math.random() * W; y = H + radius; vx = (Math.random() - 0.5) * speed; vy = -speed; }
+            else if (side === 1) { x = Math.random() * W; y = -radius; vx = (Math.random() - 0.5) * speed; vy = speed * 0.7; }
+            else if (side === 2) { x = -radius; y = Math.random() * H; vx = speed; vy = (Math.random() - 0.5) * speed * 0.5; }
+            else { x = W + radius; y = Math.random() * H; vx = -speed; vy = (Math.random() - 0.5) * speed * 0.5; }
 
             bubbles.push({
                 x, y, vx, vy, radius, type,
-                color: config.color,
-                points: config.points,
-                special: config.special,
-                phase: Math.random() * Math.PI * 2,
-                life: 1
+                color: config.color, points: config.points, special: config.special,
+                phase: Math.random() * Math.PI * 2, life: 1
             });
         }
 
@@ -959,10 +881,7 @@
                 b.x += Math.sin(b.phase) * 0.3;
                 if (b.x < -100 || b.x > W + 100 || b.y < -100 || b.y > H + 100) {
                     bubbles.splice(i, 1);
-                    if (b.special !== 'bomb') {
-                        gameState.combo = 0;
-                        updateHUD();
-                    }
+                    if (b.special !== 'bomb') { gameState.combo = 0; updateHUD(); }
                 }
             }
         }
@@ -980,10 +899,7 @@
                 grad.addColorStop(1, `hsl(${(t * 360 + 360) % 360}, 100%, 60%)`);
                 ctx.fillStyle = grad;
             } else {
-                const grad = ctx.createRadialGradient(
-                    -b.radius * 0.3, -b.radius * 0.3, b.radius * 0.1,
-                    0, 0, b.radius
-                );
+                const grad = ctx.createRadialGradient(-b.radius * 0.3, -b.radius * 0.3, b.radius * 0.1, 0, 0, b.radius);
                 grad.addColorStop(0, '#FFFFFF');
                 grad.addColorStop(0.3, b.color);
                 grad.addColorStop(1, shadeColor(b.color, -30));
@@ -1047,38 +963,19 @@
                 for (let i = 0; i < 25; i++) {
                     const angle = Math.random() * Math.PI * 2;
                     const speed = 3 + Math.random() * 5;
-                    particles.push({
-                        x, y,
-                        vx: Math.cos(angle) * speed,
-                        vy: Math.sin(angle) * speed,
-                        radius: 4 + Math.random() * 3,
-                        color: '#FFD700', life: 1, decay: 0.015, isStar: true
-                    });
+                    particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, radius: 4 + Math.random() * 3, color: '#FFD700', life: 1, decay: 0.015, isStar: true });
                 }
             } else if (type === 'rainbow') {
                 for (let i = 0; i < 80; i++) {
                     const angle = Math.random() * Math.PI * 2;
                     const speed = 2 + Math.random() * 8;
-                    particles.push({
-                        x, y,
-                        vx: Math.cos(angle) * speed,
-                        vy: Math.sin(angle) * speed,
-                        radius: 3 + Math.random() * 5,
-                        color: `hsl(${Math.random() * 360}, 100%, 60%)`,
-                        life: 1, decay: 0.01
-                    });
+                    particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, radius: 3 + Math.random() * 5, color: `hsl(${Math.random() * 360}, 100%, 60%)`, life: 1, decay: 0.01 });
                 }
             } else if (type === 'bomb') {
                 for (let i = 0; i < 30; i++) {
                     const angle = Math.random() * Math.PI * 2;
                     const speed = 1 + Math.random() * 3;
-                    particles.push({
-                        x, y,
-                        vx: Math.cos(angle) * speed,
-                        vy: Math.sin(angle) * speed - 1,
-                        radius: 8 + Math.random() * 8,
-                        color: '#333', life: 1, decay: 0.015, isSmoke: true
-                    });
+                    particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 1, radius: 8 + Math.random() * 8, color: '#333', life: 1, decay: 0.015, isSmoke: true });
                 }
             }
         }
@@ -1156,6 +1053,7 @@
         // ============ 手指追蹤與碰撞 ============
         let fingerPos = null;
         let fingerVisible = false;
+        let rawLandmarkX = 0;  // 🔧 用於除錯顯示
 
         function checkCollisions() {
             if (!fingerPos) return;
@@ -1258,10 +1156,7 @@
         function drawFingerIndicator(ctx) {
             if (!fingerPos) return;
             ctx.save();
-            const grad = ctx.createRadialGradient(
-                fingerPos.x, fingerPos.y, 0,
-                fingerPos.x, fingerPos.y, 30
-            );
+            const grad = ctx.createRadialGradient(fingerPos.x, fingerPos.y, 0, fingerPos.x, fingerPos.y, 30);
             grad.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
             grad.addColorStop(0.5, 'rgba(255, 105, 180, 0.5)');
             grad.addColorStop(1, 'rgba(255, 105, 180, 0)');
@@ -1279,13 +1174,15 @@
             ctx.restore();
         }
 
-        // ============ MediaPipe 設定 ============
+        // ============ 🔧 關鍵修復：MediaPipe 設定 ============
         function onResults(results) {
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
             canvasCtx.save();
             canvasCtx.scale(dpr, dpr);
             
-            // 🔧 根據設定決定是否鏡像 Canvas
+            // 🔧 核心修復邏輯：
+            // 鏡像模式：Video CSS 鏡像 + Canvas JS 鏡像 + landmarks 鏡像
+            // 真實模式：都不鏡像
             if (settings.mirror === 'mirror') {
                 canvasCtx.scale(-1, 1);
                 canvasCtx.translate(-W, 0);
@@ -1294,10 +1191,27 @@
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 const landmarks = results.multiHandLandmarks[0];
                 const tip = landmarks[8];
-                // 🔧 鏡像模式下，landmark.x 需要反轉
+                
+                // 🔧 關鍵修復：landmarks 座標必須與 Canvas 繪圖鏡像一致
+                // 鏡像模式：landmark.x 需要 1-x 來鏡像
+                // 真實模式：直接使用原始座標
                 const fx = settings.mirror === 'mirror' ? (1 - tip.x) : tip.x;
+                
+                rawLandmarkX = tip.x;  // 記錄原始座標用於除錯
                 fingerPos = { x: fx * W, y: tip.y * H };
                 fingerVisible = true;
+                
+                // 🔧 除錯資訊
+                if (settings.debug === 'on') {
+                    const debugEl = document.getElementById('debug-info');
+                    const mode = settings.mirror === 'mirror' ? '鏡像' : '真實';
+                    debugEl.innerHTML = 
+                        `模式：${mode}<br>` +
+                        `原始 X：${(tip.x * 100).toFixed(1)}%<br>` +
+                        `激光 X：${(fx * 100).toFixed(1)}%<br>` +
+                        `激光 Y：${(tip.y * 100).toFixed(1)}%<br>` +
+                        `螢幕：${W}x${H}`;
+                }
             } else {
                 fingerVisible = false;
                 fingerPos = null;
@@ -1340,21 +1254,12 @@
                 const elapsed = (Date.now() - gameStartTime) / 1000;
                 gameState.timeLeft = Math.max(0, diffConfig.duration - elapsed);
                 
-                if (gameState.slowMotion && Date.now() > gameState.slowMotionEnd) {
-                    gameState.slowMotion = false;
-                }
-                
-                if (gameState.combo > 0 && Date.now() - gameState.lastComboTime > 2000) {
-                    gameState.combo = 0;
-                    updateHUD();
-                }
+                if (gameState.slowMotion && Date.now() > gameState.slowMotionEnd) gameState.slowMotion = false;
+                if (gameState.combo > 0 && Date.now() - gameState.lastComboTime > 2000) { gameState.combo = 0; updateHUD(); }
                 
                 spawnTimer += dt;
                 const spawnInterval = Math.max(0.3, diffConfig.spawnInterval - gameState.level * 0.08);
-                if (spawnTimer >= spawnInterval) {
-                    spawnBubble();
-                    spawnTimer = 0;
-                }
+                if (spawnTimer >= spawnInterval) { spawnBubble(); spawnTimer = 0; }
                 
                 updateBubbles(dt);
                 updateParticles(dt);
@@ -1374,33 +1279,24 @@
         async function startGame() {
             document.getElementById('start-screen').classList.remove('show');
             
-            // 顯示難度指示器
             const diffConfig = DIFFICULTY_CONFIG[settings.difficulty];
             document.getElementById('difficulty-indicator').innerText = diffConfig.name;
             
             try {
                 await Tone.start();
                 audioReady = true;
-            } catch(e) {
-                console.warn('Audio init failed:', e);
-            }
+            } catch(e) { console.warn('Audio init failed:', e); }
 
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { 
-                        facingMode: settings.camera,
-                        width: { ideal: 1280 }, 
-                        height: { ideal: 720 } 
-                    },
+                    video: { facingMode: settings.camera, width: { ideal: 1280 }, height: { ideal: 720 } },
                     audio: false
                 });
                 videoElement.srcObject = stream;
                 await videoElement.play();
                 
                 async function processFrame() {
-                    if (videoElement.readyState >= 2) {
-                        await hands.send({image: videoElement});
-                    }
+                    if (videoElement.readyState >= 2) await hands.send({image: videoElement});
                     requestAnimationFrame(processFrame);
                 }
                 processFrame();
@@ -1472,7 +1368,6 @@
             updateHUD();
         }
 
-        // ============ 事件綁定 ============
         document.getElementById('btn-start').addEventListener('click', startGame);
         document.getElementById('btn-restart').addEventListener('click', restartGame);
     </script>
