@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>🫧 泡泡大作戰 v1.1.1</title>
+    <title>🫧 泡泡大作戰 v1.1.2</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -18,7 +18,7 @@
             background: linear-gradient(180deg, #87CEEB 0%, #FFB6C1 50%, #FFD700 100%);
         }
 
-        /* 🔧 關鍵修復：Video 鏡像，Canvas 不鏡像（由 JS 控制繪圖鏡像） */
+        /*  修復：Video 鏡像，Canvas 不鏡像 */
         #videoInput {
             position: absolute;
             top: 0; left: 0;
@@ -34,10 +34,9 @@
             width: 100%; height: 100%;
             z-index: 2; 
             pointer-events: none;
-            /* 不設 transform，由 JS 控制 */
+            /* 不設任何 transform */
         }
 
-        /* 版本號 */
         #version-tag {
             position: absolute;
             top: calc(5px + env(safe-area-inset-top));
@@ -51,7 +50,6 @@
             pointer-events: none;
         }
 
-        /* HUD */
         #hud-top {
             position: absolute;
             top: calc(10px + env(safe-area-inset-top));
@@ -136,7 +134,6 @@
         }
         @keyframes vignette { 0% { opacity: 0.8; } 100% { opacity: 0; } }
 
-        /* 設定畫面 */
         #settings-screen {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -250,7 +247,6 @@
             max-width: 400px;
         }
 
-        /* 開始畫面 */
         #start-screen {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -317,7 +313,6 @@
         }
         .btn-start:active { transform: scale(0.95); }
 
-        /* 結算畫面 */
         #game-over {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -406,7 +401,6 @@
             pointer-events: none;
         }
 
-        /* 🔧 新增：除錯模式指示器 */
         #debug-info {
             position: absolute;
             bottom: calc(60px + env(safe-area-inset-bottom));
@@ -429,7 +423,7 @@
     <video id="videoInput" autoplay playsinline muted></video>
     <canvas id="canvasOutput"></canvas>
     <div id="screen-effects"></div>
-    <div id="version-tag">v1.1.1</div>
+    <div id="version-tag">v1.1.2</div>
     <div id="difficulty-indicator"></div>
     <div id="debug-info"></div>
 
@@ -443,7 +437,7 @@
             <div class="hud-value" id="level">Lv.1</div>
         </div>
         <div class="hud-card">
-            <div class="hud-label">🎯 連擊</div>
+            <div class="hud-label"> 連擊</div>
             <div class="hud-value" id="combo">0</div>
         </div>
     </div>
@@ -453,11 +447,10 @@
     <div id="time-text">60</div>
     <div id="time-bar-container"><div id="time-bar"></div></div>
 
-    <!-- 設定畫面 -->
     <div id="settings-screen">
         <div class="settings-header">
-            <div class="settings-title">⚙️ 設定</div>
-            <div class="settings-version">v1.1.1</div>
+            <div class="settings-title">️ 設定</div>
+            <div class="settings-version">v1.1.2</div>
         </div>
 
         <div class="settings-group">
@@ -471,7 +464,7 @@
                     鏡像模式
                 </button>
                 <button class="option-btn" data-mirror="real">
-                    <span class="icon">📷</span>
+                    <span class="icon"></span>
                     真實模式
                 </button>
             </div>
@@ -529,9 +522,8 @@
         <button class="main-menu-btn" id="btn-to-start">下一步 →</button>
     </div>
 
-    <!-- 開始畫面 -->
     <div id="start-screen">
-        <div id="start-version">v1.1.1</div>
+        <div id="start-version">v1.1.2</div>
         <h1>泡泡大作戰</h1>
         <div class="mascot">🫧</div>
         <p>用你的手指戳破飛來的泡泡！<br>小心黑色的炸彈泡泡喔 💣</p>
@@ -542,7 +534,6 @@
         <button class="secondary-btn" id="btn-back-settings">← 返回設定</button>
     </div>
 
-    <!-- 結算畫面 -->
     <div id="game-over">
         <h2>🎉 遊戲結束！</h2>
         <div class="final-stats">
@@ -573,28 +564,26 @@
     <script src="https://cdn.jsdelivr.net/npm/tone@14.7.77/build/Tone.js"></script>
 
     <script>
-        // ============ 版本資訊 ============
-        const VERSION = '1.1.1';
-        console.log(`🫧 泡泡大作戰 v${VERSION} 啟動`);
-        console.log(`🔧 修復：激光點與手指方向對齊問題`);
+        const VERSION = '1.1.2';
+        console.log(` 泡泡大作戰 v${VERSION} 啟動`);
+        console.log(`🔧 修復：Video 鏡像 + Canvas 不鏡像 + Landmarks 鏡像`);
 
-        // ============ 設定系統 ============
         const DEFAULT_SETTINGS = {
             mirror: 'mirror',
             difficulty: 'normal',
             camera: 'user',
-            debug: 'on'  // 🔧 預設開啟除錯模式
+            debug: 'on'
         };
 
         const DIFFICULTY_CONFIG = {
             easy: { name: '🌱 簡單', duration: 90, speedMul: 0.7, bombWeight: 2, spawnInterval: 1.5, levelUpScore: 300 },
             normal: { name: '⭐ 普通', duration: 60, speedMul: 1.0, bombWeight: 5, spawnInterval: 1.2, levelUpScore: 200 },
-            hard: { name: '🔥 困難', duration: 45, speedMul: 1.4, bombWeight: 10, spawnInterval: 0.8, levelUpScore: 150 }
+            hard: { name: ' 困難', duration: 45, speedMul: 1.4, bombWeight: 10, spawnInterval: 0.8, levelUpScore: 150 }
         };
 
         function loadSettings() {
             try {
-                const saved = localStorage.getItem('bubble_game_settings_v2');
+                const saved = localStorage.getItem('bubble_game_settings_v3');
                 if (saved) return { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
             } catch (e) {}
             return { ...DEFAULT_SETTINGS };
@@ -602,15 +591,13 @@
 
         function saveSettings() {
             try {
-                localStorage.setItem('bubble_game_settings_v2', JSON.stringify(settings));
+                localStorage.setItem('bubble_game_settings_v3', JSON.stringify(settings));
             } catch (e) {}
         }
 
         let settings = loadSettings();
 
-        // ============ 設定 UI ============
         function setupSettingsUI() {
-            // 鏡像模式
             document.querySelectorAll('#mirror-options .option-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.mirror === settings.mirror);
                 btn.addEventListener('click', () => {
@@ -624,7 +611,6 @@
                 });
             });
 
-            // 難度
             document.querySelectorAll('#difficulty-options .option-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.difficulty === settings.difficulty);
                 btn.addEventListener('click', () => {
@@ -637,7 +623,6 @@
                 });
             });
 
-            // 鏡頭
             document.querySelectorAll('#camera-options .option-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.camera === settings.camera);
                 btn.addEventListener('click', () => {
@@ -650,7 +635,6 @@
                 });
             });
 
-            // 除錯模式
             document.querySelectorAll('#debug-options .option-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.debug === settings.debug);
                 btn.addEventListener('click', () => {
@@ -668,7 +652,7 @@
             updateStartScreenInfo();
         }
 
-        // 🔧 關鍵修復：只鏡像 Video，不鏡像 Canvas（由 JS 控制）
+        // 🔧 關鍵修復：只鏡像 Video，Canvas 不鏡像
         function applyMirrorMode() {
             const video = document.getElementById('videoInput');
             if (settings.mirror === 'mirror') {
@@ -682,11 +666,7 @@
 
         function applyDebugMode() {
             const debugEl = document.getElementById('debug-info');
-            if (settings.debug === 'on') {
-                debugEl.classList.add('show');
-            } else {
-                debugEl.classList.remove('show');
-            }
+            debugEl.classList.toggle('show', settings.debug === 'on');
         }
 
         function updateStartScreenInfo() {
@@ -700,7 +680,6 @@
 
         setupSettingsUI();
 
-        // ============ 畫面切換 ============
         function showSettings() {
             document.getElementById('settings-screen').classList.remove('hidden');
             document.getElementById('start-screen').classList.remove('show');
@@ -718,7 +697,6 @@
         document.getElementById('btn-back-settings').addEventListener('click', showSettings);
         document.getElementById('btn-to-settings').addEventListener('click', showSettings);
 
-        // ============ 遊戲狀態 ============
         let gameState = {
             score: 0, combo: 0, maxCombo: 0, level: 1,
             popped: 0, timeLeft: 60,
@@ -726,7 +704,6 @@
             running: false, lastComboTime: 0
         };
 
-        // ============ 音效系統 ============
         let audioReady = false;
         
         const popSynth = new Tone.MembraneSynth({
@@ -781,7 +758,6 @@
         function playLevelUpSound() { if (!audioReady) return; levelUpSynth.triggerAttackRelease(['C5', 'E5', 'G5', 'C6'], '2n', Tone.now()); }
         function playGameOverSound() { if (!audioReady) return; gameOverSynth.triggerAttackRelease(['C5', 'E5', 'G5'], '1n', Tone.now()); }
 
-        // ============ 屏幕特效 ============
         const screenEffects = document.getElementById('screen-effects');
         function triggerScreenFlash(color = 'white') {
             const flash = document.createElement('div');
@@ -802,7 +778,6 @@
             setTimeout(() => v.remove(), 500);
         }
 
-        // ============ Canvas 設定 ============
         const videoElement = document.getElementById('videoInput');
         const canvasElement = document.getElementById('canvasOutput');
         const canvasCtx = canvasElement.getContext('2d');
@@ -821,7 +796,6 @@
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
 
-        // ============ 泡泡系統 ============
         const bubbles = [];
         const particles = [];
         const floatingTexts = [];
@@ -942,7 +916,6 @@
             return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
         }
 
-        // ============ 粒子系統 ============
         function createPopEffect(x, y, color, count = 15) {
             for (let i = 0; i < count; i++) {
                 const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
@@ -1020,7 +993,6 @@
             }
         }
 
-        // ============ 飄字系統 ============
         function addFloatingText(x, y, text, color, size = 30) {
             floatingTexts.push({ x, y, text, color, size, life: 1, vy: -2 });
         }
@@ -1050,10 +1022,8 @@
             }
         }
 
-        // ============ 手指追蹤與碰撞 ============
         let fingerPos = null;
         let fingerVisible = false;
-        let rawLandmarkX = 0;  // 🔧 用於除錯顯示
 
         function checkCollisions() {
             if (!fingerPos) return;
@@ -1113,7 +1083,7 @@
                 if (b.special === 'clock') {
                     gameState.slowMotion = true;
                     gameState.slowMotionEnd = Date.now() + 5000;
-                    addFloatingText(b.x, b.y - 40, '⏱️ 慢動作！', '#4169E1', 32);
+                    addFloatingText(b.x, b.y - 40, '️ 慢動作！', '#4169E1', 32);
                     playSpecialSound('clock');
                     triggerScreenFlash('rgba(65, 105, 225, 0.3)');
                 }
@@ -1152,7 +1122,6 @@
             document.getElementById('combo').innerText = gameState.combo;
         }
 
-        // ============ 手指指示器 ============
         function drawFingerIndicator(ctx) {
             if (!fingerPos) return;
             ctx.save();
@@ -1174,34 +1143,26 @@
             ctx.restore();
         }
 
-        // ============ 🔧 關鍵修復：MediaPipe 設定 ============
+        // 🔧 關鍵修復：Video 鏡像 + Canvas 不鏡像 + Landmarks 鏡像
         function onResults(results) {
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
             canvasCtx.save();
             canvasCtx.scale(dpr, dpr);
             
-            // 🔧 核心修復邏輯：
-            // 鏡像模式：Video CSS 鏡像 + Canvas JS 鏡像 + landmarks 鏡像
-            // 真實模式：都不鏡像
-            if (settings.mirror === 'mirror') {
-                canvasCtx.scale(-1, 1);
-                canvasCtx.translate(-W, 0);
-            }
+            // 🔧 Canvas 不鏡像！只處理 DPR 縮放
 
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 const landmarks = results.multiHandLandmarks[0];
                 const tip = landmarks[8];
                 
-                // 🔧 關鍵修復：landmarks 座標必須與 Canvas 繪圖鏡像一致
-                // 鏡像模式：landmark.x 需要 1-x 來鏡像
+                //  關鍵修復：Landmarks 必須鏡像（因為 Video 鏡像了）
+                // 鏡像模式：landmark.x 需要 1-x
                 // 真實模式：直接使用原始座標
                 const fx = settings.mirror === 'mirror' ? (1 - tip.x) : tip.x;
                 
-                rawLandmarkX = tip.x;  // 記錄原始座標用於除錯
                 fingerPos = { x: fx * W, y: tip.y * H };
                 fingerVisible = true;
                 
-                // 🔧 除錯資訊
                 if (settings.debug === 'on') {
                     const debugEl = document.getElementById('debug-info');
                     const mode = settings.mirror === 'mirror' ? '鏡像' : '真實';
@@ -1239,7 +1200,6 @@
         });
         hands.onResults(onResults);
 
-        // ============ 遊戲循環 ============
         let lastTime = 0;
         let spawnTimer = 0;
         let gameStartTime = 0;
@@ -1275,7 +1235,6 @@
             requestAnimationFrame(gameLoop);
         }
 
-        // ============ 遊戲流程 ============
         async function startGame() {
             document.getElementById('start-screen').classList.remove('show');
             
@@ -1337,7 +1296,7 @@
             if (gameState.score >= 1000) badges.push('👑 泡泡之王');
             if (gameState.level >= 5) badges.push('⭐ 傳奇玩家');
             if (gameState.popped >= 50) badges.push('💪 不屈不撓');
-            if (settings.difficulty === 'hard' && gameState.score >= 500) badges.push('🏆 困難征服者');
+            if (settings.difficulty === 'hard' && gameState.score >= 500) badges.push(' 困難征服者');
             
             const badgesEl = document.getElementById('badges');
             badgesEl.innerHTML = '';
