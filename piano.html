@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>🫧 泡泡大作戰 - 修復版</title>
+    <title>🫧 泡泡大作戰 v1.0.0</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -18,7 +18,7 @@
             background: linear-gradient(180deg, #87CEEB 0%, #FFB6C1 50%, #FFD700 100%);
         }
 
-        /* 移除鏡像處理，保持真實視角 */
+        /* 不鏡像，保持真實視角 */
         #videoInput, #canvasOutput {
             position: absolute;
             top: 0; left: 0;
@@ -28,11 +28,25 @@
         #videoInput { z-index: 1; opacity: 0.25; filter: blur(3px) brightness(1.1); }
         #canvasOutput { z-index: 2; pointer-events: none; }
 
+        /* 版本號顯示 */
+        #version-tag {
+            position: absolute;
+            top: calc(5px + env(safe-area-inset-top));
+            right: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            color: #FFF;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            z-index: 50;
+            pointer-events: none;
+        }
+
         /* HUD */
         #hud-top {
             position: absolute;
             top: calc(10px + env(safe-area-inset-top));
-            left: 10px; right: 10px;
+            left: 10px; right: 60px;
             display: flex;
             justify-content: space-between;
             z-index: 10;
@@ -298,6 +312,7 @@
     <video id="videoInput" autoplay playsinline muted></video>
     <canvas id="canvasOutput"></canvas>
     <div id="screen-effects"></div>
+    <div id="version-tag">v1.0.0</div>
 
     <!-- HUD -->
     <div id="hud-top">
@@ -364,6 +379,10 @@
     <script src="https://cdn.jsdelivr.net/npm/tone@14.7.77/build/Tone.js"></script>
 
     <script>
+        // ============ 版本資訊 ============
+        const VERSION = '1.0.0';
+        console.log(`🫧 泡泡大作戰 v${VERSION} 啟動`);
+
         // ============ 遊戲狀態 ============
         const GAME_DURATION = 60;
         let gameState = {
@@ -379,10 +398,9 @@
             lastComboTime: 0
         };
 
-        // ============ 增強音效系統 ============
+        // ============ 音效系統 ============
         let audioReady = false;
         
-        // 泡泡爆破音效（更清脆）
         const popSynth = new Tone.MembraneSynth({
             pitchDecay: 0.01,
             octaves: 6,
@@ -390,21 +408,18 @@
         }).toDestination();
         popSynth.volume.value = -8;
 
-        // 連擊音效（音調遞增）
         const comboSynth = new Tone.Synth({
             oscillator: { type: "triangle8" },
             envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.4 }
         }).toDestination();
         comboSynth.volume.value = -6;
 
-        // 特殊泡泡音效（魔法和弦）
         const specialSynth = new Tone.PolySynth(Tone.Synth, {
             oscillator: { type: "sine" },
             envelope: { attack: 0.01, decay: 0.4, sustain: 0.4, release: 0.8 }
         }).toDestination();
         specialSynth.volume.value = -5;
 
-        // 炸彈音效（低沉爆炸）
         const bombSynth = new Tone.MembraneSynth({
             pitchDecay: 0.05,
             octaves: 8,
@@ -412,14 +427,12 @@
         }).toDestination();
         bombSynth.volume.value = -4;
 
-        // 升級音效（歡呼）
         const levelUpSynth = new Tone.PolySynth(Tone.Synth, {
             oscillator: { type: "sawtooth" },
             envelope: { attack: 0.01, decay: 0.2, sustain: 0.5, release: 1 }
         }).toDestination();
         levelUpSynth.volume.value = -6;
 
-        // 遊戲結束音效
         const gameOverSynth = new Tone.PolySynth(Tone.Synth, {
             oscillator: { type: "sine" },
             envelope: { attack: 0.05, decay: 0.3, sustain: 0.4, release: 1.5 }
@@ -542,5 +555,581 @@
             let x, y, vx, vy;
             const speed = (1 + gameState.level * 0.3) * (0.5 + Math.random() * 0.8);
             
-            if (side === 0) {
-                x = Math
+            if (side === 0) { // 從下
+                x = Math.random() * W;
+                y = H + radius;
+                vx = (Math.random() - 0.5) * speed;
+                vy = -speed;
+            } else if (side === 1) { // 從上
+                x = Math.random() * W;
+                y = -radius;
+                vx = (Math.random() - 0.5) * speed;
+                vy = speed * 0.7;
+            } else if (side === 2) { // 從左
+                x = -radius;
+                y = Math.random() * H;
+                vx = speed;
+                vy = (Math.random() - 0.5) * speed * 0.5;
+            } else { // 從右
+                x = W + radius;
+                y = Math.random() * H;
+                vx = -speed;
+                vy = (Math.random() - 0.5) * speed * 0.5;
+            }
+
+            bubbles.push({
+                x, y, vx, vy,
+                radius,
+                type,
+                color: config.color,
+                points: config.points,
+                special: config.special,
+                phase: Math.random() * Math.PI * 2,
+                life: 1
+            });
+        }
+
+        function updateBubbles(dt) {
+            const speedMul = gameState.slowMotion ? 0.3 : 1;
+            
+            for (let i = bubbles.length - 1; i >= 0; i--) {
+                const b = bubbles[i];
+                b.x += b.vx * dt * 60 * speedMul;
+                b.y += b.vy * dt * 60 * speedMul;
+                b.phase += dt * 2;
+                b.x += Math.sin(b.phase) * 0.3;
+
+                if (b.x < -100 || b.x > W + 100 || b.y < -100 || b.y > H + 100) {
+                    bubbles.splice(i, 1);
+                    if (b.special !== 'bomb') {
+                        gameState.combo = 0;
+                        updateHUD();
+                    }
+                }
+            }
+        }
+
+        function drawBubble(ctx, b) {
+            ctx.save();
+            ctx.translate(b.x, b.y);
+            
+            if (b.color === 'rainbow') {
+                const grad = ctx.createLinearGradient(-b.radius, -b.radius, b.radius, b.radius);
+                const t = (Date.now() / 500) % 1;
+                grad.addColorStop(0, `hsl(${t * 360}, 100%, 60%)`);
+                grad.addColorStop(0.33, `hsl(${(t * 360 + 120) % 360}, 100%, 60%)`);
+                grad.addColorStop(0.66, `hsl(${(t * 360 + 240) % 360}, 100%, 60%)`);
+                grad.addColorStop(1, `hsl(${(t * 360 + 360) % 360}, 100%, 60%)`);
+                ctx.fillStyle = grad;
+            } else {
+                const grad = ctx.createRadialGradient(
+                    -b.radius * 0.3, -b.radius * 0.3, b.radius * 0.1,
+                    0, 0, b.radius
+                );
+                grad.addColorStop(0, '#FFFFFF');
+                grad.addColorStop(0.3, b.color);
+                grad.addColorStop(1, shadeColor(b.color, -30));
+                ctx.fillStyle = grad;
+            }
+            
+            if (b.special === 'gold') {
+                ctx.shadowColor = '#FFD700';
+                ctx.shadowBlur = 20;
+            } else if (b.special === 'rainbow') {
+                ctx.shadowColor = '#FF69B4';
+                ctx.shadowBlur = 25;
+            } else if (b.special === 'bomb') {
+                ctx.shadowColor = '#FF0000';
+                ctx.shadowBlur = 15;
+            }
+            
+            ctx.beginPath();
+            ctx.arc(0, 0, b.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.beginPath();
+            ctx.ellipse(-b.radius * 0.3, -b.radius * 0.3, b.radius * 0.25, b.radius * 0.15, -0.5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#FFF';
+            ctx.font = `bold ${b.radius * 0.8}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            if (b.special === 'gold') {
+                ctx.fillText('⭐', 0, 2);
+            } else if (b.special === 'rainbow') {
+                ctx.fillText('🌈', 0, 2);
+            } else if (b.special === 'clock') {
+                ctx.fillText('⏱️', 0, 2);
+            } else if (b.special === 'bomb') {
+                ctx.fillText('💣', 0, 2);
+            }
+            
+            ctx.restore();
+        }
+
+        function shadeColor(color, percent) {
+            if (color === 'rainbow') return color;
+            const num = parseInt(color.replace('#', ''), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = Math.max(0, Math.min(255, (num >> 16) + amt));
+            const G = Math.max(0, Math.min(255, (num >> 8 & 0x00FF) + amt));
+            const B = Math.max(0, Math.min(255, (num & 0x0000FF) + amt));
+            return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
+        }
+
+        // ============ 粒子系統 ============
+        function createPopEffect(x, y, color, count = 15) {
+            for (let i = 0; i < count; i++) {
+                const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
+                const speed = 2 + Math.random() * 4;
+                particles.push({
+                    x, y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    radius: 3 + Math.random() * 4,
+                    color: color,
+                    life: 1,
+                    decay: 0.02 + Math.random() * 0.02
+                });
+            }
+        }
+
+        function createSpecialEffect(x, y, type) {
+            if (type === 'gold') {
+                for (let i = 0; i < 25; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 3 + Math.random() * 5;
+                    particles.push({
+                        x, y,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        radius: 4 + Math.random() * 3,
+                        color: '#FFD700',
+                        life: 1,
+                        decay: 0.015,
+                        isStar: true
+                    });
+                }
+            } else if (type === 'rainbow') {
+                for (let i = 0; i < 80; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 2 + Math.random() * 8;
+                    particles.push({
+                        x, y,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        radius: 3 + Math.random() * 5,
+                        color: `hsl(${Math.random() * 360}, 100%, 60%)`,
+                        life: 1,
+                        decay: 0.01
+                    });
+                }
+            } else if (type === 'bomb') {
+                for (let i = 0; i < 30; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 1 + Math.random() * 3;
+                    particles.push({
+                        x, y,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed - 1,
+                        radius: 8 + Math.random() * 8,
+                        color: '#333',
+                        life: 1,
+                        decay: 0.015,
+                        isSmoke: true
+                    });
+                }
+            }
+        }
+
+        function updateParticles(dt) {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx * dt * 60;
+                p.y += p.vy * dt * 60;
+                p.vy += 0.15;
+                p.life -= p.decay;
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+        }
+
+        function drawParticles(ctx) {
+            for (const p of particles) {
+                ctx.save();
+                ctx.globalAlpha = p.life;
+                
+                if (p.isStar) {
+                    ctx.fillStyle = p.color;
+                    ctx.shadowColor = p.color;
+                    ctx.shadowBlur = 10;
+                    ctx.font = `${p.radius * 3}px sans-serif`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('⭐', p.x, p.y);
+                } else if (p.isSmoke) {
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius * (2 - p.life), 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    ctx.fillStyle = p.color;
+                    ctx.shadowColor = p.color;
+                    ctx.shadowBlur = 8;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius * p.life, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+        }
+
+        // ============ 飄字系統 ============
+        function addFloatingText(x, y, text, color, size = 30) {
+            floatingTexts.push({
+                x, y, text, color, size,
+                life: 1,
+                vy: -2
+            });
+        }
+
+        function updateFloatingTexts(dt) {
+            for (let i = floatingTexts.length - 1; i >= 0; i--) {
+                const t = floatingTexts[i];
+                t.y += t.vy * dt * 60;
+                t.life -= 0.02;
+                if (t.life <= 0) floatingTexts.splice(i, 1);
+            }
+        }
+
+        function drawFloatingTexts(ctx) {
+            for (const t of floatingTexts) {
+                ctx.save();
+                ctx.globalAlpha = t.life;
+                ctx.fillStyle = t.color;
+                ctx.strokeStyle = '#FFF';
+                ctx.lineWidth = 4;
+                ctx.font = `bold ${t.size}px 'Comic Sans MS', sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.strokeText(t.text, t.x, t.y);
+                ctx.fillText(t.text, t.x, t.y);
+                ctx.restore();
+            }
+        }
+
+        // ============ 手指追蹤與碰撞 ============
+        let fingerPos = null;
+        let fingerVisible = false;
+
+        function checkCollisions() {
+            if (!fingerPos) return;
+            
+            for (let i = bubbles.length - 1; i >= 0; i--) {
+                const b = bubbles[i];
+                const dx = fingerPos.x - b.x;
+                const dy = fingerPos.y - b.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                
+                if (dist < b.radius + 15) {
+                    popBubble(b, i);
+                    break;
+                }
+            }
+        }
+
+        function popBubble(b, index) {
+            bubbles.splice(index, 1);
+            
+            if (b.special === 'bomb') {
+                gameState.score = Math.max(0, gameState.score + b.points);
+                gameState.combo = 0;
+                createPopEffect(b.x, b.y, '#333', 10);
+                createSpecialEffect(b.x, b.y, 'bomb');
+                addFloatingText(b.x, b.y, b.points, '#FF0000', 40);
+                playBombSound();
+                triggerScreenShake();
+                triggerScreenVignette('rgba(255, 0, 0, 0.4)');
+                if (navigator.vibrate) navigator.vibrate(200);
+            } else {
+                gameState.combo++;
+                gameState.popped++;
+                if (gameState.combo > gameState.maxCombo) gameState.maxCombo = gameState.combo;
+                gameState.lastComboTime = Date.now();
+                
+                const comboMultiplier = Math.min(5, 1 + Math.floor(gameState.combo / 5));
+                const points = b.points * comboMultiplier;
+                gameState.score += points;
+                
+                createPopEffect(b.x, b.y, b.color === 'rainbow' ? '#FF69B4' : b.color);
+                if (b.special) createSpecialEffect(b.x, b.y, b.special);
+                
+                let text = '+' + points;
+                if (comboMultiplier > 1) text += ' x' + comboMultiplier;
+                addFloatingText(b.x, b.y, text, b.color === 'rainbow' ? '#FF69B4' : b.color, 28);
+                
+                if (b.special === 'gold' || b.special === 'rainbow') {
+                    playSpecialSound(b.special);
+                    triggerScreenFlash(b.special === 'gold' ? 'rgba(255, 215, 0, 0.3)' : 'rgba(255, 105, 180, 0.3)');
+                } else {
+                    playPopSound();
+                }
+                
+                if (gameState.combo > 1 && gameState.combo % 5 === 0) {
+                    playComboSound(Math.floor(gameState.combo / 5));
+                }
+                
+                if (b.special === 'clock') {
+                    gameState.slowMotion = true;
+                    gameState.slowMotionEnd = Date.now() + 5000;
+                    addFloatingText(b.x, b.y - 40, '⏱️ 慢動作！', '#4169E1', 32);
+                    playSpecialSound('clock');
+                    triggerScreenFlash('rgba(65, 105, 225, 0.3)');
+                }
+                
+                if (gameState.combo >= 3) {
+                    showCombo(gameState.combo);
+                }
+            }
+            
+            checkLevelUp();
+            updateHUD();
+        }
+
+        function showCombo(combo) {
+            const el = document.getElementById('combo-display');
+            el.innerText = combo + ' COMBO!';
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 800);
+        }
+
+        function checkLevelUp() {
+            const newLevel = Math.floor(gameState.score / 200) + 1;
+            if (newLevel > gameState.level) {
+                gameState.level = newLevel;
+                const el = document.getElementById('level-up');
+                el.innerText = '🎉 LEVEL ' + newLevel + '！';
+                el.classList.add('show');
+                setTimeout(() => el.classList.remove('show'), 1500);
+                playLevelUpSound();
+                triggerScreenFlash('rgba(255, 215, 0, 0.4)');
+            }
+        }
+
+        function updateHUD() {
+            document.getElementById('score').innerText = gameState.score;
+            document.getElementById('level').innerText = 'Lv.' + gameState.level;
+            document.getElementById('combo').innerText = gameState.combo;
+        }
+
+        // ============ 手指指示器繪製 ============
+        function drawFingerIndicator(ctx) {
+            if (!fingerPos) return;
+            
+            ctx.save();
+            const grad = ctx.createRadialGradient(
+                fingerPos.x, fingerPos.y, 0,
+                fingerPos.x, fingerPos.y, 30
+            );
+            grad.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+            grad.addColorStop(0.5, 'rgba(255, 105, 180, 0.5)');
+            grad.addColorStop(1, 'rgba(255, 105, 180, 0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(fingerPos.x, fingerPos.y, 30, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#FFF';
+            ctx.shadowColor = '#FF69B4';
+            ctx.shadowBlur = 15;
+            ctx.beginPath();
+            ctx.arc(fingerPos.x, fingerPos.y, 8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+
+        // ============ MediaPipe 設定 ============
+        function onResults(results) {
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+            canvasCtx.save();
+            canvasCtx.scale(dpr, dpr);
+            // 不鏡像，保持真實視角
+
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                const landmarks = results.multiHandLandmarks[0];
+                const tip = landmarks[8];
+                fingerPos = { x: tip.x * W, y: tip.y * H };
+                fingerVisible = true;
+            } else {
+                fingerVisible = false;
+                fingerPos = null;
+            }
+
+            if (gameState.running) {
+                for (const b of bubbles) drawBubble(canvasCtx, b);
+                drawParticles(canvasCtx);
+                drawFloatingTexts(canvasCtx);
+                drawFingerIndicator(canvasCtx);
+                if (fingerVisible) checkCollisions();
+            }
+
+            canvasCtx.restore();
+        }
+
+        const hands = new Hands({locateFile: (file) => {
+            return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+        }});
+        hands.setOptions({
+            maxNumHands: 1,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.7,
+            minTrackingConfidence: 0.5
+        });
+        hands.onResults(onResults);
+
+        // ============ 遊戲循環 ============
+        let lastTime = 0;
+        let spawnTimer = 0;
+        let gameStartTime = 0;
+
+        function gameLoop(timestamp) {
+            if (!lastTime) lastTime = timestamp;
+            const dt = Math.min(0.05, (timestamp - lastTime) / 1000);
+            lastTime = timestamp;
+
+            if (gameState.running) {
+                const elapsed = (Date.now() - gameStartTime) / 1000;
+                gameState.timeLeft = Math.max(0, GAME_DURATION - elapsed);
+                
+                if (gameState.slowMotion && Date.now() > gameState.slowMotionEnd) {
+                    gameState.slowMotion = false;
+                }
+                
+                if (gameState.combo > 0 && Date.now() - gameState.lastComboTime > 2000) {
+                    gameState.combo = 0;
+                    updateHUD();
+                }
+                
+                spawnTimer += dt;
+                const spawnInterval = Math.max(0.3, 1.2 - gameState.level * 0.1);
+                if (spawnTimer >= spawnInterval) {
+                    spawnBubble();
+                    spawnTimer = 0;
+                }
+                
+                updateBubbles(dt);
+                updateParticles(dt);
+                updateFloatingTexts(dt);
+                
+                const timePercent = (gameState.timeLeft / GAME_DURATION) * 100;
+                document.getElementById('time-bar').style.width = timePercent + '%';
+                document.getElementById('time-text').innerText = Math.ceil(gameState.timeLeft);
+                
+                if (gameState.timeLeft <= 0) {
+                    endGame();
+                }
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // ============ 遊戲流程 ============
+        async function startGame() {
+            document.getElementById('start-screen').classList.add('hidden');
+            
+            try {
+                await Tone.start();
+                audioReady = true;
+            } catch(e) {
+                console.warn('Audio init failed:', e);
+            }
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+                    audio: false
+                });
+                videoElement.srcObject = stream;
+                await videoElement.play();
+                
+                async function processFrame() {
+                    if (videoElement.readyState >= 2) {
+                        await hands.send({image: videoElement});
+                    }
+                    requestAnimationFrame(processFrame);
+                }
+                processFrame();
+                
+                gameState = {
+                    score: 0, combo: 0, maxCombo: 0, level: 1,
+                    popped: 0, timeLeft: GAME_DURATION,
+                    slowMotion: false, slowMotionEnd: 0,
+                    running: true, lastComboTime: Date.now()
+                };
+                bubbles.length = 0;
+                particles.length = 0;
+                floatingTexts.length = 0;
+                gameStartTime = Date.now();
+                updateHUD();
+                
+                requestAnimationFrame(gameLoop);
+                
+            } catch (err) {
+                console.error('啟動失敗:', err);
+                alert('無法啟動攝影機，請檢查權限設定！');
+            }
+        }
+
+        function endGame() {
+            gameState.running = false;
+            playGameOverSound();
+            
+            document.getElementById('final-score').innerText = gameState.score;
+            document.getElementById('final-popped').innerText = gameState.popped;
+            document.getElementById('final-combo').innerText = gameState.maxCombo;
+            document.getElementById('final-level').innerText = 'Lv.' + gameState.level;
+            
+            const badges = [];
+            if (gameState.popped >= 30) badges.push('🎯 泡泡殺手');
+            if (gameState.maxCombo >= 10) badges.push('🔥 連擊大師');
+            if (gameState.score >= 1000) badges.push('👑 泡泡之王');
+            if (gameState.level >= 5) badges.push('⭐ 傳奇玩家');
+            if (gameState.popped >= 50) badges.push('💪 不屈不撓');
+            
+            const badgesEl = document.getElementById('badges');
+            badgesEl.innerHTML = '';
+            if (badges.length === 0) badgesEl.innerHTML = '<div class="badge">再接再厲！</div>';
+            else badges.forEach(b => {
+                const div = document.createElement('div');
+                div.className = 'badge';
+                div.innerText = b;
+                badgesEl.appendChild(div);
+            });
+            
+            document.getElementById('game-over').classList.add('show');
+        }
+
+        function restartGame() {
+            document.getElementById('game-over').classList.remove('show');
+            gameState = {
+                score: 0, combo: 0, maxCombo: 0, level: 1,
+                popped: 0, timeLeft: GAME_DURATION,
+                slowMotion: false, slowMotionEnd: 0,
+                running: true, lastComboTime: Date.now()
+            };
+            bubbles.length = 0;
+            particles.length = 0;
+            floatingTexts.length = 0;
+            gameStartTime = Date.now();
+            updateHUD();
+        }
+
+        // ============ 事件綁定 ============
+        document.getElementById('btn-start').addEventListener('click', startGame);
+        document.getElementById('btn-restart').addEventListener('click', restartGame);
+    </script>
+</body>
+</html>
