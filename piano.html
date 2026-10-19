@@ -3,409 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>🎮 手部追蹤遊戲廳 v2.0.1</title>
+    <title>🎮 手部追蹤遊戲廳 v2.0.2</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             overflow: hidden;
-            font-family: 'Comic Sans MS', 'Marker Felt', -apple-system, sans-serif;
-            touch-action: none;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
-            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+            font-family: 'Comic Sans MS', -apple-system, sans-serif;
+            touch-action: none; -webkit-user-select: none; user-select: none;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
+        #videoInput { position: absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; z-index:1; opacity:0; }
+        #canvasOutput { position: absolute; top:0; left:0; width:100%; height:100%; z-index:2; pointer-events:none; }
 
-        /* 🔧 修復：Video 鏡像，Canvas 不鏡像 */
-        #videoInput {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            object-fit: cover;
-            z-index: 1;
-            opacity: 0;
-        }
-        #canvasOutput {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 2;
-            pointer-events: none;
-        }
+        #home-screen { position:absolute; inset:0; background:linear-gradient(135deg,#667eea,#764ba2); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:100; padding:20px; }
+        #home-screen.hidden { display:none; }
+        .home-title { font-size:2.2rem; color:#FFF; text-shadow:3px 3px 0 rgba(0,0,0,.3); margin-bottom:8px; }
+        .home-subtitle { color:rgba(255,255,255,.8); margin-bottom:30px; }
+        .home-version { position:absolute; top:15px; right:15px; background:rgba(255,255,255,.2); color:#FFF; padding:5px 12px; border-radius:15px; font-size:12px; }
+        .game-cards { display:flex; flex-direction:column; gap:20px; width:100%; max-width:400px; }
+        .game-card { background:rgba(255,255,255,.95); border-radius:25px; padding:25px; cursor:pointer; display:flex; align-items:center; gap:20px; border:4px solid transparent; box-shadow:0 10px 30px rgba(0,0,0,.3); }
+        .game-card:active { transform:scale(.95); }
+        .game-card.bubble { border-color:#FF69B4; }
+        .game-card.racing { border-color:#FF4500; }
+        .game-icon { font-size:3.5rem; min-width:70px; text-align:center; }
+        .game-name { font-size:1.4rem; font-weight:bold; color:#333; }
+        .game-desc { font-size:.85rem; color:#666; }
+        .game-tag { display:inline-block; background:linear-gradient(135deg,#FFD700,#FFA500); color:#FFF; padding:3px 10px; border-radius:10px; font-size:.75rem; font-weight:bold; margin-top:8px; }
+        .game-tag.new { background:linear-gradient(135deg,#FF4500,#FF6347); }
 
-        /* 主頁 */
-        #home-screen {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            padding: 20px;
-        }
-        #home-screen.hidden { display: none; }
-        
-        .home-title {
-            font-size: 2.2rem;
-            color: #FFF;
-            text-shadow: 3px 3px 0 rgba(0,0,0,0.3);
-            margin-bottom: 8px;
-            text-align: center;
-        }
-        .home-subtitle {
-            font-size: 1rem;
-            color: rgba(255,255,255,0.8);
-            margin-bottom: 30px;
-            text-align: center;
-        }
-        .home-version {
-            position: absolute;
-            top: calc(15px + env(safe-area-inset-top));
-            right: 15px;
-            background: rgba(255,255,255,0.2);
-            color: #FFF;
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 12px;
-        }
+        #camera-loading { position:absolute; inset:0; background:rgba(0,0,0,.85); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:200; color:#FFF; }
+        #camera-loading.show { display:flex; }
+        .loading-spinner { width:50px; height:50px; border:5px solid rgba(255,255,255,.3); border-top-color:#FFD700; border-radius:50%; animation:spin 1s linear infinite; margin-bottom:20px; }
+        @keyframes spin { to { transform:rotate(360deg); } }
 
-        .game-cards {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            width: 100%;
-            max-width: 400px;
-        }
-        .game-card {
-            background: rgba(255,255,255,0.95);
-            border-radius: 25px;
-            padding: 25px;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            border: 4px solid transparent;
-        }
-        .game-card:active { transform: scale(0.95); }
-        .game-card.bubble { border-color: #FF69B4; }
-        .game-card.racing { border-color: #FF4500; }
-        
-        .game-icon { font-size: 3.5rem; min-width: 70px; text-align: center; }
-        .game-info { flex: 1; }
-        .game-name { font-size: 1.4rem; font-weight: bold; color: #333; margin-bottom: 5px; }
-        .game-desc { font-size: 0.85rem; color: #666; line-height: 1.4; }
-        .game-tag {
-            display: inline-block;
-            background: linear-gradient(135deg, #FFD700, #FFA500);
-            color: #FFF;
-            padding: 3px 10px;
-            border-radius: 10px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            margin-top: 8px;
-        }
-        .game-tag.new {
-            background: linear-gradient(135deg, #FF4500, #FF6347);
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
+        #bubble-hud, #game-hud { position:absolute; top:10px; left:10px; right:10px; display:none; justify-content:space-between; gap:8px; z-index:10; pointer-events:none; }
+        #bubble-hud.show, #game-hud.show { display:flex; }
+        .hud-card { background:rgba(255,255,255,.85); border:3px solid #FF69B4; border-radius:20px; padding:8px; text-align:center; flex:1; }
+        .hud-card.r { border-color:#FF4500; }
+        .hud-label { font-size:10px; color:#888; font-weight:bold; }
+        .hud-value { font-size:18px; font-weight:bold; color:#333; }
 
-        /* 相機啟動提示 */
-        #camera-loading {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 200;
-            color: #FFF;
-        }
-        #camera-loading.show { display: flex; }
-        .loading-spinner {
-            width: 50px; height: 50px;
-            border: 5px solid rgba(255,255,255,0.3);
-            border-top-color: #FFD700;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        #bubble-time-bar-container { position:absolute; bottom:15px; left:15px; right:15px; height:14px; background:rgba(255,255,255,.4); border:2px solid #FFF; border-radius:10px; overflow:hidden; z-index:10; display:none; }
+        #bubble-time-bar-container.show { display:block; }
+        #bubble-time-bar { height:100%; background:linear-gradient(90deg,#0F0,#FF0,#FF69B4); width:100%; }
+        #bubble-time-text { position:absolute; bottom:35px; left:50%; transform:translateX(-50%); color:#FFF; font-weight:bold; text-shadow:2px 2px 0 #FF1493; z-index:10; display:none; }
+        #bubble-time-text.show { display:block; }
 
-        /* 泡泡遊戲 HUD */
-        #bubble-hud {
-            position: absolute;
-            top: calc(10px + env(safe-area-inset-top));
-            left: 10px; right: 10px;
-            display: none;
-            justify-content: space-between;
-            z-index: 10;
-            pointer-events: none;
-            gap: 8px;
-        }
-        #bubble-hud.show { display: flex; }
-        .bubble-hud-card {
-            background: rgba(255, 255, 255, 0.85);
-            border: 3px solid #FF69B4;
-            border-radius: 20px;
-            padding: 8px 14px;
-            box-shadow: 0 4px 15px rgba(255, 105, 180, 0.4);
-            text-align: center;
-            flex: 1;
-        }
-        .bubble-hud-label { font-size: 10px; color: #FF1493; font-weight: bold; }
-        .bubble-hud-value { font-size: 20px; color: #FF1493; font-weight: bold; }
+        #energy-bar-container { position:absolute; bottom:20px; left:15px; right:15px; height:20px; background:rgba(0,0,0,.3); border:2px solid rgba(255,255,255,.5); border-radius:10px; overflow:hidden; z-index:10; display:none; }
+        #energy-bar-container.show { display:block; }
+        #energy-bar { height:100%; background:linear-gradient(90deg,#00BFFF,#FFD700); width:0%; transition:width .3s; }
+        #energy-label { position:absolute; bottom:45px; left:50%; transform:translateX(-50%); color:#FFF; font-size:13px; font-weight:bold; text-shadow:2px 2px 0 rgba(0,0,0,.5); z-index:10; display:none; white-space:nowrap; }
+        #energy-label.show { display:block; }
+        #skill-hint { position:absolute; top:45%; left:50%; transform:translate(-50%,-50%); background:rgba(0,0,0,.8); color:#FFD700; padding:15px 25px; border-radius:20px; font-size:1.2rem; font-weight:bold; border:3px solid #FFD700; z-index:15; display:none; }
+        #skill-hint.show { display:block; }
 
-        #bubble-time-text {
-            position: absolute;
-            bottom: calc(35px + env(safe-area-inset-bottom));
-            left: 50%;
-            transform: translateX(-50%);
-            color: #FFF;
-            font-size: 18px;
-            font-weight: bold;
-            text-shadow: 2px 2px 0 #FF1493;
-            z-index: 10;
-            display: none;
-        }
-        #bubble-time-text.show { display: block; }
-        #bubble-time-bar-container {
-            position: absolute;
-            bottom: calc(15px + env(safe-area-inset-bottom));
-            left: 15px; right: 15px;
-            height: 14px;
-            background: rgba(255, 255, 255, 0.4);
-            border: 2px solid #FFF;
-            border-radius: 10px;
-            overflow: hidden;
-            z-index: 10;
-            display: none;
-        }
-        #bubble-time-bar-container.show { display: block; }
-        #bubble-time-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #00FF00, #FFFF00, #FF69B4);
-            width: 100%;
-        }
+        /* 🔧 新增：FPS / 錯誤監視器 */
+        #perf-monitor { position:absolute; top:10px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,.6); color:#0f0; font-family:monospace; font-size:11px; padding:4px 10px; border-radius:8px; z-index:60; display:none; }
+        #perf-monitor.show { display:block; }
+        #perf-monitor.warn { color:#ff0; }
+        #perf-monitor.err { color:#f00; }
 
-        /* 賽車遊戲 HUD */
-        #game-hud {
-            position: absolute;
-            top: calc(10px + env(safe-area-inset-top));
-            left: 10px; right: 10px;
-            display: none;
-            justify-content: space-between;
-            z-index: 10;
-            pointer-events: none;
-            gap: 8px;
-        }
-        #game-hud.show { display: flex; }
-        .hud-item {
-            background: rgba(255,255,255,0.9);
-            border-radius: 15px;
-            padding: 8px 12px;
-            text-align: center;
-            flex: 1;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-        }
-        .hud-label { font-size: 10px; color: #666; font-weight: bold; }
-        .hud-value { font-size: 16px; font-weight: bold; color: #333; }
-
-        #energy-bar-container {
-            position: absolute;
-            bottom: calc(20px + env(safe-area-inset-bottom));
-            left: 15px; right: 15px;
-            height: 20px;
-            background: rgba(0,0,0,0.3);
-            border-radius: 10px;
-            overflow: hidden;
-            z-index: 10;
-            display: none;
-            border: 2px solid rgba(255,255,255,0.5);
-        }
-        #energy-bar-container.show { display: block; }
-        #energy-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #00BFFF, #1E90FF, #FFD700);
-            width: 0%;
-            transition: width 0.3s;
-        }
-        #energy-label {
-            position: absolute;
-            bottom: calc(45px + env(safe-area-inset-bottom));
-            left: 50%;
-            transform: translateX(-50%);
-            color: #FFF;
-            font-size: 13px;
-            font-weight: bold;
-            text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
-            z-index: 10;
-            display: none;
-            white-space: nowrap;
-        }
-        #energy-label.show { display: block; }
-
-        #skill-hint {
-            position: absolute;
-            top: 45%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.8);
-            color: #FFD700;
-            padding: 15px 25px;
-            border-radius: 20px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            z-index: 15;
-            display: none;
-            text-align: center;
-            border: 3px solid #FFD700;
-        }
-        #skill-hint.show { display: block; }
-
-        /* 遊戲結束 */
-        #game-over {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            padding: 20px;
-            backdrop-filter: blur(10px);
-        }
-        #game-over.show { display: flex; }
-        #game-over h2 {
-            font-size: 2.5rem;
-            color: #FFD700;
-            text-shadow: 3px 3px 0 rgba(0,0,0,0.5);
-            margin-bottom: 20px;
-        }
-        .final-stats {
-            background: rgba(255,255,255,0.95);
-            border-radius: 25px;
-            padding: 25px;
-            margin-bottom: 20px;
-            min-width: 280px;
-            border: 4px solid #FF4500;
-        }
-        .stat-row {
-            display: flex;
-            justify-content: space-between;
-            margin: 10px 0;
-            font-size: 1.1rem;
-            color: #333;
-        }
-        .stat-row .label { color: #666; }
-        .stat-row .value { color: #FF4500; font-weight: bold; }
-        
-        .btn {
-            padding: 15px 40px;
-            border: none;
-            border-radius: 50px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            font-family: inherit;
-            cursor: pointer;
-            margin: 5px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-        .btn-primary { background: linear-gradient(135deg, #FF4500, #FF6347); color: #FFF; }
-        .btn-secondary { background: rgba(255,255,255,0.2); color: #FFF; border: 2px solid rgba(255,255,255,0.5); }
-        .btn:active { transform: scale(0.95); }
+        #game-over { position:absolute; inset:0; background:rgba(0,0,0,.8); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:100; padding:20px; }
+        #game-over.show { display:flex; }
+        #game-over h2 { font-size:2.5rem; color:#FFD700; margin-bottom:20px; }
+        .final-stats { background:rgba(255,255,255,.95); border-radius:25px; padding:25px; margin-bottom:20px; min-width:280px; border:4px solid #FF4500; }
+        .stat-row { display:flex; justify-content:space-between; margin:10px 0; font-size:1.1rem; }
+        .stat-row .label { color:#666; } .stat-row .value { color:#FF4500; font-weight:bold; }
+        .btn { padding:15px 40px; border:none; border-radius:50px; font-size:1.2rem; font-weight:bold; font-family:inherit; cursor:pointer; margin:5px; }
+        .btn-primary { background:linear-gradient(135deg,#FF4500,#FF6347); color:#FFF; }
+        .btn-secondary { background:rgba(255,255,255,.2); color:#FFF; border:2px solid rgba(255,255,255,.5); }
     </style>
 </head>
 <body>
-
     <video id="videoInput" autoplay playsinline muted></video>
     <canvas id="canvasOutput"></canvas>
+    <div id="perf-monitor"></div>
 
-    <!-- 相機啟動提示 -->
-    <div id="camera-loading">
-        <div class="loading-spinner"></div>
-        <div>正在啟動攝影機...</div>
-        <div style="font-size: 0.85rem; margin-top: 10px; color: #aaa;">請允許攝影機權限</div>
-    </div>
+    <div id="camera-loading"><div class="loading-spinner"></div><div>正在啟動攝影機...</div></div>
 
-    <!-- 主頁 -->
     <div id="home-screen">
-        <div class="home-version">v2.0.1</div>
+        <div class="home-version">v2.0.2</div>
         <div class="home-title">🎮 手部追蹤遊戲廳</div>
         <div class="home-subtitle">用你的手玩遊戲！</div>
-        
         <div class="game-cards">
             <div class="game-card bubble" id="card-bubble">
                 <div class="game-icon">🫧</div>
-                <div class="game-info">
-                    <div class="game-name">泡泡大作戰</div>
-                    <div class="game-desc">戳破飛來的彩色泡泡，小心炸彈！</div>
-                    <div class="game-tag">經典</div>
-                </div>
+                <div><div class="game-name">泡泡大作戰</div><div class="game-desc">戳破彩色泡泡，小心炸彈！</div><div class="game-tag">經典</div></div>
             </div>
-            
             <div class="game-card racing" id="card-racing">
                 <div class="game-icon">🏎️</div>
-                <div class="game-info">
-                    <div class="game-name">極速狂飆</div>
-                    <div class="game-desc">握拳控制賽車，張開五指觸發技能！</div>
-                    <div class="game-tag new">NEW!</div>
-                </div>
+                <div><div class="game-name">極速狂飆</div><div class="game-desc">握拳控制賽車，張開五指觸發技能！</div><div class="game-tag new">NEW!</div></div>
             </div>
         </div>
     </div>
 
-    <!-- 泡泡遊戲 HUD -->
     <div id="bubble-hud">
-        <div class="bubble-hud-card">
-            <div class="bubble-hud-label">⭐ 分數</div>
-            <div class="bubble-hud-value" id="bubble-score">0</div>
-        </div>
-        <div class="bubble-hud-card">
-            <div class="bubble-hud-label">🏆 等級</div>
-            <div class="bubble-hud-value" id="bubble-level">Lv.1</div>
-        </div>
-        <div class="bubble-hud-card">
-            <div class="bubble-hud-label">🎯 連擊</div>
-            <div class="bubble-hud-value" id="bubble-combo">0</div>
-        </div>
+        <div class="hud-card"><div class="hud-label">⭐ 分數</div><div class="hud-value" id="bubble-score">0</div></div>
+        <div class="hud-card"><div class="hud-label">🏆 等級</div><div class="hud-value" id="bubble-level">Lv.1</div></div>
+        <div class="hud-card"><div class="hud-label">🎯 連擊</div><div class="hud-value" id="bubble-combo">0</div></div>
     </div>
     <div id="bubble-time-text">60</div>
     <div id="bubble-time-bar-container"><div id="bubble-time-bar"></div></div>
 
-    <!-- 賽車遊戲 HUD -->
     <div id="game-hud">
-        <div class="hud-item">
-            <div class="hud-label">🏆 分數</div>
-            <div class="hud-value" id="racing-score">0</div>
-        </div>
-        <div class="hud-item">
-            <div class="hud-label">💨 速度</div>
-            <div class="hud-value" id="racing-speed">100</div>
-        </div>
-        <div class="hud-item">
-            <div class="hud-label">❤️ 生命</div>
-            <div class="hud-value" id="racing-lives">3</div>
-        </div>
+        <div class="hud-card r"><div class="hud-label">🏆 分數</div><div class="hud-value" id="racing-score">0</div></div>
+        <div class="hud-card r"><div class="hud-label">💨 速度</div><div class="hud-value" id="racing-speed">100</div></div>
+        <div class="hud-card r"><div class="hud-label">❤️ 生命</div><div class="hud-value" id="racing-lives">3</div></div>
     </div>
-    <div id="energy-label">⚡ 能量槽 - 張開五指觸發技能！</div>
+    <div id="energy-label"></div>
     <div id="energy-bar-container"><div id="energy-bar"></div></div>
-    <div id="skill-hint">🚀 氮氣衝刺啟動！</div>
+    <div id="skill-hint"></div>
 
-    <!-- 遊戲結束 -->
     <div id="game-over">
-        <h2 id="game-over-title">🎉 遊戲結束！</h2>
+        <h2>🎉 遊戲結束！</h2>
         <div class="final-stats" id="final-stats"></div>
         <button class="btn btn-primary" id="btn-restart">再玩一次！</button>
         <button class="btn btn-secondary" id="btn-home">返回主頁</button>
@@ -413,771 +123,293 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/tone@14.7.77/build/Tone.js"></script>
-
     <script>
-        const VERSION = '2.0.1';
-        console.log(`🎮 手部追蹤遊戲廳 v${VERSION} 啟動`);
-        console.log(`🔧 修復：選擇遊戲後才啟動相機`);
+        const VERSION='2.0.2';
+        let currentGame=null, audioReady=false; const MIRROR=true;
 
-        // ============ 全局狀態 ============
-        let currentGame = null;
-        let audioReady = false;
-        const MIRROR = true; // 鏡像模式
-
-        // ============ 🔧 相機管理（防重複啟動） ============
-        let cameraStarted = false;
-        let handsLoopRunning = false;
-
-        async function startCamera() {
-            // 🔧 修復：如果已啟動，直接返回成功
-            if (cameraStarted) {
-                console.log('相機已啟動，跳過');
-                return true;
-            }
-            
-            document.getElementById('camera-loading').classList.add('show');
-            
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
-                    audio: false
-                });
-                videoElement.srcObject = stream;
-                await videoElement.play();
-                
-                // 🔧 套用鏡像
-                if (MIRROR) {
-                    videoElement.style.transform = 'scaleX(-1)';
-                    videoElement.style.webkitTransform = 'scaleX(-1)';
-                }
-                
-                cameraStarted = true;
-                document.getElementById('camera-loading').classList.remove('show');
-                
-                // 啟動手部追蹤循環（只啟動一次）
-                startHandsLoop();
-                return true;
-            } catch (err) {
-                console.error('攝影機啟動失敗:', err);
-                document.getElementById('camera-loading').classList.remove('show');
-                alert('無法啟動攝影機！請檢查權限設定。');
-                return false;
+        // 🔧 效能監視
+        const perfEl=document.getElementById('perf-monitor');
+        let fpsFrames=0, fpsLast=performance.now(), currentFps=60;
+        function trackFps(){
+            fpsFrames++;
+            const now=performance.now();
+            if(now-fpsLast>=1000){
+                currentFps=fpsFrames; fpsFrames=0; fpsLast=now;
+                perfEl.innerText=`FPS:${currentFps}`;
+                perfEl.className='show'+(currentFps<20?' err':currentFps<30?' warn':'');
             }
         }
 
-        function startHandsLoop() {
-            if (handsLoopRunning) return;
-            handsLoopRunning = true;
-            
-            async function processFrame() {
-                if (videoElement.readyState >= 2) {
-                    await hands.send({image: videoElement});
-                }
+        // ============ 相機 ============
+        let cameraStarted=false, handsLoopRunning=false;
+        const videoElement=document.getElementById('videoInput');
+        const canvasElement=document.getElementById('canvasOutput');
+        const canvasCtx=canvasElement.getContext('2d');
+        let dpr=1,W=innerWidth,H=innerHeight;
+        function resizeCanvas(){dpr=devicePixelRatio||1;W=innerWidth;H=innerHeight;canvasElement.style.width=W+'px';canvasElement.style.height=H+'px';canvasElement.width=W*dpr;canvasElement.height=H*dpr;}
+        resizeCanvas(); addEventListener('resize',resizeCanvas);
+
+        async function startCamera(){
+            if(cameraStarted) return true;
+            document.getElementById('camera-loading').classList.add('show');
+            try{
+                // 🔧 效能優化：降低解析度減輕負擔
+                const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480}},audio:false});
+                videoElement.srcObject=stream; await videoElement.play();
+                if(MIRROR){videoElement.style.transform='scaleX(-1)';videoElement.style.webkitTransform='scaleX(-1)';}
+                cameraStarted=true;
+                document.getElementById('camera-loading').classList.remove('show');
+                startHandsLoop(); return true;
+            }catch(e){
+                document.getElementById('camera-loading').classList.remove('show');
+                alert('無法啟動攝影機！'); return false;
+            }
+        }
+
+        function startHandsLoop(){
+            if(handsLoopRunning) return; handsLoopRunning=true;
+            async function processFrame(){
+                // 🔧 try-catch 保護，避免 WASM 錯誤中斷循環
+                try{
+                    if(videoElement.readyState>=2) await hands.send({image:videoElement});
+                }catch(e){ console.warn('Hands error:',e); }
                 requestAnimationFrame(processFrame);
             }
             processFrame();
         }
 
-        // ============ Canvas 設定 ============
-        const videoElement = document.getElementById('videoInput');
-        const canvasElement = document.getElementById('canvasOutput');
-        const canvasCtx = canvasElement.getContext('2d');
-        let dpr = window.devicePixelRatio || 1;
-        let W = window.innerWidth, H = window.innerHeight;
-
-        function resizeCanvas() {
-            dpr = window.devicePixelRatio || 1;
-            W = window.innerWidth;
-            H = window.innerHeight;
-            canvasElement.style.width = W + 'px';
-            canvasElement.style.height = H + 'px';
-            canvasElement.width = W * dpr;
-            canvasElement.height = H * dpr;
-        }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-
-        // ============ 手部資料 ============
-        let handData = {
-            fistPos: null,
-            fingerPos: null,
-            isOpen: false,
-            isFist: false,
-            visible: false
-        };
-
-        function analyzeHand(landmarks) {
-            const mcps = [5, 9, 13, 17].map(i => landmarks[i]);
-            const fistX = mcps.reduce((s, p) => s + p.x, 0) / 4;
-            const fistY = mcps.reduce((s, p) => s + p.y, 0) / 4;
-            
-            const indexTip = landmarks[8];
-            
-            const fingers = [
-                { tip: 4, mcp: 2 },
-                { tip: 8, mcp: 5 },
-                { tip: 12, mcp: 9 },
-                { tip: 16, mcp: 13 },
-                { tip: 20, mcp: 17 }
-            ];
-            
-            let openCount = 0;
-            for (const f of fingers) {
-                const tip = landmarks[f.tip];
-                const mcp = landmarks[f.mcp];
-                const wrist = landmarks[0];
-                const tipDist = Math.hypot(tip.x - wrist.x, tip.y - wrist.y);
-                const mcpDist = Math.hypot(mcp.x - wrist.x, mcp.y - wrist.y);
-                if (tipDist > mcpDist * 1.3) openCount++;
-            }
-            
-            // 🔧 鏡像處理
-            const fx = MIRROR ? (1 - fistX) : fistX;
-            const ix = MIRROR ? (1 - indexTip.x) : indexTip.x;
-            
-            handData = {
-                fistPos: { x: fx * W, y: fistY * H },
-                fingerPos: { x: ix * W, y: indexTip.y * H },
-                isOpen: openCount >= 4,
-                isFist: openCount <= 1,
-                visible: true
-            };
-        }
-
-        // 🔧 修復：onResults 只更新手部資料，不呼叫遊戲函數
-        function onResults(results) {
-            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                analyzeHand(results.multiHandLandmarks[0]);
-            } else {
-                handData.visible = false;
-                handData.fistPos = null;
-                handData.fingerPos = null;
-                handData.isOpen = false;
-                handData.isFist = false;
-            }
-        }
-
-        const hands = new Hands({locateFile: (file) => {
-            return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
-        }});
-        hands.setOptions({
-            maxNumHands: 1,
-            modelComplexity: 1,
-            minDetectionConfidence: 0.7,
-            minTrackingConfidence: 0.5
+        // 🔧 頁面回到前景時恢復 video（iOS 會暫停）
+        document.addEventListener('visibilitychange',()=>{
+            if(!document.hidden && cameraStarted){ videoElement.play().catch(()=>{}); }
         });
+
+        // ============ 手部 ============
+        let handData={fistPos:null,fingerPos:null,isOpen:false,visible:false};
+        function analyzeHand(lm){
+            const mcps=[5,9,13,17].map(i=>lm[i]);
+            const fx0=mcps.reduce((s,p)=>s+p.x,0)/4, fy0=mcps.reduce((s,p)=>s+p.y,0)/4;
+            const tip=lm[8];
+            let open=0;
+            [[4,2],[8,5],[12,9],[16,13],[20,17]].forEach(([t,m])=>{
+                const td=Math.hypot(lm[t].x-lm[0].x,lm[t].y-lm[0].y);
+                const md=Math.hypot(lm[m].x-lm[0].x,lm[m].y-lm[0].y);
+                if(td>md*1.3) open++;
+            });
+            const mx=MIRROR?(1-fx0):fx0, ix=MIRROR?(1-tip.x):tip.x;
+            handData={fistPos:{x:mx*W,y:fy0*H},fingerPos:{x:ix*W,y:tip.y*H},isOpen:open>=4,visible:true};
+        }
+        function onResults(r){
+            if(r.multiHandLandmarks&&r.multiHandLandmarks.length) analyzeHand(r.multiHandLandmarks[0]);
+            else handData={fistPos:null,fingerPos:null,isOpen:false,visible:false};
+        }
+        const hands=new Hands({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`});
+        // 🔧 效能優化：modelComplexity 降為 0，大幅減輕 CPU 負擔防過熱
+        hands.setOptions({maxNumHands:1,modelComplexity:0,minDetectionConfidence:0.6,minTrackingConfidence:0.5});
         hands.onResults(onResults);
 
         // ============ 音效 ============
-        const popSynth = new Tone.MembraneSynth({
-            pitchDecay: 0.01, octaves: 6,
-            envelope: { attack: 0.001, decay: 0.15, sustain: 0, release: 0.05 }
-        }).toDestination();
-        popSynth.volume.value = -8;
+        const popSynth=new Tone.MembraneSynth({pitchDecay:.01,octaves:6,envelope:{attack:.001,decay:.15,sustain:0,release:.05}}).toDestination();
+        popSynth.volume.value=-8;
+        const crashSynth=new Tone.MembraneSynth({pitchDecay:.05,octaves:8,envelope:{attack:.001,decay:.5,sustain:.2,release:.3}}).toDestination();
+        crashSynth.volume.value=-4;
+        const skillSynth=new Tone.PolySynth(Tone.Synth).toDestination(); skillSynth.volume.value=-5;
+        const playPop=()=>{if(audioReady)popSynth.triggerAttackRelease('C5','32n',Tone.now());};
+        const playCrash=()=>{if(audioReady)crashSynth.triggerAttackRelease('C2','2n',Tone.now());};
+        const playSkill=()=>{if(audioReady)skillSynth.triggerAttackRelease(['C5','E5','G5'],'4n',Tone.now());};
 
-        const crashSynth = new Tone.MembraneSynth({
-            pitchDecay: 0.05, octaves: 8,
-            envelope: { attack: 0.001, decay: 0.5, sustain: 0.2, release: 0.3 }
-        }).toDestination();
-        crashSynth.volume.value = -4;
-
-        const skillSynth = new Tone.PolySynth(Tone.Synth, {
-            oscillator: { type: "sine" },
-            envelope: { attack: 0.01, decay: 0.4, sustain: 0.4, release: 0.8 }
-        }).toDestination();
-        skillSynth.volume.value = -5;
-
-        function playPop() { if (audioReady) popSynth.triggerAttackRelease('C5', '32n', Tone.now()); }
-        function playCrash() { if (audioReady) crashSynth.triggerAttackRelease('C2', '2n', Tone.now()); }
-        function playSkill() { if (audioReady) skillSynth.triggerAttackRelease(['C5','E5','G5'], '4n', Tone.now()); }
-        function playCoin() { if (audioReady) popSynth.triggerAttackRelease('G5', '32n', Tone.now()); }
-
-        // ============ 遊戲切換 ============
-        async function startBubbleGame() {
-            // 🔧 修復：選擇遊戲後才啟動相機
-            const ok = await startCamera();
-            if (!ok) return;
-            
-            try { await Tone.start(); audioReady = true; } catch(e) {}
-            
-            currentGame = 'bubble';
-            document.getElementById('home-screen').classList.add('hidden');
-            document.getElementById('game-over').classList.remove('show');
-            showHUD('bubble');
-            initBubbleGame();
+        // ============ 切換 ============
+        async function startBubbleGame(){
+            if(!await startCamera())return;
+            try{await Tone.start();audioReady=true;}catch(e){}
+            currentGame='bubble'; hideAll(); showHUD('bubble'); initBubbleGame();
         }
-
-        async function startRacingGame() {
-            // 🔧 修復：選擇遊戲後才啟動相機
-            const ok = await startCamera();
-            if (!ok) return;
-            
-            try { await Tone.start(); audioReady = true; } catch(e) {}
-            
-            currentGame = 'racing';
-            document.getElementById('home-screen').classList.add('hidden');
-            document.getElementById('game-over').classList.remove('show');
-            showHUD('racing');
-            initRacingGame();
+        async function startRacingGame(){
+            if(!await startCamera())return;
+            try{await Tone.start();audioReady=true;}catch(e){}
+            currentGame='racing'; hideAll(); showHUD('racing'); initRacingGame();
         }
-
-        function goHome() {
-            currentGame = null;
-            document.getElementById('home-screen').classList.remove('hidden');
-            document.getElementById('game-over').classList.remove('show');
-            showHUD(null);
-            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+        function goHome(){currentGame=null;hideAll();showHUD(null);canvasCtx.clearRect(0,0,canvasElement.width,canvasElement.height);perfEl.className='';}
+        function hideAll(){document.getElementById('home-screen').classList.add('hidden');document.getElementById('game-over').classList.remove('show');}
+        function showHUD(g){
+            document.getElementById('bubble-hud').classList.toggle('show',g==='bubble');
+            document.getElementById('bubble-time-text').classList.toggle('show',g==='bubble');
+            document.getElementById('bubble-time-bar-container').classList.toggle('show',g==='bubble');
+            document.getElementById('game-hud').classList.toggle('show',g==='racing');
+            document.getElementById('energy-bar-container').classList.toggle('show',g==='racing');
+            document.getElementById('energy-label').classList.toggle('show',g==='racing');
+            if(g!=='racing')document.getElementById('skill-hint').classList.remove('show');
+            perfEl.classList.toggle('show',!!g);
         }
-
-        function showHUD(game) {
-            document.getElementById('bubble-hud').classList.toggle('show', game === 'bubble');
-            document.getElementById('bubble-time-text').classList.toggle('show', game === 'bubble');
-            document.getElementById('bubble-time-bar-container').classList.toggle('show', game === 'bubble');
-            document.getElementById('game-hud').classList.toggle('show', game === 'racing');
-            document.getElementById('energy-bar-container').classList.toggle('show', game === 'racing');
-            document.getElementById('energy-label').classList.toggle('show', game === 'racing');
-            if (game !== 'racing') document.getElementById('skill-hint').classList.remove('show');
-        }
-
-        document.getElementById('card-bubble').addEventListener('click', startBubbleGame);
-        document.getElementById('card-racing').addEventListener('click', startRacingGame);
-        document.getElementById('btn-home').addEventListener('click', goHome);
+        document.getElementById('card-bubble').onclick=startBubbleGame;
+        document.getElementById('card-racing').onclick=startRacingGame;
+        document.getElementById('btn-home').onclick=goHome;
 
         // ============ 泡泡遊戲 ============
-        const BUBBLE_TYPES = {
-            normal: { color: '#FF69B4', points: 10, weight: 60 },
-            blue: { color: '#00BFFF', points: 10, weight: 20 },
-            green: { color: '#32CD32', points: 10, weight: 15 },
-            gold: { color: '#FFD700', points: 50, weight: 8, special: 'gold' },
-            rainbow: { color: 'rainbow', points: 100, weight: 3, special: 'rainbow' },
-            bomb: { color: '#2C2C2C', points: -30, weight: 5, special: 'bomb' }
-        };
-
-        let bubbleState = null;
-
-        function initBubbleGame() {
-            bubbleState = {
-                score: 0, combo: 0, level: 1, timeLeft: 60,
-                running: true, bubbles: [], particles: [], texts: [],
-                lastTime: performance.now(), spawnTimer: 0, lastComboTime: Date.now()
-            };
-            updateBubbleHUD();
+        const BT={normal:{c:'#FF69B4',p:10,w:60},blue:{c:'#00BFFF',p:10,w:20},green:{c:'#32CD32',p:10,w:15},gold:{c:'#FFD700',p:50,w:8,s:'gold'},rainbow:{c:'rainbow',p:100,w:3,s:'rainbow'},bomb:{c:'#2C2C2C',p:-30,w:5,s:'bomb'}};
+        let bs=null;
+        function initBubbleGame(){bs={score:0,combo:0,level:1,time:60,run:true,bub:[],par:[],txt:[],last:performance.now(),sp:0,lc:Date.now()};updBubbleHUD();requestAnimationFrame(bubbleLoop);}
+        function bubbleLoop(ts){
+            if(currentGame!=='bubble'||!bs||!bs.run)return;
+            // 🔧 try-catch 保護循環
+            try{
+                const dt=Math.min(.05,(ts-bs.last)/1000); bs.last=ts;
+                trackFps(); updBubble(dt); drawBubble();
+            }catch(e){console.error('Bubble loop error:',e);}
             requestAnimationFrame(bubbleLoop);
         }
-
-        function bubbleLoop(timestamp) {
-            if (currentGame !== 'bubble' || !bubbleState || !bubbleState.running) return;
-            
-            const dt = Math.min(0.05, (timestamp - bubbleState.lastTime) / 1000);
-            bubbleState.lastTime = timestamp;
-            
-            updateBubbleGame(dt);
-            drawBubbleGame();
-            
-            requestAnimationFrame(bubbleLoop);
+        function updBubble(dt){
+            bs.time-=dt; if(bs.time<=0){bs.run=false;showOver([['最終分數',bs.score],['等級','Lv.'+bs.level]]);return;}
+            if(bs.combo>0&&Date.now()-bs.lc>2000)bs.combo=0;
+            bs.sp+=dt; if(bs.sp>=Math.max(.3,1.2-bs.level*.1)){spawnBub();bs.sp=0;}
+            for(let i=bs.bub.length-1;i>=0;i--){const b=bs.bub[i];b.x+=b.vx*dt*60;b.y+=b.vy*dt*60;b.ph+=dt*2;b.x+=Math.sin(b.ph)*.3;
+                if(b.x<-100||b.x>W+100||b.y<-100||b.y>H+100){bs.bub.splice(i,1);if(b.s!=='bomb')bs.combo=0;}}
+            if(handData.fingerPos)for(let i=bs.bub.length-1;i>=0;i--){const b=bs.bub[i];
+                if(Math.hypot(handData.fingerPos.x-b.x,handData.fingerPos.y-b.y)<b.r+15){popBub(b,i);break;}}
+            for(let i=bs.par.length-1;i>=0;i--){const p=bs.par[i];p.x+=p.vx*dt*60;p.y+=p.vy*dt*60;p.vy+=.15;p.life-=p.dec;if(p.life<=0)bs.par.splice(i,1);}
+            for(let i=bs.txt.length-1;i>=0;i--){const t=bs.txt[i];t.y-=2*dt*60;t.life-=.02;if(t.life<=0)bs.txt.splice(i,1);}
+            document.getElementById('bubble-time-bar').style.width=(bs.time/60*100)+'%';
+            document.getElementById('bubble-time-text').innerText=Math.ceil(bs.time);
+            updBubbleHUD();
         }
-
-        function spawnBubble() {
-            const types = Object.keys(BUBBLE_TYPES);
-            const totalWeight = types.reduce((s, t) => s + BUBBLE_TYPES[t].weight, 0);
-            let r = Math.random() * totalWeight;
-            let type = 'normal';
-            for (const t of types) { r -= BUBBLE_TYPES[t].weight; if (r <= 0) { type = t; break; } }
-            
-            const config = BUBBLE_TYPES[type];
-            const radius = 25 + Math.random() * 20;
-            const side = Math.floor(Math.random() * 4);
-            const speed = (1 + bubbleState.level * 0.3) * (0.5 + Math.random() * 0.8);
-            let x, y, vx, vy;
-            
-            if (side === 0) { x = Math.random() * W; y = H + radius; vx = (Math.random()-0.5)*speed; vy = -speed; }
-            else if (side === 1) { x = Math.random() * W; y = -radius; vx = (Math.random()-0.5)*speed; vy = speed*0.7; }
-            else if (side === 2) { x = -radius; y = Math.random() * H; vx = speed; vy = (Math.random()-0.5)*speed*0.5; }
-            else { x = W + radius; y = Math.random() * H; vx = -speed; vy = (Math.random()-0.5)*speed*0.5; }
-            
-            bubbleState.bubbles.push({ x, y, vx, vy, radius, color: config.color, points: config.points, special: config.special, phase: Math.random()*Math.PI*2 });
+        function spawnBub(){
+            const ks=Object.keys(BT);let r=Math.random()*ks.reduce((s,k)=>s+BT[k].w,0),k='normal';
+            for(const key of ks){r-=BT[key].w;if(r<=0){k=key;break;}}
+            const c=BT[k],rad=25+Math.random()*20,side=Math.floor(Math.random()*4),sp=(1+bs.level*.3)*(.5+Math.random()*.8);
+            let x,y,vx,vy;
+            if(side===0){x=Math.random()*W;y=H+rad;vx=(Math.random()-.5)*sp;vy=-sp;}
+            else if(side===1){x=Math.random()*W;y=-rad;vx=(Math.random()-.5)*sp;vy=sp*.7;}
+            else if(side===2){x=-rad;y=Math.random()*H;vx=sp;vy=(Math.random()-.5)*sp*.5;}
+            else{x=W+rad;y=Math.random()*H;vx=-sp;vy=(Math.random()-.5)*sp*.5;}
+            bs.bub.push({x,y,vx,vy,r:rad,c:c.c,p:c.p,s:c.s,ph:Math.random()*6.28});
         }
-
-        function updateBubbleGame(dt) {
-            bubbleState.timeLeft -= dt;
-            if (bubbleState.timeLeft <= 0) { endBubbleGame(); return; }
-            
-            if (bubbleState.combo > 0 && Date.now() - bubbleState.lastComboTime > 2000) {
-                bubbleState.combo = 0;
-            }
-            
-            bubbleState.spawnTimer += dt;
-            const interval = Math.max(0.3, 1.2 - bubbleState.level * 0.1);
-            if (bubbleState.spawnTimer >= interval) { spawnBubble(); bubbleState.spawnTimer = 0; }
-            
-            for (let i = bubbleState.bubbles.length - 1; i >= 0; i--) {
-                const b = bubbleState.bubbles[i];
-                b.x += b.vx * dt * 60;
-                b.y += b.vy * dt * 60;
-                b.phase += dt * 2;
-                b.x += Math.sin(b.phase) * 0.3;
-                if (b.x < -100 || b.x > W+100 || b.y < -100 || b.y > H+100) {
-                    bubbleState.bubbles.splice(i, 1);
-                    if (b.special !== 'bomb') bubbleState.combo = 0;
-                }
-            }
-            
-            // 碰撞
-            if (handData.fingerPos) {
-                for (let i = bubbleState.bubbles.length - 1; i >= 0; i--) {
-                    const b = bubbleState.bubbles[i];
-                    const dx = handData.fingerPos.x - b.x;
-                    const dy = handData.fingerPos.y - b.y;
-                    if (Math.sqrt(dx*dx + dy*dy) < b.radius + 15) {
-                        popBubble(b, i);
-                        break;
-                    }
-                }
-            }
-            
-            for (let i = bubbleState.particles.length - 1; i >= 0; i--) {
-                const p = bubbleState.particles[i];
-                p.x += p.vx * dt * 60; p.y += p.vy * dt * 60; p.vy += 0.15; p.life -= p.decay;
-                if (p.life <= 0) bubbleState.particles.splice(i, 1);
-            }
-            for (let i = bubbleState.texts.length - 1; i >= 0; i--) {
-                const t = bubbleState.texts[i];
-                t.y += t.vy * dt * 60; t.life -= 0.02;
-                if (t.life <= 0) bubbleState.texts.splice(i, 1);
-            }
-            
-            document.getElementById('bubble-time-bar').style.width = (bubbleState.timeLeft / 60 * 100) + '%';
-            document.getElementById('bubble-time-text').innerText = Math.ceil(bubbleState.timeLeft);
-            updateBubbleHUD();
+        function popBub(b,i){
+            bs.bub.splice(i,1);
+            if(b.s==='bomb'){bs.score=Math.max(0,bs.score+b.p);bs.combo=0;playCrash();if(navigator.vibrate)navigator.vibrate(200);}
+            else{bs.combo++;bs.lc=Date.now();bs.score+=b.p*Math.min(5,1+Math.floor(bs.combo/5));playPop();}
+            for(let j=0;j<10;j++){const a=6.28*j/10,sp=2+Math.random()*4;bs.par.push({x:b.x,y:b.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:3+Math.random()*4,c:b.c==='rainbow'?'#FF69B4':b.c,life:1,dec:.03});}
+            bs.txt.push({x:b.x,y:b.y,t:(b.s==='bomb'?'':'+')+b.p,c:b.s==='bomb'?'#F00':'#FFF',life:1});
+            bs.level=Math.floor(bs.score/200)+1;
         }
-
-        function popBubble(b, index) {
-            bubbleState.bubbles.splice(index, 1);
-            
-            if (b.special === 'bomb') {
-                bubbleState.score = Math.max(0, bubbleState.score + b.points);
-                bubbleState.combo = 0;
-                playCrash();
-                if (navigator.vibrate) navigator.vibrate(200);
-            } else {
-                bubbleState.combo++;
-                bubbleState.lastComboTime = Date.now();
-                const mult = Math.min(5, 1 + Math.floor(bubbleState.combo / 5));
-                bubbleState.score += b.points * mult;
-                playPop();
-            }
-            
-            for (let i = 0; i < 12; i++) {
-                const angle = (Math.PI * 2 * i) / 12;
-                const speed = 2 + Math.random() * 4;
-                bubbleState.particles.push({ x: b.x, y: b.y, vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed, radius: 3+Math.random()*4, color: b.color === 'rainbow' ? '#FF69B4' : b.color, life: 1, decay: 0.03 });
-            }
-            bubbleState.texts.push({ x: b.x, y: b.y, text: (b.special === 'bomb' ? '' : '+') + b.points, color: b.special === 'bomb' ? '#FF0000' : '#FFF', life: 1, vy: -2 });
-            
-            const newLevel = Math.floor(bubbleState.score / 200) + 1;
-            if (newLevel > bubbleState.level) bubbleState.level = newLevel;
-        }
-
-        function drawBubbleGame() {
-            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-            canvasCtx.save();
-            canvasCtx.scale(dpr, dpr);
-            
-            for (const b of bubbleState.bubbles) {
-                canvasCtx.save();
-                canvasCtx.translate(b.x, b.y);
-                let grad;
-                if (b.color === 'rainbow') {
-                    grad = canvasCtx.createLinearGradient(-b.radius, -b.radius, b.radius, b.radius);
-                    const t = (Date.now()/500) % 1;
-                    grad.addColorStop(0, `hsl(${t*360},100%,60%)`);
-                    grad.addColorStop(0.5, `hsl(${(t*360+180)%360},100%,60%)`);
-                    grad.addColorStop(1, `hsl(${(t*360+360)%360},100%,60%)`);
-                } else {
-                    grad = canvasCtx.createRadialGradient(-b.radius*0.3, -b.radius*0.3, b.radius*0.1, 0, 0, b.radius);
-                    grad.addColorStop(0, '#FFF');
-                    grad.addColorStop(0.3, b.color);
-                    grad.addColorStop(1, b.color);
-                }
-                canvasCtx.fillStyle = grad;
-                canvasCtx.beginPath();
-                canvasCtx.arc(0, 0, b.radius, 0, Math.PI*2);
-                canvasCtx.fill();
-                if (b.special === 'bomb') {
-                    canvasCtx.fillStyle = '#FFF';
-                    canvasCtx.font = `bold ${b.radius*0.8}px sans-serif`;
-                    canvasCtx.textAlign = 'center';
-                    canvasCtx.fillText('💣', 0, b.radius*0.3);
-                }
-                canvasCtx.restore();
-            }
-            
-            for (const p of bubbleState.particles) {
-                canvasCtx.globalAlpha = p.life;
-                canvasCtx.fillStyle = p.color;
-                canvasCtx.beginPath();
-                canvasCtx.arc(p.x, p.y, p.radius * p.life, 0, Math.PI*2);
-                canvasCtx.fill();
-            }
-            canvasCtx.globalAlpha = 1;
-            
-            for (const t of bubbleState.texts) {
-                canvasCtx.globalAlpha = t.life;
-                canvasCtx.fillStyle = t.color;
-                canvasCtx.font = "bold 28px 'Comic Sans MS', sans-serif";
-                canvasCtx.textAlign = 'center';
-                canvasCtx.fillText(t.text, t.x, t.y);
-            }
-            canvasCtx.globalAlpha = 1;
-            
-            if (handData.fingerPos) {
-                const g = canvasCtx.createRadialGradient(handData.fingerPos.x, handData.fingerPos.y, 0, handData.fingerPos.x, handData.fingerPos.y, 30);
-                g.addColorStop(0, 'rgba(255,255,255,0.8)');
-                g.addColorStop(0.5, 'rgba(255,105,180,0.5)');
-                g.addColorStop(1, 'rgba(255,105,180,0)');
-                canvasCtx.fillStyle = g;
-                canvasCtx.beginPath();
-                canvasCtx.arc(handData.fingerPos.x, handData.fingerPos.y, 30, 0, Math.PI*2);
-                canvasCtx.fill();
-            }
-            
+        function drawBubble(){
+            canvasCtx.clearRect(0,0,canvasElement.width,canvasElement.height);
+            canvasCtx.save();canvasCtx.scale(dpr,dpr);
+            for(const b of bs.bub){canvasCtx.fillStyle=b.c==='rainbow'?`hsl(${(Date.now()/5)%360},100%,60%)`:b.c;
+                canvasCtx.beginPath();canvasCtx.arc(b.x,b.y,b.r,0,6.28);canvasCtx.fill();
+                if(b.s==='bomb'){canvasCtx.fillStyle='#FFF';canvasCtx.font=`bold ${b.r*.8}px sans-serif`;canvasCtx.textAlign='center';canvasCtx.fillText('💣',b.x,b.y+b.r*.3);}}
+            for(const p of bs.par){canvasCtx.globalAlpha=p.life;canvasCtx.fillStyle=p.c;canvasCtx.beginPath();canvasCtx.arc(p.x,p.y,p.r*p.life,0,6.28);canvasCtx.fill();}
+            canvasCtx.globalAlpha=1;
+            for(const t of bs.txt){canvasCtx.globalAlpha=t.life;canvasCtx.fillStyle=t.c;canvasCtx.font="bold 26px sans-serif";canvasCtx.textAlign='center';canvasCtx.fillText(t.t,t.x,t.y);}
+            canvasCtx.globalAlpha=1;
+            if(handData.fingerPos){canvasCtx.fillStyle='rgba(255,105,180,.6)';canvasCtx.beginPath();canvasCtx.arc(handData.fingerPos.x,handData.fingerPos.y,15,0,6.28);canvasCtx.fill();}
             canvasCtx.restore();
         }
-
-        function updateBubbleHUD() {
-            document.getElementById('bubble-score').innerText = bubbleState.score;
-            document.getElementById('bubble-level').innerText = 'Lv.' + bubbleState.level;
-            document.getElementById('bubble-combo').innerText = bubbleState.combo;
-        }
-
-        function endBubbleGame() {
-            bubbleState.running = false;
-            showGameOver([
-                ['最終分數', bubbleState.score],
-                ['最終等級', 'Lv.' + bubbleState.level],
-                ['最高連擊', bubbleState.combo]
-            ]);
-        }
+        function updBubbleHUD(){document.getElementById('bubble-score').innerText=bs.score;document.getElementById('bubble-level').innerText='Lv.'+bs.level;document.getElementById('bubble-combo').innerText=bs.combo;}
 
         // ============ 賽車遊戲 ============
-        const SKILLS = [
-            { id: 'nitro', name: '🚀 氮氣衝刺', color: '#FF4500', duration: 4000 },
-            { id: 'shield', name: '🛡️ 能量護盾', color: '#1E90FF', duration: 5000 },
-            { id: 'lightning', name: '⚡ 閃電破壞', color: '#FFD700', duration: 500 }
-        ];
-
-        let racingState = null;
-
-        function initRacingGame() {
-            racingState = {
-                score: 0, speed: 100, lives: 3, energy: 0, maxEnergy: 100,
-                carX: W/2, targetCarX: W/2,
-                obstacles: [], coins: [], crystals: [], particles: [],
-                roadOffset: 0,
-                skill: SKILLS[Math.floor(Math.random() * SKILLS.length)],
-                skillActive: false, skillEndTime: 0, skillCooldown: 0,
-                running: true, lastTime: performance.now(),
-                spawnTimer: 0, coinTimer: 0, crystalTimer: 0
-            };
-            document.getElementById('energy-label').innerText = `⚡ ${racingState.skill.name} - 張開五指觸發！`;
-            updateRacingHUD();
+        const SKILLS=[{id:'nitro',name:'🚀 氮氣衝刺',color:'#FF4500',dur:4000},{id:'shield',name:'🛡️ 能量護盾',color:'#1E90FF',dur:5000},{id:'lightning',name:'⚡ 閃電破壞',color:'#FFD700',dur:500}];
+        let rs=null, watchdog=null;
+        function initRacingGame(){
+            rs={score:0,speed:100,lives:3,energy:0,max:100,carX:W/2,tx:W/2,obs:[],coins:[],cry:[],par:[],off:0,
+                skill:SKILLS[Math.floor(Math.random()*3)],act:false,end:0,cd:0,run:true,last:performance.now(),st:0,ct:0,xt:0};
+            document.getElementById('energy-label').innerText=`⚡ ${rs.skill.name} - 張開五指觸發！`;
+            updRacingHUD();
+            // 🔧 看門狗：如果循環 1 秒沒更新，自動重啟
+            clearInterval(watchdog);
+            watchdog=setInterval(()=>{
+                if(currentGame==='racing'&&rs&&rs.run){
+                    const idle=performance.now()-rs.last;
+                    if(idle>1000){console.warn('看門狗：重啟賽車循環');requestAnimationFrame(racingLoop);}
+                }
+            },1000);
             requestAnimationFrame(racingLoop);
         }
-
-        function racingLoop(timestamp) {
-            if (currentGame !== 'racing' || !racingState || !racingState.running) return;
-            
-            const dt = Math.min(0.05, (timestamp - racingState.lastTime) / 1000);
-            racingState.lastTime = timestamp;
-            
-            updateRacingGame(dt);
-            drawRacingGame();
-            
+        function racingLoop(ts){
+            if(currentGame!=='racing'||!rs||!rs.run)return;
+            // 🔧 try-catch 保護，例外不會中斷循環
+            try{
+                const dt=Math.min(.05,(ts-rs.last)/1000); rs.last=ts;
+                trackFps(); updRacing(dt); drawRacing();
+            }catch(e){
+                console.error('Racing loop error:',e);
+                perfEl.innerText='ERROR:'+e.message; perfEl.className='show err';
+            }
             requestAnimationFrame(racingLoop);
         }
-
-        function updateRacingGame(dt) {
-            if (handData.fistPos) racingState.targetCarX = handData.fistPos.x;
-            racingState.carX += (racingState.targetCarX - racingState.carX) * 0.15;
-            racingState.carX = Math.max(40, Math.min(W - 40, racingState.carX));
-            
-            racingState.roadOffset += racingState.speed * dt * 0.5;
-            if (racingState.roadOffset > 100) racingState.roadOffset = 0;
-            racingState.speed = Math.min(300, 100 + racingState.score * 0.3);
-            
-            racingState.spawnTimer += dt;
-            if (racingState.spawnTimer >= Math.max(0.8, 2 - racingState.speed * 0.003)) {
-                const types = ['car', 'cone', 'truck'];
-                racingState.obstacles.push({
-                    x: 60 + Math.random() * (W - 120), y: -80,
-                    type: types[Math.floor(Math.random() * types.length)]
-                });
-                racingState.spawnTimer = 0;
-            }
-            
-            racingState.coinTimer += dt;
-            if (racingState.coinTimer >= 0.6) {
-                racingState.coins.push({ x: 60 + Math.random() * (W - 120), y: -30, rotation: 0 });
-                racingState.coinTimer = 0;
-            }
-            
-            racingState.crystalTimer += dt;
-            if (racingState.crystalTimer >= 3) {
-                racingState.crystals.push({ x: 60 + Math.random() * (W - 120), y: -30, phase: 0 });
-                racingState.crystalTimer = 0;
-            }
-            
-            const carY = H - 100;
-            
-            for (let i = racingState.obstacles.length - 1; i >= 0; i--) {
-                const obs = racingState.obstacles[i];
-                obs.y += racingState.speed * dt * 0.8;
-                if (obs.y > H + 100) { racingState.obstacles.splice(i, 1); racingState.score += 10; continue; }
-                
-                const dx = racingState.carX - obs.x;
-                const dy = carY - obs.y;
-                if (Math.sqrt(dx*dx + dy*dy) < 50) {
-                    if (racingState.skillActive && (racingState.skill.id === 'nitro' || racingState.skill.id === 'shield')) {
-                        racingState.obstacles.splice(i, 1);
-                        racingState.score += 50;
-                        createExplosion(obs.x, obs.y, '#FF4500');
-                    } else {
-                        racingState.lives--;
-                        racingState.obstacles.splice(i, 1);
-                        createExplosion(obs.x, obs.y, '#FF0000');
-                        playCrash();
-                        if (navigator.vibrate) navigator.vibrate(200);
-                        if (racingState.lives <= 0) { endRacingGame(); return; }
-                    }
-                }
-            }
-            
-            for (let i = racingState.coins.length - 1; i >= 0; i--) {
-                const c = racingState.coins[i];
-                c.y += racingState.speed * dt * 0.8;
-                c.rotation += dt * 3;
-                if (c.y > H + 50) { racingState.coins.splice(i, 1); continue; }
-                const dx = racingState.carX - c.x, dy = carY - c.y;
-                if (Math.sqrt(dx*dx + dy*dy) < 50) {
-                    racingState.coins.splice(i, 1);
-                    racingState.score += 20;
-                    playCoin();
-                    createExplosion(c.x, c.y, '#FFD700', 8);
-                }
-            }
-            
-            for (let i = racingState.crystals.length - 1; i >= 0; i--) {
-                const c = racingState.crystals[i];
-                c.y += racingState.speed * dt * 0.8;
-                c.phase += dt * 2;
-                if (c.y > H + 50) { racingState.crystals.splice(i, 1); continue; }
-                const dx = racingState.carX - c.x, dy = carY - c.y;
-                if (Math.sqrt(dx*dx + dy*dy) < 60) {
-                    racingState.crystals.splice(i, 1);
-                    racingState.energy = Math.min(racingState.maxEnergy, racingState.energy + 25);
-                    playCoin();
-                    createExplosion(c.x, c.y, '#00BFFF', 12);
-                }
-            }
-            
-            for (let i = racingState.particles.length - 1; i >= 0; i--) {
-                const p = racingState.particles[i];
-                p.x += p.vx * dt * 60; p.y += p.vy * dt * 60; p.life -= p.decay;
-                if (p.life <= 0) racingState.particles.splice(i, 1);
-            }
-            
-            if (racingState.skillCooldown > 0) racingState.skillCooldown -= dt * 1000;
-            if (racingState.skillActive && Date.now() > racingState.skillEndTime) {
-                racingState.skillActive = false;
-                racingState.skillCooldown = 10000;
-                document.getElementById('skill-hint').classList.remove('show');
-            }
-            
-            if (handData.isOpen && racingState.energy >= racingState.maxEnergy && !racingState.skillActive && racingState.skillCooldown <= 0) {
-                activateSkill();
-            }
-            
-            updateRacingHUD();
+        function updRacing(dt){
+            if(handData.fistPos)rs.tx=handData.fistPos.x;
+            rs.carX+=(rs.tx-rs.carX)*.15; rs.carX=Math.max(40,Math.min(W-40,rs.carX));
+            rs.off+=rs.speed*dt*.5; if(rs.off>100)rs.off=0;
+            rs.speed=Math.min(300,100+rs.score*.3);
+            rs.st+=dt; if(rs.st>=Math.max(.8,2-rs.speed*.003)){
+                // 🔧 障礙物上限 12 個，防累積
+                if(rs.obs.length<12) rs.obs.push({x:60+Math.random()*(W-120),y:-80,t:['car','cone','truck'][Math.floor(Math.random()*3)]});
+                rs.st=0;}
+            rs.ct+=dt; if(rs.ct>=.6){if(rs.coins.length<15)rs.coins.push({x:60+Math.random()*(W-120),y:-30,rot:0});rs.ct=0;}
+            rs.xt+=dt; if(rs.xt>=3){if(rs.cry.length<5)rs.cry.push({x:60+Math.random()*(W-120),y:-30,ph:0});rs.xt=0;}
+            const carY=H-100;
+            for(let i=rs.obs.length-1;i>=0;i--){const o=rs.obs[i];o.y+=rs.speed*dt*.8;
+                if(o.y>H+100){rs.obs.splice(i,1);rs.score+=10;continue;}
+                if(Math.hypot(rs.carX-o.x,carY-o.y)<50){
+                    if(rs.act&&(rs.skill.id==='nitro'||rs.skill.id==='shield')){rs.obs.splice(i,1);rs.score+=50;boom(o.x,o.y,'#FF4500');}
+                    else{rs.lives--;rs.obs.splice(i,1);boom(o.x,o.y,'#F00');playCrash();if(navigator.vibrate)navigator.vibrate(200);
+                        if(rs.lives<=0){rs.run=false;showOver([['最終分數',rs.score],['最高速度',Math.floor(rs.speed)+' km/h']]);return;}}}}
+            for(let i=rs.coins.length-1;i>=0;i--){const c=rs.coins[i];c.y+=rs.speed*dt*.8;c.rot+=dt*3;
+                if(c.y>H+50){rs.coins.splice(i,1);continue;}
+                if(Math.hypot(rs.carX-c.x,carY-c.y)<50){rs.coins.splice(i,1);rs.score+=20;playPop();boom(c.x,c.y,'#FFD700',8);}}
+            for(let i=rs.cry.length-1;i>=0;i--){const c=rs.cry[i];c.y+=rs.speed*dt*.8;c.ph+=dt*2;
+                if(c.y>H+50){rs.cry.splice(i,1);continue;}
+                if(Math.hypot(rs.carX-c.x,carY-c.y)<60){rs.cry.splice(i,1);rs.energy=Math.min(rs.max,rs.energy+25);playPop();boom(c.x,c.y,'#00BFFF',12);}}
+            // 🔧 粒子上限 100
+            for(let i=rs.par.length-1;i>=0;i--){const p=rs.par[i];p.x+=p.vx*dt*60;p.y+=p.vy*dt*60;p.life-=p.dec;if(p.life<=0)rs.par.splice(i,1);}
+            if(rs.par.length>100)rs.par.splice(0,rs.par.length-100);
+            if(rs.cd>0)rs.cd-=dt*1000;
+            if(rs.act&&Date.now()>rs.end){rs.act=false;rs.cd=10000;document.getElementById('skill-hint').classList.remove('show');}
+            if(handData.isOpen&&rs.energy>=rs.max&&!rs.act&&rs.cd<=0)activate();
+            updRacingHUD();
         }
-
-        function activateSkill() {
-            racingState.skillActive = true;
-            racingState.energy = 0;
-            racingState.skillEndTime = Date.now() + racingState.skill.duration;
-            
-            const hint = document.getElementById('skill-hint');
-            hint.innerText = `${racingState.skill.name} 啟動！`;
-            hint.style.borderColor = racingState.skill.color;
-            hint.style.color = racingState.skill.color;
-            hint.classList.add('show');
+        function activate(){
+            rs.act=true;rs.energy=0;rs.end=Date.now()+rs.skill.dur;
+            const h=document.getElementById('skill-hint');h.innerText=rs.skill.name+' 啟動！';h.style.borderColor=rs.skill.color;h.style.color=rs.skill.color;h.classList.add('show');
             playSkill();
-            
-            if (racingState.skill.id === 'lightning') {
-                for (const obs of racingState.obstacles) {
-                    racingState.score += 50;
-                    createExplosion(obs.x, obs.y, '#FFD700', 15);
-                }
-                racingState.obstacles = [];
-            }
-            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            if(rs.skill.id==='lightning'){rs.obs.forEach(o=>{rs.score+=50;boom(o.x,o.y,'#FFD700',15);});rs.obs=[];}
+            if(navigator.vibrate)navigator.vibrate([100,50,100]);
         }
-
-        function createExplosion(x, y, color, count = 12) {
-            for (let i = 0; i < count; i++) {
-                const angle = (Math.PI * 2 * i) / count;
-                const speed = 2 + Math.random() * 4;
-                racingState.particles.push({ x, y, vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed, radius: 3+Math.random()*4, color, life: 1, decay: 0.03 });
-            }
-        }
-
-        function drawRacingGame() {
-            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-            canvasCtx.save();
-            canvasCtx.scale(dpr, dpr);
-            
-            canvasCtx.fillStyle = '#333';
-            canvasCtx.fillRect(0, 0, W, H);
-            canvasCtx.fillStyle = '#FFF';
-            canvasCtx.fillRect(20, 0, 10, H);
-            canvasCtx.fillRect(W - 30, 0, 10, H);
-            canvasCtx.fillStyle = '#FFD700';
-            for (let y = -100 + racingState.roadOffset; y < H; y += 100) {
-                canvasCtx.fillRect(W/2 - 5, y, 10, 50);
-            }
-            
-            if (racingState.skillActive && racingState.skill.id === 'nitro') {
-                canvasCtx.strokeStyle = 'rgba(255,69,0,0.5)';
-                canvasCtx.lineWidth = 3;
-                for (let i = 0; i < 10; i++) {
-                    const x = Math.random() * W, y = Math.random() * H;
-                    canvasCtx.beginPath();
-                    canvasCtx.moveTo(x, y);
-                    canvasCtx.lineTo(x, y + 50);
-                    canvasCtx.stroke();
-                }
-            }
-            
-            for (const c of racingState.crystals) {
-                canvasCtx.fillStyle = '#00BFFF';
-                canvasCtx.shadowColor = '#00BFFF';
-                canvasCtx.shadowBlur = 15;
-                canvasCtx.beginPath();
-                canvasCtx.arc(c.x, c.y, 15, 0, Math.PI*2);
-                canvasCtx.fill();
-                canvasCtx.shadowBlur = 0;
-                canvasCtx.font = '20px sans-serif';
-                canvasCtx.textAlign = 'center';
-                canvasCtx.fillText('💎', c.x, c.y + 7);
-            }
-            
-            for (const c of racingState.coins) {
-                canvasCtx.save();
-                canvasCtx.translate(c.x, c.y);
-                canvasCtx.rotate(c.rotation);
-                canvasCtx.fillStyle = '#FFD700';
-                canvasCtx.beginPath();
-                canvasCtx.arc(0, 0, 15, 0, Math.PI*2);
-                canvasCtx.fill();
-                canvasCtx.fillStyle = '#FFF';
-                canvasCtx.font = 'bold 16px sans-serif';
-                canvasCtx.textAlign = 'center';
-                canvasCtx.fillText('$', 0, 6);
-                canvasCtx.restore();
-            }
-            
-            for (const obs of racingState.obstacles) {
-                const emoji = obs.type === 'car' ? '🚗' : obs.type === 'cone' ? '🚧' : '🚛';
-                canvasCtx.font = '40px sans-serif';
-                canvasCtx.textAlign = 'center';
-                canvasCtx.fillText(emoji, obs.x, obs.y + 15);
-            }
-            
-            for (const p of racingState.particles) {
-                canvasCtx.globalAlpha = p.life;
-                canvasCtx.fillStyle = p.color;
-                canvasCtx.beginPath();
-                canvasCtx.arc(p.x, p.y, p.radius * p.life, 0, Math.PI*2);
-                canvasCtx.fill();
-            }
-            canvasCtx.globalAlpha = 1;
-            
-            const carY = H - 100;
-            canvasCtx.save();
-            canvasCtx.translate(racingState.carX, carY);
-            if (racingState.skillActive && racingState.skill.id === 'shield') {
-                canvasCtx.strokeStyle = '#1E90FF';
-                canvasCtx.lineWidth = 4;
-                canvasCtx.shadowColor = '#1E90FF';
-                canvasCtx.shadowBlur = 20;
-                canvasCtx.beginPath();
-                canvasCtx.arc(0, 0, 50, 0, Math.PI*2);
-                canvasCtx.stroke();
-                canvasCtx.shadowBlur = 0;
-            }
-            if (racingState.skillActive && racingState.skill.id === 'nitro') {
-                canvasCtx.fillStyle = '#FF4500';
-                canvasCtx.beginPath();
-                canvasCtx.moveTo(-15, 30);
-                canvasCtx.lineTo(0, 50 + Math.random()*20);
-                canvasCtx.lineTo(15, 30);
-                canvasCtx.fill();
-            }
-            canvasCtx.font = '45px sans-serif';
-            canvasCtx.textAlign = 'center';
-            canvasCtx.fillText('🏎️', 0, 15);
+        function boom(x,y,c,n=12){for(let i=0;i<n;i++){const a=6.28*i/n,sp=2+Math.random()*4;rs.par.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:3+Math.random()*4,c,life:1,dec:.03});}}
+        function drawRacing(){
+            canvasCtx.clearRect(0,0,canvasElement.width,canvasElement.height);
+            canvasCtx.save();canvasCtx.scale(dpr,dpr);
+            canvasCtx.fillStyle='#333';canvasCtx.fillRect(0,0,W,H);
+            canvasCtx.fillStyle='#FFF';canvasCtx.fillRect(20,0,10,H);canvasCtx.fillRect(W-30,0,10,H);
+            canvasCtx.fillStyle='#FFD700';for(let y=-100+rs.off;y<H;y+=100)canvasCtx.fillRect(W/2-5,y,10,50);
+            for(const c of rs.cry){canvasCtx.fillStyle='#00BFFF';canvasCtx.beginPath();canvasCtx.arc(c.x,c.y,15,0,6.28);canvasCtx.fill();canvasCtx.font='20px sans-serif';canvasCtx.textAlign='center';canvasCtx.fillText('💎',c.x,c.y+7);}
+            for(const c of rs.coins){canvasCtx.save();canvasCtx.translate(c.x,c.y);canvasCtx.rotate(c.rot);canvasCtx.fillStyle='#FFD700';canvasCtx.beginPath();canvasCtx.arc(0,0,15,0,6.28);canvasCtx.fill();canvasCtx.restore();}
+            canvasCtx.font='40px sans-serif';canvasCtx.textAlign='center';
+            for(const o of rs.obs)canvasCtx.fillText(o.t==='car'?'🚗':o.t==='cone'?'🚧':'🚛',o.x,o.y+15);
+            for(const p of rs.par){canvasCtx.globalAlpha=p.life;canvasCtx.fillStyle=p.c;canvasCtx.beginPath();canvasCtx.arc(p.x,p.y,p.r*p.life,0,6.28);canvasCtx.fill();}
+            canvasCtx.globalAlpha=1;
+            const carY=H-100;
+            canvasCtx.save();canvasCtx.translate(rs.carX,carY);
+            if(rs.act&&rs.skill.id==='shield'){canvasCtx.strokeStyle='#1E90FF';canvasCtx.lineWidth=4;canvasCtx.beginPath();canvasCtx.arc(0,0,50,0,6.28);canvasCtx.stroke();}
+            if(rs.act&&rs.skill.id==='nitro'){canvasCtx.fillStyle='#FF4500';canvasCtx.beginPath();canvasCtx.moveTo(-15,30);canvasCtx.lineTo(0,50+Math.random()*20);canvasCtx.lineTo(15,30);canvasCtx.fill();}
+            canvasCtx.font='45px sans-serif';canvasCtx.textAlign='center';canvasCtx.fillText('🏎️',0,15);
             canvasCtx.restore();
-            
-            if (handData.fistPos) {
-                canvasCtx.strokeStyle = 'rgba(255,255,255,0.4)';
-                canvasCtx.lineWidth = 2;
-                canvasCtx.setLineDash([5, 5]);
-                canvasCtx.beginPath();
-                canvasCtx.moveTo(handData.fistPos.x, handData.fistPos.y);
-                canvasCtx.lineTo(racingState.carX, carY);
-                canvasCtx.stroke();
-                canvasCtx.setLineDash([]);
-                canvasCtx.fillStyle = 'rgba(255,255,255,0.3)';
-                canvasCtx.beginPath();
-                canvasCtx.arc(handData.fistPos.x, handData.fistPos.y, 15, 0, Math.PI*2);
-                canvasCtx.fill();
-            }
-            
+            if(handData.fistPos){canvasCtx.fillStyle='rgba(255,255,255,.3)';canvasCtx.beginPath();canvasCtx.arc(handData.fistPos.x,handData.fistPos.y,15,0,6.28);canvasCtx.fill();}
             canvasCtx.restore();
         }
-
-        function updateRacingHUD() {
-            document.getElementById('racing-score').innerText = racingState.score;
-            document.getElementById('racing-speed').innerText = Math.floor(racingState.speed);
-            document.getElementById('racing-lives').innerText = '❤️'.repeat(Math.max(0, racingState.lives));
-            document.getElementById('energy-bar').style.width = (racingState.energy / racingState.maxEnergy * 100) + '%';
+        function updRacingHUD(){
+            document.getElementById('racing-score').innerText=rs.score;
+            document.getElementById('racing-speed').innerText=Math.floor(rs.speed);
+            document.getElementById('racing-lives').innerText='❤️'.repeat(Math.max(0,rs.lives));
+            document.getElementById('energy-bar').style.width=(rs.energy/rs.max*100)+'%';
         }
 
-        function endRacingGame() {
-            racingState.running = false;
-            showGameOver([
-                ['最終分數', racingState.score],
-                ['最高速度', Math.floor(racingState.speed) + ' km/h'],
-                ['使用技能', racingState.skill.name]
-            ]);
-        }
-
-        // ============ 遊戲結束 ============
-        function showGameOver(stats) {
-            const el = document.getElementById('final-stats');
-            el.innerHTML = stats.map(([label, value]) => 
-                `<div class="stat-row"><span class="label">${label}</span><span class="value">${value}</span></div>`
-            ).join('');
+        function showOver(stats){
+            document.getElementById('final-stats').innerHTML=stats.map(([l,v])=>`<div class="stat-row"><span class="label">${l}</span><span class="value">${v}</span></div>`).join('');
             document.getElementById('game-over').classList.add('show');
+            clearInterval(watchdog);
         }
-
-        document.getElementById('btn-restart').addEventListener('click', () => {
-            document.getElementById('game-over').classList.remove('show');
-            if (currentGame === 'bubble') initBubbleGame();
-            else if (currentGame === 'racing') initRacingGame();
-        });
-
-        // 🔧 修復：移除頁面載入時的 startCamera() 呼叫
-        console.log('✅ 相機將在選擇遊戲後啟動');
+        document.getElementById('btn-restart').onclick=()=>{document.getElementById('game-over').classList.remove('show');if(currentGame==='bubble')initBubbleGame();else if(currentGame==='racing')initRacingGame();};
+        console.log('✅ v2.0.2：加入錯誤保護、看門狗、效能優化');
     </script>
 </body>
 </html>
