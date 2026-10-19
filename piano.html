@@ -4,118 +4,249 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>Iron Man AR Glove</title>
+    <title>🫧 泡泡大作戰</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             overflow: hidden;
-            background: #000;
-            font-family: 'Courier New', monospace;
-            touch-action: none; 
+            font-family: 'Comic Sans MS', 'Marker Felt', -apple-system, sans-serif;
+            touch-action: none;
             -webkit-touch-callout: none;
             -webkit-user-select: none;
             user-select: none;
             padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+            background: linear-gradient(180deg, #87CEEB 0%, #FFB6C1 50%, #FFD700 100%);
         }
-        
+
         #videoInput, #canvasOutput {
             position: absolute;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            object-fit: contain; 
-            background: #000;
+            object-fit: cover;
+            -webkit-transform: scaleX(-1);
+            transform: scaleX(-1);
         }
-        #videoInput { 
-            z-index: 1; 
-            opacity: 0.3; 
-            filter: brightness(0.6) contrast(1.2) saturate(0.5);
-            -webkit-transform: scaleX(-1); 
-            transform: scaleX(-1); 
-        }
+        #videoInput { z-index: 1; opacity: 0.25; filter: blur(3px) brightness(1.1); }
         #canvasOutput { z-index: 2; pointer-events: none; }
 
+        /* HUD 頂部 */
         #hud-top {
             position: absolute;
-            top: calc(15px + env(safe-area-inset-top));
-            left: 15px;
-            right: 15px;
+            top: calc(10px + env(safe-area-inset-top));
+            left: 10px; right: 10px;
             display: flex;
             justify-content: space-between;
-            color: #00e5ff;
-            font-size: 11px;
             z-index: 10;
-            text-shadow: 0 0 10px rgba(0, 229, 255, 0.8);
             pointer-events: none;
+            gap: 8px;
         }
-        .hud-box {
-            background: rgba(0, 229, 255, 0.08);
-            border: 1px solid rgba(0, 229, 255, 0.4);
-            padding: 8px 12px;
-            border-radius: 4px;
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-        }
-        .hud-label { color: #888; font-size: 9px; }
-        .hud-value { color: #00e5ff; font-weight: bold; font-size: 13px; }
-        .hud-warning { color: #ff3d00; text-shadow: 0 0 10px rgba(255, 61, 0, 0.8); }
-
-        #status-bar {
-            position: absolute;
-            bottom: calc(15px + env(safe-area-inset-bottom));
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.7);
-            color: #00e5ff;
-            padding: 8px 20px;
+        .hud-card {
+            background: rgba(255, 255, 255, 0.85);
+            border: 3px solid #FF69B4;
             border-radius: 20px;
-            font-size: 12px;
-            z-index: 10;
-            border: 1px solid rgba(0, 229, 255, 0.4);
-            text-shadow: 0 0 8px rgba(0, 229, 255, 0.6);
-            pointer-events: none;
+            padding: 8px 14px;
+            box-shadow: 0 4px 15px rgba(255, 105, 180, 0.4);
+            text-align: center;
+            flex: 1;
+        }
+        .hud-label {
+            font-size: 10px;
+            color: #FF1493;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .hud-value {
+            font-size: 22px;
+            color: #FF1493;
+            font-weight: bold;
+            text-shadow: 2px 2px 0 #FFF, 3px 3px 0 rgba(255, 105, 180, 0.3);
         }
 
-        #start-overlay {
+        /* 連擊顯示 */
+        #combo-display {
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translateX(-50%) scale(0);
+            font-size: 60px;
+            font-weight: bold;
+            color: #FF6B00;
+            text-shadow: 3px 3px 0 #FFF, 5px 5px 0 rgba(255, 107, 0, 0.5);
+            z-index: 15;
+            pointer-events: none;
+            transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+        #combo-display.show {
+            transform: translateX(-50%) scale(1);
+        }
+
+        /* 等級提示 */
+        #level-up {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-size: 40px;
+            font-weight: bold;
+            background: linear-gradient(45deg, #FFD700, #FF69B4, #00BFFF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+            z-index: 15;
+            pointer-events: none;
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+        #level-up.show {
+            transform: translate(-50%, -50%) scale(1.2);
+        }
+
+        /* 開始畫面 */
+        #start-screen {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at center, #1a0000 0%, #000 100%);
+            background: linear-gradient(135deg, #FF9A9E 0%, #FAD0C4 50%, #FBC2EB 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            color: white;
-            z-index: 200;
+            z-index: 100;
             padding: 20px;
             text-align: center;
         }
-        #start-overlay h1 { 
-            font-size: 2.5rem; 
-            margin-bottom: 0.5rem; 
-            color: #ff3d00;
-            text-shadow: 0 0 20px rgba(255, 61, 0, 0.8), 0 0 40px rgba(255, 61, 0, 0.4);
-            letter-spacing: 4px;
+        #start-screen h1 {
+            font-size: 3rem;
+            color: #FFF;
+            text-shadow: 3px 3px 0 #FF1493, 6px 6px 0 rgba(0,0,0,0.2);
+            margin-bottom: 10px;
+            animation: bounce 2s infinite;
         }
-        #start-overlay h2 {
-            font-size: 1rem;
-            color: #ffd700;
-            margin-bottom: 2rem;
-            letter-spacing: 2px;
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
         }
-        #start-overlay p { font-size: 0.9rem; color: #aaa; line-height: 1.8; margin-bottom: 10px; max-width: 340px;}
-        .btn-start {
-            margin-top: 25px;
-            padding: 15px 50px;
-            background: linear-gradient(to bottom, #ff3d00, #b71c1c);
-            color: #fff;
-            border: 2px solid #ffd700;
-            border-radius: 4px;
+        #start-screen .mascot {
+            font-size: 80px;
+            margin: 20px 0;
+            animation: wiggle 3s infinite;
+        }
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+        }
+        #start-screen p {
             font-size: 1.1rem;
+            color: #FFF;
+            text-shadow: 2px 2px 0 rgba(255, 20, 147, 0.5);
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+        .btn-start {
+            margin-top: 20px;
+            padding: 18px 50px;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #FFF;
+            border: 4px solid #FFF;
+            border-radius: 50px;
+            font-size: 1.5rem;
             font-weight: bold;
-            letter-spacing: 3px;
-            box-shadow: 0 0 30px rgba(255, 61, 0, 0.6), inset 0 0 20px rgba(255, 215, 0, 0.2);
+            font-family: inherit;
+            box-shadow: 0 8px 20px rgba(255, 165, 0, 0.5), inset 0 -4px 0 rgba(0,0,0,0.2);
             cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .btn-start:active {
+            transform: scale(0.95);
         }
         .hidden { display: none !important; }
+
+        /* 結算畫面 */
+        #game-over {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        #game-over.show { display: flex; }
+        #game-over h2 {
+            font-size: 2.5rem;
+            color: #FFD700;
+            text-shadow: 3px 3px 0 #FF1493;
+            margin-bottom: 20px;
+        }
+        .final-stats {
+            background: rgba(255, 255, 255, 0.95);
+            border: 4px solid #FF69B4;
+            border-radius: 25px;
+            padding: 25px;
+            margin-bottom: 20px;
+            min-width: 280px;
+        }
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            font-size: 1.2rem;
+            color: #333;
+        }
+        .stat-row .label { color: #888; }
+        .stat-row .value { color: #FF1493; font-weight: bold; }
+        .badges {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 15px;
+        }
+        .badge {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #FFF;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        /* 時間條 */
+        #time-bar-container {
+            position: absolute;
+            bottom: calc(15px + env(safe-area-inset-bottom));
+            left: 15px; right: 15px;
+            height: 14px;
+            background: rgba(255, 255, 255, 0.4);
+            border: 2px solid #FFF;
+            border-radius: 10px;
+            overflow: hidden;
+            z-index: 10;
+            pointer-events: none;
+        }
+        #time-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #00FF00, #FFFF00, #FF69B4);
+            width: 100%;
+            transition: width 0.1s linear;
+            border-radius: 8px;
+        }
+        #time-text {
+            position: absolute;
+            bottom: calc(35px + env(safe-area-inset-bottom));
+            left: 50%;
+            transform: translateX(-50%);
+            color: #FFF;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 2px 2px 0 #FF1493;
+            z-index: 10;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -123,425 +254,633 @@
     <video id="videoInput" autoplay playsinline muted></video>
     <canvas id="canvasOutput"></canvas>
 
+    <!-- HUD -->
     <div id="hud-top">
-        <div class="hud-box">
-            <div class="hud-label">SYSTEM</div>
-            <div class="hud-value" id="hud-system">INITIALIZING</div>
+        <div class="hud-card">
+            <div class="hud-label">⭐ 分數</div>
+            <div class="hud-value" id="score">0</div>
         </div>
-        <div class="hud-box">
-            <div class="hud-label">POWER</div>
-            <div class="hud-value" id="hud-power">0%</div>
+        <div class="hud-card">
+            <div class="hud-label">🏆 等級</div>
+            <div class="hud-value" id="level">Lv.1</div>
         </div>
-        <div class="hud-box">
-            <div class="hud-label">FPS</div>
-            <div class="hud-value" id="hud-fps">0</div>
+        <div class="hud-card">
+            <div class="hud-label">🎯 連擊</div>
+            <div class="hud-value" id="combo">0</div>
         </div>
     </div>
 
-    <div id="status-bar">J.A.R.V.I.S. ONLINE</div>
+    <div id="combo-display"></div>
+    <div id="level-up"></div>
+    <div id="time-text">60</div>
+    <div id="time-bar-container"><div id="time-bar"></div></div>
 
-    <div id="start-overlay">
-        <h1>IRON MAN</h1>
-        <h2>MARK AR GLOVE</h2>
-        <p>將手掌對準鏡頭，啟動裝甲系統</p>
-        <p style="font-size: 0.85rem; color: #ff3d00; margin-top: 15px; border: 1px solid #ff3d00; padding: 12px; border-radius: 4px; line-height: 1.8;">
-            ✦ <strong>手勢控制</strong> ✦<br>
-            ✊ 握拳 → 啟動 Repulsor<br>
-            ☝️ 伸出食指 → 發射光束<br>
-            🖐️ 張開五指 → 裝甲充能
+    <!-- 開始畫面 -->
+    <div id="start-screen">
+        <h1>泡泡大作戰</h1>
+        <div class="mascot">🫧</div>
+        <p>用你的手指戳破飛來的泡泡！<br>小心黑色的炸彈泡泡喔 💣</p>
+        <p style="font-size: 0.9rem; color: #FFF; opacity: 0.9;">
+            🌟 金色泡泡 = 50分<br>
+            🌈 彩虹泡泡 = 100分<br>
+            ⏱️ 時鐘泡泡 = 時間變慢<br>
+            💣 炸彈泡泡 = 要躲開！
         </p>
-        <button class="btn-start" id="btn-start">INITIALIZE</button>
+        <button class="btn-start" id="btn-start">開始遊戲！</button>
+    </div>
+
+    <!-- 結算畫面 -->
+    <div id="game-over">
+        <h2>🎉 遊戲結束！</h2>
+        <div class="final-stats">
+            <div class="stat-row">
+                <span class="label">最終分數</span>
+                <span class="value" id="final-score">0</span>
+            </div>
+            <div class="stat-row">
+                <span class="label">戳破泡泡</span>
+                <span class="value" id="final-popped">0</span>
+            </div>
+            <div class="stat-row">
+                <span class="label">最高連擊</span>
+                <span class="value" id="final-combo">0</span>
+            </div>
+            <div class="stat-row">
+                <span class="label">最終等級</span>
+                <span class="value" id="final-level">Lv.1</span>
+            </div>
+            <div class="badges" id="badges"></div>
+        </div>
+        <button class="btn-start" id="btn-restart">再玩一次！</button>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tone@14.7.77/build/Tone.js"></script>
 
     <script>
+        // ============ 遊戲狀態 ============
+        const GAME_DURATION = 60; // 60 秒
+        let gameState = {
+            score: 0,
+            combo: 0,
+            maxCombo: 0,
+            level: 1,
+            popped: 0,
+            timeLeft: GAME_DURATION,
+            slowMotion: false,
+            slowMotionEnd: 0,
+            running: false,
+            lastComboTime: 0
+        };
+
+        // ============ 音效系統 ============
+        let audioReady = false;
+        const popSynth = new Tone.MembraneSynth({
+            pitchDecay: 0.02,
+            octaves: 4,
+            envelope: { attack: 0.001, decay: 0.2, sustain: 0, release: 0.1 }
+        }).toDestination();
+        popSynth.volume.value = -10;
+
+        const comboSynth = new Tone.Synth({
+            oscillator: { type: "triangle" },
+            envelope: { attack: 0.01, decay: 0.1, sustain: 0.2, release: 0.3 }
+        }).toDestination();
+        comboSynth.volume.value = -8;
+
+        const specialSynth = new Tone.PolySynth(Tone.Synth, {
+            oscillator: { type: "sine" },
+            envelope: { attack: 0.01, decay: 0.3, sustain: 0.3, release: 0.5 }
+        }).toDestination();
+        specialSynth.volume.value = -6;
+
+        function playPopSound(pitch = 'C5') {
+            if (!audioReady) return;
+            popSynth.triggerAttackRelease(pitch, '16n', Tone.now());
+        }
+
+        function playComboSound(combo) {
+            if (!audioReady) return;
+            const notes = ['C5', 'E5', 'G5', 'B5', 'C6'];
+            const note = notes[Math.min(combo - 1, notes.length - 1)];
+            comboSynth.triggerAttackRelease(note, '8n', Tone.now());
+        }
+
+        function playSpecialSound() {
+            if (!audioReady) return;
+            specialSynth.triggerAttackRelease(['C5', 'E5', 'G5'], '4n', Tone.now());
+        }
+
+        function playBombSound() {
+            if (!audioReady) return;
+            popSynth.triggerAttackRelease('C2', '4n', Tone.now());
+        }
+
+        // ============ Canvas 設定 ============
         const videoElement = document.getElementById('videoInput');
         const canvasElement = document.getElementById('canvasOutput');
         const canvasCtx = canvasElement.getContext('2d');
-        const hudSystem = document.getElementById('hud-system');
-        const hudPower = document.getElementById('hud-power');
-        const hudFps = document.getElementById('hud-fps');
-        const statusBar = document.getElementById('status-bar');
-
         let dpr = window.devicePixelRatio || 1;
+        let W = window.innerWidth, H = window.innerHeight;
 
         function resizeCanvas() {
             dpr = window.devicePixelRatio || 1;
-            const width = window.innerWidth;
-            const height = window.innerHeight;
-            canvasElement.style.width = width + 'px';
-            canvasElement.style.height = height + 'px';
-            canvasElement.width = width * dpr;
-            canvasElement.height = height * dpr;
+            W = window.innerWidth;
+            H = window.innerHeight;
+            canvasElement.style.width = W + 'px';
+            canvasElement.style.height = H + 'px';
+            canvasElement.width = W * dpr;
+            canvasElement.height = H * dpr;
         }
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
 
-        // 平滑濾波
-        function lerp(start, end, factor) { return start + (end - start) * factor; }
-        let smoothState = { power: 0, beam: 0, charge: 0 };
-        let isTracking = false;
-        let beamParticles = [];
+        // ============ 泡泡系統 ============
+        const bubbles = [];
+        const particles = [];
+        const floatingTexts = [];
+        
+        const BUBBLE_TYPES = {
+            normal: { color: '#FF69B4', points: 10, weight: 60 },
+            blue: { color: '#00BFFF', points: 10, weight: 20 },
+            green: { color: '#32CD32', points: 10, weight: 15 },
+            gold: { color: '#FFD700', points: 50, weight: 8, special: 'gold' },
+            rainbow: { color: 'rainbow', points: 100, weight: 3, special: 'rainbow' },
+            clock: { color: '#4169E1', points: 20, weight: 4, special: 'clock' },
+            bomb: { color: '#2C2C2C', points: -30, weight: 5, special: 'bomb' }
+        };
 
-        // 計算手指彎曲度 (0 = 伸直, 1 = 彎曲)
-        function getFingerCurl(landmarks, tipIdx, pipIdx, mcpIdx) {
-            const tip = landmarks[tipIdx];
-            const pip = landmarks[pipIdx];
-            const mcp = landmarks[mcpIdx];
-            
-            // 用向量夾角判斷彎曲
-            const v1x = pip.x - mcp.x, v1y = pip.y - mcp.y;
-            const v2x = tip.x - pip.x, v2y = tip.y - pip.y;
-            const dot = v1x * v2x + v1y * v2y;
-            const mag1 = Math.sqrt(v1x*v1x + v1y*v1y);
-            const mag2 = Math.sqrt(v2x*v2x + v2y*v2y);
-            const cosAngle = dot / (mag1 * mag2);
-            // cosAngle 接近 1 = 伸直, 接近 -1 = 彎曲
-            return Math.max(0, Math.min(1, (1 - cosAngle) / 2));
+        function getRandomBubbleType() {
+            const types = Object.keys(BUBBLE_TYPES);
+            const totalWeight = types.reduce((sum, t) => sum + BUBBLE_TYPES[t].weight, 0);
+            let r = Math.random() * totalWeight;
+            for (const t of types) {
+                r -= BUBBLE_TYPES[t].weight;
+                if (r <= 0) return t;
+            }
+            return 'normal';
         }
 
-        // 繪製鋼鐵人手套
-        function drawIronManGlove(ctx, landmarks, W, H, powerLevel, beamLevel, chargeLevel) {
-            const toScreen = (lm) => ({ x: lm.x * W, y: lm.y * H });
+        function spawnBubble() {
+            const type = getRandomBubbleType();
+            const config = BUBBLE_TYPES[type];
+            const radius = 25 + Math.random() * 20;
             
-            // 關鍵點索引
-            const wrist = toScreen(landmarks[0]);
-            const mcps = [5, 9, 13, 17].map(i => toScreen(landmarks[i]));
-            const thumbMcp = toScreen(landmarks[1]);
+            // 從四個方向隨機出現
+            const side = Math.floor(Math.random() * 4);
+            let x, y, vx, vy;
+            const speed = (1 + gameState.level * 0.3) * (0.5 + Math.random() * 0.8);
             
-            // 手指段定義 [MCP, PIP, DIP, TIP]
-            const fingers = [
-                [1, 2, 3, 4],     // 拇指
-                [5, 6, 7, 8],     // 食指
-                [9, 10, 11, 12],  // 中指
-                [13, 14, 15, 16], // 無名指
-                [17, 18, 19, 20]  // 尾指
-            ];
-
-            // === 1. 繪製手掌主體（紅色金屬） ===
-            ctx.save();
-            
-            // 手掌外殼
-            const palmGrad = ctx.createLinearGradient(wrist.x, wrist.y, mcps[1].x, mcps[1].y);
-            palmGrad.addColorStop(0, '#8B0000');
-            palmGrad.addColorStop(0.5, '#C62828');
-            palmGrad.addColorStop(1, '#D32F2F');
-            
-            ctx.fillStyle = palmGrad;
-            ctx.strokeStyle = '#FFD700';
-            ctx.lineWidth = 2;
-            ctx.lineJoin = 'round';
-            
-            ctx.beginPath();
-            ctx.moveTo(wrist.x, wrist.y);
-            ctx.lineTo(mcps[3].x, mcps[3].y);
-            ctx.lineTo(mcps[2].x, mcps[2].y);
-            ctx.lineTo(mcps[1].x, mcps[1].y);
-            ctx.lineTo(mcps[0].x, mcps[0].y);
-            ctx.lineTo(thumbMcp.x, thumbMcp.y);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-
-            // 手掌金屬高光
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-            ctx.beginPath();
-            ctx.moveTo(wrist.x, wrist.y);
-            ctx.lineTo(mcps[3].x, mcps[3].y);
-            ctx.lineTo(mcps[2].x, mcps[2].y);
-            ctx.lineTo((mcps[1].x + mcps[2].x) / 2, (mcps[1].y + mcps[2].y) / 2);
-            ctx.closePath();
-            ctx.fill();
-
-            // === 2. 繪製 Repulsor（手掌心發光裝置）===
-            const palmCenter = {
-                x: (mcps[0].x + mcps[1].x + mcps[2].x + mcps[3].x + wrist.x) / 5,
-                y: (mcps[0].y + mcps[1].y + mcps[2].y + mcps[3].y + wrist.y) / 5
-            };
-            
-            const repulsorRadius = 18 * (1 + powerLevel * 0.5);
-            
-            // 外圈金色
-            ctx.beginPath();
-            ctx.arc(palmCenter.x, palmCenter.y, repulsorRadius + 4, 0, Math.PI * 2);
-            ctx.fillStyle = '#FFD700';
-            ctx.fill();
-            ctx.strokeStyle = '#8B6914';
-            ctx.lineWidth = 1;
-            ctx.stroke();
-            
-            // 內圈發光
-            const repulsorGrad = ctx.createRadialGradient(
-                palmCenter.x, palmCenter.y, 0,
-                palmCenter.x, palmCenter.y, repulsorRadius
-            );
-            repulsorGrad.addColorStop(0, `rgba(255, 255, 255, ${0.3 + powerLevel * 0.7})`);
-            repulsorGrad.addColorStop(0.3, `rgba(100, 200, 255, ${0.5 + powerLevel * 0.5})`);
-            repulsorGrad.addColorStop(0.7, `rgba(0, 150, 255, ${0.3 + powerLevel * 0.5})`);
-            repulsorGrad.addColorStop(1, 'rgba(0, 50, 150, 0.2)');
-            
-            ctx.shadowColor = `rgba(100, 200, 255, ${powerLevel})`;
-            ctx.shadowBlur = 30 * powerLevel;
-            ctx.beginPath();
-            ctx.arc(palmCenter.x, palmCenter.y, repulsorRadius, 0, Math.PI * 2);
-            ctx.fillStyle = repulsorGrad;
-            ctx.fill();
-            ctx.shadowBlur = 0;
-
-            // === 3. 繪製每個手指的裝甲 ===
-            for (let f = 0; f < fingers.length; f++) {
-                const [mcpIdx, pipIdx, dipIdx, tipIdx] = fingers[f];
-                const mcp = toScreen(landmarks[mcpIdx]);
-                const pip = toScreen(landmarks[pipIdx]);
-                const dip = toScreen(landmarks[dipIdx]);
-                const tip = toScreen(landmarks[tipIdx]);
-                
-                // 每段裝甲
-                const segments = [
-                    { from: mcp, to: pip, width: 14 },
-                    { from: pip, to: dip, width: 12 },
-                    { from: dip, to: tip, width: 10 }
-                ];
-                
-                for (const seg of segments) {
-                    const dx = seg.to.x - seg.from.x;
-                    const dy = seg.to.y - seg.from.y;
-                    const len = Math.sqrt(dx*dx + dy*dy);
-                    const nx = -dy / len * seg.width / 2;
-                    const ny = dx / len * seg.width / 2;
-                    
-                    // 紅色裝甲
-                    const segGrad = ctx.createLinearGradient(
-                        seg.from.x + nx, seg.from.y + ny,
-                        seg.from.x - nx, seg.from.y - ny
-                    );
-                    segGrad.addColorStop(0, '#D32F2F');
-                    segGrad.addColorStop(0.5, '#F44336');
-                    segGrad.addColorStop(1, '#B71C1C');
-                    
-                    ctx.fillStyle = segGrad;
-                    ctx.strokeStyle = '#FFD700';
-                    ctx.lineWidth = 1.5;
-                    ctx.beginPath();
-                    ctx.moveTo(seg.from.x + nx, seg.from.y + ny);
-                    ctx.lineTo(seg.to.x + nx * 0.8, seg.to.y + ny * 0.8);
-                    ctx.lineTo(seg.to.x - nx * 0.8, seg.to.y - ny * 0.8);
-                    ctx.lineTo(seg.from.x - nx, seg.from.y - ny);
-                    ctx.closePath();
-                    ctx.fill();
-                    ctx.stroke();
-                }
-                
-                // 金色關節圓
-                [mcp, pip, dip].forEach((joint, i) => {
-                    const r = 7 - i;
-                    // 金色外圈
-                    ctx.beginPath();
-                    ctx.arc(joint.x, joint.y, r + 1, 0, Math.PI * 2);
-                    ctx.fillStyle = '#FFD700';
-                    ctx.fill();
-                    ctx.strokeStyle = '#8B6914';
-                    ctx.lineWidth = 1;
-                    ctx.stroke();
-                    // 深色內圈
-                    ctx.beginPath();
-                    ctx.arc(joint.x, joint.y, r - 2, 0, Math.PI * 2);
-                    ctx.fillStyle = '#B8860B';
-                    ctx.fill();
-                });
-                
-                // 指尖發光（充能時）
-                if (chargeLevel > 0.3) {
-                    ctx.shadowColor = `rgba(100, 200, 255, ${chargeLevel})`;
-                    ctx.shadowBlur = 15 * chargeLevel;
-                    ctx.beginPath();
-                    ctx.arc(tip.x, tip.y, 5, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(150, 220, 255, ${chargeLevel})`;
-                    ctx.fill();
-                    ctx.shadowBlur = 0;
-                }
+            if (side === 0) { // 從下
+                x = Math.random() * W;
+                y = H + radius;
+                vx = (Math.random() - 0.5) * speed;
+                vy = -speed;
+            } else if (side === 1) { // 從上
+                x = Math.random() * W;
+                y = -radius;
+                vx = (Math.random() - 0.5) * speed;
+                vy = speed * 0.7;
+            } else if (side === 2) { // 從左
+                x = -radius;
+                y = Math.random() * H;
+                vx = speed;
+                vy = (Math.random() - 0.5) * speed * 0.5;
+            } else { // 從右
+                x = W + radius;
+                y = Math.random() * H;
+                vx = -speed;
+                vy = (Math.random() - 0.5) * speed * 0.5;
             }
 
-            // === 4. 發射光束特效（食指伸直時）===
-            if (beamLevel > 0.3) {
-                const indexTip = toScreen(landmarks[8]);
-                const indexMcp = toScreen(landmarks[5]);
-                const dx = indexTip.x - indexMcp.x;
-                const dy = indexTip.y - indexMcp.y;
-                const len = Math.sqrt(dx*dx + dy*dy);
-                const dirX = dx / len;
-                const dirY = dy / len;
+            bubbles.push({
+                x, y, vx, vy,
+                radius,
+                type,
+                color: config.color,
+                points: config.points,
+                special: config.special,
+                phase: Math.random() * Math.PI * 2, // 晃動相位
+                life: 1
+            });
+        }
+
+        function updateBubbles(dt) {
+            const speedMul = gameState.slowMotion ? 0.3 : 1;
+            
+            for (let i = bubbles.length - 1; i >= 0; i--) {
+                const b = bubbles[i];
+                b.x += b.vx * dt * 60 * speedMul;
+                b.y += b.vy * dt * 60 * speedMul;
+                b.phase += dt * 2;
                 
-                // 光束
-                const beamLength = 400 * beamLevel;
-                const beamGrad = ctx.createLinearGradient(
-                    indexTip.x, indexTip.y,
-                    indexTip.x + dirX * beamLength, indexTip.y + dirY * beamLength
+                // 輕微晃動
+                b.x += Math.sin(b.phase) * 0.3;
+
+                // 超出畫面就移除
+                if (b.x < -100 || b.x > W + 100 || b.y < -100 || b.y > H + 100) {
+                    bubbles.splice(i, 1);
+                    // 如果漏掉普通泡泡，重置連擊
+                    if (b.special !== 'bomb') {
+                        gameState.combo = 0;
+                        updateHUD();
+                    }
+                }
+            }
+        }
+
+        function drawBubble(ctx, b) {
+            ctx.save();
+            ctx.translate(b.x, b.y);
+            
+            // 彩虹泡泡特殊處理
+            if (b.color === 'rainbow') {
+                const grad = ctx.createLinearGradient(-b.radius, -b.radius, b.radius, b.radius);
+                const t = (Date.now() / 500) % 1;
+                grad.addColorStop(0, `hsl(${t * 360}, 100%, 60%)`);
+                grad.addColorStop(0.33, `hsl(${(t * 360 + 120) % 360}, 100%, 60%)`);
+                grad.addColorStop(0.66, `hsl(${(t * 360 + 240) % 360}, 100%, 60%)`);
+                grad.addColorStop(1, `hsl(${(t * 360 + 360) % 360}, 100%, 60%)`);
+                ctx.fillStyle = grad;
+            } else {
+                // 普通漸層泡泡
+                const grad = ctx.createRadialGradient(
+                    -b.radius * 0.3, -b.radius * 0.3, b.radius * 0.1,
+                    0, 0, b.radius
                 );
-                beamGrad.addColorStop(0, `rgba(255, 255, 255, ${beamLevel})`);
-                beamGrad.addColorStop(0.3, `rgba(100, 200, 255, ${beamLevel * 0.8})`);
-                beamGrad.addColorStop(1, 'rgba(0, 100, 255, 0)');
-                
-                ctx.shadowColor = `rgba(100, 200, 255, ${beamLevel})`;
-                ctx.shadowBlur = 30;
-                ctx.strokeStyle = beamGrad;
-                ctx.lineWidth = 8 * beamLevel;
-                ctx.lineCap = 'round';
-                ctx.beginPath();
-                ctx.moveTo(indexTip.x, indexTip.y);
-                ctx.lineTo(indexTip.x + dirX * beamLength, indexTip.y + dirY * beamLength);
-                ctx.stroke();
-                ctx.shadowBlur = 0;
-                
-                // 光束粒子
-                for (let i = 0; i < 3; i++) {
-                    const t = Math.random();
-                    const px = indexTip.x + dirX * beamLength * t;
-                    const py = indexTip.y + dirY * beamLength * t;
-                    const spread = (Math.random() - 0.5) * 20 * beamLevel;
-                    ctx.beginPath();
-                    ctx.arc(px + (-dirY) * spread, py + dirX * spread, Math.random() * 3 + 1, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(200, 230, 255, ${beamLevel * Math.random()})`;
-                    ctx.fill();
+                grad.addColorStop(0, '#FFFFFF');
+                grad.addColorStop(0.3, b.color);
+                grad.addColorStop(1, shadeColor(b.color, -30));
+                ctx.fillStyle = grad;
+            }
+            
+            // 陰影/光暈
+            if (b.special === 'gold') {
+                ctx.shadowColor = '#FFD700';
+                ctx.shadowBlur = 20;
+            } else if (b.special === 'rainbow') {
+                ctx.shadowColor = '#FF69B4';
+                ctx.shadowBlur = 25;
+            } else if (b.special === 'bomb') {
+                ctx.shadowColor = '#FF0000';
+                ctx.shadowBlur = 15;
+            }
+            
+            ctx.beginPath();
+            ctx.arc(0, 0, b.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            
+            // 高光
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.beginPath();
+            ctx.ellipse(-b.radius * 0.3, -b.radius * 0.3, b.radius * 0.25, b.radius * 0.15, -0.5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 特殊泡泡的圖案
+            ctx.fillStyle = '#FFF';
+            ctx.font = `bold ${b.radius * 0.8}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            if (b.special === 'gold') {
+                ctx.fillText('⭐', 0, 2);
+            } else if (b.special === 'rainbow') {
+                ctx.fillText('🌈', 0, 2);
+            } else if (b.special === 'clock') {
+                ctx.fillText('⏱️', 0, 2);
+            } else if (b.special === 'bomb') {
+                ctx.fillText('💣', 0, 2);
+            }
+            
+            ctx.restore();
+        }
+
+        function shadeColor(color, percent) {
+            if (color === 'rainbow') return color;
+            const num = parseInt(color.replace('#', ''), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = Math.max(0, Math.min(255, (num >> 16) + amt));
+            const G = Math.max(0, Math.min(255, (num >> 8 & 0x00FF) + amt));
+            const B = Math.max(0, Math.min(255, (num & 0x0000FF) + amt));
+            return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
+        }
+
+        // ============ 粒子系統 ============
+        function createPopEffect(x, y, color, count = 15) {
+            for (let i = 0; i < count; i++) {
+                const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
+                const speed = 2 + Math.random() * 4;
+                particles.push({
+                    x, y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    radius: 3 + Math.random() * 4,
+                    color: color,
+                    life: 1,
+                    decay: 0.02 + Math.random() * 0.02
+                });
+            }
+        }
+
+        function createSpecialEffect(x, y, type) {
+            if (type === 'gold') {
+                // 星星飛散
+                for (let i = 0; i < 25; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 3 + Math.random() * 5;
+                    particles.push({
+                        x, y,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        radius: 4 + Math.random() * 3,
+                        color: '#FFD700',
+                        life: 1,
+                        decay: 0.015,
+                        isStar: true
+                    });
+                }
+            } else if (type === 'rainbow') {
+                // 全螢幕煙火
+                for (let i = 0; i < 80; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 2 + Math.random() * 8;
+                    particles.push({
+                        x, y,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        radius: 3 + Math.random() * 5,
+                        color: `hsl(${Math.random() * 360}, 100%, 60%)`,
+                        life: 1,
+                        decay: 0.01
+                    });
+                }
+            } else if (type === 'bomb') {
+                // 黑色煙霧
+                for (let i = 0; i < 30; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 1 + Math.random() * 3;
+                    particles.push({
+                        x, y,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed - 1,
+                        radius: 8 + Math.random() * 8,
+                        color: '#333',
+                        life: 1,
+                        decay: 0.015,
+                        isSmoke: true
+                    });
                 }
             }
-
-            ctx.restore();
         }
 
-        // 繪製 HUD 骨骼
-        function drawHUDSkeleton(ctx, landmarks, W, H) {
-            const toScreen = (lm) => ({ x: lm.x * W, y: lm.y * H });
+        function updateParticles(dt) {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx * dt * 60;
+                p.y += p.vy * dt * 60;
+                p.vy += 0.15; // 重力
+                p.life -= p.decay;
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+        }
+
+        function drawParticles(ctx) {
+            for (const p of particles) {
+                ctx.save();
+                ctx.globalAlpha = p.life;
+                
+                if (p.isStar) {
+                    // 星星
+                    ctx.fillStyle = p.color;
+                    ctx.shadowColor = p.color;
+                    ctx.shadowBlur = 10;
+                    ctx.font = `${p.radius * 3}px sans-serif`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('⭐', p.x, p.y);
+                } else if (p.isSmoke) {
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius * (2 - p.life), 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    ctx.fillStyle = p.color;
+                    ctx.shadowColor = p.color;
+                    ctx.shadowBlur = 8;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius * p.life, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+        }
+
+        // ============ 飄字系統 ============
+        function addFloatingText(x, y, text, color, size = 30) {
+            floatingTexts.push({
+                x, y, text, color, size,
+                life: 1,
+                vy: -2
+            });
+        }
+
+        function updateFloatingTexts(dt) {
+            for (let i = floatingTexts.length - 1; i >= 0; i--) {
+                const t = floatingTexts[i];
+                t.y += t.vy * dt * 60;
+                t.life -= 0.02;
+                if (t.life <= 0) floatingTexts.splice(i, 1);
+            }
+        }
+
+        function drawFloatingTexts(ctx) {
+            for (const t of floatingTexts) {
+                ctx.save();
+                ctx.globalAlpha = t.life;
+                ctx.fillStyle = t.color;
+                ctx.strokeStyle = '#FFF';
+                ctx.lineWidth = 4;
+                ctx.font = `bold ${t.size}px 'Comic Sans MS', sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.strokeText(t.text, t.x, t.y);
+                ctx.fillText(t.text, t.x, t.y);
+                ctx.restore();
+            }
+        }
+
+        // ============ 手指追蹤與碰撞 ============
+        let fingerPos = null;
+        let fingerVisible = false;
+
+        function checkCollisions() {
+            if (!fingerPos) return;
+            
+            for (let i = bubbles.length - 1; i >= 0; i--) {
+                const b = bubbles[i];
+                const dx = fingerPos.x - b.x;
+                const dy = fingerPos.y - b.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                
+                if (dist < b.radius + 15) { // 15 = 手指碰撞半徑
+                    popBubble(b, i);
+                    break; // 一次只戳一個
+                }
+            }
+        }
+
+        function popBubble(b, index) {
+            bubbles.splice(index, 1);
+            
+            if (b.special === 'bomb') {
+                // 炸彈
+                gameState.score = Math.max(0, gameState.score + b.points);
+                gameState.combo = 0;
+                createPopEffect(b.x, b.y, '#333', 10);
+                createSpecialEffect(b.x, b.y, 'bomb');
+                addFloatingText(b.x, b.y, b.points, '#FF0000', 40);
+                playBombSound();
+                // 震動效果
+                if (navigator.vibrate) navigator.vibrate(200);
+            } else {
+                // 普通/特殊泡泡
+                gameState.combo++;
+                gameState.popped++;
+                if (gameState.combo > gameState.maxCombo) gameState.maxCombo = gameState.combo;
+                gameState.lastComboTime = Date.now();
+                
+                const comboMultiplier = Math.min(5, 1 + Math.floor(gameState.combo / 5));
+                const points = b.points * comboMultiplier;
+                gameState.score += points;
+                
+                // 視覺效果
+                createPopEffect(b.x, b.y, b.color === 'rainbow' ? '#FF69B4' : b.color);
+                if (b.special) createSpecialEffect(b.x, b.y, b.special);
+                
+                // 飄字
+                let text = '+' + points;
+                if (comboMultiplier > 1) text += ' x' + comboMultiplier;
+                addFloatingText(b.x, b.y, text, b.color === 'rainbow' ? '#FF69B4' : b.color, 28);
+                
+                // 音效
+                if (b.special === 'gold' || b.special === 'rainbow') {
+                    playSpecialSound();
+                } else {
+                    playPopSound();
+                }
+                
+                // 連擊音效
+                if (gameState.combo > 1 && gameState.combo % 5 === 0) {
+                    playComboSound(Math.floor(gameState.combo / 5));
+                }
+                
+                // 特殊效果
+                if (b.special === 'clock') {
+                    gameState.slowMotion = true;
+                    gameState.slowMotionEnd = Date.now() + 5000;
+                    addFloatingText(b.x, b.y - 40, '⏱️ 慢動作！', '#4169E1', 32);
+                }
+                
+                // 顯示連擊
+                if (gameState.combo >= 3) {
+                    showCombo(gameState.combo);
+                }
+            }
+            
+            // 檢查升級
+            checkLevelUp();
+            updateHUD();
+        }
+
+        function showCombo(combo) {
+            const el = document.getElementById('combo-display');
+            el.innerText = combo + ' COMBO!';
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 800);
+        }
+
+        function checkLevelUp() {
+            const newLevel = Math.floor(gameState.score / 200) + 1;
+            if (newLevel > gameState.level) {
+                gameState.level = newLevel;
+                const el = document.getElementById('level-up');
+                el.innerText = '🎉 LEVEL ' + newLevel + '！';
+                el.classList.add('show');
+                setTimeout(() => el.classList.remove('show'), 1500);
+                playSpecialSound();
+            }
+        }
+
+        function updateHUD() {
+            document.getElementById('score').innerText = gameState.score;
+            document.getElementById('level').innerText = 'Lv.' + gameState.level;
+            document.getElementById('combo').innerText = gameState.combo;
+        }
+
+        // ============ 手指指示器繪製 ============
+        function drawFingerIndicator(ctx) {
+            if (!fingerPos) return;
             
             ctx.save();
+            // 外圈光暈
+            const grad = ctx.createRadialGradient(
+                fingerPos.x, fingerPos.y, 0,
+                fingerPos.x, fingerPos.y, 30
+            );
+            grad.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+            grad.addColorStop(0.5, 'rgba(255, 105, 180, 0.5)');
+            grad.addColorStop(1, 'rgba(255, 105, 180, 0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(fingerPos.x, fingerPos.y, 30, 0, Math.PI * 2);
+            ctx.fill();
             
-            // 連接線條（青色發光）
-            const connections = [
-                [0,1],[1,2],[2,3],[3,4],       // 拇指
-                [0,5],[5,6],[6,7],[7,8],       // 食指
-                [0,9],[9,10],[10,11],[11,12],  // 中指
-                [0,13],[13,14],[14,15],[15,16],// 無名指
-                [0,17],[17,18],[18,19],[19,20],// 尾指
-                [5,9],[9,13],[13,17]           // 手掌
-            ];
-            
-            // 外發光
-            ctx.shadowColor = 'rgba(0, 229, 255, 0.8)';
-            ctx.shadowBlur = 8;
-            ctx.strokeStyle = 'rgba(0, 229, 255, 0.6)';
-            ctx.lineWidth = 2;
-            
-            for (const [a, b] of connections) {
-                const pa = toScreen(landmarks[a]);
-                const pb = toScreen(landmarks[b]);
-                ctx.beginPath();
-                ctx.moveTo(pa.x, pa.y);
-                ctx.lineTo(pb.x, pb.y);
-                ctx.stroke();
-            }
-            
-            // 關節點
-            ctx.shadowBlur = 10;
-            for (let i = 0; i < landmarks.length; i++) {
-                const p = toScreen(landmarks[i]);
-                // 外圈
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(0, 229, 255, 0.9)';
-                ctx.fill();
-                // 內圈
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
-                ctx.fillStyle = '#fff';
-                ctx.fill();
-            }
-            
-            ctx.shadowBlur = 0;
+            // 內圈
+            ctx.fillStyle = '#FFF';
+            ctx.shadowColor = '#FF69B4';
+            ctx.shadowBlur = 15;
+            ctx.beginPath();
+            ctx.arc(fingerPos.x, fingerPos.y, 8, 0, Math.PI * 2);
+            ctx.fill();
             ctx.restore();
         }
 
+        // ============ MediaPipe 設定 ============
         function onResults(results) {
-            // FPS
-            if (!onResults.lastTime) onResults.lastTime = performance.now();
-            if (!onResults.frameCount) onResults.frameCount = 0;
-            onResults.frameCount++;
-            const now = performance.now();
-            if (now - onResults.lastTime >= 1000) {
-                hudFps.innerText = onResults.frameCount;
-                onResults.frameCount = 0;
-                onResults.lastTime = now;
-            }
-
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
             canvasCtx.save();
             canvasCtx.scale(dpr, dpr);
             canvasCtx.scale(-1, 1);
-            canvasCtx.translate(-window.innerWidth, 0);
-
-            const W = window.innerWidth;
-            const H = window.innerHeight;
+            canvasCtx.translate(-W, 0);
 
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 const landmarks = results.multiHandLandmarks[0];
-                
-                // 計算每根手指的彎曲度
-                const thumbCurl = getFingerCurl(landmarks, 4, 3, 2);
-                const indexCurl = getFingerCurl(landmarks, 8, 6, 5);
-                const middleCurl = getFingerCurl(landmarks, 12, 10, 9);
-                const ringCurl = getFingerCurl(landmarks, 16, 14, 13);
-                const pinkyCurl = getFingerCurl(landmarks, 20, 18, 17);
-                
-                // 握拳偵測（所有手指彎曲）
-                const fistLevel = (thumbCurl + indexCurl + middleCurl + ringCurl + pinkyCurl) / 5;
-                const isFist = fistLevel > 0.6;
-                
-                // 食指伸直偵測（發射光束）
-                const indexExtended = indexCurl < 0.3;
-                const otherFingersCurled = middleCurl > 0.5 && ringCurl > 0.5 && pinkyCurl > 0.5;
-                const isPointing = indexExtended && otherFingersCurled;
-                
-                // 張開五指偵測（充能）
-                const allExtended = (thumbCurl + indexCurl + middleCurl + ringCurl + pinkyCurl) / 5 < 0.3;
-                
-                // 平滑目標值
-                const targetPower = isFist ? 1 : 0;
-                const targetBeam = isPointing ? 1 : 0;
-                const targetCharge = allExtended ? 1 : 0;
-                
-                smoothState.power = lerp(smoothState.power, targetPower, 0.2);
-                smoothState.beam = lerp(smoothState.beam, targetBeam, 0.3);
-                smoothState.charge = lerp(smoothState.charge, targetCharge, 0.2);
-
-                // 繪製 HUD 骨骼（底層）
-                drawHUDSkeleton(canvasCtx, landmarks, W, H);
-                
-                // 繪製鋼鐵人手套（上層）
-                drawIronManGlove(
-                    canvasCtx, landmarks, W, H,
-                    smoothState.power,
-                    smoothState.beam,
-                    smoothState.charge
-                );
-
-                // 更新 HUD
-                hudSystem.innerText = isPointing ? 'FIRING' : (isFist ? 'REPULSOR ON' : (allExtended ? 'CHARGING' : 'STANDBY'));
-                hudSystem.className = 'hud-value' + (isPointing ? ' hud-warning' : '');
-                hudPower.innerText = Math.round(smoothState.power * 100) + '%';
-                statusBar.innerText = isPointing ? '⚡ TARGETING...' : (isFist ? '◆ REPULSOR ACTIVE' : (allExtended ? '◇ CHARGING ARC REACTOR' : '● SYSTEM ONLINE'));
-                isTracking = true;
-
+                // 使用食指指尖
+                const tip = landmarks[8];
+                fingerPos = { x: tip.x * W, y: tip.y * H };
+                fingerVisible = true;
             } else {
-                isTracking = false;
-                smoothState.power = lerp(smoothState.power, 0, 0.1);
-                smoothState.beam = lerp(smoothState.beam, 0, 0.1);
-                smoothState.charge = lerp(smoothState.charge, 0, 0.1);
-                hudSystem.innerText = 'NO SIGNAL';
-                hudSystem.className = 'hud-value hud-warning';
-                hudPower.innerText = '0%';
-                statusBar.innerText = '○ SEARCHING FOR HAND...';
+                fingerVisible = false;
+                fingerPos = null;
+            }
+
+            if (gameState.running) {
+                // 繪製泡泡
+                for (const b of bubbles) drawBubble(canvasCtx, b);
+                
+                // 繪製粒子
+                drawParticles(canvasCtx);
+                
+                // 繪製飄字
+                drawFloatingTexts(canvasCtx);
+                
+                // 繪製手指指示器
+                drawFingerIndicator(canvasCtx);
+                
+                // 碰撞檢測
+                if (fingerVisible) checkCollisions();
             }
 
             canvasCtx.restore();
@@ -558,37 +897,157 @@
         });
         hands.onResults(onResults);
 
-        async function processFrame() {
-            if (videoElement.readyState >= 2) {
-                await hands.send({image: videoElement});
+        // ============ 遊戲循環 ============
+        let lastTime = 0;
+        let spawnTimer = 0;
+        let gameStartTime = 0;
+
+        function gameLoop(timestamp) {
+            if (!lastTime) lastTime = timestamp;
+            const dt = Math.min(0.05, (timestamp - lastTime) / 1000);
+            lastTime = timestamp;
+
+            if (gameState.running) {
+                // 更新時間
+                const elapsed = (Date.now() - gameStartTime) / 1000;
+                gameState.timeLeft = Math.max(0, GAME_DURATION - elapsed);
+                
+                // 慢動作結束
+                if (gameState.slowMotion && Date.now() > gameState.slowMotionEnd) {
+                    gameState.slowMotion = false;
+                }
+                
+                // 連擊超時重置（2秒沒戳到就重置）
+                if (gameState.combo > 0 && Date.now() - gameState.lastComboTime > 2000) {
+                    gameState.combo = 0;
+                    updateHUD();
+                }
+                
+                // 生成泡泡
+                spawnTimer += dt;
+                const spawnInterval = Math.max(0.3, 1.2 - gameState.level * 0.1);
+                if (spawnTimer >= spawnInterval) {
+                    spawnBubble();
+                    spawnTimer = 0;
+                }
+                
+                // 更新
+                updateBubbles(dt);
+                updateParticles(dt);
+                updateFloatingTexts(dt);
+                
+                // 更新時間條
+                const timePercent = (gameState.timeLeft / GAME_DURATION) * 100;
+                document.getElementById('time-bar').style.width = timePercent + '%';
+                document.getElementById('time-text').innerText = Math.ceil(gameState.timeLeft);
+                
+                // 遊戲結束
+                if (gameState.timeLeft <= 0) {
+                    endGame();
+                }
             }
-            requestAnimationFrame(processFrame);
+
+            requestAnimationFrame(gameLoop);
         }
 
-        document.getElementById('btn-start').addEventListener('click', async () => {
-            document.getElementById('start-overlay').classList.add('hidden');
-            hudSystem.innerText = 'BOOTING';
+        // ============ 遊戲流程 ============
+        async function startGame() {
+            document.getElementById('start-screen').classList.add('hidden');
+            
+            try {
+                await Tone.start();
+                audioReady = true;
+            } catch(e) {
+                console.warn('Audio init failed:', e);
+            }
 
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
                     video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
                     audio: false
                 });
-                
                 videoElement.srcObject = stream;
+                await videoElement.play();
                 
-                videoElement.onloadeddata = async () => {
-                    try { await videoElement.play(); } catch(e) { console.warn(e); }
-                    hudSystem.innerText = 'STANDBY';
-                    processFrame();
+                // 開始推理循環
+                async function processFrame() {
+                    if (videoElement.readyState >= 2) {
+                        await hands.send({image: videoElement});
+                    }
+                    requestAnimationFrame(processFrame);
+                }
+                processFrame();
+                
+                // 重置遊戲狀態
+                gameState = {
+                    score: 0, combo: 0, maxCombo: 0, level: 1,
+                    popped: 0, timeLeft: GAME_DURATION,
+                    slowMotion: false, slowMotionEnd: 0,
+                    running: true, lastComboTime: Date.now()
                 };
+                bubbles.length = 0;
+                particles.length = 0;
+                floatingTexts.length = 0;
+                gameStartTime = Date.now();
+                updateHUD();
+                
+                // 啟動遊戲循環
+                requestAnimationFrame(gameLoop);
+                
             } catch (err) {
-                console.error(err);
-                hudSystem.innerText = 'ERROR';
-                hudSystem.className = 'hud-value hud-warning';
-                statusBar.innerText = '✕ CAMERA ACCESS DENIED';
+                console.error('啟動失敗:', err);
+                alert('無法啟動攝影機，請檢查權限設定！');
             }
-        });
+        }
+
+        function endGame() {
+            gameState.running = false;
+            
+            // 顯示結算
+            document.getElementById('final-score').innerText = gameState.score;
+            document.getElementById('final-popped').innerText = gameState.popped;
+            document.getElementById('final-combo').innerText = gameState.maxCombo;
+            document.getElementById('final-level').innerText = 'Lv.' + gameState.level;
+            
+            // 成就徽章
+            const badges = [];
+            if (gameState.popped >= 30) badges.push('🎯 泡泡殺手');
+            if (gameState.maxCombo >= 10) badges.push('🔥 連擊大師');
+            if (gameState.score >= 1000) badges.push('👑 泡泡之王');
+            if (gameState.level >= 5) badges.push('⭐ 傳奇玩家');
+            if (gameState.popped >= 50) badges.push('💪 不屈不撓');
+            
+            const badgesEl = document.getElementById('badges');
+            badgesEl.innerHTML = '';
+            if (badges.length === 0) badgesEl.innerHTML = '<div class="badge">再接再厲！</div>';
+            else badges.forEach(b => {
+                const div = document.createElement('div');
+                div.className = 'badge';
+                div.innerText = b;
+                badgesEl.appendChild(div);
+            });
+            
+            document.getElementById('game-over').classList.add('show');
+        }
+
+        function restartGame() {
+            document.getElementById('game-over').classList.remove('show');
+            gameState = {
+                score: 0, combo: 0, maxCombo: 0, level: 1,
+                popped: 0, timeLeft: GAME_DURATION,
+                slowMotion: false, slowMotionEnd: 0,
+                running: true, lastComboTime: Date.now()
+            };
+            bubbles.length = 0;
+            particles.length = 0;
+            floatingTexts.length = 0;
+            gameStartTime = Date.now();
+            updateHUD();
+        }
+
+        // ============ 事件綁定 ============
+        document.getElementById('btn-start').addEventListener('click', startGame);
+        document.getElementById('btn-restart').addEventListener('click', restartGame);
     </script>
 </body>
 </html>
