@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>🫧 泡泡大作戰 v1.0.0</title>
+    <title>🫧 泡泡大作戰 v1.0.1</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -18,17 +18,19 @@
             background: linear-gradient(180deg, #87CEEB 0%, #FFB6C1 50%, #FFD700 100%);
         }
 
-        /* 不鏡像，保持真實視角 */
+        /* 🔧 修復：video 和 Canvas 都做鏡像，符合用戶直覺 */
         #videoInput, #canvasOutput {
             position: absolute;
             top: 0; left: 0;
             width: 100%; height: 100%;
             object-fit: cover;
+            -webkit-transform: scaleX(-1);
+            transform: scaleX(-1);
         }
         #videoInput { z-index: 1; opacity: 0.25; filter: blur(3px) brightness(1.1); }
         #canvasOutput { z-index: 2; pointer-events: none; }
 
-        /* 版本號顯示 */
+        /* 版本號 - 右上角 */
         #version-tag {
             position: absolute;
             top: calc(5px + env(safe-area-inset-top));
@@ -46,7 +48,7 @@
         #hud-top {
             position: absolute;
             top: calc(10px + env(safe-area-inset-top));
-            left: 10px; right: 60px;
+            left: 10px; right: 70px;
             display: flex;
             justify-content: space-between;
             z-index: 10;
@@ -170,6 +172,21 @@
             z-index: 100;
             padding: 20px;
             text-align: center;
+        }
+        /* 🔧 首頁版本號 */
+        #start-version {
+            position: absolute;
+            top: calc(15px + env(safe-area-inset-top));
+            right: 15px;
+            background: rgba(255, 255, 255, 0.3);
+            color: #FFF;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
         }
         #start-screen h1 {
             font-size: 3rem;
@@ -312,7 +329,7 @@
     <video id="videoInput" autoplay playsinline muted></video>
     <canvas id="canvasOutput"></canvas>
     <div id="screen-effects"></div>
-    <div id="version-tag">v1.0.0</div>
+    <div id="version-tag">v1.0.1</div>
 
     <!-- HUD -->
     <div id="hud-top">
@@ -337,6 +354,7 @@
 
     <!-- 開始畫面 -->
     <div id="start-screen">
+        <div id="start-version">v1.0.1</div>
         <h1>泡泡大作戰</h1>
         <div class="mascot">🫧</div>
         <p>用你的手指戳破飛來的泡泡！<br>小心黑色的炸彈泡泡喔 💣</p>
@@ -380,8 +398,9 @@
 
     <script>
         // ============ 版本資訊 ============
-        const VERSION = '1.0.0';
+        const VERSION = '1.0.1';
         console.log(`🫧 泡泡大作戰 v${VERSION} 啟動`);
+        console.log(`📅 更新內容：修復左右反轉問題、首頁加入版本號`);
 
         // ============ 遊戲狀態 ============
         const GAME_DURATION = 60;
@@ -555,22 +574,22 @@
             let x, y, vx, vy;
             const speed = (1 + gameState.level * 0.3) * (0.5 + Math.random() * 0.8);
             
-            if (side === 0) { // 從下
+            if (side === 0) {
                 x = Math.random() * W;
                 y = H + radius;
                 vx = (Math.random() - 0.5) * speed;
                 vy = -speed;
-            } else if (side === 1) { // 從上
+            } else if (side === 1) {
                 x = Math.random() * W;
                 y = -radius;
                 vx = (Math.random() - 0.5) * speed;
                 vy = speed * 0.7;
-            } else if (side === 2) { // 從左
+            } else if (side === 2) {
                 x = -radius;
                 y = Math.random() * H;
                 vx = speed;
                 vy = (Math.random() - 0.5) * speed * 0.5;
-            } else { // 從右
+            } else {
                 x = W + radius;
                 y = Math.random() * H;
                 vx = -speed;
@@ -956,11 +975,15 @@
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
             canvasCtx.save();
             canvasCtx.scale(dpr, dpr);
-            // 不鏡像，保持真實視角
+            
+            // 🔧 修復：Canvas 鏡像繪圖，與 video 的 CSS 鏡像對應
+            canvasCtx.scale(-1, 1);
+            canvasCtx.translate(-W, 0);
 
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 const landmarks = results.multiHandLandmarks[0];
                 const tip = landmarks[8];
+                // 🔧 修復：landmark 座標直接對應（因為 Canvas 已鏡像）
                 fingerPos = { x: tip.x * W, y: tip.y * H };
                 fingerVisible = true;
             } else {
