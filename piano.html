@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>🫧 泡泡大作戰 v1.1.2</title>
+    <title> 手部追蹤遊戲廳 v2.0.0</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -15,52 +15,274 @@
             -webkit-user-select: none;
             user-select: none;
             padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-            background: linear-gradient(180deg, #87CEEB 0%, #FFB6C1 50%, #FFD700 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
-        /*  修復：Video 鏡像，Canvas 不鏡像 */
-        #videoInput {
+        #videoInput, #canvasOutput {
             position: absolute;
             top: 0; left: 0;
             width: 100%; height: 100%;
             object-fit: cover;
-            z-index: 1; 
-            opacity: 0.25; 
-            filter: blur(3px) brightness(1.1);
+            z-index: 1;
         }
-        #canvasOutput {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 2; 
-            pointer-events: none;
-            /* 不設任何 transform */
-        }
+        #videoInput { opacity: 0; }
+        #canvasOutput { z-index: 2; pointer-events: none; }
 
-        #version-tag {
+        /* 主頁 */
+        #home-screen {
             position: absolute;
-            top: calc(5px + env(safe-area-inset-top));
-            right: 10px;
-            background: rgba(0, 0, 0, 0.5);
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 20px;
+        }
+        #home-screen.hidden { display: none; }
+        
+        .home-title {
+            font-size: 2.5rem;
             color: #FFF;
-            padding: 3px 8px;
-            border-radius: 10px;
-            font-size: 10px;
-            z-index: 50;
-            pointer-events: none;
+            text-shadow: 3px 3px 0 rgba(0,0,0,0.3);
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .home-subtitle {
+            font-size: 1rem;
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .home-version {
+            position: absolute;
+            top: calc(15px + env(safe-area-inset-top));
+            right: 15px;
+            background: rgba(255,255,255,0.2);
+            color: #FFF;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
         }
 
-        #hud-top {
+        .game-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+            max-width: 400px;
+        }
+        .game-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 25px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border: 4px solid transparent;
+        }
+        .game-card:active {
+            transform: scale(0.95);
+        }
+        .game-card.bubble { border-color: #FF69B4; }
+        .game-card.racing { border-color: #FF4500; }
+        
+        .game-icon {
+            font-size: 4rem;
+            min-width: 80px;
+            text-align: center;
+        }
+        .game-info { flex: 1; }
+        .game-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .game-desc {
+            font-size: 0.85rem;
+            color: #666;
+            line-height: 1.4;
+        }
+        .game-tag {
+            display: inline-block;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #FFF;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+        .game-tag.new {
+            background: linear-gradient(135deg, #FF4500, #FF6347);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* 遊戲 HUD */
+        #game-hud {
+            position: absolute;
+            top: 0; left: 0; width: 100%;
+            padding: calc(10px + env(safe-area-inset-top)) 10px 10px;
+            display: none;
+            justify-content: space-between;
+            z-index: 10;
+            pointer-events: none;
+        }
+        #game-hud.show { display: flex; }
+        
+        .hud-item {
+            background: rgba(255,255,255,0.9);
+            border-radius: 15px;
+            padding: 8px 12px;
+            text-align: center;
+            min-width: 70px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .hud-label { font-size: 10px; color: #666; font-weight: bold; }
+        .hud-value { font-size: 18px; font-weight: bold; color: #333; }
+
+        /* 能量槽 */
+        #energy-bar-container {
+            position: absolute;
+            bottom: calc(20px + env(safe-area-inset-bottom));
+            left: 15px; right: 15px;
+            height: 20px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            z-index: 10;
+            display: none;
+            border: 2px solid rgba(255,255,255,0.5);
+        }
+        #energy-bar-container.show { display: block; }
+        #energy-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #00BFFF, #1E90FF, #FFD700);
+            width: 0%;
+            transition: width 0.3s;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(30, 144, 255, 0.8);
+        }
+        #energy-label {
+            position: absolute;
+            bottom: calc(45px + env(safe-area-inset-bottom));
+            left: 50%;
+            transform: translateX(-50%);
+            color: #FFF;
+            font-size: 14px;
+            font-weight: bold;
+            text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+            z-index: 10;
+            display: none;
+        }
+        #energy-label.show { display: block; }
+
+        /* 技能提示 */
+        #skill-hint {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: #FFD700;
+            padding: 15px 25px;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            z-index: 15;
+            display: none;
+            text-align: center;
+            border: 3px solid #FFD700;
+            animation: skillPulse 1s infinite;
+        }
+        #skill-hint.show { display: block; }
+        @keyframes skillPulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+        }
+
+        /* 遊戲結束 */
+        #game-over {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+        #game-over.show { display: flex; }
+        #game-over h2 {
+            font-size: 2.5rem;
+            color: #FFD700;
+            text-shadow: 3px 3px 0 rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+        }
+        .final-stats {
+            background: rgba(255,255,255,0.95);
+            border-radius: 25px;
+            padding: 25px;
+            margin-bottom: 20px;
+            min-width: 280px;
+            border: 4px solid #FF4500;
+        }
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            font-size: 1.1rem;
+            color: #333;
+        }
+        .stat-row .label { color: #666; }
+        .stat-row .value { color: #FF4500; font-weight: bold; }
+        
+        .btn {
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            font-family: inherit;
+            cursor: pointer;
+            margin: 5px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #FF4500, #FF6347);
+            color: #FFF;
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: #FFF;
+            border: 2px solid rgba(255,255,255,0.5);
+        }
+        .btn:active { transform: scale(0.95); }
+
+        /* 泡泡遊戲 HUD（保留） */
+        #bubble-hud {
             position: absolute;
             top: calc(10px + env(safe-area-inset-top));
             left: 10px; right: 70px;
-            display: flex;
+            display: none;
             justify-content: space-between;
             z-index: 10;
             pointer-events: none;
             gap: 8px;
         }
-        .hud-card {
+        #bubble-hud.show { display: flex; }
+        .bubble-hud-card {
             background: rgba(255, 255, 255, 0.85);
             border: 3px solid #FF69B4;
             border-radius: 20px;
@@ -69,313 +291,10 @@
             text-align: center;
             flex: 1;
         }
-        .hud-label { font-size: 10px; color: #FF1493; font-weight: bold; letter-spacing: 1px; }
-        .hud-value {
-            font-size: 22px; color: #FF1493; font-weight: bold;
-            text-shadow: 2px 2px 0 #FFF, 3px 3px 0 rgba(255, 105, 180, 0.3);
-        }
+        .bubble-hud-label { font-size: 10px; color: #FF1493; font-weight: bold; }
+        .bubble-hud-value { font-size: 22px; color: #FF1493; font-weight: bold; }
 
-        #combo-display {
-            position: absolute;
-            top: 30%; left: 50%;
-            transform: translateX(-50%) scale(0);
-            font-size: 60px; font-weight: bold;
-            color: #FF6B00;
-            text-shadow: 3px 3px 0 #FFF, 5px 5px 0 rgba(255, 107, 0, 0.5);
-            z-index: 15; pointer-events: none;
-            transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-        }
-        #combo-display.show { transform: translateX(-50%) scale(1); }
-
-        #level-up {
-            position: absolute;
-            top: 40%; left: 50%;
-            transform: translate(-50%, -50%) scale(0);
-            font-size: 40px; font-weight: bold;
-            background: linear-gradient(45deg, #FFD700, #FF69B4, #00BFFF);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
-            z-index: 15; pointer-events: none;
-            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-        }
-        #level-up.show { transform: translate(-50%, -50%) scale(1.2); }
-
-        #screen-effects {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: 20;
-        }
-        .screen-flash {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: white;
-            opacity: 0;
-            animation: flash 0.3s ease-out;
-        }
-        @keyframes flash { 0% { opacity: 0.6; } 100% { opacity: 0; } }
-        .screen-shake { animation: shake 0.3s ease-out; }
-        @keyframes shake {
-            0%, 100% { transform: translate(0, 0); }
-            25% { transform: translate(-10px, -5px); }
-            50% { transform: translate(10px, 5px); }
-            75% { transform: translate(-5px, 10px); }
-        }
-        .screen-vignette {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: radial-gradient(circle, transparent 50%, rgba(255, 0, 0, 0.3) 100%);
-            opacity: 0;
-            animation: vignette 0.5s ease-out;
-        }
-        @keyframes vignette { 0% { opacity: 0.8; } 100% { opacity: 0; } }
-
-        #settings-screen {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            z-index: 150;
-            padding: calc(20px + env(safe-area-inset-top)) 20px 20px;
-            overflow-y: auto;
-        }
-        #settings-screen.hidden { display: none; }
-        
-        .settings-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            max-width: 400px;
-            margin-bottom: 20px;
-        }
-        .settings-title { font-size: 1.8rem; color: #FFF; text-shadow: 2px 2px 0 rgba(0,0,0,0.3); }
-        .settings-version {
-            background: rgba(255, 255, 255, 0.2);
-            color: #FFF;
-            padding: 4px 12px;
-            border-radius: 15px;
-            font-size: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.4);
-        }
-
-        .settings-group {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 15px;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-        }
-        .settings-group-title {
-            font-size: 1rem;
-            color: #764ba2;
-            font-weight: bold;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .settings-group-desc { font-size: 0.8rem; color: #888; margin-bottom: 10px; line-height: 1.4; }
-
-        .option-group { display: flex; gap: 8px; flex-wrap: wrap; }
-        .option-btn {
-            flex: 1;
-            min-width: 80px;
-            padding: 12px 8px;
-            background: #f0f0f0;
-            border: 3px solid transparent;
-            border-radius: 15px;
-            font-family: inherit;
-            font-size: 0.9rem;
-            font-weight: bold;
-            color: #666;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: center;
-        }
-        .option-btn .icon { font-size: 1.5rem; display: block; margin-bottom: 4px; }
-        .option-btn.active {
-            background: linear-gradient(135deg, #FFD700, #FFA500);
-            color: #FFF;
-            border-color: #FFF;
-            box-shadow: 0 4px 10px rgba(255, 165, 0, 0.4);
-            transform: scale(1.05);
-        }
-        .option-btn:active { transform: scale(0.95); }
-
-        .option-btn[data-difficulty="easy"].active { background: linear-gradient(135deg, #90EE90, #32CD32); }
-        .option-btn[data-difficulty="normal"].active { background: linear-gradient(135deg, #FFD700, #FFA500); }
-        .option-btn[data-difficulty="hard"].active { background: linear-gradient(135deg, #FF6B6B, #C62828); }
-
-        .main-menu-btn {
-            margin-top: 10px;
-            padding: 18px 50px;
-            background: linear-gradient(135deg, #FFD700, #FFA500);
-            color: #FFF;
-            border: 4px solid #FFF;
-            border-radius: 50px;
-            font-size: 1.5rem;
-            font-weight: bold;
-            font-family: inherit;
-            box-shadow: 0 8px 20px rgba(255, 165, 0, 0.5), inset 0 -4px 0 rgba(0,0,0,0.2);
-            cursor: pointer;
-            width: 100%;
-            max-width: 400px;
-        }
-        .main-menu-btn:active { transform: scale(0.95); }
-
-        .secondary-btn {
-            margin-top: 10px;
-            padding: 12px 30px;
-            background: rgba(255, 255, 255, 0.2);
-            color: #FFF;
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            border-radius: 50px;
-            font-size: 1rem;
-            font-family: inherit;
-            cursor: pointer;
-            width: 100%;
-            max-width: 400px;
-        }
-
-        #start-screen {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #FF9A9E 0%, #FAD0C4 50%, #FBC2EB 100%);
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            padding: 20px;
-            text-align: center;
-        }
-        #start-screen.show { display: flex; }
-        #start-version {
-            position: absolute;
-            top: calc(15px + env(safe-area-inset-top));
-            right: 15px;
-            background: rgba(255, 255, 255, 0.3);
-            color: #FFF;
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 12px;
-            font-weight: bold;
-            border: 2px solid rgba(255, 255, 255, 0.5);
-        }
-        #start-screen h1 {
-            font-size: 3rem;
-            color: #FFF;
-            text-shadow: 3px 3px 0 #FF1493, 6px 6px 0 rgba(0,0,0,0.2);
-            margin-bottom: 10px;
-            animation: bounce 2s infinite;
-        }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
-        #start-screen .mascot { font-size: 80px; margin: 20px 0; animation: wiggle 3s infinite; }
-        @keyframes wiggle { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
-        #start-screen p {
-            font-size: 1.1rem;
-            color: #FFF;
-            text-shadow: 2px 2px 0 rgba(255, 20, 147, 0.5);
-            margin-bottom: 10px;
-            line-height: 1.6;
-        }
-        .current-settings {
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 15px;
-            padding: 10px 20px;
-            margin: 15px 0;
-            color: #FFF;
-            font-size: 0.9rem;
-            border: 2px dashed rgba(255, 255, 255, 0.6);
-        }
-        .btn-start {
-            margin-top: 10px;
-            padding: 18px 50px;
-            background: linear-gradient(135deg, #FFD700, #FFA500);
-            color: #FFF;
-            border: 4px solid #FFF;
-            border-radius: 50px;
-            font-size: 1.5rem;
-            font-weight: bold;
-            font-family: inherit;
-            box-shadow: 0 8px 20px rgba(255, 165, 0, 0.5), inset 0 -4px 0 rgba(0,0,0,0.2);
-            cursor: pointer;
-        }
-        .btn-start:active { transform: scale(0.95); }
-
-        #game-over {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            padding: 20px;
-            text-align: center;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-        }
-        #game-over.show { display: flex; }
-        #game-over h2 {
-            font-size: 2.5rem;
-            color: #FFD700;
-            text-shadow: 3px 3px 0 #FF1493;
-            margin-bottom: 20px;
-        }
-        .final-stats {
-            background: rgba(255, 255, 255, 0.95);
-            border: 4px solid #FF69B4;
-            border-radius: 25px;
-            padding: 25px;
-            margin-bottom: 20px;
-            min-width: 280px;
-        }
-        .stat-row { display: flex; justify-content: space-between; margin: 10px 0; font-size: 1.2rem; color: #333; }
-        .stat-row .label { color: #888; }
-        .stat-row .value { color: #FF1493; font-weight: bold; }
-        .badges { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 15px; }
-        .badge {
-            background: linear-gradient(135deg, #FFD700, #FFA500);
-            color: #FFF;
-            padding: 6px 12px;
-            border-radius: 15px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-
-        #time-bar-container {
-            position: absolute;
-            bottom: calc(15px + env(safe-area-inset-bottom));
-            left: 15px; right: 15px;
-            height: 14px;
-            background: rgba(255, 255, 255, 0.4);
-            border: 2px solid #FFF;
-            border-radius: 10px;
-            overflow: hidden;
-            z-index: 10;
-            pointer-events: none;
-        }
-        #time-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #00FF00, #FFFF00, #FF69B4);
-            width: 100%;
-            transition: width 0.1s linear;
-            border-radius: 8px;
-        }
-        #time-text {
+        #bubble-time-text {
             position: absolute;
             bottom: calc(35px + env(safe-area-inset-bottom));
             left: 50%;
@@ -385,178 +304,105 @@
             font-weight: bold;
             text-shadow: 2px 2px 0 #FF1493;
             z-index: 10;
-            pointer-events: none;
-        }
-
-        #difficulty-indicator {
-            position: absolute;
-            top: calc(75px + env(safe-area-inset-top));
-            right: 10px;
-            background: rgba(0, 0, 0, 0.5);
-            color: #FFF;
-            padding: 4px 10px;
-            border-radius: 10px;
-            font-size: 11px;
-            z-index: 10;
-            pointer-events: none;
-        }
-
-        #debug-info {
-            position: absolute;
-            bottom: calc(60px + env(safe-area-inset-bottom));
-            left: 10px;
-            background: rgba(0, 0, 0, 0.6);
-            color: #0f0;
-            padding: 6px 10px;
-            border-radius: 8px;
-            font-size: 10px;
-            font-family: monospace;
-            z-index: 50;
-            pointer-events: none;
             display: none;
         }
-        #debug-info.show { display: block; }
+        #bubble-time-text.show { display: block; }
+        #bubble-time-bar-container {
+            position: absolute;
+            bottom: calc(15px + env(safe-area-inset-bottom));
+            left: 15px; right: 15px;
+            height: 14px;
+            background: rgba(255, 255, 255, 0.4);
+            border: 2px solid #FFF;
+            border-radius: 10px;
+            overflow: hidden;
+            z-index: 10;
+            display: none;
+        }
+        #bubble-time-bar-container.show { display: block; }
+        #bubble-time-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #00FF00, #FFFF00, #FF69B4);
+            width: 100%;
+            transition: width 0.1s linear;
+        }
     </style>
 </head>
 <body>
 
     <video id="videoInput" autoplay playsinline muted></video>
     <canvas id="canvasOutput"></canvas>
-    <div id="screen-effects"></div>
-    <div id="version-tag">v1.1.2</div>
-    <div id="difficulty-indicator"></div>
-    <div id="debug-info"></div>
 
-    <div id="hud-top">
-        <div class="hud-card">
-            <div class="hud-label">⭐ 分數</div>
-            <div class="hud-value" id="score">0</div>
-        </div>
-        <div class="hud-card">
-            <div class="hud-label">🏆 等級</div>
-            <div class="hud-value" id="level">Lv.1</div>
-        </div>
-        <div class="hud-card">
-            <div class="hud-label"> 連擊</div>
-            <div class="hud-value" id="combo">0</div>
+    <!-- 主頁 -->
+    <div id="home-screen">
+        <div class="home-version">v2.0.0</div>
+        <div class="home-title">🎮 手部追蹤遊戲廳</div>
+        <div class="home-subtitle">用你的手玩遊戲！</div>
+        
+        <div class="game-cards">
+            <div class="game-card bubble" onclick="startBubbleGame()">
+                <div class="game-icon">🫧</div>
+                <div class="game-info">
+                    <div class="game-name">泡泡大作戰</div>
+                    <div class="game-desc">戳破飛來的彩色泡泡，小心炸彈！</div>
+                    <div class="game-tag">經典</div>
+                </div>
+            </div>
+            
+            <div class="game-card racing" onclick="startRacingGame()">
+                <div class="game-icon">🏎️</div>
+                <div class="game-info">
+                    <div class="game-name">極速狂飆</div>
+                    <div class="game-desc">握拳控制賽車，張開五指觸發技能！</div>
+                    <div class="game-tag new">NEW!</div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div id="combo-display"></div>
-    <div id="level-up"></div>
-    <div id="time-text">60</div>
-    <div id="time-bar-container"><div id="time-bar"></div></div>
-
-    <div id="settings-screen">
-        <div class="settings-header">
-            <div class="settings-title">️ 設定</div>
-            <div class="settings-version">v1.1.2</div>
+    <!-- 泡泡遊戲 HUD -->
+    <div id="bubble-hud">
+        <div class="bubble-hud-card">
+            <div class="bubble-hud-label">⭐ 分數</div>
+            <div class="bubble-hud-value" id="bubble-score">0</div>
         </div>
-
-        <div class="settings-group">
-            <div class="settings-group-title">🪞 鏡頭方向</div>
-            <div class="settings-group-desc">
-                如果手指移動方向與激光點相反，請切換此選項
-            </div>
-            <div class="option-group" id="mirror-options">
-                <button class="option-btn active" data-mirror="mirror">
-                    <span class="icon">🪞</span>
-                    鏡像模式
-                </button>
-                <button class="option-btn" data-mirror="real">
-                    <span class="icon"></span>
-                    真實模式
-                </button>
-            </div>
+        <div class="bubble-hud-card">
+            <div class="bubble-hud-label"> 等級</div>
+            <div class="bubble-hud-value" id="bubble-level">Lv.1</div>
         </div>
-
-        <div class="settings-group">
-            <div class="settings-group-title">🎮 遊戲難度</div>
-            <div class="settings-group-desc">選擇適合你的挑戰程度</div>
-            <div class="option-group" id="difficulty-options">
-                <button class="option-btn" data-difficulty="easy">
-                    <span class="icon">🌱</span>
-                    簡單
-                </button>
-                <button class="option-btn active" data-difficulty="normal">
-                    <span class="icon">⭐</span>
-                    普通
-                </button>
-                <button class="option-btn" data-difficulty="hard">
-                    <span class="icon">🔥</span>
-                    困難
-                </button>
-            </div>
+        <div class="bubble-hud-card">
+            <div class="bubble-hud-label">🎯 連擊</div>
+            <div class="bubble-hud-value" id="bubble-combo">0</div>
         </div>
-
-        <div class="settings-group">
-            <div class="settings-group-title">📹 攝影機</div>
-            <div class="settings-group-desc">前置鏡頭適合自拍，後置鏡頭畫質更好</div>
-            <div class="option-group" id="camera-options">
-                <button class="option-btn active" data-camera="user">
-                    <span class="icon">🤳</span>
-                    前置鏡頭
-                </button>
-                <button class="option-btn" data-camera="environment">
-                    <span class="icon">📷</span>
-                    後置鏡頭
-                </button>
-            </div>
-        </div>
-
-        <div class="settings-group">
-            <div class="settings-group-title">🐛 除錯模式</div>
-            <div class="settings-group-desc">顯示激光點座標，幫助確認方向是否正確</div>
-            <div class="option-group" id="debug-options">
-                <button class="option-btn" data-debug="off">
-                    <span class="icon">🚫</span>
-                    關閉
-                </button>
-                <button class="option-btn active" data-debug="on">
-                    <span class="icon">🔍</span>
-                    開啟
-                </button>
-            </div>
-        </div>
-
-        <button class="main-menu-btn" id="btn-to-start">下一步 →</button>
     </div>
+    <div id="bubble-time-text">60</div>
+    <div id="bubble-time-bar-container"><div id="bubble-time-bar"></div></div>
 
-    <div id="start-screen">
-        <div id="start-version">v1.1.2</div>
-        <h1>泡泡大作戰</h1>
-        <div class="mascot">🫧</div>
-        <p>用你的手指戳破飛來的泡泡！<br>小心黑色的炸彈泡泡喔 💣</p>
-        <div class="current-settings" id="current-settings">
-            難度：⭐ 普通 | 鏡頭：🪞 鏡像
+    <!-- 賽車遊戲 HUD -->
+    <div id="game-hud">
+        <div class="hud-item">
+            <div class="hud-label">🏆 分數</div>
+            <div class="hud-value" id="racing-score">0</div>
         </div>
-        <button class="btn-start" id="btn-start">開始遊戲！</button>
-        <button class="secondary-btn" id="btn-back-settings">← 返回設定</button>
+        <div class="hud-item">
+            <div class="hud-label"> 速度</div>
+            <div class="hud-value" id="racing-speed">100</div>
+        </div>
+        <div class="hud-item">
+            <div class="hud-label">❤️ 生命</div>
+            <div class="hud-value" id="racing-lives">3</div>
+        </div>
     </div>
+    <div id="energy-label">⚡ 能量槽 - 張開五指觸發技能！</div>
+    <div id="energy-bar-container"><div id="energy-bar"></div></div>
+    <div id="skill-hint">🚀 氮氣衝刺啟動！</div>
 
+    <!-- 遊戲結束 -->
     <div id="game-over">
-        <h2>🎉 遊戲結束！</h2>
-        <div class="final-stats">
-            <div class="stat-row">
-                <span class="label">最終分數</span>
-                <span class="value" id="final-score">0</span>
-            </div>
-            <div class="stat-row">
-                <span class="label">戳破泡泡</span>
-                <span class="value" id="final-popped">0</span>
-            </div>
-            <div class="stat-row">
-                <span class="label">最高連擊</span>
-                <span class="value" id="final-combo">0</span>
-            </div>
-            <div class="stat-row">
-                <span class="label">最終等級</span>
-                <span class="value" id="final-level">Lv.1</span>
-            </div>
-            <div class="badges" id="badges"></div>
-        </div>
-        <button class="btn-start" id="btn-restart">再玩一次！</button>
-        <button class="secondary-btn" id="btn-to-settings">⚙️ 修改設定</button>
+        <h2 id="game-over-title">🎉 遊戲結束！</h2>
+        <div class="final-stats" id="final-stats"></div>
+        <button class="btn btn-primary" id="btn-restart">再玩一次！</button>
+        <button class="btn btn-secondary" id="btn-home">返回主頁</button>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
@@ -564,220 +410,14 @@
     <script src="https://cdn.jsdelivr.net/npm/tone@14.7.77/build/Tone.js"></script>
 
     <script>
-        const VERSION = '1.1.2';
-        console.log(` 泡泡大作戰 v${VERSION} 啟動`);
-        console.log(`🔧 修復：Video 鏡像 + Canvas 不鏡像 + Landmarks 鏡像`);
+        const VERSION = '2.0.0';
+        console.log(`🎮 手部追蹤遊戲廳 v${VERSION} 啟動`);
 
-        const DEFAULT_SETTINGS = {
-            mirror: 'mirror',
-            difficulty: 'normal',
-            camera: 'user',
-            debug: 'on'
-        };
-
-        const DIFFICULTY_CONFIG = {
-            easy: { name: '🌱 簡單', duration: 90, speedMul: 0.7, bombWeight: 2, spawnInterval: 1.5, levelUpScore: 300 },
-            normal: { name: '⭐ 普通', duration: 60, speedMul: 1.0, bombWeight: 5, spawnInterval: 1.2, levelUpScore: 200 },
-            hard: { name: ' 困難', duration: 45, speedMul: 1.4, bombWeight: 10, spawnInterval: 0.8, levelUpScore: 150 }
-        };
-
-        function loadSettings() {
-            try {
-                const saved = localStorage.getItem('bubble_game_settings_v3');
-                if (saved) return { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
-            } catch (e) {}
-            return { ...DEFAULT_SETTINGS };
-        }
-
-        function saveSettings() {
-            try {
-                localStorage.setItem('bubble_game_settings_v3', JSON.stringify(settings));
-            } catch (e) {}
-        }
-
-        let settings = loadSettings();
-
-        function setupSettingsUI() {
-            document.querySelectorAll('#mirror-options .option-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.mirror === settings.mirror);
-                btn.addEventListener('click', () => {
-                    settings.mirror = btn.dataset.mirror;
-                    document.querySelectorAll('#mirror-options .option-btn').forEach(b => {
-                        b.classList.toggle('active', b.dataset.mirror === settings.mirror);
-                    });
-                    saveSettings();
-                    applyMirrorMode();
-                    updateStartScreenInfo();
-                });
-            });
-
-            document.querySelectorAll('#difficulty-options .option-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.difficulty === settings.difficulty);
-                btn.addEventListener('click', () => {
-                    settings.difficulty = btn.dataset.difficulty;
-                    document.querySelectorAll('#difficulty-options .option-btn').forEach(b => {
-                        b.classList.toggle('active', b.dataset.difficulty === settings.difficulty);
-                    });
-                    saveSettings();
-                    updateStartScreenInfo();
-                });
-            });
-
-            document.querySelectorAll('#camera-options .option-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.camera === settings.camera);
-                btn.addEventListener('click', () => {
-                    settings.camera = btn.dataset.camera;
-                    document.querySelectorAll('#camera-options .option-btn').forEach(b => {
-                        b.classList.toggle('active', b.dataset.camera === settings.camera);
-                    });
-                    saveSettings();
-                    updateStartScreenInfo();
-                });
-            });
-
-            document.querySelectorAll('#debug-options .option-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.debug === settings.debug);
-                btn.addEventListener('click', () => {
-                    settings.debug = btn.dataset.debug;
-                    document.querySelectorAll('#debug-options .option-btn').forEach(b => {
-                        b.classList.toggle('active', b.dataset.debug === settings.debug);
-                    });
-                    saveSettings();
-                    applyDebugMode();
-                });
-            });
-
-            applyMirrorMode();
-            applyDebugMode();
-            updateStartScreenInfo();
-        }
-
-        // 🔧 關鍵修復：只鏡像 Video，Canvas 不鏡像
-        function applyMirrorMode() {
-            const video = document.getElementById('videoInput');
-            if (settings.mirror === 'mirror') {
-                video.style.transform = 'scaleX(-1)';
-                video.style.webkitTransform = 'scaleX(-1)';
-            } else {
-                video.style.transform = 'scaleX(1)';
-                video.style.webkitTransform = 'scaleX(1)';
-            }
-        }
-
-        function applyDebugMode() {
-            const debugEl = document.getElementById('debug-info');
-            debugEl.classList.toggle('show', settings.debug === 'on');
-        }
-
-        function updateStartScreenInfo() {
-            const diff = DIFFICULTY_CONFIG[settings.difficulty];
-            const mirrorText = settings.mirror === 'mirror' ? '🪞 鏡像' : '📷 真實';
-            const cameraText = settings.camera === 'user' ? '🤳 前置' : '📷 後置';
-            document.getElementById('current-settings').innerHTML = 
-                `難度：${diff.name} | 鏡頭：${mirrorText} | ${cameraText}<br>` +
-                `<small>遊戲時間：${diff.duration} 秒</small>`;
-        }
-
-        setupSettingsUI();
-
-        function showSettings() {
-            document.getElementById('settings-screen').classList.remove('hidden');
-            document.getElementById('start-screen').classList.remove('show');
-            document.getElementById('game-over').classList.remove('show');
-        }
-
-        function showStartScreen() {
-            document.getElementById('settings-screen').classList.add('hidden');
-            document.getElementById('start-screen').classList.add('show');
-            document.getElementById('game-over').classList.remove('show');
-            updateStartScreenInfo();
-        }
-
-        document.getElementById('btn-to-start').addEventListener('click', showStartScreen);
-        document.getElementById('btn-back-settings').addEventListener('click', showSettings);
-        document.getElementById('btn-to-settings').addEventListener('click', showSettings);
-
-        let gameState = {
-            score: 0, combo: 0, maxCombo: 0, level: 1,
-            popped: 0, timeLeft: 60,
-            slowMotion: false, slowMotionEnd: 0,
-            running: false, lastComboTime: 0
-        };
-
+        // ============ 全局狀態 ============
+        let currentGame = null; // 'bubble' | 'racing' | null
         let audioReady = false;
-        
-        const popSynth = new Tone.MembraneSynth({
-            pitchDecay: 0.01, octaves: 6,
-            envelope: { attack: 0.001, decay: 0.15, sustain: 0, release: 0.05 }
-        }).toDestination();
-        popSynth.volume.value = -8;
 
-        const comboSynth = new Tone.Synth({
-            oscillator: { type: "triangle8" },
-            envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.4 }
-        }).toDestination();
-        comboSynth.volume.value = -6;
-
-        const specialSynth = new Tone.PolySynth(Tone.Synth, {
-            oscillator: { type: "sine" },
-            envelope: { attack: 0.01, decay: 0.4, sustain: 0.4, release: 0.8 }
-        }).toDestination();
-        specialSynth.volume.value = -5;
-
-        const bombSynth = new Tone.MembraneSynth({
-            pitchDecay: 0.05, octaves: 8,
-            envelope: { attack: 0.001, decay: 0.5, sustain: 0.2, release: 0.3 }
-        }).toDestination();
-        bombSynth.volume.value = -4;
-
-        const levelUpSynth = new Tone.PolySynth(Tone.Synth, {
-            oscillator: { type: "sawtooth" },
-            envelope: { attack: 0.01, decay: 0.2, sustain: 0.5, release: 1 }
-        }).toDestination();
-        levelUpSynth.volume.value = -6;
-
-        const gameOverSynth = new Tone.PolySynth(Tone.Synth, {
-            oscillator: { type: "sine" },
-            envelope: { attack: 0.05, decay: 0.3, sustain: 0.4, release: 1.5 }
-        }).toDestination();
-        gameOverSynth.volume.value = -5;
-
-        function playPopSound(pitch = 'C5') { if (!audioReady) return; popSynth.triggerAttackRelease(pitch, '32n', Tone.now()); }
-        function playComboSound(combo) {
-            if (!audioReady) return;
-            const notes = ['C5', 'E5', 'G5', 'B5', 'C6', 'D6', 'E6'];
-            comboSynth.triggerAttackRelease(notes[Math.min(combo - 1, notes.length - 1)], '8n', Tone.now());
-        }
-        function playSpecialSound(type) {
-            if (!audioReady) return;
-            if (type === 'gold') specialSynth.triggerAttackRelease(['C5', 'E5', 'G5'], '4n', Tone.now());
-            else if (type === 'rainbow') specialSynth.triggerAttackRelease(['C5', 'E5', 'G5', 'B5'], '2n', Tone.now());
-            else if (type === 'clock') specialSynth.triggerAttackRelease(['G4', 'C5'], '4n', Tone.now());
-        }
-        function playBombSound() { if (!audioReady) return; bombSynth.triggerAttackRelease('C2', '2n', Tone.now()); }
-        function playLevelUpSound() { if (!audioReady) return; levelUpSynth.triggerAttackRelease(['C5', 'E5', 'G5', 'C6'], '2n', Tone.now()); }
-        function playGameOverSound() { if (!audioReady) return; gameOverSynth.triggerAttackRelease(['C5', 'E5', 'G5'], '1n', Tone.now()); }
-
-        const screenEffects = document.getElementById('screen-effects');
-        function triggerScreenFlash(color = 'white') {
-            const flash = document.createElement('div');
-            flash.className = 'screen-flash';
-            flash.style.background = color;
-            screenEffects.appendChild(flash);
-            setTimeout(() => flash.remove(), 300);
-        }
-        function triggerScreenShake() {
-            document.body.classList.add('screen-shake');
-            setTimeout(() => document.body.classList.remove('screen-shake'), 300);
-        }
-        function triggerScreenVignette(color = 'rgba(255, 0, 0, 0.3)') {
-            const v = document.createElement('div');
-            v.className = 'screen-vignette';
-            v.style.background = `radial-gradient(circle, transparent 50%, ${color} 100%)`;
-            screenEffects.appendChild(v);
-            setTimeout(() => v.remove(), 500);
-        }
-
+        // ============ Canvas 設定 ============
         const videoElement = document.getElementById('videoInput');
         const canvasElement = document.getElementById('canvasOutput');
         const canvasCtx = canvasElement.getContext('2d');
@@ -796,394 +436,77 @@
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
 
-        const bubbles = [];
-        const particles = [];
-        const floatingTexts = [];
-        
-        const BUBBLE_TYPES = {
-            normal: { color: '#FF69B4', points: 10, weight: 60 },
-            blue: { color: '#00BFFF', points: 10, weight: 20 },
-            green: { color: '#32CD32', points: 10, weight: 15 },
-            gold: { color: '#FFD700', points: 50, weight: 8, special: 'gold' },
-            rainbow: { color: 'rainbow', points: 100, weight: 3, special: 'rainbow' },
-            clock: { color: '#4169E1', points: 20, weight: 4, special: 'clock' },
-            bomb: { color: '#2C2C2C', points: -30, weight: 5, special: 'bomb' }
+        // ============ 手部追蹤 ============
+        let handData = {
+            fistPos: null,      // 拳頭中心位置
+            fingerPos: null,    // 食指指尖位置
+            isOpen: false,      // 是否張開五指
+            isFist: false,      // 是否握拳
+            visible: false
         };
 
-        function getRandomBubbleType() {
-            const types = Object.keys(BUBBLE_TYPES);
-            const bombWeight = DIFFICULTY_CONFIG[settings.difficulty].bombWeight;
-            const totalWeight = types.reduce((sum, t) => sum + (t === 'bomb' ? bombWeight : BUBBLE_TYPES[t].weight), 0);
-            let r = Math.random() * totalWeight;
-            for (const t of types) {
-                const w = t === 'bomb' ? bombWeight : BUBBLE_TYPES[t].weight;
-                r -= w;
-                if (r <= 0) return t;
-            }
-            return 'normal';
-        }
-
-        function spawnBubble() {
-            const type = getRandomBubbleType();
-            const config = BUBBLE_TYPES[type];
-            const radius = 25 + Math.random() * 20;
-            const diffConfig = DIFFICULTY_CONFIG[settings.difficulty];
+        function analyzeHand(landmarks) {
+            // 拳頭中心：MCP 關節平均值
+            const mcps = [5, 9, 13, 17].map(i => landmarks[i]);
+            const fistX = mcps.reduce((s, p) => s + p.x, 0) / 4;
+            const fistY = mcps.reduce((s, p) => s + p.y, 0) / 4;
             
-            const side = Math.floor(Math.random() * 4);
-            let x, y, vx, vy;
-            const speed = (1 + gameState.level * 0.3) * (0.5 + Math.random() * 0.8) * diffConfig.speedMul;
+            // 食指指尖
+            const indexTip = landmarks[8];
             
-            if (side === 0) { x = Math.random() * W; y = H + radius; vx = (Math.random() - 0.5) * speed; vy = -speed; }
-            else if (side === 1) { x = Math.random() * W; y = -radius; vx = (Math.random() - 0.5) * speed; vy = speed * 0.7; }
-            else if (side === 2) { x = -radius; y = Math.random() * H; vx = speed; vy = (Math.random() - 0.5) * speed * 0.5; }
-            else { x = W + radius; y = Math.random() * H; vx = -speed; vy = (Math.random() - 0.5) * speed * 0.5; }
-
-            bubbles.push({
-                x, y, vx, vy, radius, type,
-                color: config.color, points: config.points, special: config.special,
-                phase: Math.random() * Math.PI * 2, life: 1
-            });
-        }
-
-        function updateBubbles(dt) {
-            const speedMul = gameState.slowMotion ? 0.3 : 1;
-            for (let i = bubbles.length - 1; i >= 0; i--) {
-                const b = bubbles[i];
-                b.x += b.vx * dt * 60 * speedMul;
-                b.y += b.vy * dt * 60 * speedMul;
-                b.phase += dt * 2;
-                b.x += Math.sin(b.phase) * 0.3;
-                if (b.x < -100 || b.x > W + 100 || b.y < -100 || b.y > H + 100) {
-                    bubbles.splice(i, 1);
-                    if (b.special !== 'bomb') { gameState.combo = 0; updateHUD(); }
-                }
-            }
-        }
-
-        function drawBubble(ctx, b) {
-            ctx.save();
-            ctx.translate(b.x, b.y);
+            // 檢查是否張開五指
+            const fingers = [
+                { tip: 4, mcp: 2 },   // 拇指
+                { tip: 8, mcp: 5 },   // 食指
+                { tip: 12, mcp: 9 },  // 中指
+                { tip: 16, mcp: 13 }, // 無名指
+                { tip: 20, mcp: 17 }  // 尾指
+            ];
             
-            if (b.color === 'rainbow') {
-                const grad = ctx.createLinearGradient(-b.radius, -b.radius, b.radius, b.radius);
-                const t = (Date.now() / 500) % 1;
-                grad.addColorStop(0, `hsl(${t * 360}, 100%, 60%)`);
-                grad.addColorStop(0.33, `hsl(${(t * 360 + 120) % 360}, 100%, 60%)`);
-                grad.addColorStop(0.66, `hsl(${(t * 360 + 240) % 360}, 100%, 60%)`);
-                grad.addColorStop(1, `hsl(${(t * 360 + 360) % 360}, 100%, 60%)`);
-                ctx.fillStyle = grad;
-            } else {
-                const grad = ctx.createRadialGradient(-b.radius * 0.3, -b.radius * 0.3, b.radius * 0.1, 0, 0, b.radius);
-                grad.addColorStop(0, '#FFFFFF');
-                grad.addColorStop(0.3, b.color);
-                grad.addColorStop(1, shadeColor(b.color, -30));
-                ctx.fillStyle = grad;
-            }
-            
-            if (b.special === 'gold') { ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 20; }
-            else if (b.special === 'rainbow') { ctx.shadowColor = '#FF69B4'; ctx.shadowBlur = 25; }
-            else if (b.special === 'bomb') { ctx.shadowColor = '#FF0000'; ctx.shadowBlur = 15; }
-            
-            ctx.beginPath();
-            ctx.arc(0, 0, b.radius, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.shadowBlur = 0;
-            
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-            ctx.beginPath();
-            ctx.ellipse(-b.radius * 0.3, -b.radius * 0.3, b.radius * 0.25, b.radius * 0.15, -0.5, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.fillStyle = '#FFF';
-            ctx.font = `bold ${b.radius * 0.8}px sans-serif`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            if (b.special === 'gold') ctx.fillText('⭐', 0, 2);
-            else if (b.special === 'rainbow') ctx.fillText('🌈', 0, 2);
-            else if (b.special === 'clock') ctx.fillText('⏱️', 0, 2);
-            else if (b.special === 'bomb') ctx.fillText('💣', 0, 2);
-            
-            ctx.restore();
-        }
-
-        function shadeColor(color, percent) {
-            if (color === 'rainbow') return color;
-            const num = parseInt(color.replace('#', ''), 16);
-            const amt = Math.round(2.55 * percent);
-            const R = Math.max(0, Math.min(255, (num >> 16) + amt));
-            const G = Math.max(0, Math.min(255, (num >> 8 & 0x00FF) + amt));
-            const B = Math.max(0, Math.min(255, (num & 0x0000FF) + amt));
-            return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
-        }
-
-        function createPopEffect(x, y, color, count = 15) {
-            for (let i = 0; i < count; i++) {
-                const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
-                const speed = 2 + Math.random() * 4;
-                particles.push({
-                    x, y,
-                    vx: Math.cos(angle) * speed,
-                    vy: Math.sin(angle) * speed,
-                    radius: 3 + Math.random() * 4,
-                    color, life: 1,
-                    decay: 0.02 + Math.random() * 0.02
-                });
-            }
-        }
-
-        function createSpecialEffect(x, y, type) {
-            if (type === 'gold') {
-                for (let i = 0; i < 25; i++) {
-                    const angle = Math.random() * Math.PI * 2;
-                    const speed = 3 + Math.random() * 5;
-                    particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, radius: 4 + Math.random() * 3, color: '#FFD700', life: 1, decay: 0.015, isStar: true });
-                }
-            } else if (type === 'rainbow') {
-                for (let i = 0; i < 80; i++) {
-                    const angle = Math.random() * Math.PI * 2;
-                    const speed = 2 + Math.random() * 8;
-                    particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, radius: 3 + Math.random() * 5, color: `hsl(${Math.random() * 360}, 100%, 60%)`, life: 1, decay: 0.01 });
-                }
-            } else if (type === 'bomb') {
-                for (let i = 0; i < 30; i++) {
-                    const angle = Math.random() * Math.PI * 2;
-                    const speed = 1 + Math.random() * 3;
-                    particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 1, radius: 8 + Math.random() * 8, color: '#333', life: 1, decay: 0.015, isSmoke: true });
-                }
-            }
-        }
-
-        function updateParticles(dt) {
-            for (let i = particles.length - 1; i >= 0; i--) {
-                const p = particles[i];
-                p.x += p.vx * dt * 60;
-                p.y += p.vy * dt * 60;
-                p.vy += 0.15;
-                p.life -= p.decay;
-                if (p.life <= 0) particles.splice(i, 1);
-            }
-        }
-
-        function drawParticles(ctx) {
-            for (const p of particles) {
-                ctx.save();
-                ctx.globalAlpha = p.life;
-                if (p.isStar) {
-                    ctx.fillStyle = p.color;
-                    ctx.shadowColor = p.color;
-                    ctx.shadowBlur = 10;
-                    ctx.font = `${p.radius * 3}px sans-serif`;
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText('⭐', p.x, p.y);
-                } else if (p.isSmoke) {
-                    ctx.fillStyle = p.color;
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.radius * (2 - p.life), 0, Math.PI * 2);
-                    ctx.fill();
-                } else {
-                    ctx.fillStyle = p.color;
-                    ctx.shadowColor = p.color;
-                    ctx.shadowBlur = 8;
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.radius * p.life, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-                ctx.restore();
-            }
-        }
-
-        function addFloatingText(x, y, text, color, size = 30) {
-            floatingTexts.push({ x, y, text, color, size, life: 1, vy: -2 });
-        }
-
-        function updateFloatingTexts(dt) {
-            for (let i = floatingTexts.length - 1; i >= 0; i--) {
-                const t = floatingTexts[i];
-                t.y += t.vy * dt * 60;
-                t.life -= 0.02;
-                if (t.life <= 0) floatingTexts.splice(i, 1);
-            }
-        }
-
-        function drawFloatingTexts(ctx) {
-            for (const t of floatingTexts) {
-                ctx.save();
-                ctx.globalAlpha = t.life;
-                ctx.fillStyle = t.color;
-                ctx.strokeStyle = '#FFF';
-                ctx.lineWidth = 4;
-                ctx.font = `bold ${t.size}px 'Comic Sans MS', sans-serif`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.strokeText(t.text, t.x, t.y);
-                ctx.fillText(t.text, t.x, t.y);
-                ctx.restore();
-            }
-        }
-
-        let fingerPos = null;
-        let fingerVisible = false;
-
-        function checkCollisions() {
-            if (!fingerPos) return;
-            for (let i = bubbles.length - 1; i >= 0; i--) {
-                const b = bubbles[i];
-                const dx = fingerPos.x - b.x;
-                const dy = fingerPos.y - b.y;
-                const dist = Math.sqrt(dx*dx + dy*dy);
-                if (dist < b.radius + 15) {
-                    popBubble(b, i);
-                    break;
-                }
-            }
-        }
-
-        function popBubble(b, index) {
-            bubbles.splice(index, 1);
-            
-            if (b.special === 'bomb') {
-                gameState.score = Math.max(0, gameState.score + b.points);
-                gameState.combo = 0;
-                createPopEffect(b.x, b.y, '#333', 10);
-                createSpecialEffect(b.x, b.y, 'bomb');
-                addFloatingText(b.x, b.y, b.points, '#FF0000', 40);
-                playBombSound();
-                triggerScreenShake();
-                triggerScreenVignette('rgba(255, 0, 0, 0.4)');
-                if (navigator.vibrate) navigator.vibrate(200);
-            } else {
-                gameState.combo++;
-                gameState.popped++;
-                if (gameState.combo > gameState.maxCombo) gameState.maxCombo = gameState.combo;
-                gameState.lastComboTime = Date.now();
+            let openCount = 0;
+            for (const f of fingers) {
+                const tip = landmarks[f.tip];
+                const mcp = landmarks[f.mcp];
+                const wrist = landmarks[0];
                 
-                const comboMultiplier = Math.min(5, 1 + Math.floor(gameState.combo / 5));
-                const points = b.points * comboMultiplier;
-                gameState.score += points;
+                // 指尖到手腕的距離 vs MCP到手腕的距離
+                const tipDist = Math.hypot(tip.x - wrist.x, tip.y - wrist.y);
+                const mcpDist = Math.hypot(mcp.x - wrist.x, mcp.y - wrist.y);
                 
-                createPopEffect(b.x, b.y, b.color === 'rainbow' ? '#FF69B4' : b.color);
-                if (b.special) createSpecialEffect(b.x, b.y, b.special);
-                
-                let text = '+' + points;
-                if (comboMultiplier > 1) text += ' x' + comboMultiplier;
-                addFloatingText(b.x, b.y, text, b.color === 'rainbow' ? '#FF69B4' : b.color, 28);
-                
-                if (b.special === 'gold' || b.special === 'rainbow') {
-                    playSpecialSound(b.special);
-                    triggerScreenFlash(b.special === 'gold' ? 'rgba(255, 215, 0, 0.3)' : 'rgba(255, 105, 180, 0.3)');
-                } else {
-                    playPopSound();
-                }
-                
-                if (gameState.combo > 1 && gameState.combo % 5 === 0) {
-                    playComboSound(Math.floor(gameState.combo / 5));
-                }
-                
-                if (b.special === 'clock') {
-                    gameState.slowMotion = true;
-                    gameState.slowMotionEnd = Date.now() + 5000;
-                    addFloatingText(b.x, b.y - 40, '️ 慢動作！', '#4169E1', 32);
-                    playSpecialSound('clock');
-                    triggerScreenFlash('rgba(65, 105, 225, 0.3)');
-                }
-                
-                if (gameState.combo >= 3) showCombo(gameState.combo);
+                if (tipDist > mcpDist * 1.3) openCount++;
             }
             
-            checkLevelUp();
-            updateHUD();
-        }
-
-        function showCombo(combo) {
-            const el = document.getElementById('combo-display');
-            el.innerText = combo + ' COMBO!';
-            el.classList.add('show');
-            setTimeout(() => el.classList.remove('show'), 800);
-        }
-
-        function checkLevelUp() {
-            const levelUpScore = DIFFICULTY_CONFIG[settings.difficulty].levelUpScore;
-            const newLevel = Math.floor(gameState.score / levelUpScore) + 1;
-            if (newLevel > gameState.level) {
-                gameState.level = newLevel;
-                const el = document.getElementById('level-up');
-                el.innerText = '🎉 LEVEL ' + newLevel + '！';
-                el.classList.add('show');
-                setTimeout(() => el.classList.remove('show'), 1500);
-                playLevelUpSound();
-                triggerScreenFlash('rgba(255, 215, 0, 0.4)');
-            }
-        }
-
-        function updateHUD() {
-            document.getElementById('score').innerText = gameState.score;
-            document.getElementById('level').innerText = 'Lv.' + gameState.level;
-            document.getElementById('combo').innerText = gameState.combo;
-        }
-
-        function drawFingerIndicator(ctx) {
-            if (!fingerPos) return;
-            ctx.save();
-            const grad = ctx.createRadialGradient(fingerPos.x, fingerPos.y, 0, fingerPos.x, fingerPos.y, 30);
-            grad.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
-            grad.addColorStop(0.5, 'rgba(255, 105, 180, 0.5)');
-            grad.addColorStop(1, 'rgba(255, 105, 180, 0)');
-            ctx.fillStyle = grad;
-            ctx.beginPath();
-            ctx.arc(fingerPos.x, fingerPos.y, 30, 0, Math.PI * 2);
-            ctx.fill();
+            const isOpen = openCount >= 4;
+            const isFist = openCount <= 1;
             
-            ctx.fillStyle = '#FFF';
-            ctx.shadowColor = '#FF69B4';
-            ctx.shadowBlur = 15;
-            ctx.beginPath();
-            ctx.arc(fingerPos.x, fingerPos.y, 8, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
+            handData = {
+                fistPos: { x: fistX * W, y: fistY * H },
+                fingerPos: { x: indexTip.x * W, y: indexTip.y * H },
+                isOpen,
+                isFist,
+                visible: true
+            };
         }
 
-        // 🔧 關鍵修復：Video 鏡像 + Canvas 不鏡像 + Landmarks 鏡像
         function onResults(results) {
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
             canvasCtx.save();
             canvasCtx.scale(dpr, dpr);
-            
-            // 🔧 Canvas 不鏡像！只處理 DPR 縮放
 
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                const landmarks = results.multiHandLandmarks[0];
-                const tip = landmarks[8];
-                
-                //  關鍵修復：Landmarks 必須鏡像（因為 Video 鏡像了）
-                // 鏡像模式：landmark.x 需要 1-x
-                // 真實模式：直接使用原始座標
-                const fx = settings.mirror === 'mirror' ? (1 - tip.x) : tip.x;
-                
-                fingerPos = { x: fx * W, y: tip.y * H };
-                fingerVisible = true;
-                
-                if (settings.debug === 'on') {
-                    const debugEl = document.getElementById('debug-info');
-                    const mode = settings.mirror === 'mirror' ? '鏡像' : '真實';
-                    debugEl.innerHTML = 
-                        `模式：${mode}<br>` +
-                        `原始 X：${(tip.x * 100).toFixed(1)}%<br>` +
-                        `激光 X：${(fx * 100).toFixed(1)}%<br>` +
-                        `激光 Y：${(tip.y * 100).toFixed(1)}%<br>` +
-                        `螢幕：${W}x${H}`;
-                }
+                analyzeHand(results.multiHandLandmarks[0]);
             } else {
-                fingerVisible = false;
-                fingerPos = null;
+                handData.visible = false;
+                handData.fistPos = null;
+                handData.fingerPos = null;
+                handData.isOpen = false;
+                handData.isFist = false;
             }
 
-            if (gameState.running) {
-                for (const b of bubbles) drawBubble(canvasCtx, b);
-                drawParticles(canvasCtx);
-                drawFloatingTexts(canvasCtx);
-                drawFingerIndicator(canvasCtx);
-                if (fingerVisible) checkCollisions();
+            if (currentGame === 'bubble') {
+                updateBubbleGame();
+            } else if (currentGame === 'racing') {
+                updateRacingGame();
             }
 
             canvasCtx.restore();
@@ -1200,55 +523,10 @@
         });
         hands.onResults(onResults);
 
-        let lastTime = 0;
-        let spawnTimer = 0;
-        let gameStartTime = 0;
-
-        function gameLoop(timestamp) {
-            if (!lastTime) lastTime = timestamp;
-            const dt = Math.min(0.05, (timestamp - lastTime) / 1000);
-            lastTime = timestamp;
-
-            if (gameState.running) {
-                const diffConfig = DIFFICULTY_CONFIG[settings.difficulty];
-                const elapsed = (Date.now() - gameStartTime) / 1000;
-                gameState.timeLeft = Math.max(0, diffConfig.duration - elapsed);
-                
-                if (gameState.slowMotion && Date.now() > gameState.slowMotionEnd) gameState.slowMotion = false;
-                if (gameState.combo > 0 && Date.now() - gameState.lastComboTime > 2000) { gameState.combo = 0; updateHUD(); }
-                
-                spawnTimer += dt;
-                const spawnInterval = Math.max(0.3, diffConfig.spawnInterval - gameState.level * 0.08);
-                if (spawnTimer >= spawnInterval) { spawnBubble(); spawnTimer = 0; }
-                
-                updateBubbles(dt);
-                updateParticles(dt);
-                updateFloatingTexts(dt);
-                
-                const timePercent = (gameState.timeLeft / diffConfig.duration) * 100;
-                document.getElementById('time-bar').style.width = timePercent + '%';
-                document.getElementById('time-text').innerText = Math.ceil(gameState.timeLeft);
-                
-                if (gameState.timeLeft <= 0) endGame();
-            }
-
-            requestAnimationFrame(gameLoop);
-        }
-
-        async function startGame() {
-            document.getElementById('start-screen').classList.remove('show');
-            
-            const diffConfig = DIFFICULTY_CONFIG[settings.difficulty];
-            document.getElementById('difficulty-indicator').innerText = diffConfig.name;
-            
-            try {
-                await Tone.start();
-                audioReady = true;
-            } catch(e) { console.warn('Audio init failed:', e); }
-
+        async function startCamera() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: settings.camera, width: { ideal: 1280 }, height: { ideal: 720 } },
+                    video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
                     audio: false
                 });
                 videoElement.srcObject = stream;
@@ -1259,76 +537,567 @@
                     requestAnimationFrame(processFrame);
                 }
                 processFrame();
-                
-                gameState = {
-                    score: 0, combo: 0, maxCombo: 0, level: 1,
-                    popped: 0, timeLeft: diffConfig.duration,
-                    slowMotion: false, slowMotionEnd: 0,
-                    running: true, lastComboTime: Date.now()
-                };
-                bubbles.length = 0;
-                particles.length = 0;
-                floatingTexts.length = 0;
-                gameStartTime = Date.now();
-                updateHUD();
-                
-                requestAnimationFrame(gameLoop);
-                
             } catch (err) {
-                console.error('啟動失敗:', err);
-                alert('無法啟動攝影機，請檢查權限設定！');
-                showSettings();
+                console.error('攝影機啟動失敗:', err);
+                alert('無法啟動攝影機！');
             }
         }
 
-        function endGame() {
-            gameState.running = false;
-            playGameOverSound();
+        // ============ 遊戲切換 ============
+        function startBubbleGame() {
+            currentGame = 'bubble';
+            document.getElementById('home-screen').classList.add('hidden');
+            document.getElementById('bubble-hud').classList.add('show');
+            document.getElementById('bubble-time-text').classList.add('show');
+            document.getElementById('bubble-time-bar-container').classList.add('show');
+            document.getElementById('game-hud').classList.remove('show');
+            document.getElementById('energy-bar-container').classList.remove('show');
+            document.getElementById('energy-label').classList.remove('show');
+            document.getElementById('skill-hint').classList.remove('show');
+            initBubbleGame();
+        }
+
+        function startRacingGame() {
+            currentGame = 'racing';
+            document.getElementById('home-screen').classList.add('hidden');
+            document.getElementById('bubble-hud').classList.remove('show');
+            document.getElementById('bubble-time-text').classList.remove('show');
+            document.getElementById('bubble-time-bar-container').classList.remove('show');
+            document.getElementById('game-hud').classList.add('show');
+            document.getElementById('energy-bar-container').classList.add('show');
+            document.getElementById('energy-label').classList.add('show');
+            initRacingGame();
+        }
+
+        function goHome() {
+            currentGame = null;
+            document.getElementById('home-screen').classList.remove('hidden');
+            document.getElementById('game-over').classList.remove('show');
+            document.getElementById('bubble-hud').classList.remove('show');
+            document.getElementById('bubble-time-text').classList.remove('show');
+            document.getElementById('bubble-time-bar-container').classList.remove('show');
+            document.getElementById('game-hud').classList.remove('show');
+            document.getElementById('energy-bar-container').classList.remove('show');
+            document.getElementById('energy-label').classList.remove('show');
+            document.getElementById('skill-hint').classList.remove('show');
+        }
+
+        document.getElementById('btn-home').addEventListener('click', goHome);
+
+        // ============ 泡泡遊戲（簡化版） ============
+        let bubbleState = {
+            score: 0, combo: 0, level: 1, timeLeft: 60,
+            running: false, bubbles: [], particles: []
+        };
+
+        function initBubbleGame() {
+            bubbleState = {
+                score: 0, combo: 0, level: 1, timeLeft: 60,
+                running: true, bubbles: [], particles: []
+            };
+            startCamera();
+            requestAnimationFrame(bubbleLoop);
+        }
+
+        function bubbleLoop() {
+            if (currentGame !== 'bubble') return;
+            if (!bubbleState.running) return;
             
-            document.getElementById('final-score').innerText = gameState.score;
-            document.getElementById('final-popped').innerText = gameState.popped;
-            document.getElementById('final-combo').innerText = gameState.maxCombo;
-            document.getElementById('final-level').innerText = 'Lv.' + gameState.level;
+            // 簡化：只顯示手指位置
+            if (handData.fingerPos) {
+                canvasCtx.fillStyle = '#FF69B4';
+                canvasCtx.beginPath();
+                canvasCtx.arc(handData.fingerPos.x, handData.fingerPos.y, 20, 0, Math.PI * 2);
+                canvasCtx.fill();
+            }
             
-            const badges = [];
-            if (gameState.popped >= 30) badges.push('🎯 泡泡殺手');
-            if (gameState.maxCombo >= 10) badges.push('🔥 連擊大師');
-            if (gameState.score >= 1000) badges.push('👑 泡泡之王');
-            if (gameState.level >= 5) badges.push('⭐ 傳奇玩家');
-            if (gameState.popped >= 50) badges.push('💪 不屈不撓');
-            if (settings.difficulty === 'hard' && gameState.score >= 500) badges.push(' 困難征服者');
+            requestAnimationFrame(bubbleLoop);
+        }
+
+        // ============ 賽車遊戲 ============
+        const SKILLS = [
+            { id: 'nitro', name: '🚀 氮氣衝刺', color: '#FF4500', duration: 4000 },
+            { id: 'shield', name: '🛡️ 能量護盾', color: '#1E90FF', duration: 5000 },
+            { id: 'lightning', name: '⚡ 閃電破壞', color: '#FFD700', duration: 0 }
+        ];
+
+        let racingState = {
+            score: 0,
+            speed: 100,
+            lives: 3,
+            energy: 0,
+            maxEnergy: 100,
+            carX: W / 2,
+            targetCarX: W / 2,
+            obstacles: [],
+            coins: [],
+            crystals: [],
+            particles: [],
+            roadOffset: 0,
+            skill: null,
+            skillActive: false,
+            skillEndTime: 0,
+            skillCooldown: 0,
+            running: false,
+            lastTime: 0,
+            spawnTimer: 0,
+            coinTimer: 0,
+            crystalTimer: 0
+        };
+
+        function initRacingGame() {
+            // 隨機選擇技能
+            racingState.skill = SKILLS[Math.floor(Math.random() * SKILLS.length)];
+            racingState.score = 0;
+            racingState.speed = 100;
+            racingState.lives = 3;
+            racingState.energy = 0;
+            racingState.carX = W / 2;
+            racingState.targetCarX = W / 2;
+            racingState.obstacles = [];
+            racingState.coins = [];
+            racingState.crystals = [];
+            racingState.particles = [];
+            racingState.roadOffset = 0;
+            racingState.skillActive = false;
+            racingState.skillEndTime = 0;
+            racingState.skillCooldown = 0;
+            racingState.running = true;
+            racingState.lastTime = performance.now();
+            racingState.spawnTimer = 0;
+            racingState.coinTimer = 0;
+            racingState.crystalTimer = 0;
             
-            const badgesEl = document.getElementById('badges');
-            badgesEl.innerHTML = '';
-            if (badges.length === 0) badgesEl.innerHTML = '<div class="badge">再接再厲！</div>';
-            else badges.forEach(b => {
-                const div = document.createElement('div');
-                div.className = 'badge';
-                div.innerText = b;
-                badgesEl.appendChild(div);
+            updateRacingHUD();
+            document.getElementById('energy-label').innerText = `⚡ ${racingState.skill.name} - 張開五指觸發！`;
+            
+            startCamera();
+            requestAnimationFrame(racingLoop);
+        }
+
+        function racingLoop(timestamp) {
+            if (currentGame !== 'racing') return;
+            if (!racingState.running) return;
+            
+            const dt = Math.min(0.05, (timestamp - racingState.lastTime) / 1000);
+            racingState.lastTime = timestamp;
+            
+            updateRacingGame(dt);
+            drawRacingGame();
+            
+            requestAnimationFrame(racingLoop);
+        }
+
+        function updateRacingGame(dt) {
+            // 車輛控制：拳頭位置
+            if (handData.fistPos) {
+                racingState.targetCarX = handData.fistPos.x;
+            }
+            // 平滑跟隨
+            racingState.carX += (racingState.targetCarX - racingState.carX) * 0.15;
+            racingState.carX = Math.max(40, Math.min(W - 40, racingState.carX));
+            
+            // 道路滾動
+            racingState.roadOffset += racingState.speed * dt * 0.5;
+            if (racingState.roadOffset > 100) racingState.roadOffset = 0;
+            
+            // 速度逐漸增加
+            racingState.speed = Math.min(300, 100 + racingState.score * 0.5);
+            
+            // 生成障礙物
+            racingState.spawnTimer += dt;
+            const spawnInterval = Math.max(0.8, 2 - racingState.speed * 0.003);
+            if (racingState.spawnTimer >= spawnInterval) {
+                spawnObstacle();
+                racingState.spawnTimer = 0;
+            }
+            
+            // 生成硬幣
+            racingState.coinTimer += dt;
+            if (racingState.coinTimer >= 0.5) {
+                spawnCoin();
+                racingState.coinTimer = 0;
+            }
+            
+            // 生成能量晶體
+            racingState.crystalTimer += dt;
+            if (racingState.crystalTimer >= 3) {
+                spawnCrystal();
+                racingState.crystalTimer = 0;
+            }
+            
+            // 更新障礙物
+            for (let i = racingState.obstacles.length - 1; i >= 0; i--) {
+                const obs = racingState.obstacles[i];
+                obs.y += racingState.speed * dt * 0.8;
+                
+                if (obs.y > H + 100) {
+                    racingState.obstacles.splice(i, 1);
+                    racingState.score += 10;
+                    continue;
+                }
+                
+                // 碰撞檢測
+                if (!racingState.skillActive || racingState.skill.id !== 'shield') {
+                    const dx = racingState.carX - obs.x;
+                    const dy = (H - 100) - obs.y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    if (dist < 50) {
+                        if (racingState.skillActive && racingState.skill.id === 'nitro') {
+                            // 氮氣模式下撞毀障礙物
+                            racingState.obstacles.splice(i, 1);
+                            racingState.score += 50;
+                            createExplosion(obs.x, obs.y, '#FF4500');
+                        } else {
+                            // 受傷
+                            racingState.lives--;
+                            racingState.obstacles.splice(i, 1);
+                            createExplosion(obs.x, obs.y, '#FF0000');
+                            if (navigator.vibrate) navigator.vibrate(200);
+                            if (racingState.lives <= 0) {
+                                endRacingGame();
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // 更新硬幣
+            for (let i = racingState.coins.length - 1; i >= 0; i--) {
+                const coin = racingState.coins[i];
+                coin.y += racingState.speed * dt * 0.8;
+                coin.rotation += dt * 3;
+                
+                if (coin.y > H + 50) {
+                    racingState.coins.splice(i, 1);
+                    continue;
+                }
+                
+                const dx = racingState.carX - coin.x;
+                const dy = (H - 100) - coin.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < 50) {
+                    racingState.coins.splice(i, 1);
+                    racingState.score += 20;
+                    createExplosion(coin.x, coin.y, '#FFD700', 8);
+                }
+            }
+            
+            // 更新能量晶體
+            for (let i = racingState.crystals.length - 1; i >= 0; i--) {
+                const crystal = racingState.crystals[i];
+                crystal.y += racingState.speed * dt * 0.8;
+                crystal.phase += dt * 2;
+                
+                if (crystal.y > H + 50) {
+                    racingState.crystals.splice(i, 1);
+                    continue;
+                }
+                
+                const dx = racingState.carX - crystal.x;
+                const dy = (H - 100) - crystal.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < 60) {
+                    racingState.crystals.splice(i, 1);
+                    racingState.energy = Math.min(racingState.maxEnergy, racingState.energy + 25);
+                    createExplosion(crystal.x, crystal.y, '#00BFFF', 12);
+                }
+            }
+            
+            // 更新粒子
+            for (let i = racingState.particles.length - 1; i >= 0; i--) {
+                const p = racingState.particles[i];
+                p.x += p.vx * dt * 60;
+                p.y += p.vy * dt * 60;
+                p.life -= p.decay;
+                if (p.life <= 0) racingState.particles.splice(i, 1);
+            }
+            
+            // 技能冷卻
+            if (racingState.skillCooldown > 0) {
+                racingState.skillCooldown -= dt * 1000;
+            }
+            
+            // 技能持續時間
+            if (racingState.skillActive) {
+                if (Date.now() > racingState.skillEndTime) {
+                    racingState.skillActive = false;
+                    racingState.skillCooldown = 10000; // 10 秒冷卻
+                    document.getElementById('skill-hint').classList.remove('show');
+                }
+            }
+            
+            // 張開五指觸發技能
+            if (handData.isOpen && racingState.energy >= racingState.maxEnergy && 
+                !racingState.skillActive && racingState.skillCooldown <= 0) {
+                activateSkill();
+            }
+            
+            updateRacingHUD();
+        }
+
+        function spawnObstacle() {
+            const types = ['car', 'cone', 'truck'];
+            const type = types[Math.floor(Math.random() * types.length)];
+            const x = 60 + Math.random() * (W - 120);
+            racingState.obstacles.push({
+                x, y: -80, type,
+                width: type === 'truck' ? 60 : 40,
+                height: type === 'truck' ? 100 : 60
             });
+        }
+
+        function spawnCoin() {
+            const x = 60 + Math.random() * (W - 120);
+            racingState.coins.push({
+                x, y: -30, rotation: 0
+            });
+        }
+
+        function spawnCrystal() {
+            const x = 60 + Math.random() * (W - 120);
+            racingState.crystals.push({
+                x, y: -30, phase: 0
+            });
+        }
+
+        function activateSkill() {
+            racingState.skillActive = true;
+            racingState.energy = 0;
+            racingState.skillEndTime = Date.now() + racingState.skill.duration;
+            
+            const hint = document.getElementById('skill-hint');
+            hint.innerText = `${racingState.skill.name} 啟動！`;
+            hint.style.borderColor = racingState.skill.color;
+            hint.style.color = racingState.skill.color;
+            hint.classList.add('show');
+            
+            if (racingState.skill.id === 'lightning') {
+                // 閃電破壞：摧毀所有障礙物
+                for (const obs of racingState.obstacles) {
+                    racingState.score += 50;
+                    createExplosion(obs.x, obs.y, '#FFD700', 15);
+                }
+                racingState.obstacles = [];
+            }
+            
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+        }
+
+        function createExplosion(x, y, color, count = 12) {
+            for (let i = 0; i < count; i++) {
+                const angle = (Math.PI * 2 * i) / count;
+                const speed = 2 + Math.random() * 4;
+                racingState.particles.push({
+                    x, y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    radius: 3 + Math.random() * 4,
+                    color,
+                    life: 1,
+                    decay: 0.03
+                });
+            }
+        }
+
+        function drawRacingGame() {
+            // 背景：道路
+            canvasCtx.fillStyle = '#333';
+            canvasCtx.fillRect(0, 0, W, H);
+            
+            // 道路邊線
+            canvasCtx.fillStyle = '#FFF';
+            canvasCtx.fillRect(20, 0, 10, H);
+            canvasCtx.fillRect(W - 30, 0, 10, H);
+            
+            // 道路中線（虛線）
+            canvasCtx.fillStyle = '#FFD700';
+            for (let y = -100 + racingState.roadOffset; y < H; y += 100) {
+                canvasCtx.fillRect(W / 2 - 5, y, 10, 50);
+            }
+            
+            // 速度線特效
+            if (racingState.skillActive && racingState.skill.id === 'nitro') {
+                canvasCtx.strokeStyle = 'rgba(255, 69, 0, 0.5)';
+                canvasCtx.lineWidth = 3;
+                for (let i = 0; i < 10; i++) {
+                    const x = Math.random() * W;
+                    const y = Math.random() * H;
+                    canvasCtx.beginPath();
+                    canvasCtx.moveTo(x, y);
+                    canvasCtx.lineTo(x, y + 50);
+                    canvasCtx.stroke();
+                }
+            }
+            
+            // 繪製能量晶體
+            for (const crystal of racingState.crystals) {
+                const glow = Math.sin(crystal.phase) * 5 + 15;
+                canvasCtx.fillStyle = '#00BFFF';
+                canvasCtx.shadowColor = '#00BFFF';
+                canvasCtx.shadowBlur = glow;
+                canvasCtx.beginPath();
+                canvasCtx.arc(crystal.x, crystal.y, 15, 0, Math.PI * 2);
+                canvasCtx.fill();
+                canvasCtx.shadowBlur = 0;
+                
+                canvasCtx.fillStyle = '#FFF';
+                canvasCtx.font = 'bold 20px sans-serif';
+                canvasCtx.textAlign = 'center';
+                canvasCtx.fillText('💎', crystal.x, crystal.y + 7);
+            }
+            
+            // 繪製硬幣
+            for (const coin of racingState.coins) {
+                canvasCtx.save();
+                canvasCtx.translate(coin.x, coin.y);
+                canvasCtx.rotate(coin.rotation);
+                canvasCtx.fillStyle = '#FFD700';
+                canvasCtx.shadowColor = '#FFD700';
+                canvasCtx.shadowBlur = 10;
+                canvasCtx.beginPath();
+                canvasCtx.arc(0, 0, 15, 0, Math.PI * 2);
+                canvasCtx.fill();
+                canvasCtx.shadowBlur = 0;
+                canvasCtx.fillStyle = '#FFF';
+                canvasCtx.font = 'bold 16px sans-serif';
+                canvasCtx.textAlign = 'center';
+                canvasCtx.fillText('$', 0, 6);
+                canvasCtx.restore();
+            }
+            
+            // 繪製障礙物
+            for (const obs of racingState.obstacles) {
+                canvasCtx.fillStyle = obs.type === 'car' ? '#FF4500' : 
+                                     obs.type === 'cone' ? '#FF6347' : '#4169E1';
+                canvasCtx.fillRect(obs.x - obs.width/2, obs.y - obs.height/2, obs.width, obs.height);
+                
+                canvasCtx.fillStyle = '#FFF';
+                canvasCtx.font = 'bold 30px sans-serif';
+                canvasCtx.textAlign = 'center';
+                const emoji = obs.type === 'car' ? '' : obs.type === 'cone' ? '' : '🚛';
+                canvasCtx.fillText(emoji, obs.x, obs.y + 10);
+            }
+            
+            // 繪製粒子
+            for (const p of racingState.particles) {
+                canvasCtx.globalAlpha = p.life;
+                canvasCtx.fillStyle = p.color;
+                canvasCtx.beginPath();
+                canvasCtx.arc(p.x, p.y, p.radius * p.life, 0, Math.PI * 2);
+                canvasCtx.fill();
+            }
+            canvasCtx.globalAlpha = 1;
+            
+            // 繪製車輛
+            const carY = H - 100;
+            canvasCtx.save();
+            canvasCtx.translate(racingState.carX, carY);
+            
+            // 護盾效果
+            if (racingState.skillActive && racingState.skill.id === 'shield') {
+                canvasCtx.strokeStyle = '#1E90FF';
+                canvasCtx.lineWidth = 4;
+                canvasCtx.shadowColor = '#1E90FF';
+                canvasCtx.shadowBlur = 20;
+                canvasCtx.beginPath();
+                canvasCtx.arc(0, 0, 50, 0, Math.PI * 2);
+                canvasCtx.stroke();
+                canvasCtx.shadowBlur = 0;
+            }
+            
+            // 氮氣火焰
+            if (racingState.skillActive && racingState.skill.id === 'nitro') {
+                canvasCtx.fillStyle = '#FF4500';
+                canvasCtx.beginPath();
+                canvasCtx.moveTo(-15, 30);
+                canvasCtx.lineTo(0, 50 + Math.random() * 20);
+                canvasCtx.lineTo(15, 30);
+                canvasCtx.fill();
+            }
+            
+            // 車輛本體
+            canvasCtx.fillStyle = '#FFD700';
+            canvasCtx.fillRect(-25, -35, 50, 70);
+            canvasCtx.fillStyle = '#FF4500';
+            canvasCtx.fillRect(-20, -25, 40, 50);
+            
+            canvasCtx.font = '40px sans-serif';
+            canvasCtx.textAlign = 'center';
+            canvasCtx.fillText('🏎️', 0, 15);
+            
+            canvasCtx.restore();
+            
+            // 手部指示器
+            if (handData.fistPos) {
+                canvasCtx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                canvasCtx.lineWidth = 2;
+                canvasCtx.setLineDash([5, 5]);
+                canvasCtx.beginPath();
+                canvasCtx.moveTo(handData.fistPos.x, handData.fistPos.y);
+                canvasCtx.lineTo(racingState.carX, carY);
+                canvasCtx.stroke();
+                canvasCtx.setLineDash([]);
+                
+                canvasCtx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                canvasCtx.beginPath();
+                canvasCtx.arc(handData.fistPos.x, handData.fistPos.y, 15, 0, Math.PI * 2);
+                canvasCtx.fill();
+            }
+        }
+
+        function updateRacingHUD() {
+            document.getElementById('racing-score').innerText = racingState.score;
+            document.getElementById('racing-speed').innerText = Math.floor(racingState.speed);
+            document.getElementById('racing-lives').innerText = '❤️'.repeat(racingState.lives);
+            
+            const energyPercent = (racingState.energy / racingState.maxEnergy) * 100;
+            document.getElementById('energy-bar').style.width = energyPercent + '%';
+            
+            if (racingState.energy >= racingState.maxEnergy && !racingState.skillActive) {
+                document.getElementById('energy-bar').style.background = 
+                    'linear-gradient(90deg, #FFD700, #FF4500, #FFD700)';
+                document.getElementById('energy-bar').style.animation = 'pulse 1s infinite';
+            } else {
+                document.getElementById('energy-bar').style.background = 
+                    'linear-gradient(90deg, #00BFFF, #1E90FF, #FFD700)';
+                document.getElementById('energy-bar').style.animation = 'none';
+            }
+        }
+
+        function endRacingGame() {
+            racingState.running = false;
+            
+            const stats = document.getElementById('final-stats');
+            stats.innerHTML = `
+                <div class="stat-row">
+                    <span class="label">最終分數</span>
+                    <span class="value">${racingState.score}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="label">最高速度</span>
+                    <span class="value">${Math.floor(racingState.speed)} km/h</span>
+                </div>
+                <div class="stat-row">
+                    <span class="label">使用技能</span>
+                    <span class="value">${racingState.skill.name}</span>
+                </div>
+            `;
             
             document.getElementById('game-over').classList.add('show');
         }
 
-        function restartGame() {
+        document.getElementById('btn-restart').addEventListener('click', () => {
             document.getElementById('game-over').classList.remove('show');
-            const diffConfig = DIFFICULTY_CONFIG[settings.difficulty];
-            gameState = {
-                score: 0, combo: 0, maxCombo: 0, level: 1,
-                popped: 0, timeLeft: diffConfig.duration,
-                slowMotion: false, slowMotionEnd: 0,
-                running: true, lastComboTime: Date.now()
-            };
-            bubbles.length = 0;
-            particles.length = 0;
-            floatingTexts.length = 0;
-            gameStartTime = Date.now();
-            updateHUD();
-        }
+            if (currentGame === 'racing') {
+                initRacingGame();
+            } else if (currentGame === 'bubble') {
+                initBubbleGame();
+            }
+        });
 
-        document.getElementById('btn-start').addEventListener('click', startGame);
-        document.getElementById('btn-restart').addEventListener('click', restartGame);
+        // 啟動攝影機（主頁時也啟動，這樣切換遊戲時更快）
+        startCamera();
     </script>
 </body>
 </html>
