@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>譜鏡 ScoreLens｜瀏覽器端 OMR 樂譜辨識・播放・匯出</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700;900&family=Noto+Sans+TC:wght@400;500;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg0:#0d1120;--bg1:#141b30;--panel:#181f36;--panel2:#1e2846;--line:#2b3657;--line2:#3c4a75;--txt:#e9edf8;--mut:#96a1c2;--gold:#f2b63c;--gold2:#ffd875;--teal:#57d7c2;--coral:#ff7a66;--serif:'Noto Serif TC',serif;--sans:'Noto Sans TC',sans-serif;--num:'Space Grotesk','Noto Sans TC',sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--sans);background:var(--bg0);color:var(--txt);min-height:100vh;overflow-x:hidden}
+::selection{background:rgba(242,182,60,.35)}
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none}
+.bg-grad{position:absolute;inset:0;background:radial-gradient(1200px 600px at 70% -10%,#22305c 0%,transparent 60%),radial-gradient(900px 500px at 8% 110%,#1a2a4a 0%,transparent 55%),linear-gradient(160deg,var(--bg1),var(--bg0) 55%)}
+.bg-staves{position:absolute;inset:0;opacity:.5;background:repeating-linear-gradient(180deg,transparent 0 42px,rgba(148,163,204,.045) 42px 43px)}
+.bg-glow{position:absolute;top:-140px;left:50%;transform:translateX(-50%);width:900px;height:340px;background:radial-gradient(closest-side,rgba(242,182,60,.10),transparent 70%)}
+#bgNotes span{position:absolute;bottom:-70px;color:rgba(190,205,245,.10);animation:floatUp linear infinite;user-select:none}
+@keyframes floatUp{0%{transform:translateY(0) rotate(0);opacity:0}8%{opacity:1}90%{opacity:.7}100%{transform:translateY(-115vh) rotate(28deg);opacity:0}}
+header{position:relative;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 26px;border-bottom:1px solid var(--line);background:rgba(13,17,32,.72);backdrop-filter:blur(6px)}
+.brand{display:flex;align-items:center;gap:14px}
+.logo{width:46px;height:46px;border-radius:11px;display:grid;place-items:center;font-size:24px;color:#241a04;background:linear-gradient(145deg,var(--gold2),var(--gold) 60%,#c98d1e);box-shadow:0 4px 18px rgba(242,182,60,.35),inset 0 1px 0 rgba(255,255,255,.5)}
+.brand h1{font-family:var(--serif);font-weight:900;font-size:23px;letter-spacing:.04em;line-height:1.1}
+.brand h1 span{font-family:var(--num);font-weight:500;font-size:14px;color:var(--gold);letter-spacing:.18em;margin-left:6px}
+.brand p{font-size:12px;color:var(--mut);letter-spacing:.14em;margin-top:2px}
+.hright{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.pill{display:flex;align-items:center;gap:8px;padding:7px 13px;border:1px solid var(--line);border-radius:99px;background:var(--panel);font-size:12.5px;color:var(--mut)}
+.pill .dot{width:8px;height:8px;border-radius:50%;background:#5a6482;transition:.3s}
+.pill.live .dot{background:var(--teal);box-shadow:0 0 8px var(--teal);animation:pulse 1.6s infinite}
+@keyframes pulse{50%{opacity:.45}}
+.eq{display:flex;align-items:flex-end;gap:2.5px;height:16px}
+.eq i{width:3px;background:var(--gold);border-radius:2px;height:5px;animation:eqB .9s ease-in-out infinite alternate;animation-play-state:paused}
+body.playing .eq i{animation-play-state:running}
+.eq i:nth-child(2){animation-delay:.15s}.eq i:nth-child(3){animation-delay:.3s}.eq i:nth-child(4){animation-delay:.45s}.eq i:nth-child(5){animation-delay:.6s}
+@keyframes eqB{from{height:4px}to{height:16px}}
+input[type=range]{-webkit-appearance:none;height:4px;border-radius:4px;background:var(--line2);outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--gold);border:2px solid #241a04;box-shadow:0 0 8px rgba(242,182,60,.5);transition:transform .15s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.25)}
+main{position:relative;z-index:2;display:grid;grid-template-columns:324px 1fr;gap:18px;padding:20px 26px 40px;max-width:1560px;margin:0 auto}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 8px 26px rgba(0,0,0,.28);animation:fadeUp .55s both}
+.card:nth-child(2){animation-delay:.08s}.card:nth-child(3){animation-delay:.16s}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+aside{display:flex;flex-direction:column;gap:16px}
+.ctitle{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.22em;color:var(--mut);margin-bottom:12px}
+.ctitle::before{content:'';width:14px;height:3px;background:var(--gold);border-radius:2px}
+.drop{border:2px dashed var(--line2);border-radius:12px;padding:22px 14px;text-align:center;transition:.25s;cursor:pointer;background:rgba(255,255,255,.015)}
+.drop:hover,.drop.hot,body.dragging .drop{border-color:var(--gold);background:rgba(242,182,60,.06);transform:scale(1.015)}
+.drop .dico{width:52px;height:52px;margin:0 auto 10px;border-radius:50%;display:grid;place-items:center;font-size:24px;color:var(--gold);background:rgba(242,182,60,.12);border:1px solid rgba(242,182,60,.35)}
+.drop b{font-family:var(--serif);font-size:16.5px;display:block}
+.drop small{color:var(--mut);font-size:12px;display:block;margin:5px 0 12px}
+.btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line2);background:var(--panel2);color:var(--txt);border-radius:9px;padding:8px 14px;font-size:13px;font-family:var(--sans);cursor:pointer;transition:.18s}
+.btn:hover{transform:translateY(-2px);border-color:var(--gold);box-shadow:0 6px 16px rgba(0,0,0,.3)}
+.btn.gold{background:linear-gradient(145deg,var(--gold2),var(--gold));color:#241a04;font-weight:700;border-color:transparent}
+.btn.teal{border-color:var(--teal);color:var(--teal)}
+.btn.sm{padding:5px 10px;font-size:12px;border-radius:7px}
+.btn:disabled{opacity:.4;pointer-events:none}
+.demos{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;margin-top:13px}
+.chip{border:1px solid var(--line);background:transparent;color:var(--mut);border-radius:99px;padding:5px 12px;font-size:12px;cursor:pointer;transition:.18s;font-family:var(--sans)}
+.chip:hover{color:var(--gold);border-color:var(--gold);transform:translateY(-1px)}
+#libList{list-style:none;display:flex;flex-direction:column;gap:8px;max-height:210px;overflow:auto}
+#libList li{display:flex;gap:10px;align-items:center;padding:8px;border:1px solid transparent;border-radius:10px;cursor:pointer;transition:.15s}
+#libList li:hover{background:rgba(255,255,255,.04);border-color:var(--line)}
+#libList li.act{border-color:var(--gold);background:rgba(242,182,60,.07)}
+.thumb{width:40px;height:40px;border-radius:8px;flex:none;display:grid;place-items:center;font-size:18px;background:#111830;border:1px solid var(--line);color:var(--gold);overflow:hidden}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.libname{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
+.libsub{font-size:11px;color:var(--mut);font-family:var(--num)}
+.badge{margin-left:auto;font-size:10.5px;padding:2px 8px;border-radius:99px;flex:none}
+.badge.ok{background:rgba(87,215,194,.14);color:var(--teal)}
+.badge.run{background:rgba(242,182,60,.14);color:var(--gold)}
+.badge.no{background:rgba(255,122,102,.14);color:var(--coral)}
+.meta-t{width:100%;background:#111830;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:9px 11px;font-family:var(--serif);font-size:15px;font-weight:700;margin-bottom:12px;outline:none}
+.meta-t:focus{border-color:var(--gold)}
+.mrow{display:flex;justify-content:space-between;align-items:center;padding:6.5px 0;border-bottom:1px dashed rgba(60,74,117,.5);font-size:13px;gap:8px}
+.mrow:last-of-type{border:none}
+.mrow b{font-family:var(--num);font-weight:500;color:var(--gold2)}
+.mrow span{color:var(--mut);font-size:12px;flex:none}
+select{background:#111830;border:1px solid var(--line2);color:var(--txt);border-radius:8px;padding:6px 9px;font-family:var(--sans);font-size:12.5px;outline:none;cursor:pointer}
+select:focus{border-color:var(--gold)}
+.confbar{height:6px;background:#111830;border-radius:6px;overflow:hidden;margin-top:6px}
+.confbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--gold));border-radius:6px;transition:width 1.1s cubic-bezier(.2,.8,.2,1)}
+.foot-note{font-size:11px;color:#6b7595;line-height:1.75;margin-top:8px}
+.ws{display:flex;flex-direction:column;gap:16px;min-width:0}
+.transport{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:14px 18px;position:relative;overflow:hidden}
+.tprog{position:absolute;left:0;top:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--gold2));width:0%}
+.playbtn{width:56px;height:56px;border-radius:50%;border:none;cursor:pointer;font-size:19px;color:#241a04;background:linear-gradient(145deg,var(--gold2),var(--gold) 65%,#cf9320);box-shadow:0 6px 20px rgba(242,182,60,.4),inset 0 1px 0 rgba(255,255,255,.5);transition:.2s;display:grid;place-items:center;flex:none}
+.playbtn:hover{transform:scale(1.07)}
+body.playing .playbtn{animation:ring 1.8s infinite}
+@keyframes ring{0%{box-shadow:0 0 0 0 rgba(242,182,60,.45),0 6px 20px rgba(242,182,60,.4)}100%{box-shadow:0 0 0 18px rgba(242,182,60,0),0 6px 20px rgba(242,182,60,.4)}}
+.stopbtn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line2);background:var(--panel2);color:var(--txt);cursor:pointer;font-size:13px;transition:.18s;flex:none}
+.stopbtn:hover{border-color:var(--coral);color:var(--coral);transform:scale(1.06)}
+.tgroup{display:flex;flex-direction:column;gap:5px}
+.tgroup>label{font-size:10.5px;letter-spacing:.2em;color:var(--mut)}
+.trow{display:flex;align-items:center;gap:8px}
+.trow b{font-family:var(--num);font-size:16px;color:var(--gold2);min-width:36px;text-align:center}
+.trow small{color:var(--mut);font-size:11px}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button{width:26px;height:26px;border-radius:7px;border:1px solid var(--line2);background:var(--panel2);color:var(--txt);cursor:pointer;font-size:14px;line-height:1;transition:.15s}
+.stepper button:hover{border-color:var(--gold);color:var(--gold)}
+.tog{border:1px solid var(--line);background:transparent;color:var(--mut);border-radius:99px;padding:6px 13px;font-size:12px;cursor:pointer;transition:.18s;font-family:var(--sans)}
+.tog:hover{border-color:var(--line2);color:var(--txt)}
+.tog.on{border-color:var(--teal);color:var(--teal);background:rgba(87,215,194,.1)}
+.pos{margin-left:auto;text-align:right;font-family:var(--num)}
+.pos b{font-size:16px}
+.pos small{display:block;color:var(--mut);font-size:11px;margin-top:2px}
+.stage-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.stage-head h3{font-family:var(--serif);font-size:16px;font-weight:700}
+.edited{font-size:10.5px;color:var(--coral);border:1px solid rgba(255,122,102,.4);border-radius:99px;padding:2px 9px;display:none}
+.spacer{flex:1}
+#scoreBox{max-height:46vh;overflow:auto;border-radius:10px;background:rgba(9,12,24,.45);border:1px solid var(--line)}
+#scoreBox svg{display:block;width:100%;height:auto}
+.empty{padding:52px 20px;text-align:center}
+.empty .staffy{height:46px;max-width:420px;margin:0 auto 18px;position:relative;background:repeating-linear-gradient(180deg,transparent 0 9px,rgba(150,161,194,.4) 9px 10px);border-radius:4px;overflow:hidden}
+.empty .staffy::after{content:'♪';position:absolute;top:2px;font-size:30px;color:var(--gold);animation:slideN 5s linear infinite}
+@keyframes slideN{from{left:-36px}to{left:105%}}
+.empty b{font-family:var(--serif);font-size:18px}
+.empty p{color:var(--mut);font-size:13px;margin:8px 0 16px}
+svg .hd{fill:#dfe6ff;transition:fill .12s}
+svg .stk,svg .flg{stroke:#dfe6ff}
+svg g.nt{cursor:pointer}
+svg g.nt:hover .hd{fill:var(--gold2)}
+svg g.nt.act .hd{fill:var(--gold)}
+svg g.nt.act .stk,svg g.nt.act .flg{stroke:var(--gold)}
+svg .ph{stroke:var(--gold);stroke-width:2;filter:drop-shadow(0 0 5px rgba(242,182,60,.8))}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:12px}
+.tab{background:none;border:none;color:var(--mut);font-family:var(--sans);font-size:13.5px;font-weight:500;padding:9px 16px;cursor:pointer;position:relative}
+.tab:hover{color:var(--txt)}
+.tab.on{color:var(--gold)}
+.tab.on::after{content:'';position:absolute;left:12px;right:12px;bottom:-1px;height:2px;background:var(--gold);border-radius:2px}
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;font-size:12px;color:var(--mut)}
+.toolbar .hint{margin-left:auto;font-size:11px;color:#6b7595}
+#rollWrap{max-height:270px;overflow:auto;border:1px solid var(--line);border-radius:10px;background:#0b0f1e;position:relative}
+#rollWrap canvas{display:block}
+#rollOv{position:absolute;left:0;top:0;pointer-events:none}
+.keys{position:relative;height:150px;user-select:none;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#0b0f1e}
+.kw{position:absolute;top:0;bottom:0;background:linear-gradient(180deg,#f4f2ea,#d9d6ca);border:1px solid #3a3f52;border-radius:0 0 4px 4px;cursor:pointer}
+.kw:hover{background:#fff8e0}
+.kw.on{background:linear-gradient(180deg,var(--gold2),var(--gold))}
+.kb{position:absolute;top:0;height:60%;background:linear-gradient(180deg,#232a44,#0d1226);border:1px solid #000;border-radius:0 0 3px 3px;cursor:pointer;z-index:2}
+.kb.on{background:linear-gradient(180deg,var(--gold2),var(--gold))}
+.klbl{position:absolute;bottom:3px;left:50%;transform:translateX(-50%);font-size:9px;color:#8a8fa5;pointer-events:none;font-family:var(--num)}
+.ov{position:fixed;inset:0;z-index:50;background:rgba(8,11,22,.84);backdrop-filter:blur(5px);display:none;place-items:center;padding:20px;overflow:auto}
+.ov.show{display:grid;animation:fadeUp .3s}
+.ovpanel{width:min(960px,95vw);background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line2);border-radius:16px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.ovhead{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.ovhead h2{font-family:var(--serif);font-size:19px}
+.ovhead small{color:var(--mut);font-size:12px;display:block}
+.ovgrid{display:grid;grid-template-columns:340px 1fr;gap:18px}
+@media(max-width:820px){.ovgrid{grid-template-columns:1fr}}
+.stages{display:flex;flex-direction:column;gap:10px}
+.stg{border:1px solid var(--line);border-radius:10px;background:#080b16;overflow:hidden;opacity:.35;transition:.4s}
+.stg.done{opacity:1;border-color:rgba(87,215,194,.5)}
+.stg.act{opacity:1;border-color:var(--gold);box-shadow:0 0 16px rgba(242,182,60,.18)}
+.stg label{display:block;font-size:11px;color:var(--mut);padding:6px 10px 4px;letter-spacing:.1em}
+.stg canvas{display:block;width:100%;height:96px;object-fit:contain;background:#fff}
+.console{background:#05070f;border:1px solid var(--line);border-radius:10px;padding:10px 12px;height:264px;overflow:auto;font-family:var(--num),monospace;font-size:11.5px;line-height:1.85;color:var(--teal)}
+.console div{animation:logIn .3s both}
+.console div b{color:var(--gold)}
+.console div.warn{color:var(--coral)}
+@keyframes logIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1}}
+.ovfoot{display:flex;align-items:center;gap:12px;margin-top:16px}
+#ovStatus{flex:1;font-size:13px;color:var(--mut)}
+#ovStatus.ok{color:var(--teal)}
+#ovStatus.err{color:var(--coral)}
+#toasts{position:fixed;right:20px;bottom:20px;z-index:80;display:flex;flex-direction:column;gap:10px}
+.toast{background:var(--panel2);border:1px solid var(--line2);border-left:3px solid var(--gold);border-radius:10px;padding:11px 16px;font-size:13px;box-shadow:0 12px 30px rgba(0,0,0,.5);animation:toastIn .35s cubic-bezier(.2,.9,.3,1.2);max-width:360px}
+.toast.teal{border-left-color:var(--teal)}
+.toast.coral{border-left-color:var(--coral)}
+@keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+.toast.out{opacity:0;transform:translateX(40px);transition:.3s}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:var(--line2);border-radius:6px}
+::-webkit-scrollbar-thumb:hover{background:var(--gold)}
+@media(max-width:1080px){main{grid-template-columns:1fr}.pos{margin-left:0;text-align:left;width:100%}}
+</style>
+</head>
+<body>
+<div class="bg"><div class="bg-grad"></div><div class="bg-staves"></div><div class="bg-glow"></div><div id="bgNotes"></div></div>
+
+<header>
+  <div class="brand">
+    <div class="logo">♪</div>
+    <div>
+      <h1>譜鏡 <span>SCORELENS</span></h1>
+      <p>瀏覽器端 OMR 辨識 · 播放 · 編輯 · 匯出（運算全部在本機完成）</p>
+    </div>
+  </div>
+  <div class="hright">
+    <div class="eq"><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="pill" id="enginePill"><i class="dot"></i><span id="engineTxt">音訊引擎待命</span></div>
+    <div class="pill">音量 <input type="range" id="masterVol" min="0" max="100" value="85" style="width:90px"></div>
+  </div>
+</header>
+
+<main>
+  <aside>
+    <div class="card">
+      <div class="ctitle">上傳樂譜</div>
+      <div class="drop" id="drop">
+        <div class="dico">𝄞</div>
+        <b>拖放樂譜到這裡</b>
+        <small>PDF · JPG · PNG（≤ 25MB）· 建議清晰印刷譜</small>
+        <button class="btn gold" type="button">選擇檔案</button>
+        <div class="demos">
+          <button class="btn sm teal" id="btnTestScore" type="button">🧪 產生測試樂譜並辨識</button>
+        </div>
+        <div class="demos">
+          <button class="chip" data-demo="twinkle">♫ 範例：小星星</button>
+          <button class="chip" data-demo="ode">♫ 範例：快樂頌</button>
+          <button class="chip" data-demo="elise">♫ 範例：給愛麗絲</button>
+        </div>
+      </div>
+      <input type="file" id="fileIn" accept="application/pdf,image/*" hidden>
+    </div>
+    <div class="card">
+      <div class="ctitle">文件庫</div>
+      <ul id="libList"></ul>
+    </div>
+    <div class="card">
+      <div class="ctitle">辨識結果</div>
+      <input class="meta-t" id="mTitle" value="—" spellcheck="false">
+      <div class="mrow"><span>目標譜表</span><select id="staveSel" style="max-width:180px"><option value="auto">尚未辨識</option></select></div>
+      <div class="mrow"><span>推測調性</span><b id="mKey">—</b></div>
+      <div class="mrow"><span>推測拍號</span><b id="mTS">—</b></div>
+      <div class="mrow"><span>速度</span><b id="mTempo">—</b></div>
+      <div class="mrow"><span>小節數</span><b id="mBars">—</b></div>
+      <div class="mrow"><span>偵測音符</span><b id="mNotes">—</b></div>
+      <div class="mrow"><span>譜線間距</span><b id="mGap">—</b></div>
+      <div class="mrow"><span>來源</span><b id="mSrc" style="font-size:11.5px">—</b></div>
+      <div class="mrow" style="display:block">
+        <span>辨識信心度</span><b id="mConf" style="float:right">—</b>
+        <div class="confbar"><i id="confFill"></i></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+        <button class="btn sm" id="btnReset">↺ 重設為辨識結果</button>
+        <button class="btn sm" id="btnUndo">⌫ 復原編輯</button>
+      </div>
+      <p class="foot-note">辨識於瀏覽器本地以純 JavaScript 執行（二值化 → 譜線偵測 → 連通元件分割 → 音高映射），不上傳任何伺服器。適合清晰印刷樂譜；手寫、陰影或複雜排版辨識率有限。目前假設高音譜號、無升降調號，結果可在下方捲簾直接修正。</p>
+    </div>
+  </aside>
+
+  <section class="ws">
+    <div class="transport card">
+      <div class="tprog" id="tprog"></div>
+      <button class="playbtn" id="btnPlay" title="播放 / 暫停（空白鍵）">▶</button>
+      <button class="stopbtn" id="btnStop" title="停止">■</button>
+      <div class="tgroup"><label>速度 TEMPO</label>
+        <div class="trow"><input type="range" id="tempoR" min="50" max="180" value="96" style="width:120px"><b id="tempoVal">96</b><small>BPM</small></div>
+      </div>
+      <div class="tgroup"><label>移調 TRANSPOSE</label>
+        <div class="stepper"><button id="trDown">−</button><b id="trVal">0</b><button id="trUp">＋</button></div>
+      </div>
+      <div class="tgroup"><label>音色 INSTRUMENT</label>
+        <select id="instSel" style="font-size:13px">
+          <option value="piano">平台鋼琴</option><option value="musicbox">音樂盒</option>
+          <option value="strings">弦樂群</option><option value="flute">長笛</option>
+        </select>
+      </div>
+      <div class="tgroup"><label>選項</label>
+        <div class="trow">
+          <button class="tog" id="togMetro">節拍器</button>
+          <button class="tog on" id="togAcc">自動伴奏</button>
+          <button class="tog" id="togLoop">循環</button>
+        </div>
+      </div>
+      <div class="pos"><b id="posTxt">— · —</b><small id="posTotal">尚未載入樂譜</small></div>
+    </div>
+
+    <div class="card" style="animation-delay:.1s">
+      <div class="stage-head">
+        <h3 id="stageTitle">五線譜預覽</h3>
+        <span class="edited" id="editedTag">已手動編輯</span>
+        <div class="spacer"></div>
+        <button class="btn sm" id="btnMidi">⬇ 匯出 MIDI</button>
+        <button class="btn sm" id="btnJson">⬇ 匯出 JSON</button>
+        <button class="btn sm" id="btnPrint">⎙ 列印</button>
+      </div>
+      <div id="scoreBox"></div>
+    </div>
+
+    <div class="card" style="animation-delay:.18s">
+      <div class="tabs">
+        <button class="tab on" data-pane="roll">鋼琴捲簾編輯（修正辨識結果）</button>
+        <button class="tab" data-pane="keys">琴鍵視覺化</button>
+      </div>
+      <div id="pane-roll">
+        <div class="toolbar">
+          網格：<select id="gridSel"><option value="1">¼ 拍</option><option value="0.5" selected>⅛ 拍</option><option value="0.25">1/16 拍</option></select>
+          <button class="btn sm" id="btnClearBar">清除目前小節</button>
+          <span class="hint">左鍵＝加入／移除音符 · 右鍵＝刪除 · 捲簾顯示原始音高</span>
+        </div>
+        <div id="rollWrap"><canvas id="rollBase"></canvas><canvas id="rollOv"></canvas></div>
+      </div>
+      <div id="pane-keys" style="display:none">
+        <div class="toolbar"><span>滑鼠點擊琴鍵可試聽 · 播放中會即時點亮發聲的音</span></div>
+        <div class="keys" id="keys"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="ov" id="ov">
+  <div class="ovpanel">
+    <div class="ovhead"><div class="logo" style="width:38px;height:38px;font-size:19px">𝄞</div>
+      <div><h2>OMR 光學樂譜辨識（瀏覽器端真實運算）</h2><small id="ovFile">—</small></div>
+    </div>
+    <div class="ovgrid">
+      <div class="stages">
+        <div class="stg" id="stg0"><label>① Otsu 二值化</label><canvas></canvas></div>
+        <div class="stg" id="stg1"><label>② 五線譜偵測（水平投影）</label><canvas></canvas></div>
+        <div class="stg" id="stg2"><label>③ 符號分割與音高定位</label><canvas></canvas></div>
+      </div>
+      <div class="console" id="ovLog"></div>
+    </div>
+    <div class="ovfoot">
+      <div id="ovStatus">準備中…</div>
+      <button class="btn sm" id="ovClose" disabled>關閉</button>
+    </div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+/* ============ 工具 ============ */
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const hashStr=s=>{let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0};
+const mulberry32=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+const NN=['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
+const mName=m=>NN[((m%12)+12)%12]+(Math.floor(m/12)-1);
+const fmtSize=b=>b>1048576?(b/1048576).toFixed(1)+' MB':(b/1024).toFixed(0)+' KB';
+const median=a=>{const s=[...a].sort((x,y)=>x-y);return s[s.length>>1]};
+const tick=()=>new Promise(r=>setTimeout(r,15));
+function toast(msg,type=''){const t=document.createElement('div');t.className='toast '+type;t.textContent=msg;$('#toasts').appendChild(t);setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),320)},4200)}
+function dl(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
+function spell(m){const oct=Math.floor(m/12)-1,pc=((m%12)+12)%12,ord=[0,2,4,5,7,9,11];
+  let li=0;while(li<6&&ord[li+1]<=pc)li++;
+  if(ord[li]===pc)return{o:oct*7+li,a:0};return{o:oct*7+(li+1)%7,a:-1}}
+
+/* ============ 狀態 ============ */
+const S={score:null,origSnap:null,transpose:0,bpm:96,playing:false,curBeat:0,startBeat:0,startAt:0,
+  evIdx:0,mNext:0,events:[],timer:null,metro:false,acc:true,loop:false,grid:.5,vol:.85};
+let AC=null,master,sendBus,undoStack=[],lib=[],libSeq=0,GEOM=null,curItem=null;
+
+/* ================================================================
+   真實 OMR 辨識引擎（純 JavaScript，於瀏覽器本地執行）
+   ================================================================ */
+function otsu(g){const hist=new Uint32Array(256);for(let i=0;i<g.length;i++)hist[g[i]]++;
+  const total=g.length;let sum=0;for(let i=0;i<256;i++)sum+=i*hist[i];
+  let sumB=0,wB=0,maxVar=0,thr=127;
+  for(let t=0;t<256;t++){wB+=hist[t];if(!wB)continue;const wF=total-wB;if(!wF)break;
+    sumB+=t*hist[t];const mB=sumB/wB,mF=(sum-sumB)/wF,v=wB*wF*(mB-mF)*(mB-mF);
+    if(v>maxVar){maxVar=v;thr=t}}return thr}
+
+async function analyzePage(srcCanvas,log){
+  const maxW=1400,sc=Math.min(1,maxW/srcCanvas.width);
+  const w=Math.round(srcCanvas.width*sc),h=Math.round(srcCanvas.height*sc);
+  const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+  const ctx=cv.getContext('2d',{willReadFrequently:true});
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);ctx.drawImage(srcCanvas,0,0,w,h);
+  const d=ctx.getImageData(0,0,w,h).data,gray=new Uint8Array(w*h);
+  for(let i=0,p=0;i<d.length;i+=4,p++)gray[p]=(d[i]*299+d[i+1]*587+d[i+2]*114)/1000|0;
+  const thr=otsu(gray),bin=new Uint8Array(w*h);
+  for(let i=0;i<gray.length;i++)bin[i]=gray[i]<thr?1:0;
+  log(`影像 ${srcCanvas.width}×${srcCanvas.height} → 工作解析度 ${w}×${h} · Otsu 臨界值 = ${thr}`);
+  paintStage(0,bin,w,h,[]);await tick();
+
+  /* --- 譜線偵測：水平投影 --- */
+  const rowD=new Uint32Array(h);
+  for(let y=0;y<h;y++){let c=0,o=y*w;for(let x=0;x<w;x++)c+=bin[o+x];rowD[y]=c}
+  const thrR=Math.max(w*0.18,40),bands=[];let y=0;
+  while(y<h){if(rowD[y]>thrR){const y0=y;while(y<h&&rowD[y]>thrR*0.6)y++;
+    if(y-y0<=Math.max(8,h*0.01))bands.push({c:(y0+y-1)/2,t:y-y0})}else y++}
+  const staffs=[];
+  for(let i=0;i+4<bands.length;i++){
+    const g=bands.slice(i,i+5),sp=[];
+    for(let k=0;k<4;k++)sp.push(g[k+1].c-g[k].c);
+    const med=median(sp);
+    if(med<4||med>90||sp.some(v=>Math.abs(v-med)>med*0.35)||g.some(b=>b.t>med*0.9))continue;
+    const yr=Math.round(g[2].c);let x0=w,x1=0;const o=yr*w;
+    for(let x=0;x<w;x++)if(bin[o+x]){if(x<x0)x0=x;if(x>x1)x1=x}
+    if(x1-x0<w*0.15)continue;
+    staffs.push({lines:g.map(b=>b.c),s:med,th:median(g.map(b=>b.t)),x0,x1,y0:g[0].c,y1:g[4].c});
+    i+=4}
+  log(`水平線帶候選 ${bands.length} 組 → 確認五線譜 ${staffs.length} 組${staffs.length?`（間距 ${staffs[0].s.toFixed(1)}px · 線粗 ${staffs[0].th.toFixed(1)}px）`:''}`);
+  paintStage(1,bin,w,h,staffs);await tick();
+
+  /* --- 移除譜線（長水平連通區） --- */
+  const bin2=new Uint8Array(bin);
+  for(const st of staffs)for(const ly of st.lines){
+    const lim=Math.max(24,st.s*2.8);
+    for(let dy=-Math.ceil(st.th/2);dy<=Math.ceil(st.th/2);dy++){
+      const yy=Math.round(ly)+dy;if(yy<0||yy>=h)continue;const o=yy*w;let x=0;
+      while(x<w){if(bin2[o+x]){let x2=x;while(x2<w&&bin2[o+x2])x2++;
+        if(x2-x>lim)for(let k=x;k<x2;k++)bin2[o+k]=0;x=x2}else x++}}}
+  log(`譜線移除完成（清除長度 > ${staffs.length?Math.round(Math.max(24,staffs[0].s*2.8)):0}px 的水平連通區）`);
+
+  /* --- 連通元件分割 --- */
+  const lab=new Int32Array(w*h),stk=new Int32Array(w*h),comps=[];
+  for(let i=0;i<bin2.length;i++){if(!bin2[i]||lab[i])continue;
+    let sp=0;stk[sp++]=i;lab[i]=comps.length+1;
+    let minx=w,maxx=0,miny=h,maxy=0,cnt=0;
+    while(sp){const q=stk[--sp],qx=q%w,qy=(q/w)|0;cnt++;
+      if(qx<minx)minx=qx;if(qx>maxx)maxx=qx;if(qy<miny)miny=qy;if(qy>maxy)maxy=qy;
+      for(let ny=Math.max(0,qy-1);ny<=Math.min(h-1,qy+1);ny++)
+        for(let nx=Math.max(0,qx-1);nx<=Math.min(w-1,qx+1);nx++){
+          const ni=ny*w+nx;if(bin2[ni]&&!lab[ni]){lab[ni]=comps.length+1;stk[sp++]=ni}}}
+    if(cnt>4&&maxx-minx<120&&maxy-miny<180)comps.push({minx,maxx,miny,maxy,cnt,id:comps.length+1})}
+  log(`連通元件 ${comps.length} 個 → 逐一量測包圍盒與最寬列…`);
+  for(const c of comps){const bw=c.maxx-c.minx+1,bh=c.maxy-c.miny+1;
+    let bestW=0,bestY=c.miny,bestX=c.minx,headPix=0,headRows=0;
+    const hr=Math.max(1,Math.round(bw*0.42));
+    for(let yy=c.miny;yy<=c.maxy;yy++){let rw=0,sx=0;
+      for(let xx=c.minx;xx<=c.maxx;xx++)if(lab[yy*w+xx]===c.id){rw++;sx+=xx}
+      if(rw>bestW){bestW=rw;bestY=yy;bestX=rw?sx/rw:c.minx}
+      if(Math.abs(yy-(c.miny+c.maxy)/2)<=hr){headPix+=rw;headRows++}}
+    c.hrW=bestW;c.hrY=bestY;c.hrX=bestX;c.bw=bw;c.bh=bh;
+    c.dens=c.cnt/(bw*bh);c.ratio=headRows?headPix/(headRows*bw):1}
+  return{w,h,staffs,comps,bin2}}
+
+function midiFromY(y,st){const k=Math.round((y-st.lines[0])/(st.s/2)),abs=38-k;
+  if(abs<7||abs>60)return null;
+  return(Math.floor(abs/7)+1)*12+[0,2,4,5,7,9,11][abs%7]}
+
+/* 依譜表選擇，從已分割的元件推導音符 */
+function deriveFrom(A,mode){
+  const chosen=[];let prev=null;
+  A.pages.forEach((pg,pi)=>{pg.staffs.forEach((st,si)=>{
+    const sameSys=prev&&prev.pi===pi&&(st.y0-prev.st.y1)<prev.st.s*5;
+    chosen.push({pi,si,st,first:!sameSys,label:`第${pi+1}頁・譜表${si+1}`});
+    prev={pi,st}})});
+  let pick;
+  if(mode==='all')pick=chosen;
+  else if(mode==='auto')pick=chosen.filter(c=>c.first);
+  else{const id=chosen.findIndex(c=>c.label===mode);pick=id>=0?[chosen[id]]:chosen.filter(c=>c.first)}
+  const melody=[],barXs=[];let bpbGuess=4;
+  for(const c of pick){const st=c.st,s=st.s,heads=[],bars=[];
+    for(const cp of A.pages[c.pi].comps){
+      if(cp.hrW<0.5*s||cp.hrW>2.4*s||cp.bh<0.45*s)continue;
+      if(cp.hrY<st.y0-1.8*s||cp.hrY>st.y1+1.8*s)continue;
+      if(cp.hrX<st.x0+4*s||cp.hrX>st.x1-0.3*s)continue;
+      heads.push({x:cp.hrX,y:cp.hrY,hollow:cp.ratio<0.45})}
+    for(const cp of A.pages[c.pi].comps){
+      if(cp.bw<=Math.max(6,0.6*s)&&cp.bh>=3*s&&cp.bh<=6.8*s&&cp.dens>0.45){
+        const cy=(cp.miny+cp.maxy)/2;
+        if(Math.abs(cy-(st.y0+st.y1)/2)<0.8*s&&cp.minx>st.x0&&cp.minx<st.x1)bars.push((cp.minx+cp.maxx)/2)}}
+    bars.sort((a,b)=>a-b);
+    const merged=[];bars.forEach(x=>{if(!merged.length||x-merged[merged.length-1]>0.6*s)merged.push(x)});
+    heads.sort((a,b)=>a.x-b.x);
+    const ded=[];heads.forEach(hd=>{const last=ded[ded.length-1];
+      if(last&&Math.abs(hd.x-last.x)<0.35*s&&Math.abs(hd.y-last.y)<0.8*s)return;ded.push(hd)});
+    barXs.push(merged.length);
+    /* 音高與時值 */
+    const notes=ded.map(hd=>({p:midiFromY(hd.y,st),x:hd.x,d:hd.hollow?2:1})).filter(n=>n.p);
+    let tOff=melody.length?melody[melody.length-1].t+melody[melody.length-1].d:0;
+    if(merged.length>=2){
+      const groups=[];for(let i=0;i<merged.length-1;i++){
+        const g=notes.filter(n=>n.x>=merged[i]&&n.x<merged[i+1]);if(g.length)groups.push(g)}
+      const tots=groups.map(g=>g.reduce((a,n)=>a+n.d,0));
+      bpbGuess=Math.max(2,Math.min(4,Math.round(median(tots))));
+      groups.forEach(g=>{const tot=g.reduce((a,n)=>a+n.d,0),k=tot?bpbGuess/tot:1;
+        g.forEach(n=>{melody.push({t:tOff,d:Math.max(.25,Math.round(n.d*k*4)/4),p:n.p,v:.8});tOff+=Math.max(.25,Math.round(n.d*k*4)/4)})})}
+    else notes.forEach(n=>{melody.push({t:tOff,d:n.d,p:n.p,v:.8});tOff+=n.d})}
+  return{melody,bpbGuess,labels:pick.map(p=>p.label)}}
+
+/* ---------- 辨識主流程（含 UI） ---------- */
+const ovLogEl=$('#ovLog');
+function olog(t,warn){const d=document.createElement('div');if(warn)d.className='warn';
+  d.innerHTML='<b>›</b> '+t;ovLogEl.appendChild(d);ovLogEl.scrollTop=1e6}
+function paintStage(i,bin,w,h,staffs,marks){
+  const stg=$('#stg'+i);stg.classList.add('act');
+  const cv=stg.querySelector('canvas'),ctx=cv.getContext('2d');
+  const tmp=document.createElement('canvas');tmp.width=w;tmp.height=h;
+  const tc=tmp.getContext('2d'),img=tc.createImageData(w,h);
+  for(let p=0,q=0;p<bin.length;p++,q+=4){const v=bin[p]?20:250;
+    img.data[q]=v;img.data[q+1]=v;img.data[q+2]=v;img.data[q+3]=255}
+  tc.putImageData(img,0,0);
+  cv.width=320;cv.height=96;ctx.imageSmoothingEnabled=true;
+  const r=Math.min(320/w,96/h),dw=w*r,dh=h*r,ox=(320-dw)/2,oy=(96-dh)/2;
+  ctx.fillStyle='#0a0d18';ctx.fillRect(0,0,320,96);ctx.drawImage(tmp,ox,oy,dw,dh);
+  if(staffs){ctx.strokeStyle='#57d7c2';ctx.lineWidth=1;
+    staffs.forEach(st=>st.lines.forEach(ly=>{ctx.beginPath();
+      ctx.moveTo(ox+st.x0*r,oy+ly*r);ctx.lineTo(ox+st.x1*r,oy+ly*r);ctx.stroke()}))}
+  if(marks){marks.heads.forEach(hd=>{ctx.strokeStyle='#f2b63c';ctx.lineWidth=1.4;
+      ctx.strokeRect(ox+(hd.x-9)*r,oy+(hd.y-7)*r,18*r,14*r)});
+    ctx.strokeStyle='#ff7a66';marks.bars.forEach(bx=>{ctx.beginPath();
+      ctx.moveTo(ox+bx*r,oy+marks.top*r);ctx.lineTo(ox+bx*r,oy+marks.bot*r);ctx.stroke()})}
+  stg.classList.remove('act');stg.classList.add('done')}
+
+async function runAnalysis(item,canvases){
+  curItem=item;$('#ov').classList.add('show');
+  $('#ovFile').textContent=item.name+' · '+fmtSize(item.size||0);
+  ovLogEl.innerHTML='';$('#ovClose').disabled=true;$('#ovStatus').className='';$('#ovStatus').textContent='開始分析…';
+  $$('.stg').forEach(s=>{s.classList.remove('done','act')});
+  const A={pages:[]};const t0=performance.now();
+  try{
+    for(let p=0;p<canvases.length;p++){
+      olog(`—— 第 ${p+1}/${canvases.length} 頁 ——`);
+      const pg=await analyzePage(canvases[p],olog);
+      A.pages.push(pg);await tick()}
+    /* 整體統計 */
+    const allS=A.pages.flatMap(p=>p.staffs);
+    if(!allS.length)throw new Error('未偵測到五線譜：請使用更清晰、解析度更高的影像（建議 ≥300dpi 扫描或截圖）');
+    const d=deriveFrom(A,'auto');
+    if(!d.melody.length)throw new Error('偵測到譜線但未找到符合條件的音符頭。手寫譜、陰影或傾斜過多皆可能影響結果，可改試「測試樂譜」或範例');
+    /* 視覺化：符號標記（第一頁） */
+    const pg0=A.pages[0],st0=pg0.staffs[0];
+    const dd=deriveFrom({pages:[pg0]},'第1頁・譜表1');
+    const marks={heads:[],bars:[],top:st0.y0-st0.s,bottom:st0.y1+st0.s};
+    for(const cp of pg0.comps){const s=st0.s;
+      if(cp.hrW>=0.5*s&&cp.hrW<=2.4*s&&cp.bh>=0.45*s&&cp.hrY>=st0.y0-1.8*s&&cp.hrY<=st0.y1+1.8*s&&cp.hrX>st0.x0+4*s)
+        marks.heads.push({x:cp.hrX,y:cp.hrY});
+      if(cp.bw<=Math.max(6,0.6*s)&&cp.bh>=3*s&&cp.bh<=6.8*s&&cp.dens>0.45)marks.bars.push((cp.minx+cp.maxx)/2)}
+    paintStage(2,pg0.bin2,pg0.w,pg0.h,null,marks);
+    const ps=d.melody.map(n=>n.p);
+    const conf=Math.max(35,Math.min(96,Math.round(58+d.melody.length*1.1+allS.length*4)));
+    const usedBars=barSum(d);
+    A.dims=canvases[0].width+'×'+canvases[0].height;
+    item.A=A;item.state='ok';
+    olog(`符號標記完成：音符頭候選 ${marks.heads.length} · 小節線 ${barSum2(A)} 條`);
+    olog(`音高範圍 ${mName(Math.min(...ps))} – ${mName(Math.max(...ps))} · 推測拍號 ${d.bpbGuess}/4 · 共 ${d.melody.length} 個音符`);
+    olog(`信心度 ${conf}% · 總耗時 ${((performance.now()-t0)/1000).toFixed(2)} 秒`);
+    const sc=buildScore(item,d,conf,allS[0].s);
+    item.score=sc;item.sub=A.dims+' · '+sc.key.name;
+    fillStaveSel(d.labels);renderLib();
+    $('#ovStatus').className='ok';$('#ovStatus').textContent=`✔ 辨識完成：${d.melody.length} 個音符 · 信心 ${conf}%（已自動載入，可直接播放）`;
+    loadScore(sc,item);chime();
+    toast(`辨識完成：偵測到 ${d.melody.length} 個音符（${sc.key.name} 預設調號，可在捲簾修正）`,'teal');
+  }catch(err){
+    olog(err.message,true);item.state='no';renderLib();
+    $('#ovStatus').className='err';$('#ovStatus').textContent='✘ 辨識未成功 — '+err.message}
+  $('#ovClose').disabled=false}
+function barSum(d){return 0}
+function barSum2(A){let n=0;A.pages.forEach(p=>p.comps.forEach(c=>{const st=p.staffs[0];
+  if(st&&c.bw<=Math.max(6,0.6*st.s)&&c.bh>=3*st.s&&c.bh<=6.8*st.s&&c.dens>0.45)n++}));return n}
+function buildScore(item,d,conf,spacing){
+  const bpb=d.bpbGuess,total=d.melody.length?d.melody[d.melody.length-1].t+d.melody[d.melody.length-1].d:0;
+  const sc={title:item.name.replace(/\.[^.]+$/,''),composer:'OMR 辨識',
+    key:{name:'C',type:'major',tonic:60},timeSig:[bpb,4],tempo:100,
+    bars:Math.max(1,Math.ceil(total/bpb)),conf,meta:{src:(item.name||'')+(item.A&&item.A.dims?' · '+item.A.dims:'')}};
+  sc.melody=d.melody;harmonize(sc);return sc}
+$('#ovClose').onclick=()=>$('#ov').classList.remove('show');
+function fillStaveSel(labels){const sel=$('#staveSel');sel.innerHTML='';
+  const mk=(v,t)=>{const o=document.createElement('option');o.value=v;o.textContent=t;sel.appendChild(o)};
+  mk('auto','自動（每系統第一行）');mk('all','全部譜表');labels.forEach(l=>mk(l,l))}
+$('#staveSel').onchange=()=>{if(!curItem||!curItem.A)return;
+  const d=deriveFrom(curItem.A,$('#staveSel').value);
+  if(!d.melody.length){toast('此選擇下沒有音符','coral');return}
+  const oldTitle=S.score?S.score.title:'';
+  const sc=buildScore(curItem,d,curItem.score?curItem.score.conf:70,curItem.A.pages[0].staffs[0].s);
+  sc.title=oldTitle||sc.title;curItem.score=sc;undoStack=[];loadScore(sc,curItem);
+  toast('已依所選譜表重新推導音符','teal')};
+
+/* ---------- 檔案讀入 ---------- */
+async function fileToCanvases(f){
+  if(f.type.startsWith('image/')){
+    const bmp=await createImageBitmap(f,{imageOrientation:'from-image'}).catch(async()=>{
+      const im=new Image();im.src=URL.createObjectURL(f);await im.decode();return im});
+    const cv=document.createElement('canvas');cv.width=bmp.width;cv.height=bmp.height;
+    cv.getContext('2d').drawImage(bmp,0,0);return[cv]}
+  const lib=await getPdfLib(),pdf=await lib.getDocument({data:await f.arrayBuffer()}).promise;
+  const pages=[],n=Math.min(pdf.numPages,4);
+  for(let p=1;p<=n;p++){const page=await pdf.getPage(p);
+    const vp0=page.getViewport({scale:1}),vp=page.getViewport({scale:Math.min(2.5,1500/vp0.width)});
+    const cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;
+    await page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;pages.push(cv)}
+  if(pdf.numPages>4)toast('僅分析前 4 頁','coral');
+  return pages}
+function getPdfLib(){return new Promise((res,rej)=>{if(window.pdfjsLib)return res(window.pdfjsLib);
+  const s=document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+  s.onload=()=>{window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';res(window.pdfjsLib)};
+  s.onerror=()=>rej(new Error('pdf.js'));document.head.appendChild(s)})}
+async function handleFile(f){
+  const okT=f.type==='application/pdf'||f.type.startsWith('image/');
+  if(!okT){toast('僅支援 PDF 或圖片格式','coral');return}
+  if(f.size>25*1048576){toast('檔案過大（上限 25MB）','coral');return}
+  const item={id:'f'+(++libSeq),name:f.name,size:f.size,state:'run',
+    url:f.type.startsWith('image/')?URL.createObjectURL(f):null};
+  lib.unshift(item);renderLib();
+  try{const cvs=await fileToCanvases(f);await runAnalysis(item,cvs)}
+  catch(e){item.state='no';renderLib();$('#ov').classList.add('show');ovLogEl.innerHTML='';
+    olog((e.message&&e.message.includes('pdf')?'無法載入 PDF 引擎（需網路連線）；圖片檔仍可正常辨識':'讀取檔案失敗：'+e.message),true);
+    $('#ovStatus').className='err';$('#ovStatus').textContent='✘ 處理失敗';$('#ovClose').disabled=false}}
+$('#drop').addEventListener('click',e=>{if(!e.target.closest('.chip')&&!e.target.closest('#btnTestScore'))$('#fileIn').click()});
+$('#fileIn').addEventListener('change',e=>e.target.files[0]&&handleFile(e.target.files[0]));
+window.addEventListener('dragover',e=>{e.preventDefault();document.body.classList.add('dragging')});
+window.addEventListener('dragleave',e=>{if(!e.relatedTarget)document.body.classList.remove('dragging')});
+window.addEventListener('drop',e=>{e.preventDefault();document.body.classList.remove('dragging');
+  if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0])});
+
+/* ---------- 合成測試樂譜（畫一張真實樂譜再送入辨識器） ---------- */
+function makeTestScoreCanvas(){
+  const mel=DEMOS.twinkle().melody.filter(n=>n.t<32),s=16,L0=170,x0=150,ppb=26;
+  const cv=document.createElement('canvas');cv.width=1180;cv.height=430;
+  const c=cv.getContext('2d');c.fillStyle='#fff';c.fillRect(0,0,cv.width,cv.height);
+  c.fillStyle='#000';c.strokeStyle='#000';
+  for(let i=0;i<5;i++){c.lineWidth=2.4;c.beginPath();c.moveTo(60,L0+i*s);c.lineTo(1130,L0+i*s);c.stroke()}
+  c.font='92px serif';c.fillText('𝄞',64,L0+4*s+14);
+  c.font='bold 30px sans-serif';c.fillText('4',104,L0+s+10);c.fillText('4',104,L0+3*s+10);
+  const yOf=p=>L0+(38-spell(p).o)*s/2;
+  mel.forEach(n=>{const x=x0+n.t*ppb,y=yOf(n.p);
+    if(38-spell(n.p).o>=10){c.lineWidth=2;c.beginPath();c.moveTo(x-1.3*s,y);c.lineTo(x+1.3*s,y);c.stroke()}
+    c.lineWidth=2;const up=y>=L0+2*s,sx=up?x+8:x-8;
+    if(n.d<2){c.beginPath();c.moveTo(sx,y);c.lineTo(sx,up?y-3.2*s:y+3.2*s);c.stroke()}
+    c.beginPath();c.ellipse(x,y,8.6,6.2,-0.26,0,Math.PI*2);
+    if(n.d>=2){c.fillStyle='#fff';c.fill();c.lineWidth=2.2;c.stroke();c.fillStyle='#000'}else c.fill()});
+  for(let b=4;b<=32;b+=4){const x=x0+b*ppb-13;c.lineWidth=b===32?5:2.4;
+    c.beginPath();c.moveTo(x,L0);c.lineTo(x,L0+4*s);c.stroke()}
+  return cv}
+$('#btnTestScore').onclick=async()=>{
+  const item={id:'t'+(++libSeq),name:'測試樂譜（小星星・合成）',size:0,state:'run',sub:'合成影像'};
+  lib.unshift(item);renderLib();
+  olog('');$('#ov').classList.add('show');
+  await runAnalysis(item,[makeTestScoreCanvas()])};
+
+/* ============ 音樂資料：範例與伴奏 ============ */
+const SCALE={major:[0,2,4,5,7,9,11],minor:[0,2,3,5,7,8,10]};
+function seqNotes(seq){let t=0;const out=[];for(const[p,d]of seq){if(p!=null)out.push({t,d,p,v:.8});t+=d}return out}
+function harmonize(sc){const ints=SCALE[sc.key.type],bpb=sc.timeSig[0],chords=[];let prev=0;
+  for(let b=0;b<sc.bars;b++){const s0=b*bpb,pcw=new Map();
+    sc.melody.forEach(n=>{if(n.t>=s0&&n.t<s0+bpb){const pc=((n.p%12)+12)%12;pcw.set(pc,(pcw.get(pc)||0)+n.d)}});
+    let best=0,bestS=-1e9;
+    for(let i=0;i<7;i++){const tpc=[0,2,4].map(k=>((sc.key.tonic+ints[(i+k)%7]+12*Math.floor((i+k)/7))%12+12)%12);
+      let s2=0;pcw.forEach((w2,pc)=>{if(tpc.includes(pc))s2+=w2;if(pc===tpc[0])s2+=w2*.3});
+      if(b===0&&i===0)s2+=.6;if(b===sc.bars-1&&i===0)s2+=1;if(i===prev)s2+=.15;
+      if(s2>bestS){bestS=s2;best=i}}
+    prev=best;let root=sc.key.tonic-12+ints[best];while(root<45)root+=12;while(root>57)root-=12;
+    const t3=root+(ints[(best+2)%7]+12*Math.floor((best+2)/7)-ints[best]);
+    const t5=root+(ints[(best+4)%7]+12*Math.floor((best+4)/7)-ints[best]);
+    [root,t3,t5].forEach(p=>chords.push({t:s0,d:bpb*.96,p,v:.42}))}
+  sc.chords=chords;return sc}
+const DEMOS={
+  twinkle:()=>{const sc={title:'小星星',composer:'傳統民謠',key:{name:'C',type:'major',tonic:60},timeSig:[4,4],tempo:96,bars:12,conf:99,meta:{src:'內建範例'}};
+    sc.melody=seqNotes([[60,1],[60,1],[67,1],[67,1],[69,1],[69,1],[67,2],[65,1],[65,1],[64,1],[64,1],[62,1],[62,1],[60,2],[67,1],[67,1],[65,1],[65,1],[64,1],[64,1],[62,2],[67,1],[67,1],[65,1],[65,1],[64,1],[64,1],[62,2],[60,1],[60,1],[67,1],[67,1],[69,1],[69,1],[67,2],[65,1],[65,1],[64,1],[64,1],[62,1],[62,1],[60,2]]);return harmonize(sc)},
+  ode:()=>{const sc={title:'快樂頌',composer:'貝多芬',key:{name:'C',type:'major',tonic:60},timeSig:[4,4],tempo:108,bars:8,conf:99,meta:{src:'內建範例'}};
+    sc.melody=seqNotes([[64,1],[64,1],[65,1],[67,1],[67,1],[65,1],[64,1],[62,1],[60,1],[60,1],[62,1],[64,1],[64,1.5],[62,.5],[62,2],[64,1],[64,1],[65,1],[67,1],[67,1],[65,1],[64,1],[62,1],[60,1],[60,1],[62,1],[64,1],[62,1.5],[60,.5],[60,2]]);return harmonize(sc)},
+  elise:()=>{const sc={title:'給愛麗絲（選段）',composer:'貝多芬',key:{name:'Am',type:'minor',tonic:69},timeSig:[4,4],tempo:126,bars:5,conf:99,meta:{src:'內建範例'}};
+    sc.melody=seqNotes([[76,.5],[75,.5],[76,.5],[75,.5],[76,.5],[71,.5],[74,.5],[72,.5],[69,1],[null,.5],[60,.5],[64,.5],[68,.5],[69,1],[null,.5],[71,.5],[null,.5],[64,.5],[72,.5],[74,1],[null,.5],[76,.5],[75,.5],[76,.5],[75,.5],[76,.5],[71,.5],[74,.5],[72,.5],[69,1],[60,.5],[64,.5],[69,1.5],[null,.5]]);return harmonize(sc)}};
+
+/* ============ 音訊引擎 ============ */
+function ensureAC(){if(AC)return;AC=new(window.AudioContext||window.webkitAudioContext)();
+  master=AC.createGain();master.gain.value=S.vol;
+  const comp=AC.createDynamicsCompressor();
+  sendBus=AC.createGain();const dly=AC.createDelay(.6);dly.delayTime.value=.17;
+  const fb=AC.createGain();fb.gain.value=.3;const wet=AC.createGain();wet.gain.value=.15;
+  sendBus.connect(dly);dly.connect(fb);fb.connect(dly);dly.connect(wet);wet.connect(comp);
+  master.connect(comp);comp.connect(AC.destination);
+  $('#enginePill').classList.add('live');$('#engineTxt').textContent='音訊引擎就緒'}
+function voice(t,p,dSec,v,kind){if(!AC)return;v=Math.max(.05,Math.min(1.2,v));
+  const inst=$('#instSel').value,f=440*Math.pow(2,(p-69)/12);
+  const g=AC.createGain();g.connect(master);const sg=AC.createGain();sg.gain.value=.1;g.connect(sg);sg.connect(sendBus);
+  const lp=AC.createBiquadFilter();lp.type='lowpass';lp.connect(g);
+  const mk=(type,fr,gv,det)=>{const o=AC.createOscillator();o.type=type;o.frequency.value=fr;if(det)o.detune.value=det;
+    const og=AC.createGain();og.gain.value=gv;o.connect(og);og.connect(lp);o.start(t);o.stop(t+dSec+1.8);return o};
+  if(kind==='c')v*=.55;
+  if(inst==='piano'){lp.frequency.value=5200;mk('triangle',f,.9);mk('sine',f*2,.14);
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.006);g.gain.exponentialRampToValueAtTime(.0001,t+Math.max(.22,dSec*1.05))}
+  else if(inst==='musicbox'){lp.frequency.value=8000;mk('sine',f,.8);mk('sine',f*4,.07);
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.003);g.gain.exponentialRampToValueAtTime(.0001,t+Math.max(.9,dSec*.8))}
+  else if(inst==='strings'){lp.frequency.value=1500;lp.Q.value=.6;mk('sawtooth',f,.4,-6);mk('sawtooth',f,.4,7);
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v*.8,t+.14);g.gain.setValueAtTime(v*.8,t+Math.max(.14,dSec-.1));g.gain.linearRampToValueAtTime(.0001,t+dSec+.32)}
+  else{lp.frequency.value=3200;const o=mk('triangle',f,.85);
+    const lfo=AC.createOscillator(),lg=AC.createGain();lfo.frequency.value=5.2;lg.gain.value=f*.005;
+    lfo.connect(lg);lg.connect(o.frequency);lfo.start(t+.12);lfo.stop(t+dSec+1);
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.07);g.gain.setValueAtTime(v,t+Math.max(.07,dSec-.08));g.gain.linearRampToValueAtTime(.0001,t+dSec+.18)}}
+function click(t,acc){if(!AC)return;const o=AC.createOscillator(),g=AC.createGain();o.type='square';
+  o.frequency.value=acc?1568:1046;g.gain.setValueAtTime(acc?.16:.1,t);g.gain.exponentialRampToValueAtTime(.0001,t+.06);
+  o.connect(g);g.connect(master);o.start(t);o.stop(t+.1)}
+function preview(p){ensureAC();AC.resume();voice(AC.currentTime+.02,p,.55,.9,'m')}
+function chime(){if(!AC)return;[0,4,7,12].forEach((s2,i)=>voice(AC.currentTime+i*.09,72+s2,.35,.5,'m'))}
+
+/* ============ 走帶 ============ */
+const totalBeats=()=>S.score?S.score.bars*S.score.timeSig[0]:0;
+function buildEvents(){if(!S.score){S.events=[];return}const tr=S.transpose,ev=[];
+  S.score.melody.forEach(n=>ev.push({t:n.t,d:n.d,p:n.p+tr,v:n.v||.8,k:'m'}));
+  if(S.acc)S.score.chords.forEach(n=>ev.push({t:n.t,d:n.d,p:n.p+tr,v:n.v||.45,k:'c'}));
+  ev.sort((a,b)=>a.t-b.t);S.events=ev}
+function reposition(b){S.startBeat=b;S.startAt=AC.currentTime+.06;
+  S.evIdx=S.events.findIndex(e=>e.t>=b-1e-6);if(S.evIdx<0)S.evIdx=S.events.length;
+  S.mNext=Math.max(0,Math.ceil(b-1e-6))}
+function getBeat(){return S.playing&&AC?S.startBeat+(AC.currentTime-S.startAt)*S.bpm/60:S.curBeat}
+function schedule(){if(!S.playing)return;const spb=60/S.bpm,hz=AC.currentTime+.16,T=totalBeats();
+  while(S.evIdx<S.events.length){const e=S.events[S.evIdx],at=S.startAt+(e.t-S.startBeat)*spb;
+    if(at>hz)break;if(e.t>=S.startBeat-1e-6)voice(Math.max(at,AC.currentTime+.005),e.p,Math.max(.09,e.d*spb*.92),e.v,e.k);S.evIdx++}
+  while(S.mNext<=Math.floor(T)){const at=S.startAt+(S.mNext-S.startBeat)*spb;if(at>hz)break;
+    if(S.metro&&S.mNext>=S.startBeat-1e-6)click(Math.max(at,AC.currentTime+.005),S.mNext%S.score.timeSig[0]===0);S.mNext++}}
+function play(){if(!S.score){toast('請先上傳樂譜或載入範例','coral');return}
+  ensureAC();AC.resume();buildEvents();
+  master.gain.setTargetAtTime(S.vol,AC.currentTime,.03);
+  if(S.curBeat>=totalBeats())S.curBeat=0;reposition(S.curBeat);
+  S.playing=true;S.timer=setInterval(schedule,25);document.body.classList.add('playing');$('#btnPlay').textContent='❚❚'}
+function pause(){if(!S.playing)return;S.curBeat=Math.min(getBeat(),totalBeats());S.playing=false;
+  clearInterval(S.timer);document.body.classList.remove('playing');$('#btnPlay').textContent='▶';
+  if(AC)master.gain.setTargetAtTime(.0001,AC.currentTime,.03)}
+function stopAll(){S.playing=false;clearInterval(S.timer);S.curBeat=0;
+  document.body.classList.remove('playing');$('#btnPlay').textContent='▶';
+  if(AC)master.gain.setTargetAtTime(S.vol,AC.currentTime,.03);syncUI(0,true)}
+$('#btnPlay').onclick=()=>S.playing?pause():play();
+$('#btnStop').onclick=stopAll;
+$('#tempoR').oninput=e=>{S.bpm=+e.target.value;if(S.score)S.score.tempo=S.bpm;$('#tempoVal').textContent=S.bpm;
+  if(S.playing){S.curBeat=getBeat();reposition(S.curBeat)}};
+$('#trDown').onclick=()=>setTr(S.transpose-1);$('#trUp').onclick=()=>setTr(S.transpose+1);
+function setTr(v){S.transpose=Math.max(-6,Math.min(6,v));$('#trVal').textContent=(S.transpose>0?'+':'')+S.transpose;
+  if(S.score){renderNotation();buildEvents();if(S.playing){S.curBeat=getBeat();reposition(S.curBeat)}}}
+$('#togMetro').onclick=e=>{S.metro=!S.metro;e.target.classList.toggle('on',S.metro)};
+$('#togAcc').onclick=e=>{S.acc=!S.acc;e.target.classList.toggle('on',S.acc);buildEvents();
+  if(S.playing){S.curBeat=getBeat();reposition(S.curBeat)}};
+$('#togLoop').onclick=e=>{S.loop=!S.loop;e.target.classList.toggle('on',S.loop)};
+$('#masterVol').oninput=e=>{S.vol=e.target.value/100;if(AC&&S.playing)master.gain.setTargetAtTime(S.vol,AC.currentTime,.03)};
+document.addEventListener('keydown',e=>{if(e.code==='Space'&&!/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)){e.preventDefault();S.playing?pause():play()}});
+
+/* ============ 五線譜渲染 ============ */
+const NW=1040,GAP=10,SYSSP=112,SY0=70,X0=150,X1=NW-26,MPS=4;
+function renderNotation(){const box=$('#scoreBox');if(!S.score){box.innerHTML=emptyHTML();return}
+  const sc=S.score,bpb=sc.timeSig[0],bars=sc.bars,sysN=Math.ceil(bars/MPS);
+  const barW=(X1-X0)/MPS,padL=16,padR=8;let out='',phOut='';const notePos=[];
+  for(let s=0;s<sysN;s++){const top=SY0+s*SYSSP,mid=top+2*GAP,bot=top+4*GAP,y=p=>mid-p*(GAP/2);
+    for(let i=0;i<5;i++)out+=`<line x1="38" y1="${top+i*GAP}" x2="${X1}" y2="${top+i*GAP}" stroke="#3a4568"/>`;
+    const gy=top+3*GAP;let sp='',r=13.5,a=-2.2;
+    for(let k=0;k<=36;k++){sp+=(k?'L':'M')+(58+r*Math.cos(a)).toFixed(1)+' '+(gy+r*Math.sin(a)*1.12).toFixed(1)+' ';a+=.24;r*=.93}
+    out+=`<path d="${sp}" fill="none" stroke="#c9d3ef" stroke-width="2.2" stroke-linecap="round"/>`;
+    out+=`<path d="M60 ${top-14} L60 ${bot+15} q0 7 -6 7 q-5 0 -5 -5" fill="none" stroke="#c9d3ef" stroke-width="2.2" stroke-linecap="round"/>`;
+    out+=`<circle cx="49" cy="${bot+19}" r="2.6" fill="#c9d3ef"/>`;
+    if(s===0){out+=`<text x="122" y="${mid-2}" font-family="Space Grotesk" font-size="21" font-weight="700" fill="#e9edf8" text-anchor="middle">${sc.timeSig[0]}</text>`;
+      out+=`<text x="122" y="${mid+18}" font-family="Space Grotesk" font-size="21" font-weight="700" fill="#e9edf8" text-anchor="middle">${sc.timeSig[1]}</text>`}
+    const b0=s*MPS,b1=Math.min(b0+MPS,bars);
+    for(let b=b0;b<=b1;b++){const bx=X0+(b-b0)*barW;
+      if(b===bars&&b1===bars)out+=`<line x1="${bx-5}" y1="${top}" x2="${bx-5}" y2="${bot}" stroke="#c9d3ef" stroke-width="1.4"/><line x1="${bx}" y1="${top}" x2="${bx}" y2="${bot}" stroke="#c9d3ef" stroke-width="3.4"/>`;
+      else if(b<b1||b===bars)out+=`<line x1="${bx}" y1="${top}" x2="${bx}" y2="${bot}" stroke="#3a4568" stroke-width="1.2"/>`}
+    out+=`<text x="${X0-14}" y="${top-6}" font-family="Space Grotesk" font-size="10" fill="#5d6890">${s*MPS+1}</text>`;
+    phOut+=`<line class="ph" data-sys="${s}" x1="0" y1="${top-14}" x2="0" y2="${bot+14}" style="display:none"/>`}
+  sc.melody.forEach((n,i)=>{const m=n.p+S.transpose,bar=Math.floor(n.t/bpb);if(bar>=bars)return;
+    const s=Math.floor(bar/MPS),top=SY0+s*SYSSP,mid=top+2*GAP,sp=spell(m),pos=sp.o-34;
+    const y2=mid-pos*(GAP/2),frac=(n.t-bar*bpb)/bpb,x=X0+(bar%MPS)*barW+padL+frac*(barW-padL-padR);
+    notePos.push({i,x,y:y2,s});const d=n.d;let hd='',extra='';
+    const hollow=d>=2,stem=d<3,up=pos<0;
+    hd+=`<ellipse class="hd" cx="${x}" cy="${y2}" rx="5.8" ry="4.3" transform="rotate(-18 ${x} ${y2})" ${hollow?'fill="none" stroke="#dfe6ff" stroke-width="1.7"':''}/>`;
+    if(stem){const sx=up?x+5:x-5,sy=up?y2-31:y2+31;
+      hd+=`<line class="stk" x1="${sx}" y1="${y2}" x2="${sx}" y2="${sy}" stroke-width="1.6"/>`;
+      if(d<1)hd+=`<path class="flg" d="${up?`M${sx} ${sy} q8 5 5 15`:`M${sx} ${sy} q8 -5 5 -15`}" fill="none" stroke-width="1.8"/>`}
+    if(d%1===.5)hd+=`<circle class="hd" cx="${x+9}" cy="${y2}" r="1.7"/>`;
+    if(sp.a===-1)extra+=`<text x="${x-14}" y="${y2+4.5}" font-size="13" fill="#dfe6ff">♭</text>`;
+    const led=[];if(pos<=-2)for(let p=pos%2===0?pos:pos+1;p<=-2;p+=2)led.push(p);
+    if(pos>=6){const st=pos%2===0?pos:pos-1;for(let p=6;p<=st;p+=2)led.push(p)}
+    led.forEach(p=>{extra+=`<line x1="${x-9}" y1="${mid-p*5}" x2="${x+9}" y2="${mid-p*5}" stroke="#8fa0c9" stroke-width="1.2"/>`});
+    out+=`<g class="nt" data-i="${i}" data-p="${m}">${extra}${hd}</g>`});
+  box.innerHTML=`<svg viewBox="0 0 ${NW} ${SY0+sysN*SYSSP+16}" xmlns="http://www.w3.org/2000/svg">${out}${phOut}</svg>`;
+  GEOM={notePos,barW,padL,padR,bpb,sysN};
+  box.querySelectorAll('g.nt').forEach(g=>g.addEventListener('click',()=>preview(+g.dataset.p)));
+  renderRollBase()}
+function emptyHTML(){return `<div class="empty"><div class="staffy"></div><b>尚無樂譜</b><p>上傳樂譜進行辨識、點「產生測試樂譜」驗證引擎，或載入範例。</p></div>`}
+
+/* ============ 鋼琴捲簾 ============ */
+const PPB=56,RH=13,RHDR=20;let rollMin=48,rollMax=84;
+function rollRange(){const all=S.score.melody;if(!all.length){rollMin=55;rollMax=79;return}
+  let lo=127,hi=0;all.forEach(n=>{lo=Math.min(lo,n.p);hi=Math.max(hi,n.p)});
+  rollMin=Math.max(36,lo-4);rollMax=Math.min(96,hi+4)}
+function rollDim(){return{w:totalBeats()*PPB+30,h:RHDR+(rollMax-rollMin+1)*RH}}
+function rr(g,x,y,w2,h2,r){g.beginPath();g.roundRect?g.roundRect(x,y,w2,h2,r):g.rect(x,y,w2,h2);g.fill()}
+function renderRollBase(){const cv=$('#rollBase'),ov=$('#rollOv');if(!S.score){cv.width=ov.width=0;return}
+  rollRange();const{w,h}=rollDim(),dpr=window.devicePixelRatio||1;
+  [cv,ov].forEach(c=>{c.width=w*dpr;c.height=h*dpr;c.style.width=w+'px';c.style.height=h+'px';c.getContext('2d').setTransform(dpr,0,0,dpr,0,0)});
+  const g=cv.getContext('2d'),bpb=S.score.timeSig[0],T=totalBeats();
+  g.fillStyle='#0b0f1e';g.fillRect(0,0,w,h);
+  for(let b=0;b<=T;b+=.25){const x=b*PPB;g.strokeStyle=b%bpb===0?'#3c4a75':b%1===0?'#2b3657':'#1a2340';
+    g.lineWidth=b%bpb===0?1.4:1;g.beginPath();g.moveTo(x+.5,RHDR);g.lineTo(x+.5,h);g.stroke();
+    if(b%bpb===0&&b<T){g.fillStyle='#5d6890';g.font='10px Space Grotesk';g.fillText(Math.floor(b/bpb)+1,x+4,13)}}
+  for(let p=rollMax;p>=rollMin;p--){const y=RHDR+(rollMax-p)*RH;
+    if([1,3,6,8,10].includes(p%12)){g.fillStyle='rgba(0,0,0,.3)';g.fillRect(0,y,w,RH)}
+    if(p%12===0){g.fillStyle='#6b7595';g.font='9px Space Grotesk';g.fillText('C'+(p/12-1),3,y+RH-3)}}
+  S.score.chords.forEach(n=>{if(n.t>=T)return;const x=n.t*PPB,y=RHDR+(rollMax-n.p)*RH;
+    if(y<RHDR||y>h)return;g.fillStyle='rgba(87,215,194,.4)';rr(g,x+1,y+1,Math.max(6,n.d*PPB-2),RH-2,3)});
+  S.score.melody.forEach(n=>{if(n.t>=T)return;const x=n.t*PPB,y=RHDR+(rollMax-n.p)*RH;
+    if(y<RHDR||y>h)return;const gr=g.createLinearGradient(0,y,0,y+RH);
+    gr.addColorStop(0,'#ffd875');gr.addColorStop(1,'#e09a1f');g.fillStyle=gr;
+    rr(g,x+1,y+1,Math.max(6,n.d*PPB-2),RH-2,3)});
+  drawRollOv(getBeat())}
+function drawRollOv(beat){const ov=$('#rollOv');if(!ov.width)return;const g=ov.getContext('2d'),{w,h}=rollDim();
+  g.clearRect(0,0,w,h);const x=beat*PPB;g.strokeStyle='#f2b63c';g.lineWidth=2;
+  g.shadowColor='rgba(242,182,60,.8)';g.shadowBlur=6;g.beginPath();g.moveTo(x,0);g.lineTo(x,h);g.stroke()}
+$('#rollWrap').addEventListener('click',e=>{if(!S.score)return;const r=$('#rollBase').getBoundingClientRect();
+  const x=e.clientX-r.left,y=e.clientY-r.top;if(y<RHDR)return;
+  const beat=Math.floor(x/(PPB*S.grid))*S.grid,p=rollMax-Math.floor((y-RHDR)/RH);
+  if(p<rollMin||p>rollMax||beat>=totalBeats())return;
+  pushUndo();const idx=S.score.melody.findIndex(n=>n.p===p&&beat<n.t+n.d&&beat+S.grid>n.t);
+  if(idx>=0)S.score.melody.splice(idx,1);else S.score.melody.push({t:beat,d:S.grid,p,v:.85});
+  afterEdit()});
+$('#rollWrap').addEventListener('contextmenu',e=>{e.preventDefault();if(!S.score)return;
+  const r=$('#rollBase').getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
+  const beat=x/PPB,p=rollMax-Math.floor((y-RHDR)/RH);
+  const idx=S.score.melody.findIndex(n=>n.p===p&&beat>=n.t&&beat<n.t+n.d);
+  if(idx>=0){pushUndo();S.score.melody.splice(idx,1);afterEdit()}});
+$('#btnClearBar').onclick=()=>{if(!S.score)return;const bpb=S.score.timeSig[0],bar=Math.min(Math.floor(getBeat()/bpb),S.score.bars-1);
+  pushUndo();S.score.melody=S.score.melody.filter(n=>Math.floor(n.t/bpb)!==bar);afterEdit();toast(`已清除第 ${bar+1} 小節`)};
+function afterEdit(){const bpb=S.score.timeSig[0],end=S.score.melody.reduce((m,n)=>Math.max(m,n.t+n.d),0);
+  S.score.bars=Math.max(1,Math.ceil(end/bpb));S.score.custom=true;$('#editedTag').style.display='inline';
+  S.curBeat=Math.min(S.curBeat,totalBeats());renderNotation();fillMeta();
+  buildEvents();if(S.playing)reposition(getBeat())}
+function pushUndo(){if(!S.score)return;undoStack.push(JSON.stringify(S.score.melody));if(undoStack.length>50)undoStack.shift()}
+$('#btnUndo').onclick=()=>{if(!undoStack.length){toast('沒有可復原的編輯','coral');return}
+  S.score.melody=JSON.parse(undoStack.pop());S.score.custom=true;$('#editedTag').style.display='inline';
+  renderNotation();fillMeta();buildEvents();toast('已復原','teal')};
+$('#btnReset').onclick=()=>{if(!S.origSnap){toast('沒有原始辨識結果','coral');return}
+  const snap=JSON.parse(S.origSnap);S.score.melody=snap.melody;S.score.bars=snap.bars;S.score.custom=false;
+  $('#editedTag').style.display='none';undoStack=[];renderNotation();fillMeta();buildEvents();stopAll();toast('已重設為辨識結果','teal')};
+$('#gridSel').onchange=e=>S.grid=+e.target.value;
+
+/* ============ 琴鍵 ============ */
+const keyEls=new Map();
+function buildKeys(){const box=$('#keys');box.innerHTML='';keyEls.clear();
+  const blacks=[1,3,6,8,10];let whites=0;for(let m=48;m<=84;m++)if(!blacks.includes(m%12))whites++;
+  const wW=100/whites,wB=wW*.62;let wi=0;
+  for(let m=48;m<=84;m++){const isB=blacks.includes(m%12),el=document.createElement('div');
+    el.className=isB?'kb':'kw';el.title=mName(m);
+    if(!isB){el.style.left=(wi*wW)+'%';el.style.width=wW+'%';
+      if(m%12===0){const lb=document.createElement('span');lb.className='klbl';lb.textContent=mName(m);el.appendChild(lb)}wi++}
+    else{el.style.left=(wi*wW-wB/2)+'%';el.style.width=wB+'%'}
+    el.addEventListener('pointerdown',()=>{preview(m+S.transpose);el.classList.add('on');setTimeout(()=>el.classList.remove('on'),200)});
+    box.appendChild(el);keyEls.set(m,el)}}
+function lightKeys(){const act=new Set();
+  if(S.playing&&S.score){const b=getBeat();
+    S.score.melody.forEach(n=>{if(b>=n.t&&b<n.t+n.d)act.add(n.p+S.transpose)});
+    if(S.acc)S.score.chords.forEach(n=>{if(b>=n.t&&b<n.t+n.d)act.add(n.p+S.transpose)})}
+  keyEls.forEach((el,m)=>el.classList.toggle('on',act.has(m)))}
+
+/* ============ 播放同步 ============ */
+let lastAct=[];
+function syncUI(beat,force){if(!S.score||!GEOM)return;const bpb=GEOM.bpb,T=totalBeats();
+  beat=Math.max(0,Math.min(beat,T));
+  $('#tprog').style.width=(T?beat/T*100:0)+'%';
+  if(beat<=0&&!S.playing&&!force){$$('#scoreBox .ph').forEach(l=>l.style.display='none');$('#posTxt').textContent='— · —';return}
+  const bar=Math.min(Math.floor(beat/bpb),S.score.bars-1),sys=Math.floor(bar/MPS),inBar=beat-bar*bpb;
+  $('#posTxt').textContent=`小節 ${bar+1} · 拍 ${(inBar+1).toFixed(1)} / ${bpb}`;
+  $$('#scoreBox .ph').forEach(l=>l.style.display=+l.dataset.sys===sys?'':'none');
+  const ph=$(`#scoreBox .ph[data-sys="${sys}"]`);
+  if(ph){const x=X0+(bar%MPS)*GEOM.barW+GEOM.padL+(inBar/bpb)*(GEOM.barW-GEOM.padL-GEOM.padR);
+    ph.setAttribute('x1',x);ph.setAttribute('x2',x)}
+  const act=S.score.melody.map((n,i)=>(beat>=n.t&&beat<n.t+n.d)?i:-1).filter(i=>i>=0);
+  if(act.join()!==lastAct.join()){$$('#scoreBox g.nt.act').forEach(g=>g.classList.remove('act'));
+    act.forEach(i=>{const g=$(`#scoreBox g.nt[data-i="${i}"]`);if(g)g.classList.add('act')});lastAct=act}
+  drawRollOv(beat);
+  const wrap=$('#rollWrap'),x=beat*PPB;
+  if(x>wrap.scrollLeft+wrap.clientWidth-90)wrap.scrollLeft=x-120;
+  if(x<wrap.scrollLeft)wrap.scrollLeft=Math.max(0,x-40)}
+(function raf(){requestAnimationFrame(raf);
+  if(S.playing){const b=getBeat();
+    if(b>=totalBeats()){if(S.loop)reposition(0);else{stopAll();return}}
+    syncUI(getBeat());lightKeys()}else if(S.score)lightKeys()})();
+
+/* ============ 載入 / 中繼資料 / 文件庫 ============ */
+function renderLib(){const ul=$('#libList');ul.innerHTML='';
+  lib.forEach(it=>{const li=document.createElement('li');
+    if(S.score&&S.score._libId===it.id)li.classList.add('act');
+    const bd=it.state==='ok'?'<span class="badge ok">已就緒</span>':it.state==='run'?'<span class="badge run">分析中</span>':it.state==='demo'?'<span class="badge ok">範例</span>':'<span class="badge no">未成功</span>';
+    li.innerHTML=`<div class="thumb">${it.url?`<img src="${it.url}">`:'♪'}</div><div style="min-width:0"><div class="libname">${it.name}</div><div class="libsub">${it.sub||fmtSize(it.size||0)}</div></div>${bd}`;
+    li.onclick=()=>{if(it.score)loadScore(it.score,it);else if(it.state==='run')toast('尚在分析中')};
+    ul.appendChild(li)})}
+function loadScore(sc,item){S.score=sc;sc._libId=item?item.id:null;
+  curItem=item&&item.A?item:curItem;
+  S.origSnap=JSON.stringify({melody:sc.melody,bars:sc.bars});
+  S.transpose=0;$('#trVal').textContent='0';S.curBeat=0;S.bpm=sc.tempo;
+  $('#tempoR').value=sc.tempo;$('#tempoVal').textContent=sc.tempo;
+  $('#editedTag').style.display=sc.custom?'inline':'none';
+  stopAll();renderNotation();fillMeta();buildEvents();renderLib();
+  $('#stageTitle').textContent='五線譜預覽 · '+sc.title}
+function fillMeta(){const sc=S.score;if(!sc)return;
+  $('#mTitle').value=sc.title;
+  $('#mKey').textContent=sc.key.name+' '+(sc.key.type==='major'?'大調':'小調')+(sc.composer==='OMR 辨識'?'（預設）':'')+(S.transpose?` · 移調${S.transpose>0?'+':''}${S.transpose}`:'');
+  $('#mTS').textContent=sc.timeSig[0]+'/'+sc.timeSig[1];
+  $('#mTempo').textContent='♩ = '+sc.tempo;
+  $('#mBars').textContent=sc.bars;
+  $('#mNotes').textContent=sc.melody.length;
+  $('#mGap').textContent=curItem&&curItem.A&&curItem.A.pages[0]&&curItem.A.pages[0].staffs[0]?curItem.A.pages[0].staffs[0].s.toFixed(1)+' px':'—';
+  $('#mSrc').textContent=sc.meta.src||'—';
+  $('#mConf').textContent=(sc.conf||0)+'%';
+  $('#posTotal').textContent=`${sc.bars} 小節 · ${(sc.bars*sc.timeSig[0]).toFixed(0)} 拍`;
+  setTimeout(()=>$('#confFill').style.width=(sc.conf||0)+'%',60)}
+$('#mTitle').oninput=e=>{if(S.score){S.score.title=e.target.value;$('#stageTitle').textContent='五線譜預覽 · '+e.target.value}};
+
+/* ============ 匯出 ============ */
+function writeVL(a,v){const b=[v&0x7f];v>>=7;while(v>0){b.unshift((v&0x7f)|0x80);v>>=7}a.push(...b)}
+$('#btnMidi').onclick=()=>{if(!S.score){toast('尚無樂譜可匯出','coral');return}
+  const ppq=480,us=Math.round(6e7/S.score.tempo),evs=[];
+  const push=(arr,vel)=>arr.forEach(n=>{const p=Math.max(0,Math.min(127,n.p+S.transpose));
+    evs.push([Math.round(n.t*ppq),0x90,p,vel]);evs.push([Math.round((n.t+n.d*.92)*ppq),0x80,p,0])});
+  push(S.score.melody,96);push(S.score.chords,62);
+  evs.sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+  const trk=[];let last=0;const dlt=t=>{writeVL(trk,t-last);last=t};
+  dlt(0);const nm='ScoreLens';trk.push(0xFF,0x03,nm.length);for(const c of nm)trk.push(c.charCodeAt(0));
+  dlt(0);trk.push(0xFF,0x51,0x03,(us>>16)&255,(us>>8)&255,us&255);dlt(0);trk.push(0xC0,0);
+  evs.forEach(e=>{dlt(e[0]);trk.push(e[1],e[2],Math.min(127,e[3]))});dlt(0);trk.push(0xFF,0x2F,0x00);
+  const hd=[0x4d,0x54,0x68,0x64,0,0,0,6,0,0,0,1,(ppq>>8)&255,ppq&255,0x4d,0x54,0x72,0x6b,(trk.length>>24)&255,(trk.length>>16)&255,(trk.length>>8)&255,trk.length&255];
+  dl(new Blob([new Uint8Array([...hd,...trk])],{type:'audio/mid'}),(S.score.title||'score')+'.mid');
+  toast('已匯出 MIDI，可於任何 DAW／電子樂器開啟','teal')};
+$('#btnJson').onclick=()=>{if(!S.score){toast('尚無樂譜可匯出','coral');return}
+  const{melody,chords,key,timeSig,tempo,bars,title,composer,conf}=S.score;
+  dl(new Blob([JSON.stringify({format:'scorelens/1',title,composer,key,timeSig,tempo,bars,conf,melody,chords},null,2)],{type:'application/json'}),(title||'score')+'.json');
+  toast('已匯出 JSON 樂譜檔','teal')};
+$('#btnPrint').onclick=()=>{if(!S.score){toast('尚無樂譜可列印','coral');return}
+  const w=window.open('','_blank'),svg=$('#scoreBox svg');
+  w.document.write(`<html><head><title>${S.score.title}</title><style>body{font-family:serif;padding:24px;background:#fff;color:#111}svg .hd{fill:#111}svg .stk,svg .flg{stroke:#111}svg line{stroke:#444}svg text{fill:#333}h1{font-size:22px}p{color:#555;font-size:13px}</style></head><body><h1>${S.score.title}</h1><p>${S.score.key.name} · ${S.score.timeSig[0]}/${S.score.timeSig[1]} · ♩=${S.score.tempo} · 譜鏡 ScoreLens OMR 轉譯</p>${svg?svg.outerHTML:''}</body></html>`);
+  w.document.close();setTimeout(()=>w.print(),450)};
+
+/* ============ 分頁 / 背景 / 初始化 ============ */
+$$('.tab').forEach(t=>t.onclick=()=>{$$('.tab').forEach(x=>x.classList.remove('on'));t.classList.add('on');
+  $('#pane-roll').style.display=t.dataset.pane==='roll'?'':'none';
+  $('#pane-keys').style.display=t.dataset.pane==='keys'?'':'none'});
+document.addEventListener('click',e=>{const c=e.target.closest('[data-demo]');if(!c)return;
+  const d=c.dataset.demo,sc=DEMOS[d](),item={id:'d'+d,name:sc.title,size:0,state:'demo',sub:'內建範例',score:sc};
+  if(!lib.find(i=>i.id===item.id))lib.push(item);loadScore(sc,item);toast('已載入範例：'+sc.title)});
+(function amb(){const box=$('#bgNotes'),chars=['♪','♩','♫','♬','𝄞','♭','♯'];
+  for(let i=0;i<14;i++){const s=document.createElement('span');s.textContent=chars[i%chars.length];
+    s.style.left=Math.random()*100+'%';s.style.fontSize=(16+Math.random()*38)+'px';
+    s.style.animationDuration=(18+Math.random()*22)+'s';s.style.animationDelay=(-Math.random()*30)+'s';box.appendChild(s)}})();
+window.addEventListener('resize',()=>{if(S.score)renderRollBase()});
+buildKeys();renderLib();
+const init=DEMOS.twinkle(),initItem={id:'d-twinkle',name:'小星星',size:0,state:'demo',sub:'內建範例',score:init};
+lib.push(initItem);loadScore(init,initItem);
+setTimeout(()=>toast('建議先點「🧪 產生測試樂譜並辨識」看看真實辨識流程，再上傳你的樂譜'),800);
+</script>
+</body>
+</html>
