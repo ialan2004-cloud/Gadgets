@@ -53,7 +53,6 @@ aside{display:flex;flex-direction:column;gap:16px}
 .btn.gold{background:linear-gradient(145deg,var(--gold2),var(--gold));color:#241a04;font-weight:700;border-color:transparent}
 .btn.teal{border-color:var(--teal);color:var(--teal)}
 .btn.sm{padding:5px 10px;font-size:12px;border-radius:7px}
-.btn:disabled{opacity:.4;pointer-events:none}
 .demos{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;margin-top:13px}
 .chip{border:1px solid var(--line);background:transparent;color:var(--mut);border-radius:99px;padding:5px 12px;font-size:12px;cursor:pointer;transition:.18s;font-family:var(--sans)}
 .chip:hover{color:var(--gold);border-color:var(--gold);transform:translateY(-1px)}
@@ -152,7 +151,7 @@ svg .ph{stroke:var(--gold);stroke-width:2;filter:drop-shadow(0 0 5px rgba(242,18
 .stg.done{opacity:1;border-color:rgba(87,215,194,.5)}
 .stg.act{opacity:1;border-color:var(--gold);box-shadow:0 0 16px rgba(242,182,60,.18)}
 .stg label{display:block;font-size:11px;color:var(--mut);padding:6px 10px 4px;letter-spacing:.1em}
-.stg canvas{display:block;width:100%;height:96px;object-fit:contain;background:#fff}
+.stg canvas{display:block;width:100%;height:96px;background:#fff}
 .console{background:#05070f;border:1px solid var(--line);border-radius:10px;padding:10px 12px;height:264px;overflow:auto;font-family:var(--num),monospace;font-size:11.5px;line-height:1.85;color:var(--teal)}
 .console div{animation:logIn .3s both}
 .console div b{color:var(--gold)}
@@ -163,7 +162,7 @@ svg .ph{stroke:var(--gold);stroke-width:2;filter:drop-shadow(0 0 5px rgba(242,18
 #ovStatus.ok{color:var(--teal)}
 #ovStatus.err{color:var(--coral)}
 #toasts{position:fixed;right:20px;bottom:20px;z-index:80;display:flex;flex-direction:column;gap:10px}
-.toast{background:var(--panel2);border:1px solid var(--line2);border-left:3px solid var(--gold);border-radius:10px;padding:11px 16px;font-size:13px;box-shadow:0 12px 30px rgba(0,0,0,.5);animation:toastIn .35s cubic-bezier(.2,.9,.3,1.2);max-width:360px}
+.toast{background:var(--panel2);border:1px solid var(--line2);border-left:3px solid var(--gold);border-radius:10px;padding:11px 16px;font-size:13px;box-shadow:0 12px 30px rgba(0,0,0,.5);animation:toastIn .35s cubic-bezier(.2,.9,.3,1.2);max-width:380px}
 .toast.teal{border-left-color:var(--teal)}
 .toast.coral{border-left-color:var(--coral)}
 @keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
@@ -182,7 +181,7 @@ svg .ph{stroke:var(--gold);stroke-width:2;filter:drop-shadow(0 0 5px rgba(242,18
     <div class="logo">♪</div>
     <div>
       <h1>譜鏡 <span>SCORELENS</span></h1>
-      <p>瀏覽器端 OMR 辨識 · 播放 · 編輯 · 匯出（運算全部在本機完成）</p>
+      <p>瀏覽器端 OMR · 大譜表聲部分離 · 調號/譜號偵測 · 播放 · 匯出</p>
     </div>
   </div>
   <div class="hright">
@@ -199,11 +198,9 @@ svg .ph{stroke:var(--gold);stroke-width:2;filter:drop-shadow(0 0 5px rgba(242,18
       <div class="drop" id="drop">
         <div class="dico">𝄞</div>
         <b>拖放樂譜到這裡</b>
-        <small>PDF · JPG · PNG（≤ 25MB）· 建議清晰印刷譜</small>
+        <small>PDF · JPG · PNG（≤ 25MB）· 清晰印刷譜效果最佳</small>
         <button class="btn gold" type="button">選擇檔案</button>
-        <div class="demos">
-          <button class="btn sm teal" id="btnTestScore" type="button">🧪 產生測試樂譜並辨識</button>
-        </div>
+        <div class="demos"><button class="btn sm teal" id="btnTestScore" type="button">🧪 產生測試樂譜並辨識</button></div>
         <div class="demos">
           <button class="chip" data-demo="twinkle">♫ 範例：小星星</button>
           <button class="chip" data-demo="ode">♫ 範例：快樂頌</button>
@@ -219,23 +216,22 @@ svg .ph{stroke:var(--gold);stroke-width:2;filter:drop-shadow(0 0 5px rgba(242,18
     <div class="card">
       <div class="ctitle">辨識結果</div>
       <input class="meta-t" id="mTitle" value="—" spellcheck="false">
-      <div class="mrow"><span>目標譜表</span><select id="staveSel" style="max-width:180px"><option value="auto">尚未辨識</option></select></div>
-      <div class="mrow"><span>推測調性</span><b id="mKey">—</b></div>
-      <div class="mrow"><span>推測拍號</span><b id="mTS">—</b></div>
+      <div class="mrow"><span>旋律來源</span><select id="staveSel" style="max-width:170px"><option value="auto">尚未辨識</option></select></div>
+      <div class="mrow"><span>拍號假設</span><select id="tsSel" style="width:80px">
+        <option value="2">2/4</option><option value="3">3/4</option><option value="4" selected>4/4</option><option value="4h">2/2</option><option value="3c">6/8</option></select></div>
+      <div class="mrow"><span>偵測調號</span><b id="mKey">—</b></div>
+      <div class="mrow"><span>譜號配置</span><b id="mClef" style="font-size:11.5px">—</b></div>
       <div class="mrow"><span>速度</span><b id="mTempo">—</b></div>
       <div class="mrow"><span>小節數</span><b id="mBars">—</b></div>
-      <div class="mrow"><span>偵測音符</span><b id="mNotes">—</b></div>
-      <div class="mrow"><span>譜線間距</span><b id="mGap">—</b></div>
-      <div class="mrow"><span>來源</span><b id="mSrc" style="font-size:11.5px">—</b></div>
-      <div class="mrow" style="display:block">
-        <span>辨識信心度</span><b id="mConf" style="float:right">—</b>
-        <div class="confbar"><i id="confFill"></i></div>
-      </div>
+      <div class="mrow"><span>旋律音符</span><b id="mNotes">—</b></div>
+      <div class="mrow"><span>伴奏音符</span><b id="mAcc">—</b></div>
+      <div class="mrow" style="display:block"><span>辨識信心度</span><b id="mConf" style="float:right">—</b>
+        <div class="confbar"><i id="confFill"></i></div></div>
       <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
         <button class="btn sm" id="btnReset">↺ 重設為辨識結果</button>
         <button class="btn sm" id="btnUndo">⌫ 復原編輯</button>
       </div>
-      <p class="foot-note">辨識於瀏覽器本地以純 JavaScript 執行（二值化 → 譜線偵測 → 連通元件分割 → 音高映射），不上傳任何伺服器。適合清晰印刷樂譜；手寫、陰影或複雜排版辨識率有限。目前假設高音譜號、無升降調號，結果可在下方捲簾直接修正。</p>
+      <p class="foot-note">所有運算於瀏覽器本地完成（Otsu 二值化 → 譜線/譜號/調號偵測 → 連通元件分割 → 音高映射 → 小節線內 x 比例節奏）。歌詞、和弦符號、臨時記號與反覆記號目前不納入；辨識結果可在捲簾修正。</p>
     </div>
   </aside>
 
@@ -245,24 +241,13 @@ svg .ph{stroke:var(--gold);stroke-width:2;filter:drop-shadow(0 0 5px rgba(242,18
       <button class="playbtn" id="btnPlay" title="播放 / 暫停（空白鍵）">▶</button>
       <button class="stopbtn" id="btnStop" title="停止">■</button>
       <div class="tgroup"><label>速度 TEMPO</label>
-        <div class="trow"><input type="range" id="tempoR" min="50" max="180" value="96" style="width:120px"><b id="tempoVal">96</b><small>BPM</small></div>
-      </div>
-      <div class="tgroup"><label>移調 TRANSPOSE</label>
-        <div class="stepper"><button id="trDown">−</button><b id="trVal">0</b><button id="trUp">＋</button></div>
-      </div>
-      <div class="tgroup"><label>音色 INSTRUMENT</label>
-        <select id="instSel" style="font-size:13px">
-          <option value="piano">平台鋼琴</option><option value="musicbox">音樂盒</option>
-          <option value="strings">弦樂群</option><option value="flute">長笛</option>
-        </select>
-      </div>
+        <div class="trow"><input type="range" id="tempoR" min="50" max="180" value="96" style="width:120px"><b id="tempoVal">96</b><small>BPM</small></div></div>
+      <div class="tgroup"><label>移調</label>
+        <div class="stepper"><button id="trDown">−</button><b id="trVal">0</b><button id="trUp">＋</button></div></div>
+      <div class="tgroup"><label>音色</label>
+        <select id="instSel" style="font-size:13px"><option value="piano">平台鋼琴</option><option value="musicbox">音樂盒</option><option value="strings">弦樂群</option><option value="flute">長笛</option></select></div>
       <div class="tgroup"><label>選項</label>
-        <div class="trow">
-          <button class="tog" id="togMetro">節拍器</button>
-          <button class="tog on" id="togAcc">自動伴奏</button>
-          <button class="tog" id="togLoop">循環</button>
-        </div>
-      </div>
+        <div class="trow"><button class="tog" id="togMetro">節拍器</button><button class="tog on" id="togAcc">伴奏軌</button><button class="tog" id="togLoop">循環</button></div></div>
       <div class="pos"><b id="posTxt">— · —</b><small id="posTotal">尚未載入樂譜</small></div>
     </div>
 
@@ -284,15 +269,14 @@ svg .ph{stroke:var(--gold);stroke-width:2;filter:drop-shadow(0 0 5px rgba(242,18
         <button class="tab" data-pane="keys">琴鍵視覺化</button>
       </div>
       <div id="pane-roll">
-        <div class="toolbar">
-          網格：<select id="gridSel"><option value="1">¼ 拍</option><option value="0.5" selected>⅛ 拍</option><option value="0.25">1/16 拍</option></select>
+        <div class="toolbar">網格：
+          <select id="gridSel"><option value="1">¼ 拍</option><option value="0.5" selected>⅛ 拍</option><option value="0.25">1/16 拍</option></select>
           <button class="btn sm" id="btnClearBar">清除目前小節</button>
-          <span class="hint">左鍵＝加入／移除音符 · 右鍵＝刪除 · 捲簾顯示原始音高</span>
-        </div>
+          <span class="hint">左鍵＝加入／移除 · 右鍵＝刪除 · 金色＝旋律、青色＝伴奏</span></div>
         <div id="rollWrap"><canvas id="rollBase"></canvas><canvas id="rollOv"></canvas></div>
       </div>
       <div id="pane-keys" style="display:none">
-        <div class="toolbar"><span>滑鼠點擊琴鍵可試聽 · 播放中會即時點亮發聲的音</span></div>
+        <div class="toolbar"><span>滑鼠點擊琴鍵可試聽 · 播放中即時點亮</span></div>
         <div class="keys" id="keys"></div>
       </div>
     </div>
@@ -302,30 +286,24 @@ svg .ph{stroke:var(--gold);stroke-width:2;filter:drop-shadow(0 0 5px rgba(242,18
 <div class="ov" id="ov">
   <div class="ovpanel">
     <div class="ovhead"><div class="logo" style="width:38px;height:38px;font-size:19px">𝄞</div>
-      <div><h2>OMR 光學樂譜辨識（瀏覽器端真實運算）</h2><small id="ovFile">—</small></div>
-    </div>
+      <div><h2>OMR 光學樂譜辨識（瀏覽器端真實運算）</h2><small id="ovFile">—</small></div></div>
     <div class="ovgrid">
       <div class="stages">
         <div class="stg" id="stg0"><label>① Otsu 二值化</label><canvas></canvas></div>
-        <div class="stg" id="stg1"><label>② 五線譜偵測（水平投影）</label><canvas></canvas></div>
+        <div class="stg" id="stg1"><label>② 五線譜／譜號／調號偵測</label><canvas></canvas></div>
         <div class="stg" id="stg2"><label>③ 符號分割與音高定位</label><canvas></canvas></div>
       </div>
       <div class="console" id="ovLog"></div>
     </div>
-    <div class="ovfoot">
-      <div id="ovStatus">準備中…</div>
-      <button class="btn sm" id="ovClose" disabled>關閉</button>
-    </div>
+    <div class="ovfoot"><div id="ovStatus">準備中…</div><button class="btn sm" id="ovClose" disabled>關閉</button></div>
   </div>
 </div>
-
 <div id="toasts"></div>
 
 <script>
-/* ============ 工具 ============ */
+/* ================= 工具 ================= */
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const hashStr=s=>{let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0};
-const mulberry32=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
 const NN=['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
 const mName=m=>NN[((m%12)+12)%12]+(Math.floor(m/12)-1);
 const fmtSize=b=>b>1048576?(b/1048576).toFixed(1)+' MB':(b/1024).toFixed(0)+' KB';
@@ -337,13 +315,13 @@ function spell(m){const oct=Math.floor(m/12)-1,pc=((m%12)+12)%12,ord=[0,2,4,5,7,
   let li=0;while(li<6&&ord[li+1]<=pc)li++;
   if(ord[li]===pc)return{o:oct*7+li,a:0};return{o:oct*7+(li+1)%7,a:-1}}
 
-/* ============ 狀態 ============ */
+/* ================= 狀態 ================= */
 const S={score:null,origSnap:null,transpose:0,bpm:96,playing:false,curBeat:0,startBeat:0,startAt:0,
   evIdx:0,mNext:0,events:[],timer:null,metro:false,acc:true,loop:false,grid:.5,vol:.85};
 let AC=null,master,sendBus,undoStack=[],lib=[],libSeq=0,GEOM=null,curItem=null;
 
 /* ================================================================
-   真實 OMR 辨識引擎（純 JavaScript，於瀏覽器本地執行）
+   OMR 引擎 v2：譜號/調號/大譜表/比例節奏
    ================================================================ */
 function otsu(g){const hist=new Uint32Array(256);for(let i=0;i<g.length;i++)hist[g[i]]++;
   const total=g.length;let sum=0;for(let i=0;i<256;i++)sum+=i*hist[i];
@@ -351,6 +329,9 @@ function otsu(g){const hist=new Uint32Array(256);for(let i=0;i<g.length;i++)hist
   for(let t=0;t<256;t++){wB+=hist[t];if(!wB)continue;const wF=total-wB;if(!wF)break;
     sumB+=t*hist[t];const mB=sumB/wB,mF=(sum-sumB)/wF,v=wB*wF*(mB-mF)*(mB-mF);
     if(v>maxVar){maxVar=v;thr=t}}return thr}
+const FLAT_LI=[6,2,5,1,4,0,3],SHARP_LI=[3,0,4,1,5,2,6];
+const FLAT_KEY=['F','B♭','E','A♭','D'],SHARP_KEY=['G','D','A','E','B'];
+const KEY_PC={'C':0,'G':7,'D':2,'A':9,'E':4,'B':11,'F':5,'B♭':10,'E♭':3,'A♭':8,'D♭':1};
 
 async function analyzePage(srcCanvas,log){
   const maxW=1400,sc=Math.min(1,maxW/srcCanvas.width);
@@ -362,40 +343,33 @@ async function analyzePage(srcCanvas,log){
   for(let i=0,p=0;i<d.length;i+=4,p++)gray[p]=(d[i]*299+d[i+1]*587+d[i+2]*114)/1000|0;
   const thr=otsu(gray),bin=new Uint8Array(w*h);
   for(let i=0;i<gray.length;i++)bin[i]=gray[i]<thr?1:0;
-  log(`影像 ${srcCanvas.width}×${srcCanvas.height} → 工作解析度 ${w}×${h} · Otsu 臨界值 = ${thr}`);
-  paintStage(0,bin,w,h,[]);await tick();
-
-  /* --- 譜線偵測：水平投影 --- */
+  log(`影像 ${srcCanvas.width}×${srcCanvas.height} → ${w}×${h} · Otsu 臨界 ${thr}`);
+  paintStage(0,bin,w,h,null,null);await tick();
+  /* 譜線 */
   const rowD=new Uint32Array(h);
   for(let y=0;y<h;y++){let c=0,o=y*w;for(let x=0;x<w;x++)c+=bin[o+x];rowD[y]=c}
   const thrR=Math.max(w*0.18,40),bands=[];let y=0;
   while(y<h){if(rowD[y]>thrR){const y0=y;while(y<h&&rowD[y]>thrR*0.6)y++;
     if(y-y0<=Math.max(8,h*0.01))bands.push({c:(y0+y-1)/2,t:y-y0})}else y++}
   const staffs=[];
-  for(let i=0;i+4<bands.length;i++){
-    const g=bands.slice(i,i+5),sp=[];
+  for(let i=0;i+4<bands.length;i++){const g=bands.slice(i,i+5),sp=[];
     for(let k=0;k<4;k++)sp.push(g[k+1].c-g[k].c);
     const med=median(sp);
     if(med<4||med>90||sp.some(v=>Math.abs(v-med)>med*0.35)||g.some(b=>b.t>med*0.9))continue;
     const yr=Math.round(g[2].c);let x0=w,x1=0;const o=yr*w;
     for(let x=0;x<w;x++)if(bin[o+x]){if(x<x0)x0=x;if(x>x1)x1=x}
     if(x1-x0<w*0.15)continue;
-    staffs.push({lines:g.map(b=>b.c),s:med,th:median(g.map(b=>b.t)),x0,x1,y0:g[0].c,y1:g[4].c});
-    i+=4}
-  log(`水平線帶候選 ${bands.length} 組 → 確認五線譜 ${staffs.length} 組${staffs.length?`（間距 ${staffs[0].s.toFixed(1)}px · 線粗 ${staffs[0].th.toFixed(1)}px）`:''}`);
-  paintStage(1,bin,w,h,staffs);await tick();
-
-  /* --- 移除譜線（長水平連通區） --- */
+    staffs.push({lines:g.map(b=>b.c),s:med,th:median(g.map(b=>b.t)),x0,x1,y0:g[0].c,y1:g[4].c});i+=4}
+  log(`五線譜 ${staffs.length} 組${staffs.length?`（間距 ${staffs[0].s.toFixed(1)}px · 線粗 ${staffs[0].th.toFixed(1)}px）`:''}`);
+  paintStage(1,bin,w,h,staffs,null);await tick();
+  /* 移除譜線 */
   const bin2=new Uint8Array(bin);
-  for(const st of staffs)for(const ly of st.lines){
-    const lim=Math.max(24,st.s*2.8);
+  for(const st of staffs)for(const ly of st.lines){const lim=Math.max(24,st.s*2.8);
     for(let dy=-Math.ceil(st.th/2);dy<=Math.ceil(st.th/2);dy++){
       const yy=Math.round(ly)+dy;if(yy<0||yy>=h)continue;const o=yy*w;let x=0;
       while(x<w){if(bin2[o+x]){let x2=x;while(x2<w&&bin2[o+x2])x2++;
         if(x2-x>lim)for(let k=x;k<x2;k++)bin2[o+k]=0;x=x2}else x++}}}
-  log(`譜線移除完成（清除長度 > ${staffs.length?Math.round(Math.max(24,staffs[0].s*2.8)):0}px 的水平連通區）`);
-
-  /* --- 連通元件分割 --- */
+  /* 連通元件 */
   const lab=new Int32Array(w*h),stk=new Int32Array(w*h),comps=[];
   for(let i=0;i<bin2.length;i++){if(!bin2[i]||lab[i])continue;
     let sp=0;stk[sp++]=i;lab[i]=comps.length+1;
@@ -405,68 +379,124 @@ async function analyzePage(srcCanvas,log){
       for(let ny=Math.max(0,qy-1);ny<=Math.min(h-1,qy+1);ny++)
         for(let nx=Math.max(0,qx-1);nx<=Math.min(w-1,qx+1);nx++){
           const ni=ny*w+nx;if(bin2[ni]&&!lab[ni]){lab[ni]=comps.length+1;stk[sp++]=ni}}}
-    if(cnt>4&&maxx-minx<120&&maxy-miny<180)comps.push({minx,maxx,miny,maxy,cnt,id:comps.length+1})}
-  log(`連通元件 ${comps.length} 個 → 逐一量測包圍盒與最寬列…`);
+    if(cnt>4&&maxx-minx<140&&maxy-miny<200)comps.push({minx,maxx,miny,maxy,cnt})}
   for(const c of comps){const bw=c.maxx-c.minx+1,bh=c.maxy-c.miny+1;
     let bestW=0,bestY=c.miny,bestX=c.minx,headPix=0,headRows=0;
     const hr=Math.max(1,Math.round(bw*0.42));
     for(let yy=c.miny;yy<=c.maxy;yy++){let rw=0,sx=0;
-      for(let xx=c.minx;xx<=c.maxx;xx++)if(lab[yy*w+xx]===c.id){rw++;sx+=xx}
+      for(let xx=c.minx;xx<=c.maxx;xx++)if(lab[yy*w+xx]===comps.indexOf(c)+1){rw++;sx+=xx}
       if(rw>bestW){bestW=rw;bestY=yy;bestX=rw?sx/rw:c.minx}
       if(Math.abs(yy-(c.miny+c.maxy)/2)<=hr){headPix+=rw;headRows++}}
     c.hrW=bestW;c.hrY=bestY;c.hrX=bestX;c.bw=bw;c.bh=bh;
     c.dens=c.cnt/(bw*bh);c.ratio=headRows?headPix/(headRows*bw):1}
+  log(`譜線移除 → 連通元件 ${comps.length} 個，量測最寬列/填滿率完成`);
+  /* 譜號 / 調號 / 拍號區 */
+  for(const st of staffs){const s=st.s,top=st.lines[0],mid=st.lines[2];
+    const cl=comps.filter(c=>c.minx>=st.x0-0.5*s&&c.maxx<=st.x0+4*s&&c.bh>2*s&&c.bw<4.5*s);
+    st.clef=cl.length?(cl.sort((a,b)=>b.bh-a.bh)[0].bh>3.2*s?'treble':'bass'):'treble';
+    const ks=comps.filter(c=>c.minx>st.x0+2.5*s&&c.minx<st.x0+7.5*s&&c.bh>=0.9*s&&c.bh<=2.3*s&&c.bw>=0.3*s&&c.bw<=1.2*s).sort((a,b)=>a.minx-b.minx);
+    st.keyN=0;st.keyType='';st.alt={};
+    if(ks.length){const ky=(ks[0].miny+ks[0].maxy)/2;let kt='';
+      if(st.clef==='treble')kt=Math.abs(ky-mid)<0.4*s?'flat':Math.abs(ky-top)<0.4*s?'sharp':'';
+      else kt=Math.abs(ky-(top-0.5*s))<0.4*s?'flat':Math.abs(ky-(top+s))<0.4*s?'sharp':'';
+      if(!kt)kt=ks[0].bh>1.4*s?'flat':'sharp';
+      st.keyN=Math.min(5,ks.length);st.keyType=kt;
+      (kt==='flat'?FLAT_LI:SHARP_LI).slice(0,st.keyN).forEach(li=>st.alt[li]=kt==='flat'?-1:1)}
+    const ts=comps.filter(c=>c.minx>st.x0+4*s&&c.minx<st.x0+11*s&&c.bh>=1.4*s&&c.bh<=2.6*s&&c.hrW>=0.6*s&&c.hrW<=1.6*s);
+    st.skipX=ts.length?Math.max(...ts.map(c=>c.maxx))+1.5*s:st.x0+4*s}
+  if(staffs.length)log(`譜表判讀：${staffs.map(st=>(st.clef==='treble'?'高音':'低音')+(st.keyN?`/${st.keyN}${st.keyType==='flat'?'♭':'♯'}`:'')).join(' · ')}`);
   return{w,h,staffs,comps,bin2}}
 
-function midiFromY(y,st){const k=Math.round((y-st.lines[0])/(st.s/2)),abs=38-k;
-  if(abs<7||abs>60)return null;
-  return(Math.floor(abs/7)+1)*12+[0,2,4,5,7,9,11][abs%7]}
+function midiFromStaff(st,y){const s=st.s,k=Math.round((y-st.lines[0])/(s/2));
+  const topAbs=st.clef==='treble'?38:26,abs=topAbs-k;
+  if(abs<5||abs>62)return null;
+  const li=((abs%7)+7)%7;let m=(Math.floor(abs/7)+1)*12+[0,2,4,5,7,9,11][li];
+  if(st.alt[li])m+=st.alt[li];return m}
 
-/* 依譜表選擇，從已分割的元件推導音符 */
-function deriveFrom(A,mode){
-  const chosen=[];let prev=null;
-  A.pages.forEach((pg,pi)=>{pg.staffs.forEach((st,si)=>{
-    const sameSys=prev&&prev.pi===pi&&(st.y0-prev.st.y1)<prev.st.s*5;
-    chosen.push({pi,si,st,first:!sameSys,label:`第${pi+1}頁・譜表${si+1}`});
-    prev={pi,st}})});
-  let pick;
-  if(mode==='all')pick=chosen;
-  else if(mode==='auto')pick=chosen.filter(c=>c.first);
-  else{const id=chosen.findIndex(c=>c.label===mode);pick=id>=0?[chosen[id]]:chosen.filter(c=>c.first)}
-  const melody=[],barXs=[];let bpbGuess=4;
-  for(const c of pick){const st=c.st,s=st.s,heads=[],bars=[];
-    for(const cp of A.pages[c.pi].comps){
-      if(cp.hrW<0.5*s||cp.hrW>2.4*s||cp.bh<0.45*s)continue;
-      if(cp.hrY<st.y0-1.8*s||cp.hrY>st.y1+1.8*s)continue;
-      if(cp.hrX<st.x0+4*s||cp.hrX>st.x1-0.3*s)continue;
-      heads.push({x:cp.hrX,y:cp.hrY,hollow:cp.ratio<0.45})}
-    for(const cp of A.pages[c.pi].comps){
-      if(cp.bw<=Math.max(6,0.6*s)&&cp.bh>=3*s&&cp.bh<=6.8*s&&cp.dens>0.45){
-        const cy=(cp.miny+cp.maxy)/2;
-        if(Math.abs(cy-(st.y0+st.y1)/2)<0.8*s&&cp.minx>st.x0&&cp.minx<st.x1)bars.push((cp.minx+cp.maxx)/2)}}
-    bars.sort((a,b)=>a-b);
-    const merged=[];bars.forEach(x=>{if(!merged.length||x-merged[merged.length-1]>0.6*s)merged.push(x)});
-    heads.sort((a,b)=>a.x-b.x);
-    const ded=[];heads.forEach(hd=>{const last=ded[ded.length-1];
-      if(last&&Math.abs(hd.x-last.x)<0.35*s&&Math.abs(hd.y-last.y)<0.8*s)return;ded.push(hd)});
-    barXs.push(merged.length);
-    /* 音高與時值 */
-    const notes=ded.map(hd=>({p:midiFromY(hd.y,st),x:hd.x,d:hd.hollow?2:1})).filter(n=>n.p);
-    let tOff=melody.length?melody[melody.length-1].t+melody[melody.length-1].d:0;
-    if(merged.length>=2){
-      const groups=[];for(let i=0;i<merged.length-1;i++){
-        const g=notes.filter(n=>n.x>=merged[i]&&n.x<merged[i+1]);if(g.length)groups.push(g)}
-      const tots=groups.map(g=>g.reduce((a,n)=>a+n.d,0));
-      bpbGuess=Math.max(2,Math.min(4,Math.round(median(tots))));
-      groups.forEach(g=>{const tot=g.reduce((a,n)=>a+n.d,0),k=tot?bpbGuess/tot:1;
-        g.forEach(n=>{melody.push({t:tOff,d:Math.max(.25,Math.round(n.d*k*4)/4),p:n.p,v:.8});tOff+=Math.max(.25,Math.round(n.d*k*4)/4)})})}
-    else notes.forEach(n=>{melody.push({t:tOff,d:n.d,p:n.p,v:.8});tOff+=n.d})}
-  return{melody,bpbGuess,labels:pick.map(p=>p.label)}}
+/* 符頭收集（含 slur/beam 黏連救援掃描） */
+function headsOf(pg,st){const s=st.s,out=[];
+  for(const cp of pg.comps){
+    if(cp.hrY<st.y0-2*s||cp.hrY>st.y1+2*s)continue;
+    if(cp.hrX<st.skipX||cp.hrX>st.x1-0.3*s)continue;
+    if(cp.hrW>=0.95*s&&cp.hrW<=2.4*s&&cp.bh>=0.7*s&&cp.bh<=2.6*s)
+      out.push({x:cp.hrX,y:cp.hrY,hollow:cp.ratio<0.45});
+    else if(cp.bw>=0.9*s&&cp.bw<=6*s&&cp.bh<=3.2*s){
+      const step=Math.max(1,Math.round(s/4)),hh=Math.max(3,Math.round(s));
+      for(let yy=cp.miny;yy+hh<=cp.maxy+1;yy+=step){
+        let cnt=0,xmin=1e9,xmax=-1;
+        for(let r=yy;r<yy+hh;r++){const o=r*pg.w;
+          for(let xx=cp.minx;xx<=cp.maxx;xx++)if(pg.bin2[o+xx]){cnt++;if(xx<xmin)xmin=xx;if(xx>xmax)xmax=xx}}
+        const w2=xmax-xmin+1;if(w2<0.6*s||w2>2.0*s)continue;
+        const dens=cnt/(w2*hh);
+        if(dens>0.6)out.push({x:(xmin+xmax)/2,y:yy+hh/2,hollow:false});
+        else if(dens>0.2&&dens<0.5)out.push({x:(xmin+xmax)/2,y:yy+hh/2,hollow:true})}}}
+  out.sort((a,b)=>a.x-b.x||a.y-b.y);
+  const res=[];for(const hd of out){const l=res[res.length-1];
+    if(l&&Math.abs(hd.x-l.x)<0.35*s&&Math.abs(hd.y-l.y)<0.6*s)continue;res.push(hd)}
+  return res}
 
-/* ---------- 辨識主流程（含 UI） ---------- */
-const ovLogEl=$('#ovLog');
+/* 單一譜表 → 音符（小節線內 x 比例節奏） */
+function staffNotes(pg,st,bpb,melodic){const s=st.s,heads=headsOf(pg,st);
+  const bars=[];
+  for(const cp of pg.comps){
+    if(cp.bw<=Math.max(6,0.6*s)&&cp.bh>=3*s&&cp.bh<=6.8*s&&cp.dens>0.45){
+      const cy=(cp.miny+cp.maxy)/2;
+      if(Math.abs(cy-(st.y0+st.y1)/2)<0.8*s&&cp.minx>st.x0&&cp.minx<st.x1)bars.push((cp.minx+cp.maxx)/2)}}
+  bars.sort((a,b)=>a-b);const mb=[];bars.forEach(x=>{if(!mb.length||x-mb[mb.length-1]>0.6*s)mb.push(x)});
+  const segs=[];
+  if(heads.length&&mb.length&&heads[0].x<mb[0]-s)segs.push([heads[0].x-2*s,mb[0]]);
+  for(let i=0;i<mb.length-1;i++)segs.push([mb[i],mb[i+1]]);
+  if(!mb.length&&heads.length)segs.push([heads[0].x-2*s,heads[heads.length-1].x+2*s]);
+  let notes=[];
+  for(const[L,R]of segs){const hs=heads.filter(hd=>hd.x>L&&hd.x<R);if(!hs.length)continue;
+    const span=Math.max(1,R-L);
+    hs.forEach((hd,i)=>{const t=Math.round(((hd.x-L)/span*bpb)*4)/4;
+      const nx=i+1<hs.length?((hs[i+1].x-L)/span*bpb):bpb;
+      let d=Math.max(.25,Math.round((nx-t)*4)/4);
+      if(hd.hollow&&i===hs.length-1)d=Math.max(d,2);
+      d=Math.min(d,Math.max(.25,bpb-t));
+      const p=midiFromStaff(st,hd.y);
+      if(p)notes.push({t,d,p,v:.8,hollow:hd.hollow})})}
+  if(melodic){const byT=new Map();
+    notes.forEach(n=>{const k=Math.round(n.t*4)/4;
+      if(!byT.has(k)||byT.get(k).p<n.p)byT.set(k,n)});
+    notes=[...byT.values()]}
+  notes.sort((a,b)=>a.t-b.t);
+  return{notes,segCount:segs.length}}
+
+function computeSystems(A){const sys=[];
+  A.pages.forEach((pg,pi)=>{let cur=null;
+    pg.staffs.forEach((st,si)=>{
+      const gap=(cur&&cur.pi===pi)?st.y0-pg.staffs[si-1].y1:1e9;
+      if(!cur||cur.pi!==pi||gap>5*st.s){cur={pi,staves:[si]};sys.push(cur)}
+      else cur.staves.push(si);
+      st.sys=sys.length-1;st.pi=pi;st.si=si;st.label=`第${pi+1}頁・譜表${si+1}`})});
+  return sys}
+
+function deriveFrom(A,mode,bpb){
+  const sys=A.systems||(A.systems=computeSystems(A));
+  const hasSolo=sys.some(sy=>sy.staves.length===1);
+  const melSet=new Set();
+  if(mode==='all')A.pages.forEach((pg,pi)=>pg.staffs.forEach((st,si)=>melSet.add(pi+':'+si)));
+  else if(mode==='auto')sys.forEach(sy=>{
+    if(hasSolo){if(sy.staves.length===1)melSet.add(sy.pi+':'+sy.staves[0])}
+    else melSet.add(sy.pi+':'+sy.staves[0])});
+  else sys.forEach(sy=>sy.staves.forEach(si=>{
+    if(A.pages[sy.pi].staffs[si].label===mode)melSet.add(sy.pi+':'+si)}));
+  const melody=[],accomp=[];let T=0;
+  sys.forEach(sy=>{let segsMax=0;
+    sy.staves.forEach(si=>{const st=A.pages[sy.pi].staffs[si];
+      const isMel=melSet.has(sy.pi+':'+si);
+      const r=staffNotes(A.pages[sy.pi],st,bpb,isMel);
+      segsMax=Math.max(segsMax,r.segCount);
+      r.notes.forEach(n=>(isMel?melody:accomp).push({t:n.t+T,d:n.d,p:n.p,v:isMel?.85:.5}))});
+    T+=Math.max(1,segsMax)*bpb});
+  return{melody,accomp,bpb,bars:Math.max(1,Math.round(T/bpb)),
+    labels:A.pages.flatMap((pg,pi)=>pg.staffs.map(st=>st.label))}}
+
+/* ---------- 辨識 UI 流程 ---------- */
 function olog(t,warn){const d=document.createElement('div');if(warn)d.className='warn';
-  d.innerHTML='<b>›</b> '+t;ovLogEl.appendChild(d);ovLogEl.scrollTop=1e6}
+  d.innerHTML='<b>›</b> '+t;$('#ovLog').appendChild(d);$('#ovLog').scrollTop=1e6}
 function paintStage(i,bin,w,h,staffs,marks){
   const stg=$('#stg'+i);stg.classList.add('act');
   const cv=stg.querySelector('canvas'),ctx=cv.getContext('2d');
@@ -475,7 +505,7 @@ function paintStage(i,bin,w,h,staffs,marks){
   for(let p=0,q=0;p<bin.length;p++,q+=4){const v=bin[p]?20:250;
     img.data[q]=v;img.data[q+1]=v;img.data[q+2]=v;img.data[q+3]=255}
   tc.putImageData(img,0,0);
-  cv.width=320;cv.height=96;ctx.imageSmoothingEnabled=true;
+  cv.width=320;cv.height=96;
   const r=Math.min(320/w,96/h),dw=w*r,dh=h*r,ox=(320-dw)/2,oy=(96-dh)/2;
   ctx.fillStyle='#0a0d18';ctx.fillRect(0,0,320,96);ctx.drawImage(tmp,ox,oy,dw,dh);
   if(staffs){ctx.strokeStyle='#57d7c2';ctx.lineWidth=1;
@@ -483,75 +513,78 @@ function paintStage(i,bin,w,h,staffs,marks){
       ctx.moveTo(ox+st.x0*r,oy+ly*r);ctx.lineTo(ox+st.x1*r,oy+ly*r);ctx.stroke()}))}
   if(marks){marks.heads.forEach(hd=>{ctx.strokeStyle='#f2b63c';ctx.lineWidth=1.4;
       ctx.strokeRect(ox+(hd.x-9)*r,oy+(hd.y-7)*r,18*r,14*r)});
-    ctx.strokeStyle='#ff7a66';marks.bars.forEach(bx=>{ctx.beginPath();
+    ctx.strokeStyle='#ff7a66';(marks.bars||[]).forEach(bx=>{ctx.beginPath();
       ctx.moveTo(ox+bx*r,oy+marks.top*r);ctx.lineTo(ox+bx*r,oy+marks.bot*r);ctx.stroke()})}
   stg.classList.remove('act');stg.classList.add('done')}
 
 async function runAnalysis(item,canvases){
   curItem=item;$('#ov').classList.add('show');
   $('#ovFile').textContent=item.name+' · '+fmtSize(item.size||0);
-  ovLogEl.innerHTML='';$('#ovClose').disabled=true;$('#ovStatus').className='';$('#ovStatus').textContent='開始分析…';
-  $$('.stg').forEach(s=>{s.classList.remove('done','act')});
+  $('#ovLog').innerHTML='';$('#ovClose').disabled=true;
+  $('#ovStatus').className='';$('#ovStatus').textContent='開始分析…';
+  $$('.stg').forEach(s=>s.classList.remove('done','act'));
   const A={pages:[]};const t0=performance.now();
   try{
     for(let p=0;p<canvases.length;p++){
-      olog(`—— 第 ${p+1}/${canvases.length} 頁 ——`);
-      const pg=await analyzePage(canvases[p],olog);
-      A.pages.push(pg);await tick()}
-    /* 整體統計 */
+      if(canvases.length>1)olog(`—— 第 ${p+1}/${canvases.length} 頁 ——`);
+      A.pages.push(await analyzePage(canvases[p],olog));await tick()}
+    A.systems=computeSystems(A);
     const allS=A.pages.flatMap(p=>p.staffs);
-    if(!allS.length)throw new Error('未偵測到五線譜：請使用更清晰、解析度更高的影像（建議 ≥300dpi 扫描或截圖）');
-    const d=deriveFrom(A,'auto');
-    if(!d.melody.length)throw new Error('偵測到譜線但未找到符合條件的音符頭。手寫譜、陰影或傾斜過多皆可能影響結果，可改試「測試樂譜」或範例');
-    /* 視覺化：符號標記（第一頁） */
+    if(!allS.length)throw new Error('未偵測到五線譜：請使用更清晰、解析度更高的影像（建議掃描或原始截圖）');
+    const bpb=tsValue();
+    const d=deriveFrom(A,'auto',bpb);
+    if(!d.melody.length)throw new Error('偵測到譜線但無符合條件的符頭。手寫、陰影、傾斜或譜號區過近皆可能影響；可於左側切換「旋律來源」或改試測試樂譜');
     const pg0=A.pages[0],st0=pg0.staffs[0];
-    const dd=deriveFrom({pages:[pg0]},'第1頁・譜表1');
-    const marks={heads:[],bars:[],top:st0.y0-st0.s,bottom:st0.y1+st0.s};
-    for(const cp of pg0.comps){const s=st0.s;
-      if(cp.hrW>=0.5*s&&cp.hrW<=2.4*s&&cp.bh>=0.45*s&&cp.hrY>=st0.y0-1.8*s&&cp.hrY<=st0.y1+1.8*s&&cp.hrX>st0.x0+4*s)
-        marks.heads.push({x:cp.hrX,y:cp.hrY});
-      if(cp.bw<=Math.max(6,0.6*s)&&cp.bh>=3*s&&cp.bh<=6.8*s&&cp.dens>0.45)marks.bars.push((cp.minx+cp.maxx)/2)}
-    paintStage(2,pg0.bin2,pg0.w,pg0.h,null,marks);
+    const hd0=headsOf(pg0,st0);
+    paintStage(2,pg0.bin2,pg0.w,pg0.h,null,{heads:hd0,bars:[],top:st0.y0-st0.s,bot:st0.y1+st0.s});
     const ps=d.melody.map(n=>n.p);
-    const conf=Math.max(35,Math.min(96,Math.round(58+d.melody.length*1.1+allS.length*4)));
-    const usedBars=barSum(d);
-    A.dims=canvases[0].width+'×'+canvases[0].height;
+    const conf=Math.max(35,Math.min(96,Math.round(56+d.melody.length*0.9+allS.length*4)));
     item.A=A;item.state='ok';
-    olog(`符號標記完成：音符頭候選 ${marks.heads.length} · 小節線 ${barSum2(A)} 條`);
-    olog(`音高範圍 ${mName(Math.min(...ps))} – ${mName(Math.max(...ps))} · 推測拍號 ${d.bpbGuess}/4 · 共 ${d.melody.length} 個音符`);
-    olog(`信心度 ${conf}% · 總耗時 ${((performance.now()-t0)/1000).toFixed(2)} 秒`);
-    const sc=buildScore(item,d,conf,allS[0].s);
-    item.score=sc;item.sub=A.dims+' · '+sc.key.name;
+    olog(`系統分组 ${A.systems.length} 個（${A.systems.some(s=>s.staves.length===1)?'含獨行譜表→聲樂旋律優先':'大譜表→首行旋律＋其餘伴奏'}）`);
+    olog(`旋律 ${d.melody.length} 音 · 伴奏 ${d.accomp.length} 音 · 音域 ${mName(Math.min(...ps))}–${mName(Math.max(...ps))}`);
+    olog(`節奏：小節線內 x 比例 · 拍號假設 ${bpb}/4（可於左側覆寫）`);
+    olog(`信心度 ${conf}% · 耗時 ${((performance.now()-t0)/1000).toFixed(2)}s`);
+    const sc=buildScore(item,d,conf);
+    item.score=sc;item.sub=(A.pages[0].w+'×'+A.pages[0].h)+' · '+sc.key.name;
     fillStaveSel(d.labels);renderLib();
-    $('#ovStatus').className='ok';$('#ovStatus').textContent=`✔ 辨識完成：${d.melody.length} 個音符 · 信心 ${conf}%（已自動載入，可直接播放）`;
+    $('#ovStatus').className='ok';
+    $('#ovStatus').textContent=`✔ 完成：旋律 ${d.melody.length} 音／伴奏 ${d.accomp.length} 音，已載入可播放`;
     loadScore(sc,item);chime();
-    toast(`辨識完成：偵測到 ${d.melody.length} 個音符（${sc.key.name} 預設調號，可在捲簾修正）`,'teal');
+    toast(`辨識完成：${sc.key.name} 調號偵測 · 旋律 ${d.melody.length} 音 · 伴奏 ${d.accomp.length} 音`,'teal');
   }catch(err){
     olog(err.message,true);item.state='no';renderLib();
     $('#ovStatus').className='err';$('#ovStatus').textContent='✘ 辨識未成功 — '+err.message}
   $('#ovClose').disabled=false}
-function barSum(d){return 0}
-function barSum2(A){let n=0;A.pages.forEach(p=>p.comps.forEach(c=>{const st=p.staffs[0];
-  if(st&&c.bw<=Math.max(6,0.6*st.s)&&c.bh>=3*st.s&&c.bh<=6.8*st.s&&c.dens>0.45)n++}));return n}
-function buildScore(item,d,conf,spacing){
-  const bpb=d.bpbGuess,total=d.melody.length?d.melody[d.melody.length-1].t+d.melody[d.melody.length-1].d:0;
-  const sc={title:item.name.replace(/\.[^.]+$/,''),composer:'OMR 辨識',
-    key:{name:'C',type:'major',tonic:60},timeSig:[bpb,4],tempo:100,
-    bars:Math.max(1,Math.ceil(total/bpb)),conf,meta:{src:(item.name||'')+(item.A&&item.A.dims?' · '+item.A.dims:'')}};
-  sc.melody=d.melody;harmonize(sc);return sc}
 $('#ovClose').onclick=()=>$('#ov').classList.remove('show');
+function tsValue(){const v=$('#tsSel').value;return v==='3c'?3:+v}
+function buildScore(item,d,conf){
+  const st0=curItem.A.pages[0].staffs[0];
+  let keyName='C',det='（無調號）';
+  if(st0.keyN){keyName=(st0.keyType==='flat'?FLAT_KEY:SHARP_KEY)[st0.keyN-1]||'C';
+    det=`（${st0.keyN}${st0.keyType==='flat'?'♭':'♯'} 偵測）`}
+  const pc=KEY_PC[keyName]??0;
+  const sc={title:item.name.replace(/\.[^.]+$/,''),composer:'OMR 辨識',
+    key:{name:keyName,type:'major',tonic:60+(pc>6?pc-12:pc)},
+    timeSig:[d.bpb,4],tempo:100,bars:d.bars,conf,
+    meta:{src:item.name+(item.A?' · '+item.A.pages[0].w+'×'+item.A.pages[0].h:'')},
+    keyDet:det,clefInfo:curItem.A.pages.flatMap(pg=>pg.staffs).map(st=>st.clef==='treble'?'G':'F').join('')}
+  sc.melody=d.melody;
+  if(d.accomp.length)sc.chords=d.accomp;else harmonize(sc);
+  return sc}
 function fillStaveSel(labels){const sel=$('#staveSel');sel.innerHTML='';
   const mk=(v,t)=>{const o=document.createElement('option');o.value=v;o.textContent=t;sel.appendChild(o)};
-  mk('auto','自動（每系統第一行）');mk('all','全部譜表');labels.forEach(l=>mk(l,l))}
-$('#staveSel').onchange=()=>{if(!curItem||!curItem.A)return;
-  const d=deriveFrom(curItem.A,$('#staveSel').value);
-  if(!d.melody.length){toast('此選擇下沒有音符','coral');return}
-  const oldTitle=S.score?S.score.title:'';
-  const sc=buildScore(curItem,d,curItem.score?curItem.score.conf:70,curItem.A.pages[0].staffs[0].s);
-  sc.title=oldTitle||sc.title;curItem.score=sc;undoStack=[];loadScore(sc,curItem);
-  toast('已依所選譜表重新推導音符','teal')};
+  mk('auto','自動（聲樂/首行優先）');mk('all','全部譜表串接');
+  labels.forEach(l=>mk(l,l))}
+function rederive(){if(!curItem||!curItem.A)return;
+  const d=deriveFrom(curItem.A,$('#staveSel').value,tsValue());
+  if(!d.melody.length){toast('此設定下沒有旋律音符','coral');return}
+  const oldT=S.score?S.score.title:'';
+  const sc=buildScore(curItem,d,S.score?S.score.conf:70);
+  sc.title=oldT||sc.title;curItem.score=sc;undoStack=[];
+  loadScore(sc,curItem);toast('已重新推導（'+$('#staveSel').selectedOptions[0].textContent+'）','teal')}
+$('#staveSel').onchange=rederive;$('#tsSel').onchange=rederive;
 
-/* ---------- 檔案讀入 ---------- */
+/* ---------- 檔案 / 測試譜 ---------- */
 async function fileToCanvases(f){
   if(f.type.startsWith('image/')){
     const bmp=await createImageBitmap(f,{imageOrientation:'from-image'}).catch(async()=>{
@@ -570,26 +603,23 @@ function getPdfLib(){return new Promise((res,rej)=>{if(window.pdfjsLib)return re
   const s=document.createElement('script');
   s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
   s.onload=()=>{window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';res(window.pdfjsLib)};
-  s.onerror=()=>rej(new Error('pdf.js'));document.head.appendChild(s)})}
+  s.onerror=()=>rej(new Error('pdf.js 載入失敗（需網路）'));document.head.appendChild(s)})}
 async function handleFile(f){
-  const okT=f.type==='application/pdf'||f.type.startsWith('image/');
-  if(!okT){toast('僅支援 PDF 或圖片格式','coral');return}
-  if(f.size>25*1048576){toast('檔案過大（上限 25MB）','coral');return}
+  if(!(f.type==='application/pdf'||f.type.startsWith('image/'))){toast('僅支援 PDF 或圖片','coral');return}
+  if(f.size>25*1048576){toast('檔案過大（25MB）','coral');return}
   const item={id:'f'+(++libSeq),name:f.name,size:f.size,state:'run',
     url:f.type.startsWith('image/')?URL.createObjectURL(f):null};
   lib.unshift(item);renderLib();
   try{const cvs=await fileToCanvases(f);await runAnalysis(item,cvs)}
-  catch(e){item.state='no';renderLib();$('#ov').classList.add('show');ovLogEl.innerHTML='';
-    olog((e.message&&e.message.includes('pdf')?'無法載入 PDF 引擎（需網路連線）；圖片檔仍可正常辨識':'讀取檔案失敗：'+e.message),true);
-    $('#ovStatus').className='err';$('#ovStatus').textContent='✘ 處理失敗';$('#ovClose').disabled=false}}
+  catch(e){item.state='no';renderLib();$('#ov').classList.add('show');$('#ovLog').innerHTML='';
+    olog(e.message||('讀取失敗'),true);$('#ovStatus').className='err';
+    $('#ovStatus').textContent='✘ 處理失敗';$('#ovClose').disabled=false}}
 $('#drop').addEventListener('click',e=>{if(!e.target.closest('.chip')&&!e.target.closest('#btnTestScore'))$('#fileIn').click()});
 $('#fileIn').addEventListener('change',e=>e.target.files[0]&&handleFile(e.target.files[0]));
 window.addEventListener('dragover',e=>{e.preventDefault();document.body.classList.add('dragging')});
 window.addEventListener('dragleave',e=>{if(!e.relatedTarget)document.body.classList.remove('dragging')});
 window.addEventListener('drop',e=>{e.preventDefault();document.body.classList.remove('dragging');
   if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0])});
-
-/* ---------- 合成測試樂譜（畫一張真實樂譜再送入辨識器） ---------- */
 function makeTestScoreCanvas(){
   const mel=DEMOS.twinkle().melody.filter(n=>n.t<32),s=16,L0=170,x0=150,ppb=26;
   const cv=document.createElement('canvas');cv.width=1180;cv.height=430;
@@ -610,11 +640,9 @@ function makeTestScoreCanvas(){
   return cv}
 $('#btnTestScore').onclick=async()=>{
   const item={id:'t'+(++libSeq),name:'測試樂譜（小星星・合成）',size:0,state:'run',sub:'合成影像'};
-  lib.unshift(item);renderLib();
-  olog('');$('#ov').classList.add('show');
-  await runAnalysis(item,[makeTestScoreCanvas()])};
+  lib.unshift(item);renderLib();await runAnalysis(item,[makeTestScoreCanvas()])};
 
-/* ============ 音樂資料：範例與伴奏 ============ */
+/* ============ 範例與伴奏和聲 ============ */
 const SCALE={major:[0,2,4,5,7,9,11],minor:[0,2,3,5,7,8,10]};
 function seqNotes(seq){let t=0;const out=[];for(const[p,d]of seq){if(p!=null)out.push({t,d,p,v:.8});t+=d}return out}
 function harmonize(sc){const ints=SCALE[sc.key.type],bpb=sc.timeSig[0],chords=[];let prev=0;
@@ -631,11 +659,11 @@ function harmonize(sc){const ints=SCALE[sc.key.type],bpb=sc.timeSig[0],chords=[]
     [root,t3,t5].forEach(p=>chords.push({t:s0,d:bpb*.96,p,v:.42}))}
   sc.chords=chords;return sc}
 const DEMOS={
-  twinkle:()=>{const sc={title:'小星星',composer:'傳統民謠',key:{name:'C',type:'major',tonic:60},timeSig:[4,4],tempo:96,bars:12,conf:99,meta:{src:'內建範例'}};
+  twinkle:()=>{const sc={title:'小星星',composer:'傳統民謠',key:{name:'C',type:'major',tonic:60},timeSig:[4,4],tempo:96,bars:12,conf:99,meta:{src:'內建範例'},keyDet:'',clefInfo:'G'};
     sc.melody=seqNotes([[60,1],[60,1],[67,1],[67,1],[69,1],[69,1],[67,2],[65,1],[65,1],[64,1],[64,1],[62,1],[62,1],[60,2],[67,1],[67,1],[65,1],[65,1],[64,1],[64,1],[62,2],[67,1],[67,1],[65,1],[65,1],[64,1],[64,1],[62,2],[60,1],[60,1],[67,1],[67,1],[69,1],[69,1],[67,2],[65,1],[65,1],[64,1],[64,1],[62,1],[62,1],[60,2]]);return harmonize(sc)},
-  ode:()=>{const sc={title:'快樂頌',composer:'貝多芬',key:{name:'C',type:'major',tonic:60},timeSig:[4,4],tempo:108,bars:8,conf:99,meta:{src:'內建範例'}};
+  ode:()=>{const sc={title:'快樂頌',composer:'貝多芬',key:{name:'C',type:'major',tonic:60},timeSig:[4,4],tempo:108,bars:8,conf:99,meta:{src:'內建範例'},keyDet:'',clefInfo:'G'};
     sc.melody=seqNotes([[64,1],[64,1],[65,1],[67,1],[67,1],[65,1],[64,1],[62,1],[60,1],[60,1],[62,1],[64,1],[64,1.5],[62,.5],[62,2],[64,1],[64,1],[65,1],[67,1],[67,1],[65,1],[64,1],[62,1],[60,1],[60,1],[62,1],[64,1],[62,1.5],[60,.5],[60,2]]);return harmonize(sc)},
-  elise:()=>{const sc={title:'給愛麗絲（選段）',composer:'貝多芬',key:{name:'Am',type:'minor',tonic:69},timeSig:[4,4],tempo:126,bars:5,conf:99,meta:{src:'內建範例'}};
+  elise:()=>{const sc={title:'給愛麗絲（選段）',composer:'貝多芬',key:{name:'Am',type:'minor',tonic:69},timeSig:[4,4],tempo:126,bars:5,conf:99,meta:{src:'內建範例'},keyDet:'',clefInfo:'G'};
     sc.melody=seqNotes([[76,.5],[75,.5],[76,.5],[75,.5],[76,.5],[71,.5],[74,.5],[72,.5],[69,1],[null,.5],[60,.5],[64,.5],[68,.5],[69,1],[null,.5],[71,.5],[null,.5],[64,.5],[72,.5],[74,1],[null,.5],[76,.5],[75,.5],[76,.5],[75,.5],[76,.5],[71,.5],[74,.5],[72,.5],[69,1],[60,.5],[64,.5],[69,1.5],[null,.5]]);return harmonize(sc)}};
 
 /* ============ 音訊引擎 ============ */
@@ -714,7 +742,7 @@ document.addEventListener('keydown',e=>{if(e.code==='Space'&&!/INPUT|SELECT|TEXT
 const NW=1040,GAP=10,SYSSP=112,SY0=70,X0=150,X1=NW-26,MPS=4;
 function renderNotation(){const box=$('#scoreBox');if(!S.score){box.innerHTML=emptyHTML();return}
   const sc=S.score,bpb=sc.timeSig[0],bars=sc.bars,sysN=Math.ceil(bars/MPS);
-  const barW=(X1-X0)/MPS,padL=16,padR=8;let out='',phOut='';const notePos=[];
+  const barW=(X1-X0)/MPS,padL=16,padR=8;let out='',phOut='';
   for(let s=0;s<sysN;s++){const top=SY0+s*SYSSP,mid=top+2*GAP,bot=top+4*GAP,y=p=>mid-p*(GAP/2);
     for(let i=0;i<5;i++)out+=`<line x1="38" y1="${top+i*GAP}" x2="${X1}" y2="${top+i*GAP}" stroke="#3a4568"/>`;
     const gy=top+3*GAP;let sp='',r=13.5,a=-2.2;
@@ -733,7 +761,7 @@ function renderNotation(){const box=$('#scoreBox');if(!S.score){box.innerHTML=em
   sc.melody.forEach((n,i)=>{const m=n.p+S.transpose,bar=Math.floor(n.t/bpb);if(bar>=bars)return;
     const s=Math.floor(bar/MPS),top=SY0+s*SYSSP,mid=top+2*GAP,sp=spell(m),pos=sp.o-34;
     const y2=mid-pos*(GAP/2),frac=(n.t-bar*bpb)/bpb,x=X0+(bar%MPS)*barW+padL+frac*(barW-padL-padR);
-    notePos.push({i,x,y:y2,s});const d=n.d;let hd='',extra='';
+    const d=n.d;let hd='',extra='';
     const hollow=d>=2,stem=d<3,up=pos<0;
     hd+=`<ellipse class="hd" cx="${x}" cy="${y2}" rx="5.8" ry="4.3" transform="rotate(-18 ${x} ${y2})" ${hollow?'fill="none" stroke="#dfe6ff" stroke-width="1.7"':''}/>`;
     if(stem){const sx=up?x+5:x-5,sy=up?y2-31:y2+31;
@@ -742,19 +770,20 @@ function renderNotation(){const box=$('#scoreBox');if(!S.score){box.innerHTML=em
     if(d%1===.5)hd+=`<circle class="hd" cx="${x+9}" cy="${y2}" r="1.7"/>`;
     if(sp.a===-1)extra+=`<text x="${x-14}" y="${y2+4.5}" font-size="13" fill="#dfe6ff">♭</text>`;
     const led=[];if(pos<=-2)for(let p=pos%2===0?pos:pos+1;p<=-2;p+=2)led.push(p);
-    if(pos>=6){const st=pos%2===0?pos:pos-1;for(let p=6;p<=st;p+=2)led.push(p)}
+    if(pos>=6){const st2=pos%2===0?pos:pos-1;for(let p=6;p<=st2;p+=2)led.push(p)}
     led.forEach(p=>{extra+=`<line x1="${x-9}" y1="${mid-p*5}" x2="${x+9}" y2="${mid-p*5}" stroke="#8fa0c9" stroke-width="1.2"/>`});
     out+=`<g class="nt" data-i="${i}" data-p="${m}">${extra}${hd}</g>`});
   box.innerHTML=`<svg viewBox="0 0 ${NW} ${SY0+sysN*SYSSP+16}" xmlns="http://www.w3.org/2000/svg">${out}${phOut}</svg>`;
-  GEOM={notePos,barW,padL,padR,bpb,sysN};
+  GEOM={barW,padL,padR,bpb,sysN};
   box.querySelectorAll('g.nt').forEach(g=>g.addEventListener('click',()=>preview(+g.dataset.p)));
   renderRollBase()}
-function emptyHTML(){return `<div class="empty"><div class="staffy"></div><b>尚無樂譜</b><p>上傳樂譜進行辨識、點「產生測試樂譜」驗證引擎，或載入範例。</p></div>`}
+function emptyHTML(){return `<div class="empty"><div class="staffy"></div><b>尚無樂譜</b><p>上傳樂譜、點「產生測試樂譜」驗證引擎，或載入範例。</p></div>`}
 
-/* ============ 鋼琴捲簾 ============ */
+/* ============ 捲簾 / 琴鍵 / 同步 ============ */
 const PPB=56,RH=13,RHDR=20;let rollMin=48,rollMax=84;
 function rollRange(){const all=S.score.melody;if(!all.length){rollMin=55;rollMax=79;return}
   let lo=127,hi=0;all.forEach(n=>{lo=Math.min(lo,n.p);hi=Math.max(hi,n.p)});
+  S.score.chords.forEach(n=>{lo=Math.min(lo,n.p);hi=Math.max(hi,n.p)});
   rollMin=Math.max(36,lo-4);rollMax=Math.min(96,hi+4)}
 function rollDim(){return{w:totalBeats()*PPB+30,h:RHDR+(rollMax-rollMin+1)*RH}}
 function rr(g,x,y,w2,h2,r){g.beginPath();g.roundRect?g.roundRect(x,y,w2,h2,r):g.rect(x,y,w2,h2);g.fill()}
@@ -770,7 +799,7 @@ function renderRollBase(){const cv=$('#rollBase'),ov=$('#rollOv');if(!S.score){c
     if([1,3,6,8,10].includes(p%12)){g.fillStyle='rgba(0,0,0,.3)';g.fillRect(0,y,w,RH)}
     if(p%12===0){g.fillStyle='#6b7595';g.font='9px Space Grotesk';g.fillText('C'+(p/12-1),3,y+RH-3)}}
   S.score.chords.forEach(n=>{if(n.t>=T)return;const x=n.t*PPB,y=RHDR+(rollMax-n.p)*RH;
-    if(y<RHDR||y>h)return;g.fillStyle='rgba(87,215,194,.4)';rr(g,x+1,y+1,Math.max(6,n.d*PPB-2),RH-2,3)});
+    if(y<RHDR||y>h)return;g.fillStyle='rgba(87,215,194,.45)';rr(g,x+1,y+1,Math.max(6,n.d*PPB-2),RH-2,3)});
   S.score.melody.forEach(n=>{if(n.t>=T)return;const x=n.t*PPB,y=RHDR+(rollMax-n.p)*RH;
     if(y<RHDR||y>h)return;const gr=g.createLinearGradient(0,y,0,y+RH);
     gr.addColorStop(0,'#ffd875');gr.addColorStop(1,'#e09a1f');g.fillStyle=gr;
@@ -803,10 +832,8 @@ $('#btnUndo').onclick=()=>{if(!undoStack.length){toast('沒有可復原的編輯
   renderNotation();fillMeta();buildEvents();toast('已復原','teal')};
 $('#btnReset').onclick=()=>{if(!S.origSnap){toast('沒有原始辨識結果','coral');return}
   const snap=JSON.parse(S.origSnap);S.score.melody=snap.melody;S.score.bars=snap.bars;S.score.custom=false;
-  $('#editedTag').style.display='none';undoStack=[];renderNotation();fillMeta();buildEvents();stopAll();toast('已重設為辨識結果','teal')};
+  $('#editedTag').style.display='none';undoStack=[];renderNotation();fillMeta();buildEvents();stopAll();toast('已重設','teal')};
 $('#gridSel').onchange=e=>S.grid=+e.target.value;
-
-/* ============ 琴鍵 ============ */
 const keyEls=new Map();
 function buildKeys(){const box=$('#keys');box.innerHTML='';keyEls.clear();
   const blacks=[1,3,6,8,10];let whites=0;for(let m=48;m<=84;m++)if(!blacks.includes(m%12))whites++;
@@ -823,8 +850,6 @@ function lightKeys(){const act=new Set();
     S.score.melody.forEach(n=>{if(b>=n.t&&b<n.t+n.d)act.add(n.p+S.transpose)});
     if(S.acc)S.score.chords.forEach(n=>{if(b>=n.t&&b<n.t+n.d)act.add(n.p+S.transpose)})}
   keyEls.forEach((el,m)=>el.classList.toggle('on',act.has(m)))}
-
-/* ============ 播放同步 ============ */
 let lastAct=[];
 function syncUI(beat,force){if(!S.score||!GEOM)return;const bpb=GEOM.bpb,T=totalBeats();
   beat=Math.max(0,Math.min(beat,T));
@@ -848,7 +873,7 @@ function syncUI(beat,force){if(!S.score||!GEOM)return;const bpb=GEOM.bpb,T=total
     if(b>=totalBeats()){if(S.loop)reposition(0);else{stopAll();return}}
     syncUI(getBeat());lightKeys()}else if(S.score)lightKeys()})();
 
-/* ============ 載入 / 中繼資料 / 文件庫 ============ */
+/* ============ 載入 / 中繼 / 匯出 ============ */
 function renderLib(){const ul=$('#libList');ul.innerHTML='';
   lib.forEach(it=>{const li=document.createElement('li');
     if(S.score&&S.score._libId===it.id)li.classList.add('act');
@@ -857,7 +882,7 @@ function renderLib(){const ul=$('#libList');ul.innerHTML='';
     li.onclick=()=>{if(it.score)loadScore(it.score,it);else if(it.state==='run')toast('尚在分析中')};
     ul.appendChild(li)})}
 function loadScore(sc,item){S.score=sc;sc._libId=item?item.id:null;
-  curItem=item&&item.A?item:curItem;
+  if(item&&item.A)curItem=item;
   S.origSnap=JSON.stringify({melody:sc.melody,bars:sc.bars});
   S.transpose=0;$('#trVal').textContent='0';S.curBeat=0;S.bpm=sc.tempo;
   $('#tempoR').value=sc.tempo;$('#tempoVal').textContent=sc.tempo;
@@ -866,21 +891,18 @@ function loadScore(sc,item){S.score=sc;sc._libId=item?item.id:null;
   $('#stageTitle').textContent='五線譜預覽 · '+sc.title}
 function fillMeta(){const sc=S.score;if(!sc)return;
   $('#mTitle').value=sc.title;
-  $('#mKey').textContent=sc.key.name+' '+(sc.key.type==='major'?'大調':'小調')+(sc.composer==='OMR 辨識'?'（預設）':'')+(S.transpose?` · 移調${S.transpose>0?'+':''}${S.transpose}`:'');
-  $('#mTS').textContent=sc.timeSig[0]+'/'+sc.timeSig[1];
-  $('#mTempo').textContent='♩ = '+sc.tempo;
+  $('#mKey').textContent=sc.key.name+' 大調'+(sc.keyDet||'');
+  $('#mClef').textContent=sc.clefInfo?sc.clefInfo.split('').join(' '):'—';
+  $('#mTempo').textContent='♩ = '+sc.tempo+'（可調）';
   $('#mBars').textContent=sc.bars;
   $('#mNotes').textContent=sc.melody.length;
-  $('#mGap').textContent=curItem&&curItem.A&&curItem.A.pages[0]&&curItem.A.pages[0].staffs[0]?curItem.A.pages[0].staffs[0].s.toFixed(1)+' px':'—';
-  $('#mSrc').textContent=sc.meta.src||'—';
+  $('#mAcc').textContent=sc.chords.length;
   $('#mConf').textContent=(sc.conf||0)+'%';
   $('#posTotal').textContent=`${sc.bars} 小節 · ${(sc.bars*sc.timeSig[0]).toFixed(0)} 拍`;
   setTimeout(()=>$('#confFill').style.width=(sc.conf||0)+'%',60)}
 $('#mTitle').oninput=e=>{if(S.score){S.score.title=e.target.value;$('#stageTitle').textContent='五線譜預覽 · '+e.target.value}};
-
-/* ============ 匯出 ============ */
 function writeVL(a,v){const b=[v&0x7f];v>>=7;while(v>0){b.unshift((v&0x7f)|0x80);v>>=7}a.push(...b)}
-$('#btnMidi').onclick=()=>{if(!S.score){toast('尚無樂譜可匯出','coral');return}
+$('#btnMidi').onclick=()=>{if(!S.score){toast('尚無樂譜','coral');return}
   const ppq=480,us=Math.round(6e7/S.score.tempo),evs=[];
   const push=(arr,vel)=>arr.forEach(n=>{const p=Math.max(0,Math.min(127,n.p+S.transpose));
     evs.push([Math.round(n.t*ppq),0x90,p,vel]);evs.push([Math.round((n.t+n.d*.92)*ppq),0x80,p,0])});
@@ -892,17 +914,17 @@ $('#btnMidi').onclick=()=>{if(!S.score){toast('尚無樂譜可匯出','coral');r
   evs.forEach(e=>{dlt(e[0]);trk.push(e[1],e[2],Math.min(127,e[3]))});dlt(0);trk.push(0xFF,0x2F,0x00);
   const hd=[0x4d,0x54,0x68,0x64,0,0,0,6,0,0,0,1,(ppq>>8)&255,ppq&255,0x4d,0x54,0x72,0x6b,(trk.length>>24)&255,(trk.length>>16)&255,(trk.length>>8)&255,trk.length&255];
   dl(new Blob([new Uint8Array([...hd,...trk])],{type:'audio/mid'}),(S.score.title||'score')+'.mid');
-  toast('已匯出 MIDI，可於任何 DAW／電子樂器開啟','teal')};
-$('#btnJson').onclick=()=>{if(!S.score){toast('尚無樂譜可匯出','coral');return}
+  toast('已匯出 MIDI（含伴奏軌）','teal')};
+$('#btnJson').onclick=()=>{if(!S.score){toast('尚無樂譜','coral');return}
   const{melody,chords,key,timeSig,tempo,bars,title,composer,conf}=S.score;
-  dl(new Blob([JSON.stringify({format:'scorelens/1',title,composer,key,timeSig,tempo,bars,conf,melody,chords},null,2)],{type:'application/json'}),(title||'score')+'.json');
-  toast('已匯出 JSON 樂譜檔','teal')};
-$('#btnPrint').onclick=()=>{if(!S.score){toast('尚無樂譜可列印','coral');return}
+  dl(new Blob([JSON.stringify({format:'scorelens/2',title,composer,key,timeSig,tempo,bars,conf,melody,chords},null,2)],{type:'application/json'}),(title||'score')+'.json');
+  toast('已匯出 JSON','teal')};
+$('#btnPrint').onclick=()=>{if(!S.score){toast('尚無樂譜','coral');return}
   const w=window.open('','_blank'),svg=$('#scoreBox svg');
-  w.document.write(`<html><head><title>${S.score.title}</title><style>body{font-family:serif;padding:24px;background:#fff;color:#111}svg .hd{fill:#111}svg .stk,svg .flg{stroke:#111}svg line{stroke:#444}svg text{fill:#333}h1{font-size:22px}p{color:#555;font-size:13px}</style></head><body><h1>${S.score.title}</h1><p>${S.score.key.name} · ${S.score.timeSig[0]}/${S.score.timeSig[1]} · ♩=${S.score.tempo} · 譜鏡 ScoreLens OMR 轉譯</p>${svg?svg.outerHTML:''}</body></html>`);
+  w.document.write(`<html><head><title>${S.score.title}</title><style>body{font-family:serif;padding:24px;background:#fff;color:#111}svg .hd{fill:#111}svg .stk,svg .flg{stroke:#111}svg line{stroke:#444}svg text{fill:#333}h1{font-size:22px}p{color:#555;font-size:13px}</style></head><body><h1>${S.score.title}</h1><p>${S.score.key.name} · ${S.score.timeSig[0]}/${S.score.timeSig[1]} · ♩=${S.score.tempo} · 譜鏡 ScoreLens OMR</p>${svg?svg.outerHTML:''}</body></html>`);
   w.document.close();setTimeout(()=>w.print(),450)};
 
-/* ============ 分頁 / 背景 / 初始化 ============ */
+/* ============ 初始化 ============ */
 $$('.tab').forEach(t=>t.onclick=()=>{$$('.tab').forEach(x=>x.classList.remove('on'));t.classList.add('on');
   $('#pane-roll').style.display=t.dataset.pane==='roll'?'':'none';
   $('#pane-keys').style.display=t.dataset.pane==='keys'?'':'none'});
@@ -917,7 +939,7 @@ window.addEventListener('resize',()=>{if(S.score)renderRollBase()});
 buildKeys();renderLib();
 const init=DEMOS.twinkle(),initItem={id:'d-twinkle',name:'小星星',size:0,state:'demo',sub:'內建範例',score:init};
 lib.push(initItem);loadScore(init,initItem);
-setTimeout(()=>toast('建議先點「🧪 產生測試樂譜並辨識」看看真實辨識流程，再上傳你的樂譜'),800);
+setTimeout(()=>toast('上傳你的樂譜，或先按 🧪 測試按鈕驗證辨識引擎'),800);
 </script>
 </body>
 </html>
